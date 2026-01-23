@@ -1,0 +1,9 @@
+[service]
+name = "sub2api"
+
+[deploy]
+startCommand = "sh -lc 'echo \"$START_SCRIPT_B64\" | base64 -d | sh'"
+restartPolicyType = "ON_FAILURE"
+
+[env]
+PORT = "8080"
