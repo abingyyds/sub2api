@@ -2,7 +2,59 @@
 name = "sub2api"
 
 [deploy]
-startCommand = "sh -lc 'echo "$START_SCRIPT_B64" | base64 -d > /tmp/start.sh && chmod +x /tmp/start.sh && /tmp/start.sh'"
+startCommand = 'sh -lc "
+set -eu
+
+echo \"[boot] launcher begin\"
+
+decode_b64() {
+  # stdin -> decoded stdout
+  if command -v base64 >/dev/null 2>&1; then
+    base64 -d 2>/dev/null || base64 --decode 2>/dev/null
+    return $?
+  fi
+  if command -v openssl >/dev/null 2>&1; then
+    openssl base64 -d 2>/dev/null
+    return $?
+  fi
+  return 127
+}
+
+write_start_script() {
+  # Prefer START_SCRIPT_B64, fallback START_SCRIPT, then /app/start.sh
+  if [ -n \"${START_SCRIPT_B64:-}\" ]; then
+    echo \"[boot] using START_SCRIPT_B64\"
+    # strip CRLF + spaces that break base64
+    printf %s \"$START_SCRIPT_B64\" | tr -d \"\\r\\n \" | decode_b64 > /tmp/start.sh || {
+      echo \"[boot] START_SCRIPT_B64 decode failed\" >&2
+      exit 1
+    }
+  elif [ -n \"${START_SCRIPT:-}\" ]; then
+    echo \"[boot] using START_SCRIPT (plain)\"
+    printf %s \"$START_SCRIPT\" > /tmp/start.sh
+  elif [ -f /app/start.sh ]; then
+    echo \"[boot] using /app/start.sh (image)\"
+    cp /app/start.sh /tmp/start.sh
+  else
+    echo \"[boot] no script provided; will run /app/sub2api directly\"
+    return 0
+  fi
+
+  # normalize line endings + make executable
+  sed -i \"s/\\r$//\" /tmp/start.sh 2>/dev/null || true
+  chmod +x /tmp/start.sh
+  echo \"[boot] start.sh ready: $(wc -c < /tmp/start.sh 2>/dev/null || echo 0) bytes\"
+  return 0
+}
+
+write_start_script
+
+if [ -x /tmp/start.sh ]; then
+  exec /tmp/start.sh
+else
+  exec /app/sub2api
+fi
+"'
 restartPolicyType = "ON_FAILURE"
 
 [env]
