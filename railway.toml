@@ -2,7 +2,7 @@
 name = "sub2api"
 
 [deploy]
-startCommand = "sh -lc 'echo \"$START_SCRIPT_B64\" | base64 -d | sh'"
+startCommand = "sh -lc 'echo "$START_SCRIPT_B64" | base64 -d > /tmp/start.sh && chmod +x /tmp/start.sh && /tmp/start.sh'"
 restartPolicyType = "ON_FAILURE"
 
 [env]
