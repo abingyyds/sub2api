@@ -1,0 +1,39 @@
+server:
+  host: "0.0.0.0"
+  port: ${PORT:-8080}
+  mode: "release"
+  trusted_proxies:
+    - "0.0.0.0/0"
+
+database:
+  host: "${SUB2API_DB_HOST}"
+  port: ${SUB2API_DB_PORT}
+  user: "${SUB2API_DB_USER}"
+  password: "${SUB2API_DB_PASSWORD}"
+  dbname: "${SUB2API_DB_NAME}"
+  sslmode: "${SUB2API_DB_SSLMODE:-disable}"
+
+redis:
+  host: "${SUB2API_REDIS_HOST}"
+  port: ${SUB2API_REDIS_PORT}
+  password: "${SUB2API_REDIS_PASSWORD:-}"
+  db: ${SUB2API_REDIS_DB}
+
+jwt:
+  secret: "${SUB2API_JWT_SECRET}"
+  expire_hour: 24
+
+cors:
+  allowed_origins:
+    - "*"
+
+security:
+  url_allowlist:
+    enabled: ${SECURITY_URL_ALLOWLIST_ENABLED:-false}
+    allow_insecure_http: ${SECURITY_URL_ALLOWLIST_ALLOW_INSECURE_HTTP:-true}
+
+default:
+  user_concurrency: 5
+  user_balance: 0
+  api_key_prefix: "sk-"
+  rate_multiplier: 1.0
