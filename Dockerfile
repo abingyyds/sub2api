@@ -72,40 +72,103 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
 # -----------------------------------------------------------------------------
 FROM ${ALPINE_IMAGE}
 
-# Labels
-LABEL maintainer="Wei-Shaw <github.com/Wei-Shaw>"
-LABEL description="Sub2API - AI API Gateway Platform"
-LABEL org.opencontainers.image.source="https://github.com/Wei-Shaw/sub2api"
-
-# Install runtime dependencies
 RUN apk add --no-cache \
     ca-certificates \
     tzdata \
     curl \
     && rm -rf /var/cache/apk/*
 
-# Create non-root user
 RUN addgroup -g 1000 sub2api && \
     adduser -u 1000 -G sub2api -s /bin/sh -D sub2api
 
-# Set working directory
 WORKDIR /app
 
-# Copy binary from builder
 COPY --from=backend-builder /app/sub2api /app/sub2api
 
-# Create data directory
-RUN mkdir -p /app/data && chown -R sub2api:sub2api /app
+# ---- Add entrypoint that maps Railway/Sub2API env vars to runtime env vars ----
+# This makes Railway Variables effective without startCommand hacks.
+COPY <<'EOF' /app/entrypoint.sh
+#!/bin/sh
+set -eu
 
-# Switch to non-root user
+log(){ echo "[entrypoint] $*"; }
+
+# Align ports: Railway uses PORT; Sub2API often uses SERVER_PORT
+PORT_VAL="${PORT:-${SERVER_PORT:-8080}}"
+export PORT="$PORT_VAL"
+export SERVER_PORT="$PORT_VAL"
+
+# Map your existing Railway vars (SUB2API_*) -> runtime vars (DB_*, REDIS_*, etc.)
+# Do NOT overwrite if user already set the target vars explicitly.
+set_if_empty() {
+  key="$1"; val="$2"
+  eval "cur=\${$key:-}"
+  if [ -z "$cur" ] && [ -n "$val" ]; then
+    export "$key=$val"
+  fi
+}
+
+set_if_empty DB_HOST "${SUB2API_DB_HOST:-}"
+set_if_empty DB_PORT "${SUB2API_DB_PORT:-}"
+set_if_empty DB_USER "${SUB2API_DB_USER:-}"
+set_if_empty DB_PASSWORD "${SUB2API_DB_PASSWORD:-}"
+set_if_empty DB_NAME "${SUB2API_DB_NAME:-}"
+set_if_empty DB_SSLMODE "${SUB2API_DB_SSLMODE:-}"
+
+set_if_empty REDIS_HOST "${SUB2API_REDIS_HOST:-}"
+set_if_empty REDIS_PORT "${SUB2API_REDIS_PORT:-}"
+set_if_empty REDIS_PASSWORD "${SUB2API_REDIS_PASSWORD:-}"
+set_if_empty REDIS_DB "${SUB2API_REDIS_DB:-}"
+
+set_if_empty ADMIN_EMAIL "${SUB2API_ADMIN_EMAIL:-}"
+set_if_empty ADMIN_PASSWORD "${SUB2API_ADMIN_PASSWORD:-}"
+
+# JWT: set both names to be safe across versions
+if [ -n "${SUB2API_JWT_SECRET:-}" ]; then
+  set_if_empty JWT_SECRET "${SUB2API_JWT_SECRET}"
+  export SUB2API_JWT_SECRET="${SUB2API_JWT_SECRET}"
+fi
+
+# Railway / reverse-proxy hardening for 403(OPTIONS) / scheme / host issues
+# If you want strict CORS, replace "*" with your domains.
+: "${GIN_MODE:=release}"
+export GIN_MODE
+
+: "${TRUSTED_PROXIES:=0.0.0.0/0}"
+export TRUSTED_PROXIES
+
+: "${GIN_TRUSTED_PROXIES:=0.0.0.0/0}"
+export GIN_TRUSTED_PROXIES
+
+: "${SUB2API_CORS_ALLOWED_ORIGINS:=*}"
+export SUB2API_CORS_ALLOWED_ORIGINS
+
+: "${SUB2API_CORS_ALLOWED_ORIGINS_JSON:=[\"*\"]}"
+export SUB2API_CORS_ALLOWED_ORIGINS_JSON
+
+# URL allowlist: Railway is behind https proxy; many deployments need relaxed checks
+: "${SECURITY_URL_ALLOWLIST_ENABLED:=false}"
+export SECURITY_URL_ALLOWLIST_ENABLED
+
+: "${SECURITY_URL_ALLOWLIST_ALLOW_INSECURE_HTTP:=true}"
+export SECURITY_URL_ALLOWLIST_ALLOW_INSECURE_HTTP
+
+log "SERVER_PORT=$SERVER_PORT"
+log "DB=${DB_HOST:-?}:${DB_PORT:-?}/${DB_NAME:-?} sslmode=${DB_SSLMODE:-}"
+log "REDIS=${REDIS_HOST:-?}:${REDIS_PORT:-?} db=${REDIS_DB:-}"
+log "GIN_MODE=$GIN_MODE"
+
+exec /app/sub2api
+EOF
+
+RUN chmod +x /app/entrypoint.sh && \
+    mkdir -p /app/data && chown -R sub2api:sub2api /app
+
 USER sub2api
 
-# Expose port (can be overridden by SERVER_PORT env var)
 EXPOSE 8080
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:${SERVER_PORT:-8080}/health || exit 1
+    CMD sh -lc 'curl -fsS http://localhost:${SERVER_PORT:-8080}/health >/dev/null'
 
-# Run the application
-ENTRYPOINT ["/app/sub2api"]
+ENTRYPOINT ["/app/entrypoint.sh"]
