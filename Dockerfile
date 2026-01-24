@@ -1,9 +1,9 @@
 # =============================================================================
-# Sub2API Multi-Stage Dockerfile
+# Sub2API Multi-Stage Dockerfile (Railway-ready with config template rendering)
 # =============================================================================
 # Stage 1: Build frontend
 # Stage 2: Build Go backend with embedded frontend
-# Stage 3: Final minimal image
+# Stage 3: Final minimal image (+ entrypoint renders /app/config.yaml from template)
 # =============================================================================
 
 ARG NODE_IMAGE=node:24-alpine
@@ -72,34 +72,56 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
 # -----------------------------------------------------------------------------
 FROM ${ALPINE_IMAGE}
 
+# Runtime deps:
+# - curl: healthcheck
+# - tzdata, ca-certificates: tls/time
+# - gettext: provides envsubst for rendering config template at startup
 RUN apk add --no-cache \
     ca-certificates \
     tzdata \
     curl \
+    gettext \
     && rm -rf /var/cache/apk/*
 
+# Create non-root user
 RUN addgroup -g 1000 sub2api && \
     adduser -u 1000 -G sub2api -s /bin/sh -D sub2api
 
 WORKDIR /app
 
+# Copy binary from builder
 COPY --from=backend-builder /app/sub2api /app/sub2api
 
-# ---- Add entrypoint that maps Railway/Sub2API env vars to runtime env vars ----
-# This makes Railway Variables effective without startCommand hacks.
+# -----------------------------------------------------------------------------
+# Config template (recommended): put a file at deploy/config.railway.tpl.yaml
+# If you prefer a different path, change the COPY below and the entrypoint.
+# -----------------------------------------------------------------------------
+COPY deploy/config.railway.tpl.yaml /app/config.tpl.yaml
+
+# -----------------------------------------------------------------------------
+# Entrypoint:
+# 1) Align Railway PORT -> SERVER_PORT
+# 2) Map SUB2API_* envs to runtime envs (DB_*, REDIS_*, etc.) for backward compat
+# 3) Render /app/config.yaml from /app/config.tpl.yaml using envsubst
+# 4) Start /app/sub2api
+# -----------------------------------------------------------------------------
 COPY <<'EOF' /app/entrypoint.sh
 #!/bin/sh
 set -eu
 
 log(){ echo "[entrypoint] $*"; }
 
-# Align ports: Railway uses PORT; Sub2API often uses SERVER_PORT
+# -----------------------------
+# 1) Port alignment
+# -----------------------------
 PORT_VAL="${PORT:-${SERVER_PORT:-8080}}"
 export PORT="$PORT_VAL"
 export SERVER_PORT="$PORT_VAL"
 
-# Map your existing Railway vars (SUB2API_*) -> runtime vars (DB_*, REDIS_*, etc.)
-# Do NOT overwrite if user already set the target vars explicitly.
+# -----------------------------
+# 2) Env mapping (SUB2API_* -> runtime vars)
+#    Do NOT overwrite if target already set.
+# -----------------------------
 set_if_empty() {
   key="$1"; val="$2"
   eval "cur=\${$key:-}"
@@ -129,8 +151,9 @@ if [ -n "${SUB2API_JWT_SECRET:-}" ]; then
   export SUB2API_JWT_SECRET="${SUB2API_JWT_SECRET}"
 fi
 
-# Railway / reverse-proxy hardening for 403(OPTIONS) / scheme / host issues
-# If you want strict CORS, replace "*" with your domains.
+# -----------------------------
+# 3) Railway / proxy defaults (can be overridden by Railway Variables)
+# -----------------------------
 : "${GIN_MODE:=release}"
 export GIN_MODE
 
@@ -146,23 +169,45 @@ export SUB2API_CORS_ALLOWED_ORIGINS
 : "${SUB2API_CORS_ALLOWED_ORIGINS_JSON:=[\"*\"]}"
 export SUB2API_CORS_ALLOWED_ORIGINS_JSON
 
-# URL allowlist: Railway is behind https proxy; many deployments need relaxed checks
 : "${SECURITY_URL_ALLOWLIST_ENABLED:=false}"
 export SECURITY_URL_ALLOWLIST_ENABLED
 
 : "${SECURITY_URL_ALLOWLIST_ALLOW_INSECURE_HTTP:=true}"
 export SECURITY_URL_ALLOWLIST_ALLOW_INSECURE_HTTP
 
+# -----------------------------
+# 4) Render config.yaml from template (if present)
+#    This matches README's config.yaml approach.
+# -----------------------------
+CONFIG_TPL="${CONFIG_TPL_PATH:-/app/config.tpl.yaml}"
+CONFIG_OUT="${CONFIG_PATH:-/app/config.yaml}"
+
+if [ -f "$CONFIG_TPL" ]; then
+  log "rendering config: $CONFIG_OUT (from $CONFIG_TPL)"
+  # envsubst replaces ${VAR} placeholders using current env
+  envsubst < "$CONFIG_TPL" > "$CONFIG_OUT"
+  # best-effort: prevent accidental world-readable secrets (still inside container)
+  chmod 600 "$CONFIG_OUT" 2>/dev/null || true
+else
+  log "config template not found at $CONFIG_TPL (skip rendering)"
+fi
+
 log "SERVER_PORT=$SERVER_PORT"
 log "DB=${DB_HOST:-?}:${DB_PORT:-?}/${DB_NAME:-?} sslmode=${DB_SSLMODE:-}"
 log "REDIS=${REDIS_HOST:-?}:${REDIS_PORT:-?} db=${REDIS_DB:-}"
 log "GIN_MODE=$GIN_MODE"
+log "CONFIG_OUT=$CONFIG_OUT"
+
+# If Sub2API supports CONFIG_PATH, keep it exported; otherwise harmless.
+export CONFIG_PATH="$CONFIG_OUT"
 
 exec /app/sub2api
 EOF
 
+# Create data directory and fix permissions
 RUN chmod +x /app/entrypoint.sh && \
-    mkdir -p /app/data && chown -R sub2api:sub2api /app
+    mkdir -p /app/data && \
+    chown -R sub2api:sub2api /app
 
 USER sub2api
 
