@@ -380,7 +380,6 @@ import Logo from '@/components/Logo.vue'
 const authStore = useAuthStore()
 const appStore = useAppStore()
 
-const siteLogo = computed(() => appStore.cachedPublicSettings?.site_logo || appStore.siteLogo || '')
 const isDark = ref(document.documentElement.classList.contains('dark'))
 const currentYear = computed(() => new Date().getFullYear())
 
