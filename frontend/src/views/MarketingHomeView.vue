@@ -6,9 +6,7 @@
         <div class="flex items-center justify-between">
           <!-- Brand with Animation -->
           <div class="flex items-center gap-3">
-            <div class="h-10 w-10 overflow-hidden rounded-xl shadow-md">
-              <img :src="siteLogo || '/logo.png'" alt="Logo" class="h-full w-full object-contain" />
-            </div>
+            <Logo :size="40" theme="auto" />
             <div>
               <div class="text-xl font-bold text-gray-900 dark:text-white">
                 <span class="inline-block">c</span><span :class="['inline-block transition-all duration-1000', showFullBrand ? 'opacity-100 max-w-[100px]' : 'opacity-0 max-w-0 overflow-hidden', fadeOutClass]">laude</span><span class="inline-block">Coder.me</span>
@@ -51,14 +49,17 @@
           <h1 class="mb-4 text-6xl font-bold text-gray-900 dark:text-white md:text-7xl lg:text-8xl">
             <span class="inline-block">c</span><span
               :class="[
-                'inline-block transition-all duration-1000',
+                'inline-block transition-all duration-1500',
                 showFullBrand ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden',
                 fadeOutClass
               ]"
             >laude</span><span class="inline-block">Coder</span><span class="text-primary-600">.me</span>
           </h1>
-          <p class="text-xl text-gray-600 dark:text-dark-300">
-            我是 <span class="font-semibold text-primary-600">claudeCoder</span>，新一代的 AI 代码工作者
+          <p class="text-2xl font-semibold text-gray-700 dark:text-dark-200 mb-3">
+            新一代代码大师就是我
+          </p>
+          <p class="text-lg text-gray-600 dark:text-dark-300">
+            我就是 <span class="font-bold text-primary-600">claude</span> <span class="font-bold text-primary-600">coder</span> <span class="text-primary-600">=</span> <span class="font-bold text-primary-600">me</span>
           </p>
         </div>
 
@@ -374,6 +375,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import Icon from '@/components/icons/Icon.vue'
+import Logo from '@/components/Logo.vue'
 
 const authStore = useAuthStore()
 const appStore = useAppStore()
@@ -399,16 +401,16 @@ function toggleTheme() {
 onMounted(() => {
   authStore.checkAuth()
 
-  // Brand animation: show full "claudeCoder.me" for 2 seconds
-  // Then fade out "laude" to show "cCoder.me"
+  // Brand animation: show full "claudeCoder.me" with message for 4 seconds
+  // Let users understand "新一代代码大师就是我" and "claude coder = me"
   setTimeout(() => {
-    // Add color change effect to "laude"
+    // Add color change effect to "laude" - highlight the transformation
     fadeOutClass.value = 'text-primary-400'
-  }, 2000)
+  }, 4000)
 
   setTimeout(() => {
-    // Hide "laude" completely
+    // Hide "laude" completely to show "cCoder.me"
     showFullBrand.value = false
-  }, 3000)
+  }, 6000)
 })
 </script>

@@ -65,18 +65,18 @@ import { ref, computed, onMounted } from 'vue'
 import { getPublicSettings } from '@/api/auth'
 import { sanitizeUrl } from '@/utils/url'
 
-const siteName = ref('Sub2API')
+const siteName = ref('cCoder.me')
 const siteLogo = ref('')
-const siteSubtitle = ref('Subscription to API Conversion Platform')
+const siteSubtitle = ref('新一代代码大师平台')
 
 const currentYear = computed(() => new Date().getFullYear())
 
 onMounted(async () => {
   try {
     const settings = await getPublicSettings()
-    siteName.value = settings.site_name || 'Sub2API'
+    siteName.value = settings.site_name || 'cCoder.me'
     siteLogo.value = sanitizeUrl(settings.site_logo || '', { allowRelative: true })
-    siteSubtitle.value = settings.site_subtitle || 'Subscription to API Conversion Platform'
+    siteSubtitle.value = settings.site_subtitle || '新一代代码大师平台'
   } catch (error) {
     console.error('Failed to load public settings:', error)
   }
