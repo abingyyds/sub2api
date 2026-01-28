@@ -366,7 +366,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores'
 import Icon from '@/components/icons/Icon.vue'
 import Logo from '@/components/Logo.vue'
@@ -443,5 +443,12 @@ function startTypewriterAnimation() {
 onMounted(() => {
   authStore.checkAuth()
   startTypewriterAnimation()
+})
+
+onUnmounted(() => {
+  if (animationTimer) {
+    clearTimeout(animationTimer)
+    animationTimer = null
+  }
 })
 </script>
