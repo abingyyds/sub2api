@@ -9,7 +9,10 @@
             <Logo :size="40" theme="auto" />
             <div>
               <div class="text-xl font-bold text-gray-900 dark:text-white">
-                <span class="inline-block">c</span><span class="inline-block">{{ animatedText }}</span><span class="inline-block">Coder.me</span>
+                <span class="inline-block">c</span><span
+                  class="inline-block transition-opacity duration-500"
+                  :class="{ 'opacity-30': animatedText === 'laude' }"
+                >{{ animatedText }}</span><span class="inline-block">Coder.me</span>
               </div>
               <div class="text-xs text-gray-500 dark:text-dark-400">新一代 AI 代码工作平台</div>
             </div>
@@ -47,7 +50,10 @@
         <!-- Animated Brand Title -->
         <div class="mb-8">
           <h1 class="mb-4 text-6xl font-bold text-gray-900 dark:text-white md:text-7xl lg:text-8xl">
-            <span class="inline-block">c</span><span class="inline-block">{{ animatedText }}</span><span class="inline-block">Coder</span><span class="text-primary-600">.me</span>
+            <span class="inline-block">c</span><span
+              class="inline-block transition-opacity duration-500"
+              :class="{ 'opacity-30': animatedText === 'laude' }"
+            >{{ animatedText }}</span><span class="inline-block">Coder</span><span class="text-primary-600">.me</span>
           </h1>
           <p class="text-2xl font-semibold text-gray-700 dark:text-dark-200 mb-3">
             新一代代码大师就是我
@@ -401,7 +407,7 @@ function startTypewriterAnimation() {
     if (isPaused) {
       // Pause phase
       isPaused = false
-      animationTimer = setTimeout(animate, isDeleting ? 1000 : 3000)
+      animationTimer = setTimeout(animate, isDeleting ? 5000 : 2000)
       return
     }
 
@@ -415,7 +421,7 @@ function startTypewriterAnimation() {
         // Finished deleting, pause then start typing
         isDeleting = false
         isPaused = true
-        animationTimer = setTimeout(animate, 1000)
+        animationTimer = setTimeout(animate, 5000)
       }
     } else {
       // Typing phase
@@ -427,7 +433,7 @@ function startTypewriterAnimation() {
         // Finished typing, pause then start deleting
         isDeleting = true
         isPaused = true
-        animationTimer = setTimeout(animate, 3000)
+        animationTimer = setTimeout(animate, 2000)
       }
     }
   }
@@ -437,7 +443,7 @@ function startTypewriterAnimation() {
     isDeleting = true
     isPaused = true
     animate()
-  }, 3000)
+  }, 2000)
 }
 
 onMounted(() => {
