@@ -9,7 +9,7 @@
             <Logo :size="40" theme="auto" />
             <div>
               <div class="text-xl font-bold text-gray-900 dark:text-white">
-                <span class="inline-block">c</span><span :class="['inline-block transition-all duration-1000', showFullBrand ? 'opacity-100 max-w-[100px]' : 'opacity-0 max-w-0 overflow-hidden', fadeOutClass]">laude</span><span class="inline-block">Coder.me</span>
+                <span class="inline-block">c</span><span class="inline-block">{{ animatedText }}</span><span class="inline-block">Coder.me</span>
               </div>
               <div class="text-xs text-gray-500 dark:text-dark-400">新一代 AI 代码工作平台</div>
             </div>
@@ -47,13 +47,7 @@
         <!-- Animated Brand Title -->
         <div class="mb-8">
           <h1 class="mb-4 text-6xl font-bold text-gray-900 dark:text-white md:text-7xl lg:text-8xl">
-            <span class="inline-block">c</span><span
-              :class="[
-                'inline-block transition-all duration-1500',
-                showFullBrand ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden',
-                fadeOutClass
-              ]"
-            >laude</span><span class="inline-block">Coder</span><span class="text-primary-600">.me</span>
+            <span class="inline-block">c</span><span class="inline-block">{{ animatedText }}</span><span class="inline-block">Coder</span><span class="text-primary-600">.me</span>
           </h1>
           <p class="text-2xl font-semibold text-gray-700 dark:text-dark-200 mb-3">
             新一代代码大师就是我
@@ -386,9 +380,10 @@ const isAuthenticated = computed(() => authStore.isAuthenticated)
 const isAdmin = computed(() => authStore.isAdmin)
 const dashboardPath = computed(() => isAdmin.value ? '/admin/dashboard' : '/dashboard')
 
-// Brand animation state
-const showFullBrand = ref(true)
-const fadeOutClass = ref('')
+// Brand animation state - typewriter effect
+const animatedText = ref('laude')
+const fullText = 'laude'
+let animationTimer: ReturnType<typeof setTimeout> | null = null
 
 function toggleTheme() {
   isDark.value = !isDark.value
@@ -396,19 +391,57 @@ function toggleTheme() {
   localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
 }
 
+// Typewriter animation: delete and type "laude" repeatedly
+function startTypewriterAnimation() {
+  let currentIndex = fullText.length
+  let isDeleting = false
+  let isPaused = false
+
+  function animate() {
+    if (isPaused) {
+      // Pause phase
+      isPaused = false
+      animationTimer = setTimeout(animate, isDeleting ? 1000 : 3000)
+      return
+    }
+
+    if (isDeleting) {
+      // Deleting phase
+      if (currentIndex > 0) {
+        currentIndex--
+        animatedText.value = fullText.substring(0, currentIndex)
+        animationTimer = setTimeout(animate, 150)
+      } else {
+        // Finished deleting, pause then start typing
+        isDeleting = false
+        isPaused = true
+        animationTimer = setTimeout(animate, 1000)
+      }
+    } else {
+      // Typing phase
+      if (currentIndex < fullText.length) {
+        currentIndex++
+        animatedText.value = fullText.substring(0, currentIndex)
+        animationTimer = setTimeout(animate, 150)
+      } else {
+        // Finished typing, pause then start deleting
+        isDeleting = true
+        isPaused = true
+        animationTimer = setTimeout(animate, 3000)
+      }
+    }
+  }
+
+  // Start animation after initial display
+  animationTimer = setTimeout(() => {
+    isDeleting = true
+    isPaused = true
+    animate()
+  }, 3000)
+}
+
 onMounted(() => {
   authStore.checkAuth()
-
-  // Brand animation: show full "claudeCoder.me" with message for 4 seconds
-  // Let users understand "新一代代码大师就是我" and "claude coder = me"
-  setTimeout(() => {
-    // Add color change effect to "laude" - highlight the transformation
-    fadeOutClass.value = 'text-primary-400'
-  }, 4000)
-
-  setTimeout(() => {
-    // Hide "laude" completely to show "cCoder.me"
-    showFullBrand.value = false
-  }, 6000)
+  startTypewriterAnimation()
 })
 </script>
