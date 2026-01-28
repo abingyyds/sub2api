@@ -14,9 +14,11 @@ func RegisterCommonRoutes(r *gin.Engine) {
 	})
 
 	// Claude Code 遥测日志（忽略，直接返回200）
-	r.POST("/api/event_logging/batch", func(c *gin.Context) {
+	eventLoggingHandler := func(c *gin.Context) {
 		c.Status(http.StatusOK)
-	})
+	}
+	r.POST("/api/event_logging/batch", eventLoggingHandler)
+	r.GET("/api/event_logging/batch", eventLoggingHandler)
 
 	// Setup status endpoint (always returns needs_setup: false in normal mode)
 	// This is used by the frontend to detect when the service has restarted after setup
