@@ -256,7 +256,7 @@
         <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
           <div class="mb-6 flex items-start gap-4">
             <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary-100 text-primary-600 dark:bg-primary-900/30">
-              <Icon name="shoppingCart" size="md" />
+              <Icon name="creditCard" size="md" />
             </div>
             <div>
               <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">浏览器打开下单链接，支付后保存兑换码</h3>
@@ -265,7 +265,7 @@
           </div>
           <div class="rounded-lg bg-yellow-50 p-4 dark:bg-yellow-900/20">
             <div class="flex items-start gap-3">
-              <Icon name="alertCircle" size="md" class="mt-0.5 flex-shrink-0 text-yellow-600 dark:text-yellow-400" />
+              <Icon name="exclamationCircle" size="md" class="mt-0.5 flex-shrink-0 text-yellow-600 dark:text-yellow-400" />
               <div>
                 <h4 class="mb-1 font-semibold text-yellow-900 dark:text-yellow-200">重要提示</h4>
                 <p class="text-sm text-yellow-800 dark:text-yellow-300">购买后请保存下单详情里的兑换码</p>
@@ -342,7 +342,7 @@
 
           <a href="#" class="group rounded-2xl border border-gray-200 bg-white p-6 transition-all hover:border-primary-500 hover:shadow-lg dark:border-dark-700 dark:bg-dark-800">
             <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-purple-600 transition-transform group-hover:scale-110 dark:bg-purple-900/30">
-              <Icon name="file" size="lg" />
+              <Icon name="document" size="lg" />
             </div>
             <h3 class="mb-2 font-semibold text-gray-900 dark:text-white">开具发票</h3>
             <p class="text-sm text-gray-600 dark:text-dark-300">填写发票申请表单</p>
