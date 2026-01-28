@@ -375,7 +375,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import Icon from '@/components/icons/Icon.vue'
-import Logo from '@/components/Logo.vue'
 
 const authStore = useAuthStore()
 const appStore = useAppStore()
