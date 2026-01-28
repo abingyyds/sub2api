@@ -373,11 +373,10 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useAuthStore, useAppStore } from '@/stores'
+import { useAuthStore } from '@/stores'
 import Icon from '@/components/icons/Icon.vue'
 
 const authStore = useAuthStore()
-const appStore = useAppStore()
 
 const isDark = ref(document.documentElement.classList.contains('dark'))
 const currentYear = computed(() => new Date().getFullYear())
