@@ -445,7 +445,13 @@ func AutoSetupEnabled() bool {
 }
 
 // getEnvOrDefault gets environment variable or returns default value
+// Supports both SUB2API_ prefixed and non-prefixed environment variables
 func getEnvOrDefault(key, defaultValue string) string {
+	// Try SUB2API_ prefixed version first (Railway convention)
+	if val := os.Getenv("SUB2API_" + key); val != "" {
+		return val
+	}
+	// Fall back to non-prefixed version
 	if val := os.Getenv(key); val != "" {
 		return val
 	}
@@ -453,7 +459,15 @@ func getEnvOrDefault(key, defaultValue string) string {
 }
 
 // getEnvIntOrDefault gets environment variable as int or returns default value
+// Supports both SUB2API_ prefixed and non-prefixed environment variables
 func getEnvIntOrDefault(key string, defaultValue int) int {
+	// Try SUB2API_ prefixed version first (Railway convention)
+	if val := os.Getenv("SUB2API_" + key); val != "" {
+		if i, err := strconv.Atoi(val); err == nil {
+			return i
+		}
+	}
+	// Fall back to non-prefixed version
 	if val := os.Getenv(key); val != "" {
 		if i, err := strconv.Atoi(val); err == nil {
 			return i
@@ -475,14 +489,15 @@ func AutoSetupFromEnv() error {
 	}
 
 	// Build config from environment variables
+	// Supports both SUB2API_ prefixed (Railway) and non-prefixed environment variables
 	cfg := &SetupConfig{
 		Database: DatabaseConfig{
-			Host:     getEnvOrDefault("DATABASE_HOST", "localhost"),
-			Port:     getEnvIntOrDefault("DATABASE_PORT", 5432),
-			User:     getEnvOrDefault("DATABASE_USER", "postgres"),
-			Password: getEnvOrDefault("DATABASE_PASSWORD", ""),
-			DBName:   getEnvOrDefault("DATABASE_DBNAME", "sub2api"),
-			SSLMode:  getEnvOrDefault("DATABASE_SSLMODE", "disable"),
+			Host:     getEnvOrDefault("DB_HOST", "localhost"),
+			Port:     getEnvIntOrDefault("DB_PORT", 5432),
+			User:     getEnvOrDefault("DB_USER", "postgres"),
+			Password: getEnvOrDefault("DB_PASSWORD", ""),
+			DBName:   getEnvOrDefault("DB_NAME", "sub2api"),
+			SSLMode:  getEnvOrDefault("DB_SSLMODE", "disable"),
 		},
 		Redis: RedisConfig{
 			Host:     getEnvOrDefault("REDIS_HOST", "localhost"),
