@@ -22,6 +22,7 @@ const (
 	PlatformOpenAI      = "openai"
 	PlatformGemini      = "gemini"
 	PlatformAntigravity = "antigravity"
+	PlatformMulti       = "multi" // 多平台分组，根据请求路由自动选择账号
 )
 
 // Account type constants

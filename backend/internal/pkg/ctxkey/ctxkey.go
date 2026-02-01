@@ -18,4 +18,6 @@ const (
 	IsClaudeCodeClient Key = "ctx_is_claude_code_client"
 	// Group 认证后的分组信息，由 API Key 认证中间件设置
 	Group Key = "ctx_group"
+	// RoutePlatform 路由推断的目标平台，用于多平台分组根据请求路由选择账号
+	RoutePlatform Key = "ctx_route_platform"
 )

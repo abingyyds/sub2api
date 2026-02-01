@@ -432,6 +432,7 @@ func (s *GatewayService) SelectAccountForModel(ctx context.Context, groupID *int
 func (s *GatewayService) SelectAccountForModelWithExclusions(ctx context.Context, groupID *int64, sessionHash string, requestedModel string, excludedIDs map[int64]struct{}) (*Account, error) {
 	// 优先检查 context 中的强制平台（/antigravity 路由）
 	var platform string
+	var isMultiPlatformGroup bool
 	forcePlatform, hasForcePlatform := ctx.Value(ctxkey.ForcePlatform).(string)
 	if hasForcePlatform && forcePlatform != "" {
 		platform = forcePlatform
@@ -442,10 +443,26 @@ func (s *GatewayService) SelectAccountForModelWithExclusions(ctx context.Context
 		}
 		groupID = resolvedGroupID
 		ctx = s.withGroupContext(ctx, group)
-		platform = group.Platform
+		// 多平台分组：从请求路由推断目标平台
+		if group.Platform == PlatformMulti {
+			isMultiPlatformGroup = true
+			if routePlatform, ok := ctx.Value(ctxkey.RoutePlatform).(string); ok && routePlatform != "" {
+				platform = routePlatform
+			} else {
+				// 默认使用 anthropic（/v1/messages 是最常用的）
+				platform = PlatformAnthropic
+			}
+		} else {
+			platform = group.Platform
+		}
 	} else {
 		// 无分组时只使用原生 anthropic 平台
 		platform = PlatformAnthropic
+	}
+
+	// 多平台分组不走混合调度，直接按平台选择账号
+	if isMultiPlatformGroup {
+		return s.selectAccountForModelWithPlatform(ctx, groupID, sessionHash, requestedModel, excludedIDs, platform)
 	}
 
 	// anthropic/gemini 分组支持混合调度（包含启用了 mixed_scheduling 的 antigravity 账户）
@@ -1147,12 +1164,26 @@ func (s *GatewayService) resolvePlatform(ctx context.Context, groupID *int64, gr
 		return forcePlatform, true, nil
 	}
 	if group != nil {
+		// 多平台分组：从请求路由推断目标平台
+		if group.Platform == PlatformMulti {
+			if routePlatform, ok := ctx.Value(ctxkey.RoutePlatform).(string); ok && routePlatform != "" {
+				return routePlatform, false, nil
+			}
+			return PlatformAnthropic, false, nil
+		}
 		return group.Platform, false, nil
 	}
 	if groupID != nil {
 		group, err := s.resolveGroupByID(ctx, *groupID)
 		if err != nil {
 			return "", false, err
+		}
+		// 多平台分组：从请求路由推断目标平台
+		if group.Platform == PlatformMulti {
+			if routePlatform, ok := ctx.Value(ctxkey.RoutePlatform).(string); ok && routePlatform != "" {
+				return routePlatform, false, nil
+			}
+			return PlatformAnthropic, false, nil
 		}
 		return group.Platform, false, nil
 	}

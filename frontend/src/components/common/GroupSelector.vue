@@ -63,14 +63,14 @@ const filteredGroups = computed(() => {
   if (!props.platform) {
     return props.groups
   }
-  // antigravity 账户启用混合调度后，可选择 anthropic/gemini 分组
+  // antigravity 账户启用混合调度后，可选择 anthropic/gemini/multi 分组
   if (props.platform === 'antigravity' && props.mixedScheduling) {
     return props.groups.filter(
-      (g) => g.platform === 'antigravity' || g.platform === 'anthropic' || g.platform === 'gemini'
+      (g) => g.platform === 'antigravity' || g.platform === 'anthropic' || g.platform === 'gemini' || g.platform === 'multi'
     )
   }
-  // 默认：只能选择同 platform 的分组
-  return props.groups.filter((g) => g.platform === props.platform)
+  // 默认：只能选择同 platform 的分组 + multi 分组
+  return props.groups.filter((g) => g.platform === props.platform || g.platform === 'multi')
 })
 
 const handleChange = (groupId: number, checked: boolean) => {

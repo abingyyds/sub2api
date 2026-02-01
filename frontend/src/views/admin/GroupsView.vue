@@ -1152,7 +1152,8 @@ const platformOptions = computed(() => [
   { value: 'anthropic', label: 'Anthropic' },
   { value: 'openai', label: 'OpenAI' },
   { value: 'gemini', label: 'Gemini' },
-  { value: 'antigravity', label: 'Antigravity' }
+  { value: 'antigravity', label: 'Antigravity' },
+  { value: 'multi', label: t('admin.groups.platforms.multi') }
 ])
 
 const platformFilterOptions = computed(() => [
@@ -1160,7 +1161,8 @@ const platformFilterOptions = computed(() => [
   { value: 'anthropic', label: 'Anthropic' },
   { value: 'openai', label: 'OpenAI' },
   { value: 'gemini', label: 'Gemini' },
-  { value: 'antigravity', label: 'Antigravity' }
+  { value: 'antigravity', label: 'Antigravity' },
+  { value: 'multi', label: t('admin.groups.platforms.multi') }
 ])
 
 const editStatusOptions = computed(() => [

@@ -966,7 +966,8 @@ export default {
         anthropic: 'Anthropic',
         openai: 'OpenAI',
         gemini: 'Gemini',
-        antigravity: 'Antigravity'
+        antigravity: 'Antigravity',
+        multi: 'Multi-Platform'
       },
       deleteConfirm:
         "Are you sure you want to delete '{name}'? All associated API keys will no longer belong to any group.",

@@ -28,6 +28,7 @@ func RegisterGatewayRoutes(
 	gateway.Use(bodyLimit)
 	gateway.Use(clientRequestID)
 	gateway.Use(opsErrorLogger)
+	gateway.Use(middleware.RoutePlatform(service.PlatformAnthropic))
 	gateway.Use(gin.HandlerFunc(apiKeyAuth))
 	{
 		gateway.POST("/messages", h.Gateway.Messages)
@@ -43,6 +44,7 @@ func RegisterGatewayRoutes(
 	gemini.Use(bodyLimit)
 	gemini.Use(clientRequestID)
 	gemini.Use(opsErrorLogger)
+	gemini.Use(middleware.RoutePlatform(service.PlatformGemini))
 	gemini.Use(middleware.APIKeyAuthWithSubscriptionGoogle(apiKeyService, subscriptionService, cfg))
 	{
 		gemini.GET("/models", h.Gateway.GeminiV1BetaListModels)

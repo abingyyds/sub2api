@@ -36,6 +36,16 @@ func ForcePlatform(platform string) gin.HandlerFunc {
 	}
 }
 
+// RoutePlatform 返回设置路由平台的中间件
+// 用于多平台分组根据请求路由推断目标平台
+func RoutePlatform(platform string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx := context.WithValue(c.Request.Context(), ctxkey.RoutePlatform, platform)
+		c.Request = c.Request.WithContext(ctx)
+		c.Next()
+	}
+}
+
 // HasForcePlatform 检查是否有强制平台（用于 Handler 跳过分组检查）
 func HasForcePlatform(c *gin.Context) bool {
 	_, exists := c.Get(string(ContextKeyForcePlatform))

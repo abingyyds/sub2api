@@ -1012,7 +1012,8 @@ export default {
         anthropic: 'Anthropic',
         openai: 'OpenAI',
         gemini: 'Gemini',
-        antigravity: 'Antigravity'
+        antigravity: 'Antigravity',
+        multi: '多平台'
       },
       saving: '保存中...',
       noGroups: '暂无分组',
