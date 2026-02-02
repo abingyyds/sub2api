@@ -682,6 +682,17 @@ func (s *SchedulerSnapshotService) defaultBuckets(ctx context.Context) ([]Schedu
 		if group.Platform == "" {
 			continue
 		}
+		// 多平台分组需要为每个实际平台创建 bucket
+		if group.Platform == PlatformMulti {
+			for _, platform := range platforms {
+				buckets = append(buckets, SchedulerBucket{GroupID: group.ID, Platform: platform, Mode: SchedulerModeSingle})
+				buckets = append(buckets, SchedulerBucket{GroupID: group.ID, Platform: platform, Mode: SchedulerModeForced})
+				if platform == PlatformAnthropic || platform == PlatformGemini {
+					buckets = append(buckets, SchedulerBucket{GroupID: group.ID, Platform: platform, Mode: SchedulerModeMixed})
+				}
+			}
+			continue
+		}
 		buckets = append(buckets, SchedulerBucket{GroupID: group.ID, Platform: group.Platform, Mode: SchedulerModeSingle})
 		buckets = append(buckets, SchedulerBucket{GroupID: group.ID, Platform: group.Platform, Mode: SchedulerModeForced})
 		if group.Platform == PlatformAnthropic || group.Platform == PlatformGemini {
