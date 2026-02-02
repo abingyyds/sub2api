@@ -443,17 +443,13 @@ func (s *GatewayService) SelectAccountForModelWithExclusions(ctx context.Context
 		}
 		groupID = resolvedGroupID
 		ctx = s.withGroupContext(ctx, group)
-		// 多平台分组：根据请求模型推断目标平台
+		// 多平台分组：从请求路由推断目标平台
 		if group.Platform == PlatformMulti {
 			isMultiPlatformGroup = true
-			// 优先根据模型名称推断平台
-			if requestedModel != "" {
-				platform = InferPlatformFromModel(requestedModel)
-			} else if routePlatform, ok := ctx.Value(ctxkey.RoutePlatform).(string); ok && routePlatform != "" {
-				// 如果没有模型名称，则使用路由推断
+			if routePlatform, ok := ctx.Value(ctxkey.RoutePlatform).(string); ok && routePlatform != "" {
 				platform = routePlatform
 			} else {
-				// 默认使用 anthropic
+				// 默认使用 anthropic（/v1/messages 是最常用的）
 				platform = PlatformAnthropic
 			}
 		} else {
@@ -579,7 +575,7 @@ func (s *GatewayService) SelectAccountWithLoadAwareness(ctx context.Context, gro
 		}
 	}
 
-	platform, hasForcePlatform, err := s.resolvePlatform(ctx, groupID, group, requestedModel)
+	platform, hasForcePlatform, err := s.resolvePlatform(ctx, groupID, group)
 	if err != nil {
 		return nil, err
 	}
@@ -1162,17 +1158,14 @@ func (s *GatewayService) checkClaudeCodeRestriction(ctx context.Context, groupID
 	return group, resolvedID, nil
 }
 
-func (s *GatewayService) resolvePlatform(ctx context.Context, groupID *int64, group *Group, requestedModel string) (string, bool, error) {
+func (s *GatewayService) resolvePlatform(ctx context.Context, groupID *int64, group *Group) (string, bool, error) {
 	forcePlatform, hasForcePlatform := ctx.Value(ctxkey.ForcePlatform).(string)
 	if hasForcePlatform && forcePlatform != "" {
 		return forcePlatform, true, nil
 	}
 	if group != nil {
-		// 多平台分组：根据请求模型推断目标平台
+		// 多平台分组：从请求路由推断目标平台
 		if group.Platform == PlatformMulti {
-			if requestedModel != "" {
-				return InferPlatformFromModel(requestedModel), false, nil
-			}
 			if routePlatform, ok := ctx.Value(ctxkey.RoutePlatform).(string); ok && routePlatform != "" {
 				return routePlatform, false, nil
 			}
@@ -1185,11 +1178,8 @@ func (s *GatewayService) resolvePlatform(ctx context.Context, groupID *int64, gr
 		if err != nil {
 			return "", false, err
 		}
-		// 多平台分组：根据请求模型推断目标平台
+		// 多平台分组：从请求路由推断目标平台
 		if group.Platform == PlatformMulti {
-			if requestedModel != "" {
-				return InferPlatformFromModel(requestedModel), false, nil
-			}
 			if routePlatform, ok := ctx.Value(ctxkey.RoutePlatform).(string); ok && routePlatform != "" {
 				return routePlatform, false, nil
 			}
@@ -2312,11 +2302,6 @@ func (s *GatewayService) Forward(ctx context.Context, c *gin.Context, account *A
 	startTime := time.Now()
 	if parsed == nil {
 		return nil, fmt.Errorf("parse request: empty request")
-	}
-
-	// 多平台分组：如果是 OpenAI 账号，转换请求格式并调用 OpenAI API
-	if account.Platform == PlatformOpenAI {
-		return s.forwardToOpenAI(ctx, c, account, parsed, startTime)
 	}
 
 	body := parsed.Body
@@ -3938,174 +3923,4 @@ func (s *GatewayService) GetAvailableModels(ctx context.Context, groupID *int64,
 	}
 
 	return models
-}
-
-// forwardToOpenAI 将 Claude 格式请求转换为 OpenAI 格式并转发
-// 用于多平台分组中选择了 OpenAI 账号的情况
-func (s *GatewayService) forwardToOpenAI(ctx context.Context, c *gin.Context, account *Account, parsed *ParsedRequest, startTime time.Time) (*ForwardResult, error) {
-	reqModel := parsed.Model
-	reqStream := parsed.Stream
-
-	// 转换请求格式：Claude -> OpenAI
-	openaiBody, err := ClaudeToOpenAIRequest(parsed.Body)
-	if err != nil {
-		return nil, fmt.Errorf("convert to OpenAI format: %w", err)
-	}
-
-	// 获取凭证
-	token, tokenType, err := s.GetAccessToken(ctx, account)
-	if err != nil {
-		return nil, err
-	}
-
-	// 获取代理URL
-	proxyURL := ""
-	if account.ProxyID != nil && account.Proxy != nil {
-		proxyURL = account.Proxy.URL()
-	}
-
-	log.Printf("[Forward] Using OpenAI account: ID=%d Name=%s Platform=%s Type=%s Stream=%v",
-		account.ID, account.Name, account.Platform, account.Type, reqStream)
-	log.Printf("[Forward] OpenAI request body: %s", string(openaiBody))
-
-	// 构建 OpenAI 请求
-	openaiURL := "https://api.openai.com/v1/responses"
-	if account.Type == AccountTypeOAuth {
-		openaiURL = "https://chatgpt.com/backend-api/codex/responses"
-	}
-
-	upstreamReq, err := http.NewRequestWithContext(ctx, http.MethodPost, openaiURL, bytes.NewReader(openaiBody))
-	if err != nil {
-		return nil, fmt.Errorf("create OpenAI request: %w", err)
-	}
-
-	upstreamReq.Header.Set("Content-Type", "application/json")
-	if tokenType == "bearer" {
-		upstreamReq.Header.Set("Authorization", "Bearer "+token)
-	} else {
-		upstreamReq.Header.Set("Authorization", token)
-	}
-
-	// 发送请求
-	resp, err := s.httpUpstream.DoWithTLS(upstreamReq, proxyURL, account.ID, account.Concurrency, account.IsTLSFingerprintEnabled())
-	if err != nil {
-		return nil, fmt.Errorf("OpenAI request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 2<<20))
-		log.Printf("[Forward] OpenAI error: Status=%d Body=%s", resp.StatusCode, string(body))
-		return nil, fmt.Errorf("OpenAI upstream error: %d", resp.StatusCode)
-	}
-
-	log.Printf("[Forward] OpenAI response: Status=%d ContentType=%s", resp.StatusCode, resp.Header.Get("Content-Type"))
-
-	// 处理响应
-	if reqStream {
-		return s.handleOpenAIStreamResponse(ctx, c, resp, account, reqModel, startTime)
-	}
-	return s.handleOpenAINonStreamResponse(ctx, c, resp, account, reqModel, startTime)
-}
-
-// handleOpenAIStreamResponse 处理 OpenAI 流式响应并转换为 Claude 格式
-func (s *GatewayService) handleOpenAIStreamResponse(ctx context.Context, c *gin.Context, resp *http.Response, account *Account, reqModel string, startTime time.Time) (*ForwardResult, error) {
-	// 设置响应头
-	c.Header("Content-Type", "text/event-stream")
-	c.Header("Cache-Control", "no-cache")
-	c.Header("Connection", "keep-alive")
-
-	// 发送 Claude 格式的开始事件
-	c.Writer.WriteString(GenerateClaudeMessageStart(reqModel))
-	c.Writer.WriteString(GenerateClaudeContentBlockStart())
-	c.Writer.Flush()
-
-	result := &ForwardResult{
-		Model:  reqModel,
-		Stream: true,
-	}
-
-	// 读取 OpenAI SSE 响应并转换
-	reader := bufio.NewReader(resp.Body)
-	for {
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return result, nil
-		}
-
-		line = strings.TrimSpace(line)
-		if line == "" || !strings.HasPrefix(line, "data:") {
-			continue
-		}
-
-		// 转换并发送 Claude 格式事件
-		claudeEvent := OpenAIToClaudeResponse(line, reqModel)
-		if claudeEvent != "" {
-			c.Writer.WriteString(claudeEvent)
-			c.Writer.Flush()
-		}
-	}
-
-	result.Duration = time.Since(startTime)
-	return result, nil
-}
-
-// handleOpenAINonStreamResponse 处理 OpenAI 非流式响应并转换为 Claude 格式
-func (s *GatewayService) handleOpenAINonStreamResponse(ctx context.Context, c *gin.Context, resp *http.Response, account *Account, reqModel string, startTime time.Time) (*ForwardResult, error) {
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("read OpenAI response: %w", err)
-	}
-
-	var openaiResp map[string]any
-	if err := json.Unmarshal(body, &openaiResp); err != nil {
-		return nil, fmt.Errorf("parse OpenAI response: %w", err)
-	}
-
-	// 提取输出文本
-	outputText := ""
-	if output, ok := openaiResp["output"].([]any); ok {
-		for _, item := range output {
-			if itemMap, ok := item.(map[string]any); ok {
-				if content, ok := itemMap["content"].([]any); ok {
-					for _, c := range content {
-						if cMap, ok := c.(map[string]any); ok {
-							if text, ok := cMap["text"].(string); ok {
-								outputText += text
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	// 构建 Claude 格式响应
-	claudeResp := map[string]any{
-		"id":            "msg_openai_compat",
-		"type":          "message",
-		"role":          "assistant",
-		"model":         reqModel,
-		"stop_reason":   "end_turn",
-		"stop_sequence": nil,
-		"content": []any{
-			map[string]any{
-				"type": "text",
-				"text": outputText,
-			},
-		},
-		"usage": extractOpenAIUsage(openaiResp),
-	}
-
-	c.Header("Content-Type", "application/json")
-	c.JSON(200, claudeResp)
-
-	return &ForwardResult{
-		Model:    reqModel,
-		Stream:   false,
-		Duration: time.Since(startTime),
-	}, nil
 }

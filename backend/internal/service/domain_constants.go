@@ -22,24 +22,8 @@ const (
 	PlatformOpenAI      = "openai"
 	PlatformGemini      = "gemini"
 	PlatformAntigravity = "antigravity"
-	PlatformMulti       = "multi" // 多平台分组，根据请求模型自动选择账号
+	PlatformMulti       = "multi" // 多平台分组，根据请求路由自动选择账号
 )
-
-// InferPlatformFromModel 根据模型名称推断平台
-// 用于多平台分组根据请求的模型自动选择对应平台的账号
-func InferPlatformFromModel(model string) string {
-	switch {
-	case len(model) >= 6 && model[:6] == "claude":
-		return PlatformAnthropic
-	case len(model) >= 3 && model[:3] == "gpt":
-		return PlatformOpenAI
-	case len(model) >= 6 && model[:6] == "gemini":
-		return PlatformGemini
-	default:
-		// 默认使用 anthropic
-		return PlatformAnthropic
-	}
-}
 
 // Account type constants
 const (
