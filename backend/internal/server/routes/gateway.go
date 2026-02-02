@@ -35,8 +35,17 @@ func RegisterGatewayRoutes(
 		gateway.POST("/messages/count_tokens", h.Gateway.CountTokens)
 		gateway.GET("/models", h.Gateway.Models)
 		gateway.GET("/usage", h.Gateway.Usage)
-		// OpenAI Responses API
-		gateway.POST("/responses", h.OpenAIGateway.Responses)
+	}
+
+	// OpenAI Responses API（/v1/responses 使用 OpenAI 平台）
+	openaiV1 := r.Group("/v1")
+	openaiV1.Use(bodyLimit)
+	openaiV1.Use(clientRequestID)
+	openaiV1.Use(opsErrorLogger)
+	openaiV1.Use(middleware.RoutePlatform(service.PlatformOpenAI))
+	openaiV1.Use(gin.HandlerFunc(apiKeyAuth))
+	{
+		openaiV1.POST("/responses", h.OpenAIGateway.Responses)
 	}
 
 	// Gemini 原生 API 兼容层（Gemini SDK/CLI 直连）
