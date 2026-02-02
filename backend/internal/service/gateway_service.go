@@ -3964,8 +3964,9 @@ func (s *GatewayService) forwardToOpenAI(ctx context.Context, c *gin.Context, ac
 		proxyURL = account.Proxy.URL()
 	}
 
-	log.Printf("[Forward] Using OpenAI account: ID=%d Name=%s Platform=%s Type=%s",
-		account.ID, account.Name, account.Platform, account.Type)
+	log.Printf("[Forward] Using OpenAI account: ID=%d Name=%s Platform=%s Type=%s Stream=%v",
+		account.ID, account.Name, account.Platform, account.Type, reqStream)
+	log.Printf("[Forward] OpenAI request body: %s", string(openaiBody))
 
 	// 构建 OpenAI 请求
 	openaiURL := "https://api.openai.com/v1/responses"
@@ -3997,6 +3998,8 @@ func (s *GatewayService) forwardToOpenAI(ctx context.Context, c *gin.Context, ac
 		log.Printf("[Forward] OpenAI error: Status=%d Body=%s", resp.StatusCode, string(body))
 		return nil, fmt.Errorf("OpenAI upstream error: %d", resp.StatusCode)
 	}
+
+	log.Printf("[Forward] OpenAI response: Status=%d ContentType=%s", resp.StatusCode, resp.Header.Get("Content-Type"))
 
 	// 处理响应
 	if reqStream {
