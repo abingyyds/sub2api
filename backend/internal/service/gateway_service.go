@@ -443,13 +443,17 @@ func (s *GatewayService) SelectAccountForModelWithExclusions(ctx context.Context
 		}
 		groupID = resolvedGroupID
 		ctx = s.withGroupContext(ctx, group)
-		// 多平台分组：从请求路由推断目标平台
+		// 多平台分组：根据请求模型推断目标平台
 		if group.Platform == PlatformMulti {
 			isMultiPlatformGroup = true
-			if routePlatform, ok := ctx.Value(ctxkey.RoutePlatform).(string); ok && routePlatform != "" {
+			// 优先根据模型名称推断平台
+			if requestedModel != "" {
+				platform = InferPlatformFromModel(requestedModel)
+			} else if routePlatform, ok := ctx.Value(ctxkey.RoutePlatform).(string); ok && routePlatform != "" {
+				// 如果没有模型名称，则使用路由推断
 				platform = routePlatform
 			} else {
-				// 默认使用 anthropic（/v1/messages 是最常用的）
+				// 默认使用 anthropic
 				platform = PlatformAnthropic
 			}
 		} else {
@@ -575,7 +579,7 @@ func (s *GatewayService) SelectAccountWithLoadAwareness(ctx context.Context, gro
 		}
 	}
 
-	platform, hasForcePlatform, err := s.resolvePlatform(ctx, groupID, group)
+	platform, hasForcePlatform, err := s.resolvePlatform(ctx, groupID, group, requestedModel)
 	if err != nil {
 		return nil, err
 	}
@@ -1158,14 +1162,17 @@ func (s *GatewayService) checkClaudeCodeRestriction(ctx context.Context, groupID
 	return group, resolvedID, nil
 }
 
-func (s *GatewayService) resolvePlatform(ctx context.Context, groupID *int64, group *Group) (string, bool, error) {
+func (s *GatewayService) resolvePlatform(ctx context.Context, groupID *int64, group *Group, requestedModel string) (string, bool, error) {
 	forcePlatform, hasForcePlatform := ctx.Value(ctxkey.ForcePlatform).(string)
 	if hasForcePlatform && forcePlatform != "" {
 		return forcePlatform, true, nil
 	}
 	if group != nil {
-		// 多平台分组：从请求路由推断目标平台
+		// 多平台分组：根据请求模型推断目标平台
 		if group.Platform == PlatformMulti {
+			if requestedModel != "" {
+				return InferPlatformFromModel(requestedModel), false, nil
+			}
 			if routePlatform, ok := ctx.Value(ctxkey.RoutePlatform).(string); ok && routePlatform != "" {
 				return routePlatform, false, nil
 			}
@@ -1178,8 +1185,11 @@ func (s *GatewayService) resolvePlatform(ctx context.Context, groupID *int64, gr
 		if err != nil {
 			return "", false, err
 		}
-		// 多平台分组：从请求路由推断目标平台
+		// 多平台分组：根据请求模型推断目标平台
 		if group.Platform == PlatformMulti {
+			if requestedModel != "" {
+				return InferPlatformFromModel(requestedModel), false, nil
+			}
 			if routePlatform, ok := ctx.Value(ctxkey.RoutePlatform).(string); ok && routePlatform != "" {
 				return routePlatform, false, nil
 			}
