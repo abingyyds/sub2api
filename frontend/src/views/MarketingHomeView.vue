@@ -261,7 +261,7 @@
             </div>
             <div>
               <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">浏览器打开下单链接，支付后保存兑换码</h3>
-              <a href="#" class="text-primary-600 hover:text-primary-700 dark:text-primary-400">fk.ccoder.me</a>
+              <a href="https://fk.ccoder.me" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-700 dark:text-primary-400">fk.ccoder.me</a>
             </div>
           </div>
           <div class="rounded-lg bg-yellow-50 p-4 dark:bg-yellow-900/20">
@@ -325,7 +325,7 @@
       <div class="mx-auto max-w-4xl">
         <h2 class="mb-12 text-center text-4xl font-bold text-gray-900 dark:text-white">帮助文档</h2>
         <div class="grid gap-6 md:grid-cols-3">
-          <a href="#" class="group rounded-2xl border border-gray-200 bg-white p-6 transition-all hover:border-primary-500 hover:shadow-lg dark:border-dark-700 dark:bg-dark-800">
+          <a href="https://rcnwwid75eku.feishu.cn/wiki/WDWFwhUZiiNApaknf5BcqZsgndg" target="_blank" rel="noopener noreferrer" class="group rounded-2xl border border-gray-200 bg-white p-6 transition-all hover:border-primary-500 hover:shadow-lg dark:border-dark-700 dark:bg-dark-800">
             <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 transition-transform group-hover:scale-110 dark:bg-blue-900/30">
               <Icon name="book" size="lg" />
             </div>
@@ -333,7 +333,7 @@
             <p class="text-sm text-gray-600 dark:text-dark-300">Claude Code 小白无门槛宝典</p>
           </a>
 
-          <a href="#" class="group rounded-2xl border border-gray-200 bg-white p-6 transition-all hover:border-primary-500 hover:shadow-lg dark:border-dark-700 dark:bg-dark-800">
+          <a href="https://rcnwwid75eku.feishu.cn/wiki/WDWFwhUZiiNApaknf5BcqZsgndg" target="_blank" rel="noopener noreferrer" class="group rounded-2xl border border-gray-200 bg-white p-6 transition-all hover:border-primary-500 hover:shadow-lg dark:border-dark-700 dark:bg-dark-800">
             <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 text-green-600 transition-transform group-hover:scale-110 dark:bg-green-900/30">
               <Icon name="search" size="lg" />
             </div>
