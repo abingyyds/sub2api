@@ -2538,6 +2538,12 @@ func (s *GeminiMessagesCompatService) handleGeminiUpstreamError(ctx context.Cont
 		return
 	}
 
+	// apikey 类型账号不进行限流处理
+	if account.Type == AccountTypeAPIKey {
+		log.Printf("[Gemini 429] Account %d (apikey) rate limit skipped", account.ID)
+		return
+	}
+
 	oauthType := account.GeminiOAuthType()
 	tierID := account.GeminiTierID()
 	projectID := strings.TrimSpace(account.GetCredential("project_id"))

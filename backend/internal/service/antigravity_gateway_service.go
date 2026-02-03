@@ -1536,6 +1536,12 @@ func antigravityUseScopeRateLimit() bool {
 func (s *AntigravityGatewayService) handleUpstreamError(ctx context.Context, prefix string, account *Account, statusCode int, headers http.Header, body []byte, quotaScope AntigravityQuotaScope) {
 	// 429 使用 Gemini 格式解析（从 body 解析重置时间）
 	if statusCode == 429 {
+		// apikey 类型账号不进行限流处理
+		if account.Type == AccountTypeAPIKey {
+			log.Printf("%s status=429 rate_limit_skipped (apikey)", prefix)
+			return
+		}
+
 		useScopeLimit := antigravityUseScopeRateLimit() && quotaScope != ""
 		resetAt := ParseGeminiRateLimitResetTime(body)
 		if resetAt == nil {
