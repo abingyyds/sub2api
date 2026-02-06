@@ -65,6 +65,12 @@ func (s *RateLimitService) SetTokenCacheInvalidator(invalidator TokenCacheInvali
 // HandleUpstreamError 处理上游错误响应，标记账号状态
 // 返回是否应该停止该账号的调度
 func (s *RateLimitService) HandleUpstreamError(ctx context.Context, account *Account, statusCode int, headers http.Header, responseBody []byte) (shouldDisable bool) {
+	// apikey 类型账号：跳过所有错误处理，不标记任何状态
+	if account.Type == AccountTypeAPIKey {
+		slog.Info("apikey_error_skipped", "account_id", account.ID, "platform", account.Platform, "status_code", statusCode)
+		return false
+	}
+
 	// apikey 类型账号：检查自定义错误码配置
 	// 如果启用且错误码不在列表中，则不处理（不停止调度、不标记限流/过载）
 	customErrorCodesEnabled := account.IsCustomErrorCodesEnabled()
