@@ -70,7 +70,7 @@
           Claude 先进模型使用平台
         </h2>
         <p class="mb-8 text-xl text-gray-600 dark:text-dark-300">
-          支持 Opus 4.5、Sonnet 4.5、GPT-5.2-Codex 等先进 AI 模型
+          支持 Opus 4.6、Opus 4.5、Sonnet 4.5、GPT-5.2-Codex 等先进 AI 模型
         </p>
         <div class="flex flex-col items-center gap-4">
           <router-link
@@ -85,12 +85,24 @@
       </div>
     </section>
 
+    <!-- New Model Announcement Banner -->
+    <section class="px-6 py-4">
+      <div class="mx-auto max-w-7xl">
+        <div class="rounded-xl border border-green-300 bg-gradient-to-r from-green-50 to-emerald-50 p-4 text-center dark:border-green-700 dark:from-green-900/30 dark:to-emerald-900/30">
+          <div class="flex items-center justify-center gap-2">
+            <span class="inline-flex items-center rounded-full bg-green-500 px-2.5 py-0.5 text-xs font-semibold text-white">NEW</span>
+            <p class="text-lg font-semibold text-green-800 dark:text-green-200">已支持 claude-opus-4-6 模型</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Claude API Service Banner -->
     <section class="px-6 py-12">
       <div class="mx-auto max-w-7xl">
         <div class="rounded-2xl border border-primary-200 bg-gradient-to-r from-primary-50 to-blue-50 p-8 text-center dark:border-primary-800 dark:from-primary-900/20 dark:to-blue-900/20">
           <h2 class="mb-4 text-3xl font-bold text-gray-900 dark:text-white">Claude API 服务</h2>
-          <p class="text-lg text-gray-600 dark:text-dark-300">支持 Opus 4.5、Sonnet 4.5、GPT-5.2-Codex 等模型</p>
+          <p class="text-lg text-gray-600 dark:text-dark-300">支持 Opus 4.6、Opus 4.5、Sonnet 4.5、GPT-5.2-Codex 等模型</p>
         </div>
       </div>
     </section>
