@@ -13,6 +13,18 @@ func Logger() gin.HandlerFunc {
 		// 开始时间
 		startTime := time.Now()
 
+		// 在请求开始时记录关键信息（用于调试 502 问题）
+		path := c.Request.URL.Path
+		if path == "/v1/messages" || path == "/antigravity/v1/messages" {
+			log.Printf("[GIN-DEBUG] Request started: %s %s | Proto=%s | UA=%s | ContentType=%s",
+				c.Request.Method,
+				path,
+				c.Request.Proto,
+				c.GetHeader("User-Agent"),
+				c.GetHeader("Content-Type"),
+			)
+		}
+
 		// 处理请求
 		c.Next()
 

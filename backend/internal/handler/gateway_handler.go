@@ -72,6 +72,9 @@ func NewGatewayHandler(
 // Messages handles Claude API compatible messages endpoint
 // POST /v1/messages
 func (h *GatewayHandler) Messages(c *gin.Context) {
+	// Debug: 记录请求到达 handler 的时间点
+	log.Printf("[Messages-DEBUG] Handler entered | Path=%s | UA=%s", c.Request.URL.Path, c.GetHeader("User-Agent"))
+
 	// 从context获取apiKey和user（ApiKeyAuth中间件已设置）
 	apiKey, ok := middleware2.GetAPIKeyFromContext(c)
 	if !ok {
@@ -88,6 +91,7 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 	// 读取请求体
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
+		log.Printf("[Messages-DEBUG] Failed to read body: %v | UA=%s", err, c.GetHeader("User-Agent"))
 		if maxErr, ok := extractMaxBytesError(err); ok {
 			h.errorResponse(c, http.StatusRequestEntityTooLarge, "invalid_request_error", buildBodyTooLargeMessage(maxErr.Limit))
 			return
@@ -95,6 +99,8 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", "Failed to read request body")
 		return
 	}
+
+	log.Printf("[Messages-DEBUG] Body read success | Size=%d | UA=%s", len(body), c.GetHeader("User-Agent"))
 
 	if len(body) == 0 {
 		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", "Request body is empty")
