@@ -37,8 +37,8 @@ func Logger() gin.HandlerFunc {
 		// 请求方法
 		method := c.Request.Method
 
-		// 请求路径
-		path := c.Request.URL.Path
+		// 请求路径（已在函数开头声明）
+		// path 变量在上面已经赋值
 
 		// 状态码
 		statusCode := c.Writer.Status()
