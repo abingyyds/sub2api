@@ -2779,9 +2779,13 @@ func (s *GatewayService) buildUpstreamRequest(ctx context.Context, c *gin.Contex
 		}
 	}
 
-	// APIKey账号：覆盖User-Agent为通用值，避免上游API基于User-Agent阻止请求
+	// APIKey账号：针对 Anthropic JS SDK 的 User-Agent 进行覆盖
+	// 某些第三方上游API会阻止 "Anthropic/JS" 的请求，只影响该SDK的请求
 	if account.Type == AccountTypeAPIKey {
-		req.Header.Set("User-Agent", "curl/8.7.1")
+		ua := req.Header.Get("User-Agent")
+		if strings.HasPrefix(ua, "Anthropic/JS") {
+			req.Header.Set("User-Agent", "curl/8.7.1")
+		}
 	}
 
 	// OAuth账号：应用缓存的指纹到请求头（覆盖白名单透传的头）
