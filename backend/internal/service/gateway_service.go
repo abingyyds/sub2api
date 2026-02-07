@@ -2779,6 +2779,11 @@ func (s *GatewayService) buildUpstreamRequest(ctx context.Context, c *gin.Contex
 		}
 	}
 
+	// APIKey账号：覆盖User-Agent为通用值，避免上游API基于User-Agent阻止请求
+	if account.Type == AccountTypeAPIKey {
+		req.Header.Set("User-Agent", "curl/8.7.1")
+	}
+
 	// OAuth账号：应用缓存的指纹到请求头（覆盖白名单透传的头）
 	if fingerprint != nil {
 		s.identityService.ApplyFingerprint(req, fingerprint)
