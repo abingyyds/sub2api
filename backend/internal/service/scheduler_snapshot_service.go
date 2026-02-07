@@ -157,17 +157,28 @@ func (s *SchedulerSnapshotService) runInitialRebuild() {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
-	buckets, err := s.cache.ListBuckets(ctx)
+
+	// 获取现有 buckets
+	existingBuckets, err := s.cache.ListBuckets(ctx)
 	if err != nil {
 		log.Printf("[Scheduler] list buckets failed: %v", err)
 	}
-	if len(buckets) == 0 {
-		buckets, err = s.defaultBuckets(ctx)
-		if err != nil {
-			log.Printf("[Scheduler] default buckets failed: %v", err)
-			return
+
+	// 获取默认 buckets（包含所有分组的所有平台）
+	defaultBkts, err := s.defaultBuckets(ctx)
+	if err != nil {
+		log.Printf("[Scheduler] default buckets failed: %v", err)
+		// 如果获取默认 buckets 失败，仍然尝试重建现有的
+		if len(existingBuckets) > 0 {
+			if err := s.rebuildBuckets(ctx, existingBuckets, "startup"); err != nil {
+				log.Printf("[Scheduler] rebuild startup failed: %v", err)
+			}
 		}
+		return
 	}
+
+	// 合并现有 buckets 和默认 buckets，确保新分组的 buckets 也会被创建
+	buckets := mergeBuckets(existingBuckets, defaultBkts)
 	if err := s.rebuildBuckets(ctx, buckets, "startup"); err != nil {
 		log.Printf("[Scheduler] rebuild startup failed: %v", err)
 	}
