@@ -454,18 +454,22 @@ func (s *SchedulerSnapshotService) triggerFullRebuild(reason string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	buckets, err := s.cache.ListBuckets(ctx)
+	// 获取现有 buckets
+	existingBuckets, err := s.cache.ListBuckets(ctx)
 	if err != nil {
 		log.Printf("[Scheduler] list buckets failed: %v", err)
 		return err
 	}
-	if len(buckets) == 0 {
-		buckets, err = s.defaultBuckets(ctx)
-		if err != nil {
-			log.Printf("[Scheduler] default buckets failed: %v", err)
-			return err
-		}
+
+	// 获取默认 buckets（包含所有分组的所有平台）
+	defaultBkts, err := s.defaultBuckets(ctx)
+	if err != nil {
+		log.Printf("[Scheduler] default buckets failed: %v", err)
+		return err
 	}
+
+	// 合并现有 buckets 和默认 buckets，确保所有默认 buckets 都存在
+	buckets := mergeBuckets(existingBuckets, defaultBkts)
 	return s.rebuildBuckets(ctx, buckets, reason)
 }
 
@@ -714,6 +718,14 @@ func dedupeBuckets(in []SchedulerBucket) []SchedulerBucket {
 		out = append(out, bucket)
 	}
 	return out
+}
+
+// mergeBuckets 合并现有 buckets 和默认 buckets，确保所有默认 buckets 都存在
+func mergeBuckets(existing, defaults []SchedulerBucket) []SchedulerBucket {
+	merged := make([]SchedulerBucket, 0, len(existing)+len(defaults))
+	merged = append(merged, existing...)
+	merged = append(merged, defaults...)
+	return dedupeBuckets(merged)
 }
 
 func derefAccounts(accounts []*Account) []Account {
