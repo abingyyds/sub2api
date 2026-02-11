@@ -1070,11 +1070,10 @@ import AppLayout from '@/components/layout/AppLayout.vue'
 import Icon from '@/components/icons/Icon.vue'
 import Toggle from '@/components/common/Toggle.vue'
 import { useClipboard } from '@/composables/useClipboard'
-import { useAppStore, useAdminSettingsStore } from '@/stores'
+import { useAppStore } from '@/stores'
 
 const { t } = useI18n()
 const appStore = useAppStore()
-const adminSettingsStore = useAdminSettingsStore()
 const { copyToClipboard } = useClipboard()
 
 const loading = ref(true)
