@@ -11,7 +11,7 @@
         <div class="card overflow-hidden">
           <div class="bg-gradient-to-br from-primary-500 to-primary-600 px-6 py-8 text-center">
             <div class="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-              <Icon name="share" size="xl" class="text-white" />
+              <Icon name="gift" size="xl" class="text-white" />
             </div>
             <p class="text-sm font-medium text-primary-100">{{ t('referral.yourInviteCode') }}</p>
             <p class="mt-2 text-3xl font-bold tracking-wider text-white">{{ inviteCode }}</p>
