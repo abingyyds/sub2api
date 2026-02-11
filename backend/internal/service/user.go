@@ -26,6 +26,9 @@ type User struct {
 	TotpEnabled         bool       // 是否启用 TOTP
 	TotpEnabledAt       *time.Time // TOTP 启用时间
 
+	// 邀请码
+	InviteCode *string
+
 	APIKeys       []APIKey
 	Subscriptions []UserSubscription
 }

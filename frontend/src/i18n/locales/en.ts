@@ -197,6 +197,8 @@ export default {
     redeemCodes: 'Redeem Codes',
     ops: 'Ops',
     promoCodes: 'Promo Codes',
+    referral: 'Referral',
+    referrals: 'Referrals',
     settings: 'Settings',
     myAccount: 'My Account',
     lightMode: 'Light Mode',
@@ -2076,6 +2078,26 @@ export default {
       }
     },
 
+    // Referral Management
+    referrals: {
+      title: 'Referral Management',
+      description: 'View and manage user referral records',
+      totalReferrals: 'Total Referrals',
+      rewardedCount: 'Rewarded',
+      pendingCount: 'Pending',
+      totalRewardAmount: 'Total Rewards',
+      allRecords: 'All Referral Records',
+      searchPlaceholder: 'Search by email...',
+      inviter: 'Inviter',
+      invitee: 'Invitee',
+      status: 'Status',
+      rewardAmount: 'Reward',
+      createdAt: 'Created At',
+      noRecords: 'No referral records found',
+      statusPending: 'Pending',
+      statusRewarded: 'Rewarded'
+    },
+
     // Ops Monitoring
     ops: {
       title: 'Ops Monitoring',
@@ -2927,6 +2949,14 @@ export default {
         sending: 'Sending...',
         enterRecipientHint: 'Please enter a recipient email address'
       },
+      referral: {
+        title: 'Referral Settings',
+        description: 'Configure invite referral rewards for users',
+        enable: 'Enable Referral',
+        enableHint: 'Allow users to invite others and earn rewards',
+        rewardAmount: 'Reward Amount ($)',
+        rewardAmountHint: 'Amount credited to the inviter when the invitee makes their first top-up'
+      },
       opsMonitoring: {
         title: 'Ops Monitoring',
         description: 'Enable ops monitoring for troubleshooting and health visibility',
@@ -3066,6 +3096,28 @@ export default {
     resetIn: 'Resets in {time}',
     windowNotActive: 'Awaiting first use',
     usageOf: '{used} of {limit}'
+  },
+
+  // Referral
+  referral: {
+    title: 'Referral',
+    description: 'Invite friends and earn rewards',
+    yourInviteCode: 'Your Invite Code',
+    copyCode: 'Copy Code',
+    copyLink: 'Copy Link',
+    copied: 'Copied to clipboard',
+    totalInvitees: 'Total Invitees',
+    rewarded: 'Rewarded',
+    totalReward: 'Total Reward',
+    inviteeList: 'Invitee List',
+    inviteeEmail: 'Email',
+    status: 'Status',
+    rewardAmount: 'Reward',
+    invitedAt: 'Invited At',
+    noInvitees: 'No invitees yet. Share your invite code to get started.',
+    statusPending: 'Pending',
+    statusRewarded: 'Rewarded',
+    loadError: 'Failed to load referral data'
   },
 
   // Onboarding Tour

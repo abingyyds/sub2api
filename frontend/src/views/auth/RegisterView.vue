@@ -280,6 +280,8 @@ const promoValidation = reactive({
 })
 let promoValidateTimeout: ReturnType<typeof setTimeout> | null = null
 
+const inviteCode = ref<string>('')
+
 const formData = reactive({
   email: '',
   password: '',
@@ -304,6 +306,12 @@ onMounted(async () => {
     turnstileSiteKey.value = settings.turnstile_site_key || ''
     siteName.value = settings.site_name || 'cCoder.me'
     linuxdoOAuthEnabled.value = settings.linuxdo_oauth_enabled
+
+    // Read invite code from URL parameter
+    const inviteParam = route.query.invite as string
+    if (inviteParam) {
+      inviteCode.value = inviteParam
+    }
 
     // Read promo code from URL parameter only if promo code is enabled
     if (promoCodeEnabled.value) {
@@ -496,7 +504,8 @@ async function handleRegister(): Promise<void> {
           email: formData.email,
           password: formData.password,
           turnstile_token: turnstileToken.value,
-          promo_code: formData.promo_code || undefined
+          promo_code: formData.promo_code || undefined,
+          invite_code: inviteCode.value || undefined
         })
       )
 
@@ -510,7 +519,8 @@ async function handleRegister(): Promise<void> {
       email: formData.email,
       password: formData.password,
       turnstile_token: turnstileEnabled.value ? turnstileToken.value : undefined,
-      promo_code: formData.promo_code || undefined
+      promo_code: formData.promo_code || undefined,
+      invite_code: inviteCode.value || undefined
     })
 
     // Show success toast

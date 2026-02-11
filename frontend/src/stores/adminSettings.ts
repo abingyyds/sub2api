@@ -47,6 +47,7 @@ export const useAdminSettingsStore = defineStore('adminSettings', () => {
   const opsMonitoringEnabled = ref(readCachedBool('ops_monitoring_enabled_cached', true))
   const opsRealtimeMonitoringEnabled = ref(readCachedBool('ops_realtime_monitoring_enabled_cached', true))
   const opsQueryModeDefault = ref(readCachedString('ops_query_mode_default_cached', 'auto'))
+  const referralEnabled = ref(readCachedBool('referral_enabled_cached', false))
 
   async function fetch(force = false): Promise<void> {
     if (loaded.value && !force) return
@@ -63,6 +64,9 @@ export const useAdminSettingsStore = defineStore('adminSettings', () => {
 
       opsQueryModeDefault.value = settings.ops_query_mode_default || 'auto'
       writeCachedString('ops_query_mode_default_cached', opsQueryModeDefault.value)
+
+      referralEnabled.value = settings.referral_enabled ?? false
+      writeCachedBool('referral_enabled_cached', referralEnabled.value)
 
       loaded.value = true
     } catch (err) {
@@ -89,6 +93,12 @@ export const useAdminSettingsStore = defineStore('adminSettings', () => {
   function setOpsQueryModeDefaultLocal(value: string) {
     opsQueryModeDefault.value = value || 'auto'
     writeCachedString('ops_query_mode_default_cached', opsQueryModeDefault.value)
+    loaded.value = true
+  }
+
+  function setReferralEnabledLocal(value: boolean) {
+    referralEnabled.value = value
+    writeCachedBool('referral_enabled_cached', value)
     loaded.value = true
   }
 
@@ -122,9 +132,11 @@ export const useAdminSettingsStore = defineStore('adminSettings', () => {
     opsMonitoringEnabled,
     opsRealtimeMonitoringEnabled,
     opsQueryModeDefault,
+    referralEnabled,
     fetch,
     setOpsMonitoringEnabledLocal,
     setOpsRealtimeMonitoringEnabledLocal,
-    setOpsQueryModeDefaultLocal
+    setOpsQueryModeDefaultLocal,
+    setReferralEnabledLocal
   }
 })

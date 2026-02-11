@@ -64,6 +64,12 @@ const (
 	SubscriptionStatusSuspended = "suspended"
 )
 
+// Referral reward status constants
+const (
+	ReferralRewardPending  = "pending"
+	ReferralRewardRewarded = "rewarded"
+)
+
 // LinuxDoConnectSyntheticEmailDomain 是 LinuxDo Connect 用户的合成邮箱后缀（RFC 保留域名）。
 const LinuxDoConnectSyntheticEmailDomain = "@linuxdo-connect.invalid"
 
@@ -153,6 +159,13 @@ const (
 
 	// SettingKeyOpsAdvancedSettings stores JSON config for ops advanced settings (data retention, aggregation).
 	SettingKeyOpsAdvancedSettings = "ops_advanced_settings"
+
+	// =========================
+	// Referral / Invite Reward
+	// =========================
+
+	SettingKeyReferralEnabled      = "referral_enabled"       // 是否启用邀请返利功能
+	SettingKeyReferralRewardAmount = "referral_reward_amount"  // 邀请奖励金额
 
 	// =========================
 	// Stream Timeout Handling

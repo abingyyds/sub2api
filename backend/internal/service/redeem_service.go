@@ -75,6 +75,7 @@ type RedeemService struct {
 	billingCacheService  *BillingCacheService
 	entClient            *dbent.Client
 	authCacheInvalidator APIKeyAuthCacheInvalidator
+	referralService      *ReferralService
 }
 
 // NewRedeemService 创建兑换码服务实例
@@ -86,6 +87,7 @@ func NewRedeemService(
 	billingCacheService *BillingCacheService,
 	entClient *dbent.Client,
 	authCacheInvalidator APIKeyAuthCacheInvalidator,
+	referralService *ReferralService,
 ) *RedeemService {
 	return &RedeemService{
 		redeemRepo:           redeemRepo,
@@ -95,6 +97,7 @@ func NewRedeemService(
 		billingCacheService:  billingCacheService,
 		entClient:            entClient,
 		authCacheInvalidator: authCacheInvalidator,
+		referralService:      referralService,
 	}
 }
 
@@ -315,6 +318,11 @@ func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (
 
 	// 事务提交成功后失效缓存
 	s.invalidateRedeemCaches(ctx, userID, redeemCode)
+
+	// Balance 类型兑换成功后，异步触发邀请返利奖励
+	if redeemCode.Type == RedeemTypeBalance && s.referralService != nil {
+		go s.referralService.TriggerRewardIfEligible(context.Background(), userID)
+	}
 
 	// 重新获取更新后的兑换码
 	redeemCode, err = s.redeemRepo.GetByID(ctx, redeemCode.ID)

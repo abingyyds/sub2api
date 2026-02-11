@@ -55,6 +55,7 @@ export interface RegisterRequest {
   verify_code?: string
   turnstile_token?: string
   promo_code?: string
+  invite_code?: string
 }
 
 export interface SendVerifyCodeRequest {
@@ -83,6 +84,7 @@ export interface PublicSettings {
   home_content: string
   hide_ccs_import_button: boolean
   linuxdo_oauth_enabled: boolean
+  referral_enabled: boolean
   version: string
 }
 

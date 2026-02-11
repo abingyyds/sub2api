@@ -56,6 +56,10 @@ type SystemSettings struct {
 	OpsRealtimeMonitoringEnabled bool
 	OpsQueryModeDefault          string
 	OpsMetricsIntervalSeconds    int
+
+	// Referral / Invite Reward
+	ReferralEnabled      bool
+	ReferralRewardAmount float64
 }
 
 type PublicSettings struct {
@@ -75,6 +79,7 @@ type PublicSettings struct {
 	HomeContent          string
 	HideCcsImportButton  bool
 	LinuxDoOAuthEnabled  bool
+	ReferralEnabled      bool
 	Version              string
 }
 

@@ -53,6 +53,7 @@ type AuthService struct {
 	turnstileService  *TurnstileService
 	emailQueueService *EmailQueueService
 	promoService      *PromoService
+	referralService   *ReferralService
 }
 
 // NewAuthService 创建认证服务实例
@@ -64,6 +65,7 @@ func NewAuthService(
 	turnstileService *TurnstileService,
 	emailQueueService *EmailQueueService,
 	promoService *PromoService,
+	referralService *ReferralService,
 ) *AuthService {
 	return &AuthService{
 		userRepo:          userRepo,
@@ -73,16 +75,17 @@ func NewAuthService(
 		turnstileService:  turnstileService,
 		emailQueueService: emailQueueService,
 		promoService:      promoService,
+		referralService:   referralService,
 	}
 }
 
 // Register 用户注册，返回token和用户
 func (s *AuthService) Register(ctx context.Context, email, password string) (string, *User, error) {
-	return s.RegisterWithVerification(ctx, email, password, "", "")
+	return s.RegisterWithVerification(ctx, email, password, "", "", "")
 }
 
-// RegisterWithVerification 用户注册（支持邮件验证和优惠码），返回token和用户
-func (s *AuthService) RegisterWithVerification(ctx context.Context, email, password, verifyCode, promoCode string) (string, *User, error) {
+// RegisterWithVerification 用户注册（支持邮件验证、优惠码和邀请码），返回token和用户
+func (s *AuthService) RegisterWithVerification(ctx context.Context, email, password, verifyCode, promoCode, inviteCode string) (string, *User, error) {
 	// 检查是否开放注册（默认关闭：settingService 未配置时不允许注册）
 	if s.settingService == nil || !s.settingService.IsRegistrationEnabled(ctx) {
 		return "", nil, ErrRegDisabled
@@ -151,6 +154,13 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 		}
 		log.Printf("[Auth] Database error creating user: %v", err)
 		return "", nil, ErrServiceUnavailable
+	}
+
+	// 记录邀请关系（如果提供了邀请码且功能已启用）
+	if inviteCode != "" && s.referralService != nil {
+		if err := s.referralService.RecordReferral(ctx, inviteCode, user.ID); err != nil {
+			log.Printf("[Auth] Failed to record referral for user %d: %v", user.ID, err)
+		}
 	}
 
 	// 应用优惠码（如果提供且功能已启用）

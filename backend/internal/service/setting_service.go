@@ -74,6 +74,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyHomeContent,
 		SettingKeyHideCcsImportButton,
 		SettingKeyLinuxDoConnectEnabled,
+		SettingKeyReferralEnabled,
 	}
 
 	settings, err := s.settingRepo.GetMultiple(ctx, keys)
@@ -109,6 +110,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		HomeContent:          settings[SettingKeyHomeContent],
 		HideCcsImportButton:  settings[SettingKeyHideCcsImportButton] == "true",
 		LinuxDoOAuthEnabled:  linuxDoEnabled,
+		ReferralEnabled:      settings[SettingKeyReferralEnabled] == "true",
 	}, nil
 }
 
@@ -149,6 +151,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		HomeContent          string `json:"home_content,omitempty"`
 		HideCcsImportButton  bool   `json:"hide_ccs_import_button"`
 		LinuxDoOAuthEnabled  bool   `json:"linuxdo_oauth_enabled"`
+		ReferralEnabled      bool   `json:"referral_enabled"`
 		Version              string `json:"version,omitempty"`
 	}{
 		RegistrationEnabled:  settings.RegistrationEnabled,
@@ -167,6 +170,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		HomeContent:          settings.HomeContent,
 		HideCcsImportButton:  settings.HideCcsImportButton,
 		LinuxDoOAuthEnabled:  settings.LinuxDoOAuthEnabled,
+		ReferralEnabled:      settings.ReferralEnabled,
 		Version:              s.version,
 	}, nil
 }
@@ -232,6 +236,10 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	// Identity patch configuration (Claude -> Gemini)
 	updates[SettingKeyEnableIdentityPatch] = strconv.FormatBool(settings.EnableIdentityPatch)
 	updates[SettingKeyIdentityPatchPrompt] = settings.IdentityPatchPrompt
+
+	// Referral settings
+	updates[SettingKeyReferralEnabled] = strconv.FormatBool(settings.ReferralEnabled)
+	updates[SettingKeyReferralRewardAmount] = strconv.FormatFloat(settings.ReferralRewardAmount, 'f', 8, 64)
 
 	// Ops monitoring (vNext)
 	updates[SettingKeyOpsMonitoringEnabled] = strconv.FormatBool(settings.OpsMonitoringEnabled)
@@ -371,6 +379,10 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyEnableIdentityPatch: "true",
 		SettingKeyIdentityPatchPrompt: "",
 
+		// Referral defaults (disabled by default)
+		SettingKeyReferralEnabled:      "false",
+		SettingKeyReferralRewardAmount: "0",
+
 		// Ops monitoring defaults (vNext)
 		SettingKeyOpsMonitoringEnabled:         "true",
 		SettingKeyOpsRealtimeMonitoringEnabled: "true",
@@ -497,6 +509,12 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		}
 	}
 
+	// Referral settings
+	result.ReferralEnabled = settings[SettingKeyReferralEnabled] == "true"
+	if v, err := strconv.ParseFloat(settings[SettingKeyReferralRewardAmount], 64); err == nil {
+		result.ReferralRewardAmount = v
+	}
+
 	return result
 }
 
@@ -515,6 +533,27 @@ func (s *SettingService) getStringOrDefault(settings map[string]string, key, def
 		return value
 	}
 	return defaultValue
+}
+
+// IsReferralEnabled 检查是否启用邀请返利功能
+func (s *SettingService) IsReferralEnabled(ctx context.Context) bool {
+	value, err := s.settingRepo.GetValue(ctx, SettingKeyReferralEnabled)
+	if err != nil {
+		return false // 默认关闭
+	}
+	return value == "true"
+}
+
+// GetReferralRewardAmount 获取邀请奖励金额
+func (s *SettingService) GetReferralRewardAmount(ctx context.Context) float64 {
+	value, err := s.settingRepo.GetValue(ctx, SettingKeyReferralRewardAmount)
+	if err != nil {
+		return 0
+	}
+	if v, err := strconv.ParseFloat(value, 64); err == nil && v > 0 {
+		return v
+	}
+	return 0
 }
 
 // IsTurnstileEnabled 检查是否启用 Turnstile 验证

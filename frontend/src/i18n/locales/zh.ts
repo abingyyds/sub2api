@@ -194,6 +194,8 @@ export default {
     redeemCodes: '兑换码',
     ops: '运维监控',
     promoCodes: '优惠码',
+    referral: '邀请返利',
+    referrals: '邀请管理',
     settings: '系统设置',
     myAccount: '我的账户',
     lightMode: '浅色模式',
@@ -2223,6 +2225,26 @@ export default {
       }
     },
 
+    // 邀请返利管理
+    referrals: {
+      title: '邀请管理',
+      description: '查看和管理用户邀请记录',
+      totalReferrals: '邀请总数',
+      rewardedCount: '已奖励',
+      pendingCount: '待奖励',
+      totalRewardAmount: '总奖励金额',
+      allRecords: '所有邀请记录',
+      searchPlaceholder: '搜索邮箱...',
+      inviter: '邀请人',
+      invitee: '被邀请人',
+      status: '状态',
+      rewardAmount: '奖励金额',
+      createdAt: '创建时间',
+      noRecords: '暂无邀请记录',
+      statusPending: '待奖励',
+      statusRewarded: '已奖励'
+    },
+
     // Ops Monitoring
     ops: {
       title: '运维监控',
@@ -3078,6 +3100,14 @@ export default {
         sending: '发送中...',
         enterRecipientHint: '请输入收件人邮箱地址'
       },
+      referral: {
+        title: '邀请返利设置',
+        description: '配置用户邀请返利奖励',
+        enable: '启用邀请返利',
+        enableHint: '允许用户邀请他人注册并获得奖励',
+        rewardAmount: '奖励金额 ($)',
+        rewardAmountHint: '被邀请人首次充值时，邀请人获得的奖励金额'
+      },
       opsMonitoring: {
         title: '运维监控',
         description: '启用运维监控模块，用于排障与健康可视化',
@@ -3215,6 +3245,28 @@ export default {
     resetIn: '{time} 后重置',
     windowNotActive: '等待首次使用',
     usageOf: '已用 {used} / {limit}'
+  },
+
+  // Referral
+  referral: {
+    title: '邀请返利',
+    description: '邀请好友注册并获得奖励',
+    yourInviteCode: '您的邀请码',
+    copyCode: '复制邀请码',
+    copyLink: '复制链接',
+    copied: '已复制到剪贴板',
+    totalInvitees: '邀请总数',
+    rewarded: '已奖励',
+    totalReward: '总奖励',
+    inviteeList: '邀请列表',
+    inviteeEmail: '邮箱',
+    status: '状态',
+    rewardAmount: '奖励金额',
+    invitedAt: '邀请时间',
+    noInvitees: '暂无邀请记录，分享您的邀请码开始邀请吧。',
+    statusPending: '待奖励',
+    statusRewarded: '已奖励',
+    loadError: '加载邀请数据失败'
   },
 
   // Onboarding Tour

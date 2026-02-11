@@ -60,6 +60,10 @@ COPY backend/ ./
 # Copy frontend dist from previous stage (must be after backend copy to avoid being overwritten)
 COPY --from=frontend-builder /app/backend/internal/web/dist ./internal/web/dist
 
+# Generate ent ORM code and Wire DI
+RUN go generate ./ent && \
+    go generate ./cmd/server
+
 # Build the binary (BuildType=release for CI builds, embed frontend)
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -tags embed \

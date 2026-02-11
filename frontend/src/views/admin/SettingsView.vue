@@ -382,6 +382,47 @@
           </div>
         </div>
 
+        <!-- Referral Settings -->
+        <div class="card">
+          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('admin.settings.referral.title') }}
+            </h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {{ t('admin.settings.referral.description') }}
+            </p>
+          </div>
+          <div class="space-y-5 p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="font-medium text-gray-900 dark:text-white">{{
+                  t('admin.settings.referral.enable')
+                }}</label>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  {{ t('admin.settings.referral.enableHint') }}
+                </p>
+              </div>
+              <Toggle v-model="form.referral_enabled" />
+            </div>
+            <div v-if="form.referral_enabled" class="border-t border-gray-100 pt-4 dark:border-dark-700">
+              <label for="referral_reward_amount" class="input-label">
+                {{ t('admin.settings.referral.rewardAmount') }}
+              </label>
+              <input
+                id="referral_reward_amount"
+                v-model.number="form.referral_reward_amount"
+                type="number"
+                step="0.01"
+                min="0"
+                class="input mt-1 w-48"
+              />
+              <p class="input-hint">
+                {{ t('admin.settings.referral.rewardAmountHint') }}
+              </p>
+            </div>
+          </div>
+        </div>
+
         <!-- Cloudflare Turnstile Settings -->
         <div class="card">
           <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
@@ -1029,10 +1070,11 @@ import AppLayout from '@/components/layout/AppLayout.vue'
 import Icon from '@/components/icons/Icon.vue'
 import Toggle from '@/components/common/Toggle.vue'
 import { useClipboard } from '@/composables/useClipboard'
-import { useAppStore } from '@/stores'
+import { useAppStore, useAdminSettingsStore } from '@/stores'
 
 const { t } = useI18n()
 const appStore = useAppStore()
+const adminSettingsStore = useAdminSettingsStore()
 const { copyToClipboard } = useClipboard()
 
 const loading = ref(true)
@@ -1111,6 +1153,9 @@ const form = reactive<SettingsForm>({
   // Identity patch (Claude -> Gemini)
   enable_identity_patch: true,
   identity_patch_prompt: '',
+  // Referral
+  referral_enabled: false,
+  referral_reward_amount: 0,
   // Ops monitoring (vNext)
   ops_monitoring_enabled: true,
   ops_realtime_monitoring_enabled: true,
@@ -1228,7 +1273,9 @@ async function saveSettings() {
       fallback_model_gemini: form.fallback_model_gemini,
       fallback_model_antigravity: form.fallback_model_antigravity,
       enable_identity_patch: form.enable_identity_patch,
-      identity_patch_prompt: form.identity_patch_prompt
+      identity_patch_prompt: form.identity_patch_prompt,
+      referral_enabled: form.referral_enabled,
+      referral_reward_amount: form.referral_reward_amount
     }
     const updated = await adminAPI.settings.updateSettings(payload)
     Object.assign(form, updated)
@@ -1237,6 +1284,7 @@ async function saveSettings() {
     form.linuxdo_connect_client_secret = ''
     // Refresh cached public settings so sidebar/header update immediately
     await appStore.fetchPublicSettings(true)
+    adminSettingsStore.setReferralEnabledLocal(form.referral_enabled)
     appStore.showSuccess(t('admin.settings.settingsSaved'))
   } catch (error: any) {
     appStore.showError(
