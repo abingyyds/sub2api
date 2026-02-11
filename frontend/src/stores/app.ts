@@ -12,6 +12,7 @@ import {
   type ReleaseInfo
 } from '@/api/admin/system'
 import { getPublicSettings as fetchPublicSettingsAPI } from '@/api/auth'
+import { useAdminSettingsStore } from '@/stores/adminSettings'
 
 export const useAppStore = defineStore('app', () => {
   // ==================== State ====================
@@ -291,6 +292,14 @@ export const useAppStore = defineStore('app', () => {
     apiBaseUrl.value = config.api_base_url || ''
     docUrl.value = config.doc_url || ''
     publicSettingsLoaded.value = true
+
+    // Sync referral_enabled to adminSettingsStore so non-admin users also see the menu
+    try {
+      const adminSettingsStore = useAdminSettingsStore()
+      adminSettingsStore.setReferralEnabledLocal(config.referral_enabled ?? false)
+    } catch {
+      // ignore if store not ready
+    }
   }
 
   /**
