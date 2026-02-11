@@ -73,14 +73,24 @@
           支持 Opus 4.6、Opus 4.5、Sonnet 4.5、GPT-5.2-Codex 等先进 AI 模型
         </p>
         <div class="flex flex-col items-center gap-4">
-          <router-link
-            :to="isAuthenticated ? dashboardPath : '/login'"
-            class="inline-flex items-center gap-2 rounded-full bg-primary-600 px-8 py-4 text-lg font-medium text-white shadow-lg shadow-primary-500/30 transition-all hover:bg-primary-700 hover:shadow-xl"
-          >
-            进入控制台
-            <Icon name="arrowRight" size="md" />
-          </router-link>
-          <p class="text-sm text-gray-500 dark:text-dark-400">^ 新用户注册也点这里 ^</p>
+          <div class="flex flex-wrap items-center justify-center gap-4">
+            <a
+              href="#pricing"
+              class="inline-flex items-center gap-2 rounded-full bg-primary-600 px-8 py-4 text-lg font-medium text-white shadow-lg shadow-primary-500/30 transition-all hover:bg-primary-700 hover:shadow-xl"
+            >
+              查看套餐价格
+              <Icon name="arrowRight" size="md" />
+            </a>
+            <router-link
+              :to="isAuthenticated ? dashboardPath : '/login'"
+              class="inline-flex items-center gap-2 rounded-full border-2 border-primary-600 px-8 py-4 text-lg font-medium text-primary-600 transition-all hover:bg-primary-50 dark:hover:bg-primary-900/20"
+            >
+              {{ isAuthenticated ? '进入控制台' : '注册 / 登录' }}
+            </router-link>
+          </div>
+          <a href="https://fk.ccoder.me" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400">
+            直接购买套餐 &rarr; fk.ccoder.me
+          </a>
         </div>
       </div>
     </section>
@@ -97,15 +107,6 @@
       </div>
     </section>
 
-    <!-- Claude API Service Banner -->
-    <section class="px-6 py-12">
-      <div class="mx-auto max-w-7xl">
-        <div class="rounded-2xl border border-primary-200 bg-gradient-to-r from-primary-50 to-blue-50 p-8 text-center dark:border-primary-800 dark:from-primary-900/20 dark:to-blue-900/20">
-          <h2 class="mb-4 text-3xl font-bold text-gray-900 dark:text-white">Claude API 服务</h2>
-          <p class="text-lg text-gray-600 dark:text-dark-300">支持 Opus 4.6、Opus 4.5、Sonnet 4.5、GPT-5.2-Codex 等模型</p>
-        </div>
-      </div>
-    </section>
 
     <!-- Pricing Section -->
     <section id="pricing" class="px-6 py-20">
@@ -114,7 +115,7 @@
 
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <!-- Pay As You Go -->
-          <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
+          <div class="flex flex-col rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
             <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">按量付费</h3>
             <div class="mb-4 text-4xl font-bold text-primary-600">1:1</div>
             <p class="mb-6 text-gray-600 dark:text-dark-300">1$ = 1RMB</p>
@@ -136,13 +137,17 @@
                 用多少付多少
               </li>
             </ul>
+            <a href="https://fk.ccoder.me" target="_blank" rel="noopener noreferrer" class="mt-auto block rounded-xl bg-gray-100 py-3 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-dark-700 dark:text-dark-200 dark:hover:bg-dark-600">
+              立即购买
+            </a>
           </div>
 
           <!-- Monthly Plans -->
-          <div class="rounded-2xl border-2 border-primary-500 bg-white p-8 shadow-xl dark:bg-dark-800">
-            <div class="mb-2 inline-block rounded-full bg-primary-100 px-3 py-1 text-xs font-medium text-primary-600 dark:bg-primary-900/30">推荐</div>
+          <div class="relative flex flex-col rounded-2xl border-2 border-primary-500 bg-white p-8 shadow-xl ring-2 ring-primary-500/20 dark:bg-dark-800">
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary-600 px-4 py-1 text-xs font-bold text-white shadow-md">最受欢迎</div>
             <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡 289</h3>
-            <div class="mb-4 text-4xl font-bold text-primary-600">¥289</div>
+            <div class="mb-1 text-4xl font-bold text-primary-600">¥289</div>
+            <p class="mb-4 text-xs text-gray-500 dark:text-dark-400">约 ¥9.6/天</p>
             <ul class="mb-8 space-y-3">
               <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
                 <Icon name="check" size="sm" class="text-primary-600" />
@@ -161,11 +166,15 @@
                 支持叠加
               </li>
             </ul>
+            <a href="https://fk.ccoder.me" target="_blank" rel="noopener noreferrer" class="mt-auto block rounded-xl bg-primary-600 py-3 text-center text-sm font-semibold text-white shadow-md shadow-primary-500/30 transition-all hover:bg-primary-700 hover:shadow-lg">
+              立即购买
+            </a>
           </div>
 
-          <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
+          <div class="flex flex-col rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
             <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡 389</h3>
-            <div class="mb-4 text-4xl font-bold text-primary-600">¥389</div>
+            <div class="mb-1 text-4xl font-bold text-primary-600">¥389</div>
+            <p class="mb-4 text-xs text-gray-500 dark:text-dark-400">约 ¥13/天</p>
             <ul class="mb-8 space-y-3">
               <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
                 <Icon name="check" size="sm" class="text-primary-600" />
@@ -184,11 +193,15 @@
                 支持叠加
               </li>
             </ul>
+            <a href="https://fk.ccoder.me" target="_blank" rel="noopener noreferrer" class="mt-auto block rounded-xl bg-gray-100 py-3 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-dark-700 dark:text-dark-200 dark:hover:bg-dark-600">
+              立即购买
+            </a>
           </div>
 
-          <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
+          <div class="flex flex-col rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
             <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡 459</h3>
-            <div class="mb-4 text-4xl font-bold text-primary-600">¥459</div>
+            <div class="mb-1 text-4xl font-bold text-primary-600">¥459</div>
+            <p class="mb-4 text-xs text-gray-500 dark:text-dark-400">约 ¥15.3/天</p>
             <ul class="mb-8 space-y-3">
               <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
                 <Icon name="check" size="sm" class="text-primary-600" />
@@ -207,11 +220,15 @@
                 支持叠加
               </li>
             </ul>
+            <a href="https://fk.ccoder.me" target="_blank" rel="noopener noreferrer" class="mt-auto block rounded-xl bg-gray-100 py-3 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-dark-700 dark:text-dark-200 dark:hover:bg-dark-600">
+              立即购买
+            </a>
           </div>
 
-          <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
+          <div class="flex flex-col rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
             <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡 559</h3>
-            <div class="mb-4 text-4xl font-bold text-primary-600">¥559</div>
+            <div class="mb-1 text-4xl font-bold text-primary-600">¥559</div>
+            <p class="mb-4 text-xs text-gray-500 dark:text-dark-400">约 ¥18.6/天</p>
             <ul class="mb-8 space-y-3">
               <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
                 <Icon name="check" size="sm" class="text-primary-600" />
@@ -230,11 +247,16 @@
                 支持叠加
               </li>
             </ul>
+            <a href="https://fk.ccoder.me" target="_blank" rel="noopener noreferrer" class="mt-auto block rounded-xl bg-gray-100 py-3 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-dark-700 dark:text-dark-200 dark:hover:bg-dark-600">
+              立即购买
+            </a>
           </div>
 
-          <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
+          <div class="flex flex-col rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
+            <div class="mb-2 inline-block w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">大额用户</div>
             <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡 1180</h3>
-            <div class="mb-4 text-4xl font-bold text-primary-600">¥1180</div>
+            <div class="mb-1 text-4xl font-bold text-primary-600">¥1180</div>
+            <p class="mb-4 text-xs text-gray-500 dark:text-dark-400">约 ¥39.3/天</p>
             <ul class="mb-8 space-y-3">
               <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
                 <Icon name="check" size="sm" class="text-primary-600" />
@@ -253,6 +275,9 @@
                 支持叠加
               </li>
             </ul>
+            <a href="https://fk.ccoder.me" target="_blank" rel="noopener noreferrer" class="mt-auto block rounded-xl bg-gray-100 py-3 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-dark-700 dark:text-dark-200 dark:hover:bg-dark-600">
+              立即购买
+            </a>
           </div>
         </div>
 
@@ -263,26 +288,41 @@
     </section>
 
     <!-- Purchase Method -->
-    <section id="purchase" class="bg-gray-50 px-6 py-20 dark:bg-dark-900/50">
+    <section id="purchase" class="px-6 py-16">
       <div class="mx-auto max-w-4xl">
-        <h2 class="mb-12 text-center text-4xl font-bold text-gray-900 dark:text-white">购买方式</h2>
-        <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
-          <div class="mb-6 flex items-start gap-4">
-            <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary-100 text-primary-600 dark:bg-primary-900/30">
+        <div class="overflow-hidden rounded-2xl border-2 border-primary-200 bg-gradient-to-br from-primary-50 via-white to-blue-50 shadow-xl dark:border-primary-800 dark:from-primary-900/30 dark:via-dark-800 dark:to-blue-900/20">
+          <div class="p-8 text-center md:p-12">
+            <h2 class="mb-3 text-3xl font-bold text-gray-900 dark:text-white">立即购买</h2>
+            <p class="mb-8 text-gray-600 dark:text-dark-300">选好套餐？点击下方按钮前往购买页面</p>
+            <a
+              href="https://fk.ccoder.me"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-3 rounded-full bg-primary-600 px-10 py-4 text-lg font-bold text-white shadow-lg shadow-primary-500/30 transition-all hover:bg-primary-700 hover:shadow-xl hover:scale-105"
+            >
               <Icon name="creditCard" size="md" />
-            </div>
-            <div>
-              <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">浏览器打开下单链接，支付后保存兑换码</h3>
-              <a href="https://fk.ccoder.me" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-700 dark:text-primary-400">fk.ccoder.me</a>
+              前往 fk.ccoder.me 购买
+              <Icon name="arrowRight" size="md" />
+            </a>
+            <div class="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+              <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                <Icon name="check" size="sm" class="text-green-500" />
+                支持支付宝/微信
+              </div>
+              <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                <Icon name="check" size="sm" class="text-green-500" />
+                即买即用
+              </div>
+              <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                <Icon name="check" size="sm" class="text-green-500" />
+                支持企业团购
+              </div>
             </div>
           </div>
-          <div class="rounded-lg bg-yellow-50 p-4 dark:bg-yellow-900/20">
-            <div class="flex items-start gap-3">
-              <Icon name="exclamationCircle" size="md" class="mt-0.5 flex-shrink-0 text-yellow-600 dark:text-yellow-400" />
-              <div>
-                <h4 class="mb-1 font-semibold text-yellow-900 dark:text-yellow-200">重要提示</h4>
-                <p class="text-sm text-yellow-800 dark:text-yellow-300">购买后请保存下单详情里的兑换码</p>
-              </div>
+          <div class="border-t border-primary-200 bg-yellow-50/80 px-8 py-4 dark:border-primary-800 dark:bg-yellow-900/20">
+            <div class="flex items-center justify-center gap-3">
+              <Icon name="exclamationCircle" size="md" class="flex-shrink-0 text-yellow-600 dark:text-yellow-400" />
+              <p class="text-sm font-medium text-yellow-800 dark:text-yellow-300">购买后请务必保存下单详情里的兑换码，然后到控制台兑换区激活</p>
             </div>
           </div>
         </div>
