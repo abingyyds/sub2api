@@ -11,7 +11,7 @@
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
           <div class="card p-5 text-center">
             <p class="text-sm text-gray-500 dark:text-dark-400">{{ t('admin.referrals.totalReferrals') }}</p>
-            <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ stats.total_referrals }}</p>
+            <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ stats.total_invitees }}</p>
           </div>
           <div class="card p-5 text-center">
             <p class="text-sm text-gray-500 dark:text-dark-400">{{ t('admin.referrals.rewardedCount') }}</p>
@@ -106,7 +106,7 @@ const search = ref('')
 const page = ref(1)
 const totalPages = ref(1)
 const referrals = ref<AdminReferral[]>([])
-const stats = ref<AdminReferralStats>({ total_referrals: 0, rewarded_count: 0, pending_count: 0, total_reward_amount: 0 })
+const stats = ref<AdminReferralStats>({ total_invitees: 0, rewarded_count: 0, pending_count: 0, total_reward_amount: 0 })
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
 onMounted(async () => {

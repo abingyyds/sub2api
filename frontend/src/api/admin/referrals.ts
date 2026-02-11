@@ -14,7 +14,7 @@ export interface AdminReferral {
 }
 
 export interface AdminReferralStats {
-  total_referrals: number
+  total_invitees: number
   rewarded_count: number
   pending_count: number
   total_reward_amount: number
