@@ -437,7 +437,7 @@ const userNavItems = computed(() => {
     { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
     { path: '/subscriptions', label: t('nav.mySubscriptions'), icon: CreditCardIcon, hideInSimpleMode: true },
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
-    ...(adminSettingsStore.referralEnabled
+    ...(appStore.referralEnabled
       ? [{ path: '/referral', label: t('nav.referral'), icon: ShareIcon, hideInSimpleMode: true }]
       : []),
     { path: '/profile', label: t('nav.profile'), icon: UserIcon }
@@ -452,7 +452,7 @@ const personalNavItems = computed(() => {
     { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
     { path: '/subscriptions', label: t('nav.mySubscriptions'), icon: CreditCardIcon, hideInSimpleMode: true },
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
-    ...(adminSettingsStore.referralEnabled
+    ...(appStore.referralEnabled
       ? [{ path: '/referral', label: t('nav.referral'), icon: ShareIcon, hideInSimpleMode: true }]
       : []),
     { path: '/profile', label: t('nav.profile'), icon: UserIcon }
@@ -474,7 +474,7 @@ const adminNavItems = computed(() => {
     { path: '/admin/proxies', label: t('nav.proxies'), icon: ServerIcon },
     { path: '/admin/redeem', label: t('nav.redeemCodes'), icon: TicketIcon, hideInSimpleMode: true },
     { path: '/admin/promo-codes', label: t('nav.promoCodes'), icon: GiftIcon, hideInSimpleMode: true },
-    ...(adminSettingsStore.referralEnabled
+    ...(appStore.referralEnabled
       ? [{ path: '/admin/referrals', label: t('nav.referrals'), icon: ShareIcon, hideInSimpleMode: true }]
       : []),
     { path: '/admin/usage', label: t('nav.usage'), icon: ChartIcon },

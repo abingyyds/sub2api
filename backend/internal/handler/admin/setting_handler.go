@@ -86,6 +86,8 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		OpsRealtimeMonitoringEnabled:         settings.OpsRealtimeMonitoringEnabled,
 		OpsQueryModeDefault:                  settings.OpsQueryModeDefault,
 		OpsMetricsIntervalSeconds:            settings.OpsMetricsIntervalSeconds,
+		ReferralEnabled:                      settings.ReferralEnabled,
+		ReferralRewardAmount:                 settings.ReferralRewardAmount,
 	})
 }
 
@@ -148,6 +150,10 @@ type UpdateSettingsRequest struct {
 	OpsRealtimeMonitoringEnabled *bool   `json:"ops_realtime_monitoring_enabled"`
 	OpsQueryModeDefault          *string `json:"ops_query_mode_default"`
 	OpsMetricsIntervalSeconds    *int    `json:"ops_metrics_interval_seconds"`
+
+	// Referral / Invite Reward
+	ReferralEnabled      bool    `json:"referral_enabled"`
+	ReferralRewardAmount float64 `json:"referral_reward_amount"`
 }
 
 // UpdateSettings 更新系统设置
@@ -315,6 +321,8 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 			}
 			return previousSettings.OpsMetricsIntervalSeconds
 		}(),
+		ReferralEnabled:      req.ReferralEnabled,
+		ReferralRewardAmount: req.ReferralRewardAmount,
 	}
 
 	if err := h.settingService.UpdateSettings(c.Request.Context(), settings); err != nil {

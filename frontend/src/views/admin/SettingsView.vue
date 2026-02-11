@@ -1284,7 +1284,6 @@ async function saveSettings() {
     form.linuxdo_connect_client_secret = ''
     // Refresh cached public settings so sidebar/header update immediately
     await appStore.fetchPublicSettings(true)
-    adminSettingsStore.setReferralEnabledLocal(form.referral_enabled)
     appStore.showSuccess(t('admin.settings.settingsSaved'))
   } catch (error: any) {
     appStore.showError(
