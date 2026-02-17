@@ -40,8 +40,8 @@ export default {
 
   // Setup Wizard
   setup: {
-    title: 'cCoder.me 安装向导',
-    description: '配置您的 cCoder.me 实例',
+    title: 'SubRouter.ai 安装向导',
+    description: '配置您的 SubRouter.ai 实例',
     database: {
       title: '数据库配置',
       description: '连接到您的 PostgreSQL 数据库',
@@ -3384,8 +3384,8 @@ export default {
     // User tour steps
     user: {
       welcome: {
-        title: '👋 欢迎使用 cCoder.me',
-        description: '<div style="line-height: 1.8;"><p style="margin-bottom: 16px;">您好！欢迎来到 cCoder.me 新一代代码大师平台。</p><p style="margin-bottom: 12px;"><b>🎯 快速开始：</b></p><ul style="margin-left: 20px; margin-bottom: 16px;"><li>🔑 创建 API 密钥</li><li>📋 复制密钥到您的应用</li><li>🚀 开始使用 AI 服务</li></ul><p style="color: #10b981; font-weight: 600;">只需 1 分钟，让我们开始吧 →</p></div>',
+        title: '👋 欢迎使用 SubRouter.ai',
+        description: '<div style="line-height: 1.8;"><p style="margin-bottom: 16px;">您好！欢迎来到 SubRouter.ai 新一代代码大师平台。</p><p style="margin-bottom: 12px;"><b>🎯 快速开始：</b></p><ul style="margin-left: 20px; margin-bottom: 16px;"><li>🔑 创建 API 密钥</li><li>📋 复制密钥到您的应用</li><li>🚀 开始使用 AI 服务</li></ul><p style="color: #10b981; font-weight: 600;">只需 1 分钟，让我们开始吧 →</p></div>',
         nextBtn: '开始 🚀',
         prevBtn: '跳过'
       },

@@ -4,17 +4,14 @@
     <nav class="sticky top-0 z-50 border-b border-gray-200/50 bg-white/80 backdrop-blur-lg dark:border-dark-800/50 dark:bg-dark-900/80">
       <div class="mx-auto max-w-7xl px-6 py-4">
         <div class="flex items-center justify-between">
-          <!-- Brand with Animation -->
+          <!-- Brand -->
           <div class="flex items-center gap-3">
             <Logo :size="40" theme="auto" />
             <div>
               <div class="text-xl font-bold text-gray-900 dark:text-white">
-                <span class="inline-block">c</span><span
-                  class="inline-block transition-opacity duration-500"
-                  :class="{ 'opacity-30': animatedText === 'laude' }"
-                >{{ animatedText }}</span><span class="inline-block">Coder.me</span>
+                Sub<span class="text-primary-600">Router</span><span class="text-primary-600">.ai</span>
               </div>
-              <div class="text-xs text-gray-500 dark:text-dark-400">新一代 AI 代码工作平台</div>
+              <div class="text-xs text-gray-500 dark:text-dark-400">AI API Routing & Billing Platform</div>
             </div>
           </div>
 
@@ -44,22 +41,18 @@
       </div>
     </nav>
 
-    <!-- Hero Section with Brand Animation -->
+    <!-- Hero Section -->
     <section class="px-6 py-20">
       <div class="mx-auto max-w-7xl text-center">
-        <!-- Animated Brand Title -->
         <div class="mb-8">
           <h1 class="mb-4 text-6xl font-bold text-gray-900 dark:text-white md:text-7xl lg:text-8xl">
-            <span class="inline-block">c</span><span
-              class="inline-block transition-opacity duration-500"
-              :class="{ 'opacity-30': animatedText === 'laude' }"
-            >{{ animatedText }}</span><span class="inline-block">Coder</span><span class="text-primary-600">.me</span>
+            Sub<span class="text-primary-600">Router</span><span class="text-primary-600">.ai</span>
           </h1>
           <p class="text-2xl font-semibold text-gray-700 dark:text-dark-200 mb-3">
-            新一代代码大师就是我
+            AI API Routing & Billing Platform
           </p>
           <p class="text-lg text-gray-600 dark:text-dark-300">
-            我就是 <span class="font-bold text-primary-600">claude</span> <span class="font-bold text-primary-600">coder</span> <span class="text-primary-600">=</span> <span class="font-bold text-primary-600">me</span>
+            智能路由 &middot; 灵活计费 &middot; 多模型支持
           </p>
         </div>
 
@@ -88,8 +81,8 @@
               {{ isAuthenticated ? '进入控制台' : '注册 / 登录' }}
             </router-link>
           </div>
-          <a href="https://fk.ccoder.me" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400">
-            直接购买套餐 &rarr; fk.ccoder.me
+          <a href="https://fk.subrouter.ai" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-sm font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400">
+            直接购买套餐 &rarr; fk.subrouter.ai
           </a>
         </div>
       </div>
@@ -137,7 +130,7 @@
                 用多少付多少
               </li>
             </ul>
-            <a href="https://fk.ccoder.me" target="_blank" rel="noopener noreferrer" class="mt-auto block rounded-xl bg-gray-100 py-3 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-dark-700 dark:text-dark-200 dark:hover:bg-dark-600">
+            <a href="https://fk.subrouter.ai" target="_blank" rel="noopener noreferrer" class="mt-auto block rounded-xl bg-gray-100 py-3 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-dark-700 dark:text-dark-200 dark:hover:bg-dark-600">
               立即购买
             </a>
           </div>
@@ -166,7 +159,7 @@
                 支持叠加
               </li>
             </ul>
-            <a href="https://fk.ccoder.me" target="_blank" rel="noopener noreferrer" class="mt-auto block rounded-xl bg-primary-600 py-3 text-center text-sm font-semibold text-white shadow-md shadow-primary-500/30 transition-all hover:bg-primary-700 hover:shadow-lg">
+            <a href="https://fk.subrouter.ai" target="_blank" rel="noopener noreferrer" class="mt-auto block rounded-xl bg-primary-600 py-3 text-center text-sm font-semibold text-white shadow-md shadow-primary-500/30 transition-all hover:bg-primary-700 hover:shadow-lg">
               立即购买
             </a>
           </div>
@@ -193,7 +186,7 @@
                 支持叠加
               </li>
             </ul>
-            <a href="https://fk.ccoder.me" target="_blank" rel="noopener noreferrer" class="mt-auto block rounded-xl bg-gray-100 py-3 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-dark-700 dark:text-dark-200 dark:hover:bg-dark-600">
+            <a href="https://fk.subrouter.ai" target="_blank" rel="noopener noreferrer" class="mt-auto block rounded-xl bg-gray-100 py-3 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-dark-700 dark:text-dark-200 dark:hover:bg-dark-600">
               立即购买
             </a>
           </div>
@@ -220,7 +213,7 @@
                 支持叠加
               </li>
             </ul>
-            <a href="https://fk.ccoder.me" target="_blank" rel="noopener noreferrer" class="mt-auto block rounded-xl bg-gray-100 py-3 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-dark-700 dark:text-dark-200 dark:hover:bg-dark-600">
+            <a href="https://fk.subrouter.ai" target="_blank" rel="noopener noreferrer" class="mt-auto block rounded-xl bg-gray-100 py-3 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-dark-700 dark:text-dark-200 dark:hover:bg-dark-600">
               立即购买
             </a>
           </div>
@@ -247,7 +240,7 @@
                 支持叠加
               </li>
             </ul>
-            <a href="https://fk.ccoder.me" target="_blank" rel="noopener noreferrer" class="mt-auto block rounded-xl bg-gray-100 py-3 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-dark-700 dark:text-dark-200 dark:hover:bg-dark-600">
+            <a href="https://fk.subrouter.ai" target="_blank" rel="noopener noreferrer" class="mt-auto block rounded-xl bg-gray-100 py-3 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-dark-700 dark:text-dark-200 dark:hover:bg-dark-600">
               立即购买
             </a>
           </div>
@@ -275,7 +268,7 @@
                 支持叠加
               </li>
             </ul>
-            <a href="https://fk.ccoder.me" target="_blank" rel="noopener noreferrer" class="mt-auto block rounded-xl bg-gray-100 py-3 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-dark-700 dark:text-dark-200 dark:hover:bg-dark-600">
+            <a href="https://fk.subrouter.ai" target="_blank" rel="noopener noreferrer" class="mt-auto block rounded-xl bg-gray-100 py-3 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-200 dark:bg-dark-700 dark:text-dark-200 dark:hover:bg-dark-600">
               立即购买
             </a>
           </div>
@@ -295,13 +288,13 @@
             <h2 class="mb-3 text-3xl font-bold text-gray-900 dark:text-white">立即购买</h2>
             <p class="mb-8 text-gray-600 dark:text-dark-300">选好套餐？点击下方按钮前往购买页面</p>
             <a
-              href="https://fk.ccoder.me"
+              href="https://fk.subrouter.ai"
               target="_blank"
               rel="noopener noreferrer"
               class="inline-flex items-center gap-3 rounded-full bg-primary-600 px-10 py-4 text-lg font-bold text-white shadow-lg shadow-primary-500/30 transition-all hover:bg-primary-700 hover:shadow-xl hover:scale-105"
             >
               <Icon name="creditCard" size="md" />
-              前往 fk.ccoder.me 购买
+              前往 fk.subrouter.ai 购买
               <Icon name="arrowRight" size="md" />
             </a>
             <div class="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
@@ -337,7 +330,7 @@
           <div class="flex gap-4 rounded-2xl border border-gray-200 bg-white p-6 dark:border-dark-700 dark:bg-dark-800">
             <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white">1</div>
             <div>
-              <h3 class="mb-2 font-semibold text-gray-900 dark:text-white">登录 ccoder.me 注册账号</h3>
+              <h3 class="mb-2 font-semibold text-gray-900 dark:text-white">登录 subrouter.ai 注册账号</h3>
               <p class="text-sm text-gray-600 dark:text-dark-300">首次使用需要注册一个账号</p>
             </div>
           </div>
@@ -345,7 +338,7 @@
           <div class="flex gap-4 rounded-2xl border border-gray-200 bg-white p-6 dark:border-dark-700 dark:bg-dark-800">
             <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white">2</div>
             <div>
-              <h3 class="mb-2 font-semibold text-gray-900 dark:text-white">在兑换区填入从 fk.ccoder.me 购买的兑换码</h3>
+              <h3 class="mb-2 font-semibold text-gray-900 dark:text-white">在兑换区填入从 fk.subrouter.ai 购买的兑换码</h3>
               <p class="text-sm text-gray-600 dark:text-dark-300">输入购买时获得的兑换码激活服务</p>
             </div>
           </div>
@@ -363,7 +356,7 @@
             <div>
               <h3 class="mb-2 font-semibold text-gray-900 dark:text-white">配置 API</h3>
               <div class="mt-3 space-y-2 rounded-lg bg-gray-50 p-4 font-mono text-sm dark:bg-dark-900">
-                <div><span class="text-gray-500">URL:</span> <span class="text-primary-600">https://ccoder.me</span></div>
+                <div><span class="text-gray-500">URL:</span> <span class="text-primary-600">https://subrouter.ai</span></div>
                 <div><span class="text-gray-500">Key:</span> <span class="text-gray-600 dark:text-dark-300">您的 API 密钥</span></div>
               </div>
             </div>
@@ -407,15 +400,19 @@
     <!-- Footer -->
     <footer class="border-t border-gray-200 px-6 py-12 dark:border-dark-800">
       <div class="mx-auto max-w-7xl">
-        <div class="text-center">
-          <div class="mb-4">
-            <div class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
-              <span class="inline-block">c</span><span class="inline-block text-primary-600">Coder</span><span class="text-primary-600">.me</span>
-            </div>
-            <div class="text-sm text-gray-600 dark:text-dark-400">新一代 AI 代码工作平台</div>
+        <div class="flex flex-col items-center gap-6">
+          <div class="flex items-center gap-3">
+            <Logo :size="32" theme="auto" />
+            <span class="text-xl font-bold text-gray-900 dark:text-white">Sub<span class="text-primary-600">Router</span><span class="text-primary-600">.ai</span></span>
           </div>
-          <p class="text-sm text-gray-500 dark:text-dark-400">
-            &copy; {{ currentYear }} cCoder.me. All rights reserved.
+          <p class="text-sm text-gray-500 dark:text-dark-400">AI API Routing & Billing Platform</p>
+          <div class="flex flex-wrap items-center justify-center gap-4 text-xs text-gray-400 dark:text-dark-500">
+            <router-link to="/legal/tokushoho" class="transition-colors hover:text-gray-600 dark:hover:text-dark-300">特定商取引法に基づく表記</router-link>
+            <span>|</span>
+            <router-link to="/legal/disclosure" class="transition-colors hover:text-gray-600 dark:hover:text-dark-300">商業披露</router-link>
+          </div>
+          <p class="text-xs text-gray-400 dark:text-dark-500">
+            &copy; {{ currentYear }} SubRouter. All rights reserved.
           </p>
         </div>
       </div>
@@ -424,7 +421,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores'
 import Icon from '@/components/icons/Icon.vue'
 import Logo from '@/components/Logo.vue'
@@ -438,75 +435,13 @@ const isAuthenticated = computed(() => authStore.isAuthenticated)
 const isAdmin = computed(() => authStore.isAdmin)
 const dashboardPath = computed(() => isAdmin.value ? '/admin/dashboard' : '/dashboard')
 
-// Brand animation state - typewriter effect
-const animatedText = ref('laude')
-const fullText = 'laude'
-let animationTimer: ReturnType<typeof setTimeout> | null = null
-
 function toggleTheme() {
   isDark.value = !isDark.value
   document.documentElement.classList.toggle('dark', isDark.value)
   localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
 }
 
-// Typewriter animation: delete and type "laude" repeatedly
-function startTypewriterAnimation() {
-  let currentIndex = fullText.length
-  let isDeleting = false
-  let isPaused = false
-
-  function animate() {
-    if (isPaused) {
-      // Pause phase
-      isPaused = false
-      animationTimer = setTimeout(animate, isDeleting ? 5000 : 2000)
-      return
-    }
-
-    if (isDeleting) {
-      // Deleting phase
-      if (currentIndex > 0) {
-        currentIndex--
-        animatedText.value = fullText.substring(0, currentIndex)
-        animationTimer = setTimeout(animate, 150)
-      } else {
-        // Finished deleting, pause then start typing
-        isDeleting = false
-        isPaused = true
-        animationTimer = setTimeout(animate, 5000)
-      }
-    } else {
-      // Typing phase
-      if (currentIndex < fullText.length) {
-        currentIndex++
-        animatedText.value = fullText.substring(0, currentIndex)
-        animationTimer = setTimeout(animate, 150)
-      } else {
-        // Finished typing, pause then start deleting
-        isDeleting = true
-        isPaused = true
-        animationTimer = setTimeout(animate, 2000)
-      }
-    }
-  }
-
-  // Start animation after initial display
-  animationTimer = setTimeout(() => {
-    isDeleting = true
-    isPaused = true
-    animate()
-  }, 2000)
-}
-
 onMounted(() => {
   authStore.checkAuth()
-  startTypewriterAnimation()
-})
-
-onUnmounted(() => {
-  if (animationTimer) {
-    clearTimeout(animationTimer)
-    animationTimer = null
-  }
 })
 </script>

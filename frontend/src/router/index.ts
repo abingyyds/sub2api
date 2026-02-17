@@ -35,6 +35,24 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/legal/tokushoho',
+    name: 'Tokushoho',
+    component: () => import('@/views/legal/TokushohoView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: '特定商取引法に基づく表記'
+    }
+  },
+  {
+    path: '/legal/disclosure',
+    name: 'Disclosure',
+    component: () => import('@/views/legal/DisclosureView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: '商業披露'
+    }
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/auth/LoginView.vue'),
@@ -389,7 +407,7 @@ router.beforeEach((to, _from, next) => {
 
   // Set page title
   const appStore = useAppStore()
-  const siteName = appStore.siteName || 'cCoder.me'
+  const siteName = appStore.siteName || 'SubRouter.ai'
   if (to.meta.title) {
     document.title = `${to.meta.title} - ${siteName}`
   } else {
