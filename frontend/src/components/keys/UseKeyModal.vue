@@ -117,6 +117,19 @@
             {{ platformNote }}
           </p>
         </div>
+
+        <!-- Supported Models -->
+        <div v-if="platformModels.length" class="rounded-lg border border-gray-200 dark:border-dark-700">
+          <button @click="showModels = !showModels" class="flex w-full items-center justify-between px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors">
+            <span>{{ t('keys.supportedModels') }} ({{ platformModels.length }})</span>
+            <svg class="h-4 w-4 transition-transform" :class="showModels ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+          </button>
+          <div v-if="showModels" class="border-t border-gray-200 dark:border-dark-700 px-4 py-3">
+            <div class="flex flex-wrap gap-1.5">
+              <code v-for="model in platformModels" :key="model" class="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-dark-700 dark:text-gray-300">{{ model }}</code>
+            </div>
+          </div>
+        </div>
       </template>
     </div>
 
@@ -139,6 +152,7 @@ import { useI18n } from 'vue-i18n'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { useClipboard } from '@/composables/useClipboard'
+import { getModelsByPlatform } from '@/composables/useModelWhitelist'
 import type { GroupPlatform } from '@/types'
 
 interface Props {
@@ -174,6 +188,9 @@ const { copyToClipboard: clipboardCopy } = useClipboard()
 const copiedIndex = ref<number | null>(null)
 const activeTab = ref<string>('unix')
 const activeClientTab = ref<string>('claude')
+const showModels = ref(false)
+
+const platformModels = computed(() => props.platform ? getModelsByPlatform(props.platform) : [])
 
 // Reset tabs when platform changes
 const defaultClientTab = computed(() => {
