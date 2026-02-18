@@ -208,7 +208,8 @@ export default {
     logout: 'Logout',
     github: 'GitHub',
     mySubscriptions: 'My Subscriptions',
-    docs: 'Docs'
+    docs: 'Docs',
+    announcements: 'Announcements'
   },
 
   // Auth
@@ -359,6 +360,8 @@ export default {
   // API Keys
   keys: {
     title: 'API Keys',
+    supportedModels: 'Supported Models',
+    noModelsAvailable: 'No models available',
     description: 'Manage your API keys and access tokens',
     createKey: 'Create API Key',
     editKey: 'Edit API Key',
@@ -419,6 +422,7 @@ export default {
         geminiCli: 'Gemini CLI',
         codexCli: 'Codex CLI',
         opencode: 'OpenCode',
+        openclaw: 'OpenClaw',
       },
       antigravity: {
         description: 'Configure API access for Antigravity group. Select the configuration method based on your client.',
@@ -437,6 +441,8 @@ export default {
         subtitle: 'opencode.json',
         hint: 'Config path: ~/.config/opencode/opencode.json (or opencode.jsonc), create if not exists. Use default providers (openai/anthropic/google) or custom provider_id. API Key can be configured directly or via /connect command. This is an example, adjust models and options as needed.',
       },
+      claudeCodeHint: 'Config path: ~/.claude/settings.json, create if not exists. Models and options can be adjusted as needed.',
+      openclawHint: 'Config path: ~/.openclaw/openclaw.json, create if not exists. Adjust model as needed.',
     },
     customKeyLabel: 'Custom Key',
     customKeyPlaceholder: 'Enter your custom key (min 16 chars)',
@@ -2098,6 +2104,27 @@ export default {
       noRecords: 'No referral records found',
       statusPending: 'Pending',
       statusRewarded: 'Rewarded'
+    },
+
+    // Announcements
+    announcements: {
+      title: 'Announcements',
+      description: 'Manage system announcements',
+      create: 'Create Announcement',
+      edit: 'Edit Announcement',
+      delete: 'Delete Announcement',
+      titleLabel: 'Title',
+      contentLabel: 'Content',
+      priority: 'Priority',
+      noData: 'No announcements',
+      noDataDesc: 'Create your first announcement to notify users.',
+      deleteConfirm: 'Are you sure you want to delete this announcement?',
+      created: 'Announcement created successfully',
+      updated: 'Announcement updated successfully',
+      deleted: 'Announcement deleted successfully',
+      loadError: 'Failed to load announcements',
+      saveError: 'Failed to save announcement',
+      deleteError: 'Failed to delete announcement'
     },
 
     // Ops Monitoring

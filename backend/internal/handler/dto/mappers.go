@@ -532,6 +532,21 @@ func PromoCodeFromService(pc *service.PromoCode) *PromoCode {
 	}
 }
 
+func AnnouncementFromService(a *service.Announcement) *Announcement {
+	if a == nil {
+		return nil
+	}
+	return &Announcement{
+		ID:        a.ID,
+		Title:     a.Title,
+		Content:   a.Content,
+		Status:    a.Status,
+		Priority:  a.Priority,
+		CreatedAt: a.CreatedAt,
+		UpdatedAt: a.UpdatedAt,
+	}
+}
+
 func PromoCodeUsageFromService(u *service.PromoCodeUsage) *PromoCodeUsage {
 	if u == nil {
 		return nil

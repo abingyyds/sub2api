@@ -27,6 +27,7 @@ func ProvideAdminHandlers(
 	usageHandler *admin.UsageHandler,
 	userAttributeHandler *admin.UserAttributeHandler,
 	referralHandler *admin.ReferralHandler,
+	announcementHandler *admin.AnnouncementHandler,
 ) *AdminHandlers {
 	return &AdminHandlers{
 		Dashboard:        dashboardHandler,
@@ -47,6 +48,7 @@ func ProvideAdminHandlers(
 		Usage:            usageHandler,
 		UserAttribute:    userAttributeHandler,
 		Referral:         referralHandler,
+		Announcement:     announcementHandler,
 	}
 }
 
@@ -74,6 +76,7 @@ func ProvideHandlers(
 	settingHandler *SettingHandler,
 	totpHandler *TotpHandler,
 	referralHandler *ReferralHandler,
+	announcementHandler *AnnouncementHandler,
 ) *Handlers {
 	return &Handlers{
 		Auth:          authHandler,
@@ -88,6 +91,7 @@ func ProvideHandlers(
 		Setting:       settingHandler,
 		Totp:          totpHandler,
 		Referral:      referralHandler,
+		Announcement:  announcementHandler,
 	}
 }
 
@@ -104,6 +108,7 @@ var ProviderSet = wire.NewSet(
 	NewOpenAIGatewayHandler,
 	NewTotpHandler,
 	NewReferralHandler,
+	NewAnnouncementHandler,
 	ProvideSettingHandler,
 
 	// Admin handlers
@@ -125,6 +130,7 @@ var ProviderSet = wire.NewSet(
 	admin.NewUsageHandler,
 	admin.NewUserAttributeHandler,
 	admin.NewReferralHandler,
+	admin.NewAnnouncementHandler,
 
 	// AdminHandlers and Handlers constructors
 	ProvideAdminHandlers,

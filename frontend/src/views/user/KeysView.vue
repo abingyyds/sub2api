@@ -3,6 +3,10 @@
     <TablePageLayout>
       <template #actions>
         <div class="flex justify-end gap-3">
+        <button @click="showModelsDialog = true" class="btn btn-secondary">
+          <Icon name="document" size="md" class="mr-2" />
+          {{ t('keys.supportedModels') }}
+        </button>
         <button
           @click="loadApiKeys"
           :disabled="loading"
@@ -391,6 +395,24 @@
       @cancel="showDeleteDialog = false"
     />
 
+    <!-- Supported Models Dialog -->
+    <BaseDialog :show="showModelsDialog" :title="t('keys.supportedModels')" width="normal" @close="showModelsDialog = false">
+      <div v-if="modelsByPlatform.length === 0" class="py-8 text-center text-gray-500">{{ t('keys.noModelsAvailable') }}</div>
+      <div v-else class="space-y-4 max-h-[60vh] overflow-y-auto">
+        <div v-for="group in modelsByPlatform" :key="group.platform">
+          <h4 class="mb-2 text-sm font-semibold uppercase text-gray-500 dark:text-gray-400">{{ group.platform }}</h4>
+          <div class="flex flex-wrap gap-1.5">
+            <code v-for="model in group.models" :key="model" class="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-dark-700 dark:text-gray-300">{{ model }}</code>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end">
+          <button @click="showModelsDialog = false" class="btn btn-secondary">{{ t('common.close') }}</button>
+        </div>
+      </template>
+    </BaseDialog>
+
     <!-- Use Key Modal -->
     <UseKeyModal
       :show="showUseKeyModal"
@@ -494,6 +516,7 @@
 	import { useAppStore } from '@/stores/app'
 	import { useOnboardingStore } from '@/stores/onboarding'
 	import { useClipboard } from '@/composables/useClipboard'
+import { getModelsByPlatform } from '@/composables/useModelWhitelist'
 
 const { t } = useI18n()
 import { keysAPI, authAPI, usageAPI, userGroupsAPI } from '@/api'
@@ -555,6 +578,7 @@ const showEditModal = ref(false)
 const showDeleteDialog = ref(false)
 const showUseKeyModal = ref(false)
 const showCcsClientSelect = ref(false)
+const showModelsDialog = ref(false)
 const pendingCcsRow = ref<ApiKey | null>(null)
 const selectedKey = ref<ApiKey | null>(null)
 const copiedKeyId = ref<number | null>(null)
@@ -622,6 +646,11 @@ const groupOptions = computed(() =>
     platform: group.platform
   }))
 )
+
+const modelsByPlatform = computed(() => {
+  const seen = new Set<string>()
+  return groups.value.filter(g => { const k = g.platform; if (seen.has(k)) return false; seen.add(k); return true }).map(g => ({ platform: g.platform, models: getModelsByPlatform(g.platform) }))
+})
 
 const maskKey = (key: string): string => {
   if (key.length <= 12) return key

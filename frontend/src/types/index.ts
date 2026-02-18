@@ -1159,3 +1159,15 @@ export interface TotpLogin2FARequest {
   temp_token: string
   totp_code: string
 }
+
+// ==================== Announcement Types ====================
+
+export interface Announcement {
+  id: number
+  title: string
+  content: string
+  status: string
+  priority: number
+  created_at: string
+  updated_at: string
+}

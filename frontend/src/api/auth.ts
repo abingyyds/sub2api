@@ -13,7 +13,8 @@ import type {
   SendVerifyCodeResponse,
   PublicSettings,
   TotpLoginResponse,
-  TotpLogin2FARequest
+  TotpLogin2FARequest,
+  Announcement
 } from '@/types'
 
 /**
@@ -215,6 +216,11 @@ export async function resetPassword(request: ResetPasswordRequest): Promise<Rese
   return data
 }
 
+export async function getActiveAnnouncements(): Promise<Announcement[]> {
+  const { data } = await apiClient.get<Announcement[]>('/settings/announcements')
+  return data
+}
+
 export const authAPI = {
   login,
   login2FA,
@@ -230,7 +236,8 @@ export const authAPI = {
   sendVerifyCode,
   validatePromoCode,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  getActiveAnnouncements
 }
 
 export default authAPI

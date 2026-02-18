@@ -278,12 +278,14 @@ const clientTabs = computed((): TabConfig[] => {
     case 'antigravity':
       return [
         { id: 'claude', label: t('keys.useKeyModal.cliTabs.claudeCode'), icon: TerminalIcon },
+        { id: 'openclaw', label: t('keys.useKeyModal.cliTabs.openclaw'), icon: TerminalIcon },
         { id: 'gemini', label: t('keys.useKeyModal.cliTabs.geminiCli'), icon: SparkleIcon },
         { id: 'opencode', label: t('keys.useKeyModal.cliTabs.opencode'), icon: TerminalIcon }
       ]
     default:
       return [
         { id: 'claude', label: t('keys.useKeyModal.cliTabs.claudeCode'), icon: TerminalIcon },
+        { id: 'openclaw', label: t('keys.useKeyModal.cliTabs.openclaw'), icon: TerminalIcon },
         { id: 'opencode', label: t('keys.useKeyModal.cliTabs.opencode'), icon: TerminalIcon }
       ]
   }
@@ -302,7 +304,7 @@ const openaiTabs: TabConfig[] = [
   { id: 'windows', label: 'Windows', icon: WindowsIcon }
 ]
 
-const showShellTabs = computed(() => activeClientTab.value !== 'opencode')
+const showShellTabs = computed(() => !['opencode', 'claude', 'openclaw'].includes(activeClientTab.value))
 
 const currentTabs = computed(() => {
   if (!showShellTabs.value) return []
@@ -342,7 +344,7 @@ const platformNote = computed(() => {
   }
 })
 
-const showPlatformNote = computed(() => activeClientTab.value !== 'opencode')
+const showPlatformNote = computed(() => !['opencode', 'openclaw', 'claude'].includes(activeClientTab.value))
 
 const escapeHtml = (value: string) => value
   .replace(/&/g, '&amp;')
@@ -399,6 +401,11 @@ const currentFiles = computed((): FileConfig[] => {
     }
   }
 
+  if (activeClientTab.value === 'openclaw') {
+    const clawBase = props.platform === 'antigravity' ? `${baseRoot}/antigravity` : baseRoot
+    return [generateOpenClawConfig(clawBase, apiKey)]
+  }
+
   switch (props.platform) {
     case 'openai':
       return generateOpenAIFiles(baseUrl, apiKey)
@@ -408,38 +415,50 @@ const currentFiles = computed((): FileConfig[] => {
       if (activeClientTab.value === 'gemini') {
         return [generateGeminiCliContent(`${baseUrl}/antigravity`, apiKey)]
       }
-      return generateAnthropicFiles(`${baseUrl}/antigravity`, apiKey)
+      return [generateClaudeCodeConfig(`${baseRoot}/antigravity`, apiKey)]
     default:
-      return generateAnthropicFiles(baseUrl, apiKey)
+      return [generateClaudeCodeConfig(baseRoot, apiKey)]
   }
 })
 
-function generateAnthropicFiles(baseUrl: string, apiKey: string): FileConfig[] {
-  let path: string
-  let content: string
-
-  switch (activeTab.value) {
-    case 'unix':
-      path = 'Terminal'
-      content = `export ANTHROPIC_BASE_URL="${baseUrl}"
-export ANTHROPIC_AUTH_TOKEN="${apiKey}"`
-      break
-    case 'cmd':
-      path = 'Command Prompt'
-      content = `set ANTHROPIC_BASE_URL=${baseUrl}
-set ANTHROPIC_AUTH_TOKEN=${apiKey}`
-      break
-    case 'powershell':
-      path = 'PowerShell'
-      content = `$env:ANTHROPIC_BASE_URL="${baseUrl}"
-$env:ANTHROPIC_AUTH_TOKEN="${apiKey}"`
-      break
-    default:
-      path = 'Terminal'
-      content = ''
+function generateClaudeCodeConfig(baseUrl: string, apiKey: string): FileConfig {
+  const content = JSON.stringify({
+    env: {
+      ANTHROPIC_API_KEY: apiKey,
+      ANTHROPIC_BASE_URL: baseUrl.replace(/\/+$/, '') + '/',
+      ANTHROPIC_DEFAULT_HAIKU_MODEL: 'claude-opus-4-6',
+      ANTHROPIC_DEFAULT_OPUS_MODEL: 'claude-opus-4-6',
+      ANTHROPIC_DEFAULT_SONNET_MODEL: 'claude-opus-4-6',
+      ANTHROPIC_MODEL: 'claude-opus-4-6',
+      ANTHROPIC_REASONING_MODEL: 'Claude-opus-4-6-thinking',
+      forceLoginMethod: 'console'
+    },
+    permissions: { allow: [] },
+    enabledPlugins: { 'rust-analyzer-lsp@claude-plugins-official': true }
+  }, null, 2)
+  return {
+    path: '~/.claude/settings.json',
+    content,
+    hint: t('keys.useKeyModal.claudeCodeHint')
   }
+}
 
-  return [{ path, content }]
+function generateOpenClawConfig(baseUrl: string, apiKey: string): FileConfig {
+  const content = JSON.stringify({
+    provider: 'anthropic',
+    base_url: baseUrl.replace(/\/+$/, '') + '/',
+    api: 'anthropic-messages',
+    api_key: apiKey,
+    model: {
+      id: 'claude-haiku-4-5-20251001',
+      name: 'claude-haiku-4-5-20251001'
+    }
+  }, null, 2)
+  return {
+    path: '~/.openclaw/openclaw.json',
+    content,
+    hint: t('keys.useKeyModal.openclawHint')
+  }
 }
 
 function generateGeminiCliContent(baseUrl: string, apiKey: string): FileConfig {

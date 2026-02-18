@@ -205,7 +205,8 @@ export default {
     logout: '退出登录',
     github: 'GitHub',
     mySubscriptions: '我的订阅',
-    docs: '文档'
+    docs: '文档',
+    announcements: '公告管理'
   },
 
   // Auth
@@ -356,6 +357,8 @@ export default {
   // API Keys
   keys: {
     title: 'API 密钥',
+    supportedModels: '支持的模型',
+    noModelsAvailable: '暂无可用模型',
     description: '管理您的 API 密钥和访问令牌',
     createKey: '创建密钥',
     editKey: '编辑密钥',
@@ -415,6 +418,7 @@ export default {
         geminiCli: 'Gemini CLI',
         codexCli: 'Codex CLI',
         opencode: 'OpenCode',
+        openclaw: 'OpenClaw',
       },
       antigravity: {
         description: '为 Antigravity 分组配置 API 访问。请根据您使用的客户端选择对应的配置方式。',
@@ -433,6 +437,8 @@ export default {
         subtitle: 'opencode.json',
         hint: '配置文件路径：~/.config/opencode/opencode.json（或 opencode.jsonc），不存在需手动创建。可使用默认 provider（openai/anthropic/google）或自定义 provider_id。API Key 支持直接配置或通过客户端 /connect 命令配置。示例仅供参考，模型与选项可按需调整。',
       },
+      claudeCodeHint: '配置文件路径：~/.claude/settings.json，不存在需手动创建。模型与选项可按需调整。',
+      openclawHint: '配置文件路径：~/.openclaw/openclaw.json，不存在需手动创建。模型可按需调整。',
     },
     customKeyLabel: '自定义密钥',
     customKeyPlaceholder: '输入自定义密钥（至少16个字符）',
@@ -2245,6 +2251,27 @@ export default {
       noRecords: '暂无邀请记录',
       statusPending: '待奖励',
       statusRewarded: '已奖励'
+    },
+
+    // 公告管理
+    announcements: {
+      title: '公告管理',
+      description: '管理系统公告',
+      create: '创建公告',
+      edit: '编辑公告',
+      delete: '删除公告',
+      titleLabel: '标题',
+      contentLabel: '内容',
+      priority: '优先级',
+      noData: '暂无公告',
+      noDataDesc: '创建第一条公告来通知用户。',
+      deleteConfirm: '确定要删除这条公告吗？',
+      created: '公告创建成功',
+      updated: '公告更新成功',
+      deleted: '公告删除成功',
+      loadError: '加载公告失败',
+      saveError: '保存公告失败',
+      deleteError: '删除公告失败'
     },
 
     // Ops Monitoring
