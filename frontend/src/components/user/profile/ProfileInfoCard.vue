@@ -15,8 +15,8 @@
             {{ user?.email }}
           </h2>
           <div class="mt-1 flex items-center gap-2">
-            <span :class="['badge', user?.role === 'admin' ? 'badge-primary' : 'badge-gray']">
-              {{ user?.role === 'admin' ? t('profile.administrator') : t('profile.user') }}
+            <span :class="['badge', user?.role !== 'user' ? 'badge-primary' : 'badge-gray']">
+              {{ user?.role === 'admin' ? t('profile.administrator') : user?.role === 'sub_admin' ? t('profile.subAdmin') : t('profile.user') }}
             </span>
             <span
               :class="['badge', user?.status === 'active' ? 'badge-success' : 'badge-danger']"

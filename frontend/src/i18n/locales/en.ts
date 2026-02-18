@@ -569,6 +569,7 @@ export default {
     concurrencyLimit: 'Concurrency Limit',
     memberSince: 'Member Since',
     administrator: 'Administrator',
+    subAdmin: 'Sub-Admin',
     user: 'User',
     username: 'Username',
     enterUsername: 'Enter username',
@@ -835,6 +836,7 @@ export default {
       useDepositWithdrawButtons: 'Please use deposit/withdraw buttons to adjust balance',
       roles: {
         admin: 'Admin',
+        sub_admin: 'Sub-Admin',
         user: 'User'
       },
       // Settings Dropdowns

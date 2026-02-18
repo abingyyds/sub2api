@@ -270,7 +270,7 @@
           </template>
 
           <template #cell-role="{ value }">
-            <span :class="['badge', value === 'admin' ? 'badge-purple' : 'badge-gray']">
+            <span :class="['badge', value === 'admin' ? 'badge-purple' : value === 'sub_admin' ? 'badge-blue' : 'badge-gray']">
               {{ t('admin.users.roles.' + value) }}
             </span>
           </template>
@@ -356,7 +356,7 @@
 
               <!-- Toggle Status Button (not for admin) -->
               <button
-                v-if="row.role !== 'admin'"
+                v-if="row.role !== 'admin' && row.role !== 'sub_admin'"
                 @click="handleToggleStatus(row)"
                 :class="[
                   'flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors',
@@ -460,7 +460,7 @@
 
               <!-- Delete (not for admin) -->
               <button
-                v-if="user.role !== 'admin'"
+                v-if="user.role !== 'admin' && user.role !== 'sub_admin'"
                 @click="handleDelete(user); closeActionMenu()"
                 class="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
               >

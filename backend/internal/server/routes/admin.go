@@ -26,7 +26,7 @@ func RegisterAdminRoutes(
 		// 分组管理
 		registerGroupRoutes(admin, h)
 
-		// 账号管理
+		// 账号管理（仅完整管理员可访问）
 		registerAccountRoutes(admin, h)
 
 		// OpenAI OAuth
@@ -198,6 +198,7 @@ func registerGroupRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 
 func registerAccountRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	accounts := admin.Group("/accounts")
+	accounts.Use(middleware.FullAdminOnly())
 	{
 		accounts.GET("", h.Admin.Account.List)
 		accounts.GET("/:id", h.Admin.Account.GetByID)

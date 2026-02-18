@@ -88,6 +88,9 @@ type UpdateUserInput struct {
 	Balance       *float64 // 使用指针区分"未提供"和"设置为0"
 	Concurrency   *int     // 使用指针区分"未提供"和"设置为0"
 	Status        string
+	Role          string // 角色变更（仅完整管理员可操作）
+	CallerRole    string // 调用者角色
+	CallerID      int64  // 调用者用户ID
 	AllowedGroups *[]int64 // 使用指针区分"未提供"和"设置为空数组"
 }
 
@@ -348,8 +351,8 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 		return nil, err
 	}
 
-	// Protect admin users: cannot disable admin accounts
-	if user.Role == "admin" && input.Status == "disabled" {
+	// Protect admin/sub_admin users: cannot disable admin accounts
+	if (user.Role == RoleAdmin || user.Role == RoleSubAdmin) && input.Status == "disabled" {
 		return nil, errors.New("cannot disable admin user")
 	}
 
@@ -371,6 +374,17 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 	}
 	if input.Notes != nil {
 		user.Notes = *input.Notes
+	}
+
+	// 角色变更：仅完整管理员可操作，且不能修改自己的角色
+	if input.Role != "" && input.Role != user.Role {
+		if input.CallerRole != RoleAdmin {
+			return nil, errors.New("only full admin can change user roles")
+		}
+		if input.CallerID == user.ID {
+			return nil, errors.New("cannot change your own role")
+		}
+		user.Role = input.Role
 	}
 
 	if input.Status != "" {
@@ -424,7 +438,7 @@ func (s *adminServiceImpl) DeleteUser(ctx context.Context, id int64) error {
 	if err != nil {
 		return err
 	}
-	if user.Role == "admin" {
+	if user.Role == RoleAdmin || user.Role == RoleSubAdmin {
 		return errors.New("cannot delete admin user")
 	}
 	if err := s.userRepo.Delete(ctx, id); err != nil {

@@ -6,9 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// AdminOnly 管理员权限中间件
-// 必须在JWTAuth中间件之后使用
-func AdminOnly() gin.HandlerFunc {
+// FullAdminOnly 仅允许完整管理员（admin）访问，sub_admin 不可访问
+func FullAdminOnly() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role, ok := GetUserRoleFromContext(c)
 		if !ok {
@@ -16,9 +15,8 @@ func AdminOnly() gin.HandlerFunc {
 			return
 		}
 
-		// 检查是否为管理员（admin 或 sub_admin）
-		if role != service.RoleAdmin && role != service.RoleSubAdmin {
-			AbortWithError(c, 403, "FORBIDDEN", "Admin access required")
+		if role != service.RoleAdmin {
+			AbortWithError(c, 403, "FORBIDDEN", "Full admin access required")
 			return
 		}
 

@@ -447,6 +447,12 @@ router.beforeEach((to, _from, next) => {
     return
   }
 
+  // Sub-admin cannot access account management
+  if (authStore.isAdmin && !authStore.isFullAdmin && to.path.startsWith('/admin/accounts')) {
+    next('/admin/dashboard')
+    return
+  }
+
   // 简易模式下限制访问某些页面
   if (authStore.isSimpleMode) {
     const restrictedPaths = [

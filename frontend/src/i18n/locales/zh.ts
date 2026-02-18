@@ -565,6 +565,7 @@ export default {
     concurrencyLimit: '并发限制',
     memberSince: '注册时间',
     administrator: '管理员',
+    subAdmin: '副管理员',
     user: '用户',
     username: '用户名',
     enterUsername: '输入用户名',
@@ -818,6 +819,7 @@ export default {
       deleteConfirm: "确定要删除用户 '{email}' 吗？此操作无法撤销。",
       roles: {
         admin: '管理员',
+        sub_admin: '副管理员',
         user: '用户'
       },
       form: {

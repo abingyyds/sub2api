@@ -227,7 +227,7 @@ const docUrl = computed(() => appStore.docUrl)
 
 // 只在标准模式的管理员下显示新手引导按钮
 const showOnboardingButton = computed(() => {
-  return !authStore.isSimpleMode && user.value?.role === 'admin'
+  return !authStore.isSimpleMode && authStore.isAdmin
 })
 
 const userInitials = computed(() => {

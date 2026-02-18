@@ -162,6 +162,7 @@ const adminSettingsStore = useAdminSettingsStore()
 const sidebarCollapsed = computed(() => appStore.sidebarCollapsed)
 const mobileOpen = computed(() => appStore.mobileOpen)
 const isAdmin = computed(() => authStore.isAdmin)
+const isFullAdmin = computed(() => authStore.isFullAdmin)
 const isDark = ref(document.documentElement.classList.contains('dark'))
 
 // Site settings from appStore (cached, no flicker)
@@ -470,7 +471,9 @@ const adminNavItems = computed(() => {
     { path: '/admin/users', label: t('nav.users'), icon: UsersIcon, hideInSimpleMode: true },
     { path: '/admin/groups', label: t('nav.groups'), icon: FolderIcon, hideInSimpleMode: true },
     { path: '/admin/subscriptions', label: t('nav.subscriptions'), icon: CreditCardIcon, hideInSimpleMode: true },
-    { path: '/admin/accounts', label: t('nav.accounts'), icon: GlobeIcon },
+    ...(isFullAdmin.value
+      ? [{ path: '/admin/accounts', label: t('nav.accounts'), icon: GlobeIcon }]
+      : []),
     { path: '/admin/proxies', label: t('nav.proxies'), icon: ServerIcon },
     { path: '/admin/redeem', label: t('nav.redeemCodes'), icon: TicketIcon, hideInSimpleMode: true },
     { path: '/admin/promo-codes', label: t('nav.promoCodes'), icon: GiftIcon, hideInSimpleMode: true },

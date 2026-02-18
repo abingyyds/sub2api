@@ -6,6 +6,7 @@ import (
 
 	"github.com/Wei-Shaw/sub2api/internal/handler/dto"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
+	"github.com/Wei-Shaw/sub2api/internal/server/middleware"
 	"github.com/Wei-Shaw/sub2api/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -44,6 +45,7 @@ type UpdateUserRequest struct {
 	Balance       *float64 `json:"balance"`
 	Concurrency   *int     `json:"concurrency"`
 	Status        string   `json:"status" binding:"omitempty,oneof=active disabled"`
+	Role          string   `json:"role" binding:"omitempty,oneof=admin sub_admin user"`
 	AllowedGroups *[]int64 `json:"allowed_groups"`
 }
 
@@ -173,6 +175,10 @@ func (h *UserHandler) Update(c *gin.Context) {
 		return
 	}
 
+	// 角色变更仅完整管理员可操作
+	callerRole, _ := middleware.GetUserRoleFromContext(c)
+	callerSubject, _ := middleware.GetAuthSubjectFromContext(c)
+
 	// 使用指针类型直接传递，nil 表示未提供该字段
 	user, err := h.adminService.UpdateUser(c.Request.Context(), userID, &service.UpdateUserInput{
 		Email:         req.Email,
@@ -182,6 +188,9 @@ func (h *UserHandler) Update(c *gin.Context) {
 		Balance:       req.Balance,
 		Concurrency:   req.Concurrency,
 		Status:        req.Status,
+		Role:          req.Role,
+		CallerRole:    callerRole,
+		CallerID:      callerSubject.UserID,
 		AllowedGroups: req.AllowedGroups,
 	})
 	if err != nil {

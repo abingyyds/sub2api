@@ -34,6 +34,10 @@ type User struct {
 }
 
 func (u *User) IsAdmin() bool {
+	return u.Role == RoleAdmin || u.Role == RoleSubAdmin
+}
+
+func (u *User) IsFullAdmin() bool {
 	return u.Role == RoleAdmin
 }
 
