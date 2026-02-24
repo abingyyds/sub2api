@@ -355,7 +355,7 @@
             <p class="text-sm text-gray-600 dark:text-dark-300">使用问题速查</p>
           </a>
 
-          <a href="#" class="group rounded-2xl border border-gray-200 bg-white p-6 transition-all hover:border-primary-500 hover:shadow-lg dark:border-dark-700 dark:bg-dark-800">
+          <a href="https://rcnwwid75eku.feishu.cn/share/base/form/shrcnzcWz031LXqdL3sQCRHrbdg" target="_blank" rel="noopener noreferrer" class="group rounded-2xl border border-gray-200 bg-white p-6 transition-all hover:border-primary-500 hover:shadow-lg dark:border-dark-700 dark:bg-dark-800">
             <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-purple-600 transition-transform group-hover:scale-110 dark:bg-purple-900/30">
               <Icon name="document" size="lg" />
             </div>
