@@ -76,6 +76,8 @@ func ProvideHandlers(
 	settingHandler *SettingHandler,
 	totpHandler *TotpHandler,
 	modelPlazaHandler *ModelPlazaHandler,
+	referralHandler *ReferralHandler,
+	announcementHandler *AnnouncementHandler,
 ) *Handlers {
 	return &Handlers{
 		Auth:          authHandler,
@@ -90,6 +92,8 @@ func ProvideHandlers(
 		Setting:       settingHandler,
 		Totp:          totpHandler,
 		ModelPlaza:    modelPlazaHandler,
+		Referral:      referralHandler,
+		Announcement:  announcementHandler,
 	}
 }
 
