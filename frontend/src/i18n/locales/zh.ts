@@ -205,6 +205,8 @@ export default {
     logout: '退出登录',
     github: 'GitHub',
     mySubscriptions: '我的订阅',
+    pricing: '购买订阅',
+    modelPlaza: '模型广场',
     docs: '文档',
     announcements: '公告管理'
   },
@@ -3247,6 +3249,43 @@ export default {
     restartNow: '立即重启',
     restarting: '正在重启...',
     retry: '重试'
+  },
+
+  // Pricing Page
+  modelPlaza: {
+    title: '模型广场',
+    subtitle: '浏览各套餐可用的模型列表',
+    empty: '暂无可用分组',
+    availableModels: '可用模型',
+    allModels: '支持平台所有默认模型',
+    rate: '倍率',
+    subscriptionType: '订阅制',
+    standardType: '按量付费',
+  },
+
+  pricing: {
+    title: '购买订阅',
+    subtitle: '选择适合您的套餐方案',
+    recommended: '推荐',
+    daily: '每日 {amount} 美金',
+    noWeeklyLimit: '无周限额',
+    validity: '30 天有效期',
+    stackableTag: '支持叠加',
+    stackable: '月卡支持叠加使用 / 支持企业组团购买',
+    howToBuy: '购买方式',
+    step1: '浏览器打开下单链接，支付后保存兑换码',
+    step2: '购买后请保存下单详情里的兑换码',
+    step3: '在兑换区填入兑换码激活服务',
+    goRedeem: '前往兑换 →',
+    warning: '购买后请务必保存下单详情里的兑换码，丢失无法找回。',
+    plans: {
+      payg: { name: '按量付费', desc: '用多少付多少' },
+      m289: { name: '月卡 289' },
+      m389: { name: '月卡 389' },
+      m459: { name: '月卡 459' },
+      m559: { name: '月卡 559' },
+      m1180: { name: '月卡 1180' }
+    }
   },
 
   // User Subscriptions Page

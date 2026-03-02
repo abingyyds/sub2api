@@ -208,6 +208,8 @@ export default {
     logout: 'Logout',
     github: 'GitHub',
     mySubscriptions: 'My Subscriptions',
+    pricing: 'Pricing',
+    modelPlaza: 'Model Plaza',
     docs: 'Docs',
     announcements: 'Announcements'
   },
@@ -3097,6 +3099,43 @@ export default {
     restartNow: 'Restart Now',
     restarting: 'Restarting...',
     retry: 'Retry'
+  },
+
+  // Pricing Page
+  modelPlaza: {
+    title: 'Model Plaza',
+    subtitle: 'Browse available models across all your plans',
+    empty: 'No available groups found',
+    availableModels: 'Available Models',
+    allModels: 'All platform default models available',
+    rate: 'Rate',
+    subscriptionType: 'Subscription',
+    standardType: 'Standard',
+  },
+
+  pricing: {
+    title: 'Pricing',
+    subtitle: 'Choose the plan that fits your needs',
+    recommended: 'Recommended',
+    daily: '${amount} daily',
+    noWeeklyLimit: 'No weekly limit',
+    validity: '30-day validity',
+    stackableTag: 'Stackable',
+    stackable: 'Monthly plans are stackable / Group purchases available',
+    howToBuy: 'How to Purchase',
+    step1: 'Open the purchase link, pay and save the redeem code',
+    step2: 'Save the redeem code from your order details after purchase',
+    step3: 'Enter the redeem code to activate your subscription',
+    goRedeem: 'Go to Redeem →',
+    warning: 'Please save the redeem code from your order details. Lost codes cannot be recovered.',
+    plans: {
+      payg: { name: 'Pay As You Go', desc: 'Pay for what you use' },
+      m289: { name: 'Monthly 289' },
+      m389: { name: 'Monthly 389' },
+      m459: { name: 'Monthly 459' },
+      m559: { name: 'Monthly 559' },
+      m1180: { name: 'Monthly 1180' }
+    }
   },
 
   // User Subscriptions Page

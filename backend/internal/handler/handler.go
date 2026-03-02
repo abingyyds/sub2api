@@ -42,6 +42,7 @@ type Handlers struct {
 	Totp          *TotpHandler
 	Referral      *ReferralHandler
 	Announcement  *AnnouncementHandler
+	ModelPlaza    *ModelPlazaHandler
 }
 
 // BuildInfo contains build-time information

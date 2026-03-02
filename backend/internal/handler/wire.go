@@ -75,8 +75,7 @@ func ProvideHandlers(
 	openaiGatewayHandler *OpenAIGatewayHandler,
 	settingHandler *SettingHandler,
 	totpHandler *TotpHandler,
-	referralHandler *ReferralHandler,
-	announcementHandler *AnnouncementHandler,
+	modelPlazaHandler *ModelPlazaHandler,
 ) *Handlers {
 	return &Handlers{
 		Auth:          authHandler,
@@ -90,8 +89,7 @@ func ProvideHandlers(
 		OpenAIGateway: openaiGatewayHandler,
 		Setting:       settingHandler,
 		Totp:          totpHandler,
-		Referral:      referralHandler,
-		Announcement:  announcementHandler,
+		ModelPlaza:    modelPlazaHandler,
 	}
 }
 
@@ -109,6 +107,7 @@ var ProviderSet = wire.NewSet(
 	NewTotpHandler,
 	NewReferralHandler,
 	NewAnnouncementHandler,
+	NewModelPlazaHandler,
 	ProvideSettingHandler,
 
 	// Admin handlers
