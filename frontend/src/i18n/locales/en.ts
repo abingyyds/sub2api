@@ -3124,18 +3124,15 @@ export default {
     stackableTag: 'Stackable',
     stackable: 'Monthly plans are stackable / Group purchases available',
     howToBuy: 'How to Purchase',
-    step1: 'Open the purchase link, pay and save the redeem code',
+    step1: 'Click on a plan card to go to the purchase page, pay and save the redeem code',
     step2: 'Save the redeem code from your order details after purchase',
     step3: 'Enter the redeem code to activate your subscription',
     goRedeem: 'Go to Redeem →',
     warning: 'Please save the redeem code from your order details. Lost codes cannot be recovered.',
+    buyNow: 'Buy Now',
     plans: {
       payg: { name: 'Pay As You Go', desc: 'Pay for what you use' },
-      m289: { name: 'Monthly 289' },
-      m389: { name: 'Monthly 389' },
-      m459: { name: 'Monthly 459' },
-      m559: { name: 'Monthly 559' },
-      m1180: { name: 'Monthly 1180' }
+      monthly: { name: 'Monthly' }
     }
   },
 

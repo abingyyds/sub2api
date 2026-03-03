@@ -9,10 +9,13 @@
 
       <!-- Plans Grid -->
       <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div
+        <a
           v-for="plan in plans"
           :key="plan.name"
-          class="card relative flex flex-col overflow-hidden"
+          :href="plan.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="card relative flex flex-col overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1"
           :class="{ 'ring-2 ring-primary-500': plan.popular }"
         >
           <div v-if="plan.popular" class="absolute right-4 top-4">
@@ -33,8 +36,11 @@
                 {{ feature }}
               </li>
             </ul>
+            <div class="mt-4 flex items-center justify-center rounded-lg bg-primary-600 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700">
+              {{ t('pricing.buyNow') }}
+            </div>
           </div>
-        </div>
+        </a>
       </div>
 
       <p class="text-center text-sm text-gray-500 dark:text-dark-400">
@@ -49,7 +55,6 @@
             <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white">1</div>
             <div>
               <p class="font-medium text-gray-900 dark:text-white">{{ t('pricing.step1') }}</p>
-              <a href="https://fk.ccoder.me" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-700 dark:text-primary-400">fk.ccoder.me</a>
             </div>
           </div>
           <div class="flex items-start gap-4">
@@ -93,37 +98,43 @@ const plans = computed(() => [
     name: t('pricing.plans.payg.name'),
     price: '1:1',
     popular: false,
-    features: ['Opus 4.5', 'Sonnet 4.5', 'GPT-5.2-Codex', t('pricing.plans.payg.desc')]
+    features: ['Opus 4.5', 'Sonnet 4.5', 'GPT-5.2-Codex', t('pricing.plans.payg.desc')],
+    url: 'https://fk.ccoder.me'
   },
   {
-    name: t('pricing.plans.m289.name'),
+    name: t('pricing.plans.monthly.name'),
     price: '¥289',
     popular: true,
-    features: [t('pricing.daily', { amount: 30 }), t('pricing.noWeeklyLimit'), t('pricing.validity'), t('pricing.stackableTag')]
+    features: [t('pricing.daily', { amount: 30 }), t('pricing.noWeeklyLimit'), t('pricing.validity'), t('pricing.stackableTag')],
+    url: 'https://fk.ccoder.me'
   },
   {
-    name: t('pricing.plans.m389.name'),
+    name: t('pricing.plans.monthly.name'),
     price: '¥389',
     popular: false,
-    features: [t('pricing.daily', { amount: 40 }), t('pricing.noWeeklyLimit'), t('pricing.validity'), t('pricing.stackableTag')]
+    features: [t('pricing.daily', { amount: 40 }), t('pricing.noWeeklyLimit'), t('pricing.validity'), t('pricing.stackableTag')],
+    url: 'https://fk.ccoder.me'
   },
   {
-    name: t('pricing.plans.m459.name'),
+    name: t('pricing.plans.monthly.name'),
     price: '¥459',
     popular: false,
-    features: [t('pricing.daily', { amount: 50 }), t('pricing.noWeeklyLimit'), t('pricing.validity'), t('pricing.stackableTag')]
+    features: [t('pricing.daily', { amount: 50 }), t('pricing.noWeeklyLimit'), t('pricing.validity'), t('pricing.stackableTag')],
+    url: 'https://fk.ccoder.me'
   },
   {
-    name: t('pricing.plans.m559.name'),
+    name: t('pricing.plans.monthly.name'),
     price: '¥559',
     popular: false,
-    features: [t('pricing.daily', { amount: 60 }), t('pricing.noWeeklyLimit'), t('pricing.validity'), t('pricing.stackableTag')]
+    features: [t('pricing.daily', { amount: 60 }), t('pricing.noWeeklyLimit'), t('pricing.validity'), t('pricing.stackableTag')],
+    url: 'https://fk.ccoder.me'
   },
   {
-    name: t('pricing.plans.m1180.name'),
+    name: t('pricing.plans.monthly.name'),
     price: '¥1180',
     popular: false,
-    features: [t('pricing.daily', { amount: 120 }), t('pricing.noWeeklyLimit'), t('pricing.validity'), t('pricing.stackableTag')]
+    features: [t('pricing.daily', { amount: 120 }), t('pricing.noWeeklyLimit'), t('pricing.validity'), t('pricing.stackableTag')],
+    url: 'https://fk.ccoder.me'
   }
 ])
 </script>
