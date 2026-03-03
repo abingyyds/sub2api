@@ -3541,6 +3541,9 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 		billingType = BillingTypeSubscription
 	}
 
+	// 应用账号计费倍率到用户扣费
+	cost.ActualCost *= account.BillingRateMultiplier()
+
 	// 创建使用日志
 	durationMs := int(result.Duration.Milliseconds())
 	var imageSize *string

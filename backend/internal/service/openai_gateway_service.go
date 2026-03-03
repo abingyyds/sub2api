@@ -1678,6 +1678,9 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 		billingType = BillingTypeSubscription
 	}
 
+	// 应用账号计费倍率到用户扣费
+	cost.ActualCost *= account.BillingRateMultiplier()
+
 	// Create usage log
 	durationMs := int(result.Duration.Milliseconds())
 	accountRateMultiplier := account.BillingRateMultiplier()
