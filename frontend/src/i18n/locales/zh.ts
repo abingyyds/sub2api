@@ -208,7 +208,8 @@ export default {
     pricing: '购买订阅',
     modelPlaza: '模型广场',
     docs: '文档',
-    announcements: '公告管理'
+    announcements: '公告管理',
+    tutorial: '使用教程'
   },
 
   // Auth
@@ -3285,6 +3286,47 @@ export default {
       m459: { name: '月卡 459' },
       m559: { name: '月卡 559' },
       m1180: { name: '月卡 1180' }
+    }
+  },
+
+  // Tutorial Page
+  tutorial: {
+    title: '使用教程',
+    subtitle: '快速上手指南，了解如何使用 API',
+    quickStart: {
+      title: '快速开始',
+      step1: '获取 API Key',
+      step1Desc: '在"API 密钥"页面创建您的专属 API Key',
+      step2: '选择模型',
+      step2Desc: '在"模型广场"查看可用模型和定价',
+      step3: '开始调用',
+      step3Desc: '使用您的 API Key 调用 Claude API'
+    },
+    apiUsage: {
+      title: 'API 调用',
+      endpoint: 'API 端点',
+      curlExample: 'cURL 示例'
+    },
+    claudeCode: {
+      title: 'Claude Code 集成',
+      description: '在 Claude Code 中使用本平台的 API',
+      setup: '环境变量配置'
+    },
+    pythonSdk: {
+      title: 'Python SDK',
+      install: '安装 SDK',
+      example: '代码示例'
+    },
+    openai: {
+      title: 'OpenAI 兼容接口',
+      description: '本平台同时提供 OpenAI 兼容的接口，方便迁移现有代码',
+      endpoint: 'OpenAI 兼容端点'
+    },
+    tips: {
+      title: '使用提示',
+      tip1: '请妥善保管您的 API Key，不要泄露给他人',
+      tip2: '在"使用记录"页面可以查看详细的调用历史和费用',
+      tip3: '如遇到问题，请查看"模型广场"了解模型可用状态'
     }
   },
 

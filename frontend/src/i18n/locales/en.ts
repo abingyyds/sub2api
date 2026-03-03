@@ -211,7 +211,8 @@ export default {
     pricing: 'Pricing',
     modelPlaza: 'Model Plaza',
     docs: 'Docs',
-    announcements: 'Announcements'
+    announcements: 'Announcements',
+    tutorial: 'Tutorial'
   },
 
   // Auth
@@ -3135,6 +3136,47 @@ export default {
       m459: { name: 'Monthly 459' },
       m559: { name: 'Monthly 559' },
       m1180: { name: 'Monthly 1180' }
+    }
+  },
+
+  // Tutorial Page
+  tutorial: {
+    title: 'Tutorial',
+    subtitle: 'Quick start guide to using the API',
+    quickStart: {
+      title: 'Quick Start',
+      step1: 'Get API Key',
+      step1Desc: 'Create your API Key in the "API Keys" page',
+      step2: 'Choose Model',
+      step2Desc: 'View available models and pricing in "Model Plaza"',
+      step3: 'Start Calling',
+      step3Desc: 'Use your API Key to call Claude API'
+    },
+    apiUsage: {
+      title: 'API Usage',
+      endpoint: 'API Endpoint',
+      curlExample: 'cURL Example'
+    },
+    claudeCode: {
+      title: 'Claude Code Integration',
+      description: 'Use this platform\'s API in Claude Code',
+      setup: 'Environment Variables'
+    },
+    pythonSdk: {
+      title: 'Python SDK',
+      install: 'Install SDK',
+      example: 'Code Example'
+    },
+    openai: {
+      title: 'OpenAI Compatible API',
+      description: 'This platform also provides OpenAI-compatible endpoints for easy migration',
+      endpoint: 'OpenAI Compatible Endpoint'
+    },
+    tips: {
+      title: 'Tips',
+      tip1: 'Keep your API Key secure and do not share it with others',
+      tip2: 'View detailed call history and costs in the "Usage" page',
+      tip3: 'Check "Model Plaza" for model availability status if you encounter issues'
     }
   },
 
