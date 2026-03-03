@@ -3144,24 +3144,42 @@ export default {
   tutorial: {
     title: 'Tutorial',
     subtitle: 'Quick start guide to using the API',
-    quickStart: {
-      title: 'Quick Start',
-      step1: 'Get API Key',
-      step1Desc: 'Create your API Key in the "API Keys" page',
-      step2: 'Choose Model',
-      step2Desc: 'View available models and pricing in "Model Plaza"',
+    integration: {
+      title: 'API Integration Steps',
+      step1: 'Create API Key',
+      step1Desc: 'Create a new API Key in the "API Keys" page. You can create different keys for different projects to manage quotas and permissions independently.',
+      step2: 'Configure Base URL',
+      step2Desc: 'Point your SDK or tool\'s Base URL to this service address, and fill in the API Key you just created.',
       step3: 'Start Calling',
-      step3Desc: 'Use your API Key to call Claude API'
+      step3Desc: 'Send requests using standard OpenAI SDK format. Change the model parameter to switch between different models, and the system will automatically route to the optimal channel.'
+    },
+    tools: {
+      claudeCode: {
+        title: 'Claude Code',
+        desc: 'Config file path: ~/.claude/settings.json',
+        file: 'Configuration File'
+      },
+      openclaw: {
+        title: 'OpenClaw',
+        desc: 'Config file path: ~/.openclaw/openclaw.json',
+        file: 'Configuration File'
+      },
+      opencode: {
+        title: 'OpenCode',
+        desc: 'Config file path: ~/.config/opencode/opencode.json',
+        file: 'Configuration File'
+      },
+      cursor: {
+        title: 'Cursor',
+        desc: 'Configure in Cursor settings: Settings → Models → OpenAI API Key',
+        apiKey: 'API Key',
+        baseUrl: 'Base URL'
+      }
     },
     apiUsage: {
       title: 'API Usage',
       endpoint: 'API Endpoint',
       curlExample: 'cURL Example'
-    },
-    claudeCode: {
-      title: 'Claude Code Integration',
-      description: 'Use this platform\'s API in Claude Code',
-      setup: 'Environment Variables'
     },
     pythonSdk: {
       title: 'Python SDK',

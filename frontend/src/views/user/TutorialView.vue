@@ -7,30 +7,82 @@
         <p class="mt-2 text-gray-500 dark:text-dark-400">{{ t('tutorial.subtitle') }}</p>
       </div>
 
-      <!-- Quick Start -->
+      <!-- API Integration Steps -->
       <div class="card p-6">
-        <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">{{ t('tutorial.quickStart.title') }}</h2>
+        <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">{{ t('tutorial.integration.title') }}</h2>
         <div class="space-y-4">
           <div class="flex items-start gap-4">
             <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white">1</div>
             <div class="flex-1">
-              <p class="font-medium text-gray-900 dark:text-white">{{ t('tutorial.quickStart.step1') }}</p>
-              <p class="mt-1 text-sm text-gray-600 dark:text-dark-300">{{ t('tutorial.quickStart.step1Desc') }}</p>
+              <p class="font-medium text-gray-900 dark:text-white">{{ t('tutorial.integration.step1') }}</p>
+              <p class="mt-1 text-sm text-gray-600 dark:text-dark-300">{{ t('tutorial.integration.step1Desc') }}</p>
             </div>
           </div>
           <div class="flex items-start gap-4">
             <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white">2</div>
             <div class="flex-1">
-              <p class="font-medium text-gray-900 dark:text-white">{{ t('tutorial.quickStart.step2') }}</p>
-              <p class="mt-1 text-sm text-gray-600 dark:text-dark-300">{{ t('tutorial.quickStart.step2Desc') }}</p>
+              <p class="font-medium text-gray-900 dark:text-white">{{ t('tutorial.integration.step2') }}</p>
+              <p class="mt-1 text-sm text-gray-600 dark:text-dark-300">{{ t('tutorial.integration.step2Desc') }}</p>
             </div>
           </div>
           <div class="flex items-start gap-4">
             <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white">3</div>
             <div class="flex-1">
-              <p class="font-medium text-gray-900 dark:text-white">{{ t('tutorial.quickStart.step3') }}</p>
-              <p class="mt-1 text-sm text-gray-600 dark:text-dark-300">{{ t('tutorial.quickStart.step3Desc') }}</p>
+              <p class="font-medium text-gray-900 dark:text-white">{{ t('tutorial.integration.step3') }}</p>
+              <p class="mt-1 text-sm text-gray-600 dark:text-dark-300">{{ t('tutorial.integration.step3Desc') }}</p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Claude Code -->
+      <div class="card p-6">
+        <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">{{ t('tutorial.tools.claudeCode.title') }}</h2>
+        <p class="mb-4 text-sm text-gray-600 dark:text-dark-300">{{ t('tutorial.tools.claudeCode.desc') }}</p>
+        <div>
+          <h3 class="mb-2 text-sm font-medium text-gray-700 dark:text-dark-300">{{ t('tutorial.tools.claudeCode.file') }}</h3>
+          <div class="rounded-lg bg-gray-100 p-3 font-mono text-sm dark:bg-dark-700">
+            <pre class="overflow-x-auto text-gray-800 dark:text-dark-200">{{ claudeCodeConfig }}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- OpenClaw -->
+      <div class="card p-6">
+        <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">{{ t('tutorial.tools.openclaw.title') }}</h2>
+        <p class="mb-4 text-sm text-gray-600 dark:text-dark-300">{{ t('tutorial.tools.openclaw.desc') }}</p>
+        <div>
+          <h3 class="mb-2 text-sm font-medium text-gray-700 dark:text-dark-300">{{ t('tutorial.tools.openclaw.file') }}</h3>
+          <div class="rounded-lg bg-gray-100 p-3 font-mono text-sm dark:bg-dark-700">
+            <pre class="overflow-x-auto text-gray-800 dark:text-dark-200">{{ openclawConfig }}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- OpenCode -->
+      <div class="card p-6">
+        <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">{{ t('tutorial.tools.opencode.title') }}</h2>
+        <p class="mb-4 text-sm text-gray-600 dark:text-dark-300">{{ t('tutorial.tools.opencode.desc') }}</p>
+        <div>
+          <h3 class="mb-2 text-sm font-medium text-gray-700 dark:text-dark-300">{{ t('tutorial.tools.opencode.file') }}</h3>
+          <div class="rounded-lg bg-gray-100 p-3 font-mono text-sm dark:bg-dark-700">
+            <pre class="overflow-x-auto text-gray-800 dark:text-dark-200">{{ opencodeConfig }}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cursor -->
+      <div class="card p-6">
+        <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">{{ t('tutorial.tools.cursor.title') }}</h2>
+        <p class="mb-4 text-sm text-gray-600 dark:text-dark-300">{{ t('tutorial.tools.cursor.desc') }}</p>
+        <div class="space-y-2">
+          <div class="rounded-lg bg-gray-100 p-3 dark:bg-dark-700">
+            <p class="text-sm text-gray-600 dark:text-dark-300">{{ t('tutorial.tools.cursor.apiKey') }}</p>
+            <code class="text-sm font-mono text-gray-800 dark:text-dark-200">sk-your-api-key</code>
+          </div>
+          <div class="rounded-lg bg-gray-100 p-3 dark:bg-dark-700">
+            <p class="text-sm text-gray-600 dark:text-dark-300">{{ t('tutorial.tools.cursor.baseUrl') }}</p>
+            <code class="text-sm font-mono text-gray-800 dark:text-dark-200">{{ apiBaseUrl }}/v1</code>
           </div>
         </div>
       </div>
@@ -49,21 +101,6 @@
             <h3 class="mb-2 font-medium text-gray-900 dark:text-white">{{ t('tutorial.apiUsage.curlExample') }}</h3>
             <div class="rounded-lg bg-gray-100 p-3 font-mono text-sm dark:bg-dark-700">
               <pre class="overflow-x-auto text-gray-800 dark:text-dark-200">{{ curlExample }}</pre>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Claude Code Integration -->
-      <div class="card p-6">
-        <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">{{ t('tutorial.claudeCode.title') }}</h2>
-        <div class="space-y-4">
-          <p class="text-gray-600 dark:text-dark-300">{{ t('tutorial.claudeCode.description') }}</p>
-          <div>
-            <h3 class="mb-2 font-medium text-gray-900 dark:text-white">{{ t('tutorial.claudeCode.setup') }}</h3>
-            <div class="rounded-lg bg-gray-100 p-3 font-mono text-sm dark:bg-dark-700">
-              <pre class="text-gray-800 dark:text-dark-200">export ANTHROPIC_BASE_URL="{{ apiBaseUrl }}"
-export ANTHROPIC_AUTH_TOKEN="sk-your-api-key"</pre>
             </div>
           </div>
         </div>
@@ -130,6 +167,45 @@ import AppLayout from '@/components/layout/AppLayout.vue'
 const { t } = useI18n()
 
 const apiBaseUrl = computed(() => window.location.origin)
+
+const claudeCodeConfig = computed(() => `{
+  "env": {
+    "ANTHROPIC_API_KEY": "sk-your-api-key",
+    "ANTHROPIC_BASE_URL": "${apiBaseUrl.value}/",
+    "ANTHROPIC_MODEL": "claude-sonnet-4-20250514"
+  }
+}`)
+
+const openclawConfig = computed(() => `{
+  "provider": "anthropic",
+  "base_url": "${apiBaseUrl.value}/",
+  "api": "anthropic-messages",
+  "api_key": "sk-your-api-key",
+  "model": {
+    "id": "claude-haiku-4-5-20251001",
+    "name": "claude-haiku-4-5-20251001"
+  }
+}`)
+
+const opencodeConfig = computed(() => `{
+  "provider": {
+    "openai": {
+      "options": {
+        "baseURL": "${apiBaseUrl.value}/v1",
+        "apiKey": "sk-your-api-key"
+      },
+      "models": {
+        "gpt-4o": {
+          "name": "GPT-4o",
+          "options": {
+            "store": false
+          }
+        }
+      }
+    }
+  },
+  "$schema": "https://opencode.ai/config.json"
+}`)
 
 const curlExample = computed(() => `curl ${apiBaseUrl.value}/v1/messages \\
   -H "Content-Type: application/json" \\

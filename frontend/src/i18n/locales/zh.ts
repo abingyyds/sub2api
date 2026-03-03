@@ -3294,24 +3294,42 @@ export default {
   tutorial: {
     title: '使用教程',
     subtitle: '快速上手指南，了解如何使用 API',
-    quickStart: {
-      title: '快速开始',
-      step1: '获取 API Key',
-      step1Desc: '在"API 密钥"页面创建您的专属 API Key',
-      step2: '选择模型',
-      step2Desc: '在"模型广场"查看可用模型和定价',
+    integration: {
+      title: 'API 接入步骤',
+      step1: '创建 API 密钥',
+      step1Desc: '在控制台的「API 密钥」页面创建新的 API Key。你可以为不同项目创建不同密钥，独立管理额度和权限。',
+      step2: '配置 Base URL',
+      step2Desc: '将你的 SDK 或工具的 Base URL 指向本服务地址，API Key 填入刚创建的密钥。',
       step3: '开始调用',
-      step3Desc: '使用您的 API Key 调用 Claude API'
+      step3Desc: '使用标准 OpenAI SDK 格式发送请求，更换 model 参数即可切换不同模型，系统自动路由到最优渠道。'
+    },
+    tools: {
+      claudeCode: {
+        title: 'Claude Code',
+        desc: '配置文件路径：~/.claude/settings.json',
+        file: '配置文件'
+      },
+      openclaw: {
+        title: 'OpenClaw',
+        desc: '配置文件路径：~/.openclaw/openclaw.json',
+        file: '配置文件'
+      },
+      opencode: {
+        title: 'OpenCode',
+        desc: '配置文件路径：~/.config/opencode/opencode.json',
+        file: '配置文件'
+      },
+      cursor: {
+        title: 'Cursor',
+        desc: '在 Cursor 设置中配置：Settings → Models → OpenAI API Key',
+        apiKey: 'API Key',
+        baseUrl: 'Base URL'
+      }
     },
     apiUsage: {
       title: 'API 调用',
       endpoint: 'API 端点',
       curlExample: 'cURL 示例'
-    },
-    claudeCode: {
-      title: 'Claude Code 集成',
-      description: '在 Claude Code 中使用本平台的 API',
-      setup: '环境变量配置'
     },
     pythonSdk: {
       title: 'Python SDK',
