@@ -1725,9 +1725,9 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 
 	// Deduct based on billing type
 	if isSubscriptionBilling {
-		if shouldBill && cost.TotalCost > 0 {
-			_ = s.userSubRepo.IncrementUsage(ctx, subscription.ID, cost.TotalCost)
-			s.billingCacheService.QueueUpdateSubscriptionUsage(user.ID, *apiKey.GroupID, cost.TotalCost)
+		if shouldBill && cost.ActualCost > 0 {
+			_ = s.userSubRepo.IncrementUsage(ctx, subscription.ID, cost.ActualCost)
+			s.billingCacheService.QueueUpdateSubscriptionUsage(user.ID, *apiKey.GroupID, cost.ActualCost)
 		}
 	} else {
 		if shouldBill && cost.ActualCost > 0 {

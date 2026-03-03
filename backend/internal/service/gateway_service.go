@@ -3598,13 +3598,13 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 
 	// 根据计费类型执行扣费
 	if isSubscriptionBilling {
-		// 订阅模式：更新订阅用量（使用 TotalCost 原始费用，不考虑倍率）
-		if shouldBill && cost.TotalCost > 0 {
-			if err := s.userSubRepo.IncrementUsage(ctx, subscription.ID, cost.TotalCost); err != nil {
+		// 订阅模式：更新订阅用量（使用 ActualCost 应用倍率后的费用）
+		if shouldBill && cost.ActualCost > 0 {
+			if err := s.userSubRepo.IncrementUsage(ctx, subscription.ID, cost.ActualCost); err != nil {
 				log.Printf("Increment subscription usage failed: %v", err)
 			}
 			// 异步更新订阅缓存
-			s.billingCacheService.QueueUpdateSubscriptionUsage(user.ID, *apiKey.GroupID, cost.TotalCost)
+			s.billingCacheService.QueueUpdateSubscriptionUsage(user.ID, *apiKey.GroupID, cost.ActualCost)
 		}
 	} else {
 		// 余额模式：扣除用户余额（使用 ActualCost 考虑倍率后的费用）
