@@ -1542,7 +1542,7 @@ export default {
       priority: '优先级',
       priorityHint: '优先级越小的账号优先使用',
       billingRateMultiplier: '账号计费倍率',
-      billingRateMultiplierHint: '>=0，0 表示该账号计费为 0；仅影响账号计费口径',
+      billingRateMultiplierHint: '>=0，0 表示该账号计费为 0；同时影响用户扣费和账号计费口径',
       expiresAt: '过期时间',
       expiresAtHint: '留空表示不过期',
       higherPriorityFirst: '数值越小优先级越高',

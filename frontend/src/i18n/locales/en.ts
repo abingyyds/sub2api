@@ -1410,7 +1410,7 @@ export default {
       priority: 'Priority',
       priorityHint: 'Lower value accounts are used first',
       billingRateMultiplier: 'Billing Rate Multiplier',
-      billingRateMultiplierHint: '>=0, 0 means free. Affects account billing only',
+      billingRateMultiplierHint: '>=0, 0 means free. Affects both user billing and account billing',
       expiresAt: 'Expires At',
       expiresAtHint: 'Leave empty for no expiration',
       higherPriorityFirst: 'Lower value means higher priority',
