@@ -35,8 +35,25 @@
         </div>
       </div>
 
-      <!-- Claude Code -->
-      <div class="card p-6">
+      <!-- Tool Selection Cards -->
+      <div>
+        <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">{{ t('tutorial.tools.title') }}</h2>
+        <div class="grid gap-4 md:grid-cols-2">
+          <button
+            v-for="tool in tools"
+            :key="tool.id"
+            @click="selectedTool = tool.id"
+            class="card p-4 text-left transition-all hover:shadow-lg"
+            :class="selectedTool === tool.id ? 'ring-2 ring-primary-500' : ''"
+          >
+            <h3 class="font-semibold text-gray-900 dark:text-white">{{ tool.name }}</h3>
+            <p class="mt-1 text-sm text-gray-600 dark:text-dark-300">{{ tool.desc }}</p>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tool Configuration Display -->
+      <div v-if="selectedTool === 'claudeCode'" class="card p-6">
         <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">{{ t('tutorial.tools.claudeCode.title') }}</h2>
         <p class="mb-4 text-sm text-gray-600 dark:text-dark-300">{{ t('tutorial.tools.claudeCode.desc') }}</p>
         <div>
@@ -47,8 +64,7 @@
         </div>
       </div>
 
-      <!-- OpenClaw -->
-      <div class="card p-6">
+      <div v-if="selectedTool === 'openclaw'" class="card p-6">
         <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">{{ t('tutorial.tools.openclaw.title') }}</h2>
         <p class="mb-4 text-sm text-gray-600 dark:text-dark-300">{{ t('tutorial.tools.openclaw.desc') }}</p>
         <div>
@@ -59,8 +75,7 @@
         </div>
       </div>
 
-      <!-- OpenCode -->
-      <div class="card p-6">
+      <div v-if="selectedTool === 'opencode'" class="card p-6">
         <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">{{ t('tutorial.tools.opencode.title') }}</h2>
         <p class="mb-4 text-sm text-gray-600 dark:text-dark-300">{{ t('tutorial.tools.opencode.desc') }}</p>
         <div>
@@ -71,8 +86,7 @@
         </div>
       </div>
 
-      <!-- Cursor -->
-      <div class="card p-6">
+      <div v-if="selectedTool === 'cursor'" class="card p-6">
         <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">{{ t('tutorial.tools.cursor.title') }}</h2>
         <p class="mb-4 text-sm text-gray-600 dark:text-dark-300">{{ t('tutorial.tools.cursor.desc') }}</p>
         <div class="space-y-2">
@@ -87,8 +101,7 @@
         </div>
       </div>
 
-      <!-- API Usage -->
-      <div class="card p-6">
+      <div v-if="selectedTool === 'api'" class="card p-6">
         <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">{{ t('tutorial.apiUsage.title') }}</h2>
         <div class="space-y-4">
           <div>
@@ -106,8 +119,7 @@
         </div>
       </div>
 
-      <!-- Python SDK -->
-      <div class="card p-6">
+      <div v-if="selectedTool === 'python'" class="card p-6">
         <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">{{ t('tutorial.pythonSdk.title') }}</h2>
         <div class="space-y-4">
           <div>
@@ -120,20 +132,6 @@
             <h3 class="mb-2 font-medium text-gray-900 dark:text-white">{{ t('tutorial.pythonSdk.example') }}</h3>
             <div class="rounded-lg bg-gray-100 p-3 font-mono text-sm dark:bg-dark-700">
               <pre class="overflow-x-auto text-gray-800 dark:text-dark-200">{{ pythonExample }}</pre>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- OpenAI Compatible -->
-      <div class="card p-6">
-        <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">{{ t('tutorial.openai.title') }}</h2>
-        <div class="space-y-4">
-          <p class="text-gray-600 dark:text-dark-300">{{ t('tutorial.openai.description') }}</p>
-          <div>
-            <h3 class="mb-2 font-medium text-gray-900 dark:text-white">{{ t('tutorial.openai.endpoint') }}</h3>
-            <div class="rounded-lg bg-gray-100 p-3 font-mono text-sm dark:bg-dark-700">
-              <code class="text-gray-800 dark:text-dark-200">{{ apiBaseUrl }}/v1/chat/completions</code>
             </div>
           </div>
         </div>
@@ -160,13 +158,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 
 const { t } = useI18n()
 
+const selectedTool = ref('claudeCode')
+
 const apiBaseUrl = computed(() => window.location.origin)
+
+const tools = computed(() => [
+  { id: 'claudeCode', name: t('tutorial.tools.claudeCode.title'), desc: t('tutorial.tools.claudeCode.desc') },
+  { id: 'openclaw', name: t('tutorial.tools.openclaw.title'), desc: t('tutorial.tools.openclaw.desc') },
+  { id: 'opencode', name: t('tutorial.tools.opencode.title'), desc: t('tutorial.tools.opencode.desc') },
+  { id: 'cursor', name: t('tutorial.tools.cursor.title'), desc: t('tutorial.tools.cursor.desc') },
+  { id: 'api', name: t('tutorial.apiUsage.title'), desc: 'cURL / HTTP API' },
+  { id: 'python', name: t('tutorial.pythonSdk.title'), desc: 'Anthropic Python SDK' }
+])
 
 const claudeCodeConfig = computed(() => `{
   "env": {

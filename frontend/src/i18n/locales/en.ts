@@ -3154,6 +3154,7 @@ export default {
       step3Desc: 'Send requests using standard OpenAI SDK format. Change the model parameter to switch between different models, and the system will automatically route to the optimal channel.'
     },
     tools: {
+      title: 'Tool Integration Guides',
       claudeCode: {
         title: 'Claude Code',
         desc: 'Config file path: ~/.claude/settings.json',

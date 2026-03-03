@@ -3304,6 +3304,7 @@ export default {
       step3Desc: '使用标准 OpenAI SDK 格式发送请求，更换 model 参数即可切换不同模型，系统自动路由到最优渠道。'
     },
     tools: {
+      title: '主流工具接入配置',
       claudeCode: {
         title: 'Claude Code',
         desc: '配置文件路径：~/.claude/settings.json',
