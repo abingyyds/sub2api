@@ -102,35 +102,35 @@ const plans = computed(() => [
     url: 'https://fk.ccoder.me'
   },
   {
-    name: t('pricing.plans.monthly.name'),
+    name: t('pricing.plans.m289.name'),
     price: '¥289',
     popular: true,
     features: [t('pricing.daily', { amount: 30 }), t('pricing.noWeeklyLimit'), t('pricing.validity'), t('pricing.stackableTag')],
     url: 'https://fk.ccoder.me'
   },
   {
-    name: t('pricing.plans.monthly.name'),
+    name: t('pricing.plans.m389.name'),
     price: '¥389',
     popular: false,
     features: [t('pricing.daily', { amount: 40 }), t('pricing.noWeeklyLimit'), t('pricing.validity'), t('pricing.stackableTag')],
     url: 'https://fk.ccoder.me'
   },
   {
-    name: t('pricing.plans.monthly.name'),
+    name: t('pricing.plans.m459.name'),
     price: '¥459',
     popular: false,
     features: [t('pricing.daily', { amount: 50 }), t('pricing.noWeeklyLimit'), t('pricing.validity'), t('pricing.stackableTag')],
     url: 'https://fk.ccoder.me'
   },
   {
-    name: t('pricing.plans.monthly.name'),
+    name: t('pricing.plans.m559.name'),
     price: '¥559',
     popular: false,
     features: [t('pricing.daily', { amount: 60 }), t('pricing.noWeeklyLimit'), t('pricing.validity'), t('pricing.stackableTag')],
     url: 'https://fk.ccoder.me'
   },
   {
-    name: t('pricing.plans.monthly.name'),
+    name: t('pricing.plans.m1180.name'),
     price: '¥1180',
     popular: false,
     features: [t('pricing.daily', { amount: 120 }), t('pricing.noWeeklyLimit'), t('pricing.validity'), t('pricing.stackableTag')],

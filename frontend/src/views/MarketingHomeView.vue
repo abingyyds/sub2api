@@ -143,7 +143,7 @@
           <!-- Monthly Plans -->
           <div class="rounded-2xl border-2 border-primary-500 bg-white p-8 shadow-xl dark:bg-dark-800">
             <div class="mb-2 inline-block rounded-full bg-primary-100 px-3 py-1 text-xs font-medium text-primary-600 dark:bg-primary-900/30">推荐</div>
-            <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡 289</h3>
+            <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡</h3>
             <div class="mb-4 text-4xl font-bold text-primary-600">¥289</div>
             <ul class="mb-8 space-y-3">
               <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
@@ -166,7 +166,7 @@
           </div>
 
           <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
-            <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡 389</h3>
+            <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡</h3>
             <div class="mb-4 text-4xl font-bold text-primary-600">¥389</div>
             <ul class="mb-8 space-y-3">
               <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
@@ -189,7 +189,7 @@
           </div>
 
           <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
-            <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡 459</h3>
+            <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡</h3>
             <div class="mb-4 text-4xl font-bold text-primary-600">¥459</div>
             <ul class="mb-8 space-y-3">
               <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
@@ -212,7 +212,7 @@
           </div>
 
           <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
-            <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡 559</h3>
+            <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡</h3>
             <div class="mb-4 text-4xl font-bold text-primary-600">¥559</div>
             <ul class="mb-8 space-y-3">
               <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
@@ -235,7 +235,7 @@
           </div>
 
           <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
-            <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡 1180</h3>
+            <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡</h3>
             <div class="mb-4 text-4xl font-bold text-primary-600">¥1180</div>
             <ul class="mb-8 space-y-3">
               <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">

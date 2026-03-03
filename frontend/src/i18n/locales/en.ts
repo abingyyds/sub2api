@@ -3132,7 +3132,11 @@ export default {
     buyNow: 'Buy Now',
     plans: {
       payg: { name: 'Pay As You Go', desc: 'Pay for what you use' },
-      monthly: { name: 'Monthly' }
+      m289: { name: 'Monthly 289' },
+      m389: { name: 'Monthly 389' },
+      m459: { name: 'Monthly 459' },
+      m559: { name: 'Monthly 559' },
+      m1180: { name: 'Monthly 1180' }
     }
   },
 

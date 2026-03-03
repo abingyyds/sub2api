@@ -3282,7 +3282,11 @@ export default {
     buyNow: '立即购买',
     plans: {
       payg: { name: '按量付费', desc: '用多少付多少' },
-      monthly: { name: '月卡' }
+      m289: { name: '月卡 289' },
+      m389: { name: '月卡 389' },
+      m459: { name: '月卡 459' },
+      m559: { name: '月卡 559' },
+      m1180: { name: '月卡 1180' }
     }
   },
 
