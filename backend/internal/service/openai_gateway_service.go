@@ -727,12 +727,7 @@ func (s *OpenAIGatewayService) GetAccessToken(ctx context.Context, account *Acco
 }
 
 func (s *OpenAIGatewayService) shouldFailoverUpstreamError(statusCode int) bool {
-	switch statusCode {
-	case 401, 402, 403, 429, 529:
-		return true
-	default:
-		return statusCode >= 500
-	}
+	return statusCode >= 400
 }
 
 func (s *OpenAIGatewayService) handleFailoverSideEffects(ctx context.Context, resp *http.Response, account *Account) {
@@ -879,7 +874,6 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 	// Send request
 	resp, err := s.httpUpstream.Do(upstreamReq, proxyURL, account.ID, account.Concurrency)
 	if err != nil {
-		// Ensure the client receives an error response (handlers assume Forward writes on non-failover errors).
 		safeErr := sanitizeUpstreamErrorMessage(err.Error())
 		setOpsUpstreamError(c, 0, safeErr, "")
 		appendOpsUpstreamError(c, OpsUpstreamErrorEvent{
@@ -890,13 +884,7 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 			Kind:               "request_error",
 			Message:            safeErr,
 		})
-		c.JSON(http.StatusBadGateway, gin.H{
-			"error": gin.H{
-				"type":    "upstream_error",
-				"message": "Upstream request failed",
-			},
-		})
-		return nil, fmt.Errorf("upstream request failed: %s", safeErr)
+		return nil, &UpstreamFailoverError{StatusCode: 0}
 	}
 	defer func() { _ = resp.Body.Close() }()
 

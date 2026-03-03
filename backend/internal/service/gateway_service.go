@@ -1997,12 +1997,7 @@ func (s *GatewayService) shouldRetryUpstreamError(account *Account, statusCode i
 
 // shouldFailoverUpstreamError determines whether an upstream error should trigger account failover.
 func (s *GatewayService) shouldFailoverUpstreamError(statusCode int) bool {
-	switch statusCode {
-	case 401, 403, 429, 529:
-		return true
-	default:
-		return statusCode >= 500
-	}
+	return statusCode >= 400
 }
 
 func retryBackoffDelay(attempt int) time.Duration {
@@ -2367,7 +2362,6 @@ func (s *GatewayService) Forward(ctx context.Context, c *gin.Context, account *A
 			if resp != nil && resp.Body != nil {
 				_ = resp.Body.Close()
 			}
-			// Ensure the client receives an error response (handlers assume Forward writes on non-failover errors).
 			safeErr := sanitizeUpstreamErrorMessage(err.Error())
 			setOpsUpstreamError(c, 0, safeErr, "")
 			appendOpsUpstreamError(c, OpsUpstreamErrorEvent{
@@ -2378,14 +2372,7 @@ func (s *GatewayService) Forward(ctx context.Context, c *gin.Context, account *A
 				Kind:               "request_error",
 				Message:            safeErr,
 			})
-			c.JSON(http.StatusBadGateway, gin.H{
-				"type": "error",
-				"error": gin.H{
-					"type":    "upstream_error",
-					"message": "Upstream request failed",
-				},
-			})
-			return nil, fmt.Errorf("upstream request failed: %s", safeErr)
+			return nil, &UpstreamFailoverError{StatusCode: 0}
 		}
 
 		// 优先检测thinking block签名错误（400）并重试一次
@@ -2572,7 +2559,7 @@ func (s *GatewayService) Forward(ctx context.Context, c *gin.Context, account *A
 		break
 	}
 	if resp == nil || resp.Body == nil {
-		return nil, errors.New("upstream request failed: empty response")
+		return nil, &UpstreamFailoverError{StatusCode: 0}
 	}
 	defer func() { _ = resp.Body.Close() }()
 

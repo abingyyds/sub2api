@@ -640,6 +640,10 @@ func (h *GatewayHandler) handleFailoverExhausted(c *gin.Context, statusCode int,
 
 func (h *GatewayHandler) mapUpstreamError(statusCode int) (int, string, string) {
 	switch statusCode {
+	case 0:
+		return http.StatusBadGateway, "upstream_error", "Upstream connection failed"
+	case 400:
+		return http.StatusBadRequest, "upstream_error", "Upstream bad request"
 	case 401:
 		return http.StatusBadGateway, "upstream_error", "Upstream authentication failed, please contact administrator"
 	case 403:
