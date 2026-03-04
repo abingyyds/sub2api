@@ -225,6 +225,9 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	// 默认配置
 	updates[SettingKeyDefaultConcurrency] = strconv.Itoa(settings.DefaultConcurrency)
 	updates[SettingKeyDefaultBalance] = strconv.FormatFloat(settings.DefaultBalance, 'f', 8, 64)
+	if settings.MaxRetryRounds > 0 {
+		updates[SettingKeyMaxRetryRounds] = strconv.Itoa(settings.MaxRetryRounds)
+	}
 
 	// Model fallback configuration
 	updates[SettingKeyEnableModelFallback] = strconv.FormatBool(settings.EnableModelFallback)
@@ -346,6 +349,17 @@ func (s *SettingService) GetDefaultBalance(ctx context.Context) float64 {
 	return s.cfg.Default.UserBalance
 }
 
+// GetMaxRetryRounds 获取失败重试轮数
+func (s *SettingService) GetMaxRetryRounds(ctx context.Context) int {
+	value, err := s.settingRepo.GetValue(ctx, SettingKeyMaxRetryRounds)
+	if err == nil {
+		if v, err := strconv.Atoi(value); err == nil && v > 0 {
+			return v
+		}
+	}
+	return 3 // 默认 3 轮
+}
+
 // InitializeDefaultSettings 初始化默认设置
 func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 	// 检查是否已有设置
@@ -439,6 +453,13 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		result.DefaultBalance = balance
 	} else {
 		result.DefaultBalance = s.cfg.Default.UserBalance
+	}
+
+	// 解析重试轮数
+	if rounds, err := strconv.Atoi(settings[SettingKeyMaxRetryRounds]); err == nil && rounds > 0 {
+		result.MaxRetryRounds = rounds
+	} else {
+		result.MaxRetryRounds = 3
 	}
 
 	// 敏感信息直接返回，方便测试连接时使用

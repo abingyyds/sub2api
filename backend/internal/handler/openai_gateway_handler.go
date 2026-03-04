@@ -24,6 +24,7 @@ import (
 type OpenAIGatewayHandler struct {
 	gatewayService      *service.OpenAIGatewayService
 	billingCacheService *service.BillingCacheService
+	settingService      *service.SettingService
 	concurrencyHelper   *ConcurrencyHelper
 	maxAccountSwitches  int
 }
@@ -33,6 +34,7 @@ func NewOpenAIGatewayHandler(
 	gatewayService *service.OpenAIGatewayService,
 	concurrencyService *service.ConcurrencyService,
 	billingCacheService *service.BillingCacheService,
+	settingService *service.SettingService,
 	cfg *config.Config,
 ) *OpenAIGatewayHandler {
 	pingInterval := time.Duration(0)
@@ -46,6 +48,7 @@ func NewOpenAIGatewayHandler(
 	return &OpenAIGatewayHandler{
 		gatewayService:      gatewayService,
 		billingCacheService: billingCacheService,
+		settingService:      settingService,
 		concurrencyHelper:   NewConcurrencyHelper(concurrencyService, SSEPingFormatComment, pingInterval),
 		maxAccountSwitches:  maxAccountSwitches,
 	}
@@ -195,7 +198,8 @@ func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
 	// Generate session hash (header first; fallback to prompt_cache_key)
 	sessionHash := h.gatewayService.GenerateSessionHash(c, reqBody)
 
-	maxAccountSwitches := h.maxAccountSwitches
+	maxRetryRounds := h.settingService.GetMaxRetryRounds(c.Request.Context())
+	retryRound := 0
 	switchCount := 0
 	failedAccountIDs := make(map[int64]struct{})
 	lastFailoverStatus := 0
@@ -210,8 +214,14 @@ func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
 				h.handleStreamingAwareError(c, http.StatusServiceUnavailable, "api_error", "No available accounts: "+err.Error(), streamStarted)
 				return
 			}
-			h.handleFailoverExhausted(c, lastFailoverStatus, streamStarted)
-			return
+			retryRound++
+			if retryRound >= maxRetryRounds {
+				h.handleFailoverExhausted(c, lastFailoverStatus, streamStarted)
+				return
+			}
+			log.Printf("All accounts failed in round %d/%d, retrying from top priority", retryRound, maxRetryRounds)
+			failedAccountIDs = make(map[int64]struct{})
+			continue
 		}
 		account := selection.Account
 		log.Printf("[OpenAI Handler] Selected account: id=%d name=%s", account.ID, account.Name)
@@ -275,14 +285,9 @@ func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
 			var failoverErr *service.UpstreamFailoverError
 			if errors.As(err, &failoverErr) {
 				failedAccountIDs[account.ID] = struct{}{}
-				if switchCount >= maxAccountSwitches {
-					lastFailoverStatus = failoverErr.StatusCode
-					h.handleFailoverExhausted(c, lastFailoverStatus, streamStarted)
-					return
-				}
 				lastFailoverStatus = failoverErr.StatusCode
 				switchCount++
-				log.Printf("Account %d: upstream error %d, switching account %d/%d", account.ID, failoverErr.StatusCode, switchCount, maxAccountSwitches)
+				log.Printf("Account %d: upstream error %d, switching account (switch %d, round %d/%d)", account.ID, failoverErr.StatusCode, switchCount, retryRound+1, maxRetryRounds)
 				continue
 			}
 			// Error response already handled in Forward, just log

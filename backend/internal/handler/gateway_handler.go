@@ -30,6 +30,7 @@ type GatewayHandler struct {
 	antigravityGatewayService *service.AntigravityGatewayService
 	userService               *service.UserService
 	billingCacheService       *service.BillingCacheService
+	settingService            *service.SettingService
 	concurrencyHelper         *ConcurrencyHelper
 	maxAccountSwitches        int
 	maxAccountSwitchesGemini  int
@@ -43,6 +44,7 @@ func NewGatewayHandler(
 	userService *service.UserService,
 	concurrencyService *service.ConcurrencyService,
 	billingCacheService *service.BillingCacheService,
+	settingService *service.SettingService,
 	cfg *config.Config,
 ) *GatewayHandler {
 	pingInterval := time.Duration(0)
@@ -63,6 +65,7 @@ func NewGatewayHandler(
 		antigravityGatewayService: antigravityGatewayService,
 		userService:               userService,
 		billingCacheService:       billingCacheService,
+		settingService:            settingService,
 		concurrencyHelper:         NewConcurrencyHelper(concurrencyService, SSEPingFormatClaude, pingInterval),
 		maxAccountSwitches:        maxAccountSwitches,
 		maxAccountSwitchesGemini:  maxAccountSwitchesGemini,
@@ -197,7 +200,8 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 	}
 
 	if platform == service.PlatformGemini {
-		maxAccountSwitches := h.maxAccountSwitchesGemini
+		maxRetryRounds := h.settingService.GetMaxRetryRounds(c.Request.Context())
+		retryRound := 0
 		switchCount := 0
 		failedAccountIDs := make(map[int64]struct{})
 		lastFailoverStatus := 0
@@ -209,8 +213,14 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 					h.handleStreamingAwareError(c, http.StatusServiceUnavailable, "api_error", "No available accounts: "+err.Error(), streamStarted)
 					return
 				}
-				h.handleFailoverExhausted(c, lastFailoverStatus, streamStarted)
-				return
+				retryRound++
+				if retryRound >= maxRetryRounds {
+					h.handleFailoverExhausted(c, lastFailoverStatus, streamStarted)
+					return
+				}
+				log.Printf("All accounts failed in round %d/%d, retrying from top priority", retryRound, maxRetryRounds)
+				failedAccountIDs = make(map[int64]struct{})
+				continue
 			}
 			account := selection.Account
 			setOpsSelectedAccount(c, account.ID)
@@ -297,12 +307,8 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 				if errors.As(err, &failoverErr) {
 					failedAccountIDs[account.ID] = struct{}{}
 					lastFailoverStatus = failoverErr.StatusCode
-					if switchCount >= maxAccountSwitches {
-						h.handleFailoverExhausted(c, lastFailoverStatus, streamStarted)
-						return
-					}
 					switchCount++
-					log.Printf("Account %d: upstream error %d, switching account %d/%d", account.ID, failoverErr.StatusCode, switchCount, maxAccountSwitches)
+					log.Printf("Account %d: upstream error %d, switching account (switch %d, round %d/%d)", account.ID, failoverErr.StatusCode, switchCount, retryRound+1, maxRetryRounds)
 					continue
 				}
 				// 错误响应已在Forward中处理，这里只记录日志
@@ -334,7 +340,8 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 		}
 	}
 
-	maxAccountSwitches := h.maxAccountSwitches
+	maxRetryRounds := h.settingService.GetMaxRetryRounds(c.Request.Context())
+	retryRound := 0
 	switchCount := 0
 	failedAccountIDs := make(map[int64]struct{})
 	lastFailoverStatus := 0
@@ -347,8 +354,14 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 				h.handleStreamingAwareError(c, http.StatusServiceUnavailable, "api_error", "No available accounts: "+err.Error(), streamStarted)
 				return
 			}
-			h.handleFailoverExhausted(c, lastFailoverStatus, streamStarted)
-			return
+			retryRound++
+			if retryRound >= maxRetryRounds {
+				h.handleFailoverExhausted(c, lastFailoverStatus, streamStarted)
+				return
+			}
+			log.Printf("All accounts failed in round %d/%d, retrying from top priority", retryRound, maxRetryRounds)
+			failedAccountIDs = make(map[int64]struct{})
+			continue
 		}
 		account := selection.Account
 		setOpsSelectedAccount(c, account.ID)
@@ -433,12 +446,8 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 			if errors.As(err, &failoverErr) {
 				failedAccountIDs[account.ID] = struct{}{}
 				lastFailoverStatus = failoverErr.StatusCode
-				if switchCount >= maxAccountSwitches {
-					h.handleFailoverExhausted(c, lastFailoverStatus, streamStarted)
-					return
-				}
 				switchCount++
-				log.Printf("Account %d: upstream error %d, switching account %d/%d", account.ID, failoverErr.StatusCode, switchCount, maxAccountSwitches)
+				log.Printf("Account %d: upstream error %d, switching account (switch %d, round %d/%d)", account.ID, failoverErr.StatusCode, switchCount, retryRound+1, maxRetryRounds)
 				continue
 			}
 			// 错误响应已在Forward中处理，这里只记录日志

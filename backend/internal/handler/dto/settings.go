@@ -37,6 +37,7 @@ type SystemSettings struct {
 
 	DefaultConcurrency int     `json:"default_concurrency"`
 	DefaultBalance     float64 `json:"default_balance"`
+	MaxRetryRounds     int     `json:"max_retry_rounds"`
 
 	// Model fallback configuration
 	EnableModelFallback      bool   `json:"enable_model_fallback"`

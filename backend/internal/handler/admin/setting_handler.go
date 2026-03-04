@@ -75,6 +75,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		HideCcsImportButton:                  settings.HideCcsImportButton,
 		DefaultConcurrency:                   settings.DefaultConcurrency,
 		DefaultBalance:                       settings.DefaultBalance,
+		MaxRetryRounds:                       settings.MaxRetryRounds,
 		EnableModelFallback:                  settings.EnableModelFallback,
 		FallbackModelAnthropic:               settings.FallbackModelAnthropic,
 		FallbackModelOpenAI:                  settings.FallbackModelOpenAI,
@@ -133,6 +134,7 @@ type UpdateSettingsRequest struct {
 	// 默认配置
 	DefaultConcurrency int     `json:"default_concurrency"`
 	DefaultBalance     float64 `json:"default_balance"`
+	MaxRetryRounds     int     `json:"max_retry_rounds"`
 
 	// Model fallback configuration
 	EnableModelFallback      bool   `json:"enable_model_fallback"`
@@ -177,6 +179,12 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	}
 	if req.DefaultBalance < 0 {
 		req.DefaultBalance = 0
+	}
+	if req.MaxRetryRounds < 1 {
+		req.MaxRetryRounds = 1
+	}
+	if req.MaxRetryRounds > 10 {
+		req.MaxRetryRounds = 10
 	}
 	if req.SMTPPort <= 0 {
 		req.SMTPPort = 587
@@ -290,6 +298,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		HideCcsImportButton:        req.HideCcsImportButton,
 		DefaultConcurrency:         req.DefaultConcurrency,
 		DefaultBalance:             req.DefaultBalance,
+		MaxRetryRounds:             req.MaxRetryRounds,
 		EnableModelFallback:        req.EnableModelFallback,
 		FallbackModelAnthropic:     req.FallbackModelAnthropic,
 		FallbackModelOpenAI:        req.FallbackModelOpenAI,
@@ -370,6 +379,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		HideCcsImportButton:                  updatedSettings.HideCcsImportButton,
 		DefaultConcurrency:                   updatedSettings.DefaultConcurrency,
 		DefaultBalance:                       updatedSettings.DefaultBalance,
+		MaxRetryRounds:                       updatedSettings.MaxRetryRounds,
 		EnableModelFallback:                  updatedSettings.EnableModelFallback,
 		FallbackModelAnthropic:               updatedSettings.FallbackModelAnthropic,
 		FallbackModelOpenAI:                  updatedSettings.FallbackModelOpenAI,
@@ -489,6 +499,9 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	}
 	if before.DefaultBalance != after.DefaultBalance {
 		changed = append(changed, "default_balance")
+	}
+	if before.MaxRetryRounds != after.MaxRetryRounds {
+		changed = append(changed, "max_retry_rounds")
 	}
 	if before.EnableModelFallback != after.EnableModelFallback {
 		changed = append(changed, "enable_model_fallback")

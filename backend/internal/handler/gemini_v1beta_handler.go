@@ -249,7 +249,8 @@ func (h *GatewayHandler) GeminiV1BetaModels(c *gin.Context) {
 	isCLI := isGeminiCLIRequest(c, body)
 	cleanedForUnknownBinding := false
 
-	maxAccountSwitches := h.maxAccountSwitchesGemini
+	maxRetryRounds := h.settingService.GetMaxRetryRounds(c.Request.Context())
+	retryRound := 0
 	switchCount := 0
 	failedAccountIDs := make(map[int64]struct{})
 	lastFailoverStatus := 0
@@ -261,8 +262,14 @@ func (h *GatewayHandler) GeminiV1BetaModels(c *gin.Context) {
 				googleError(c, http.StatusServiceUnavailable, "No available Gemini accounts: "+err.Error())
 				return
 			}
-			handleGeminiFailoverExhausted(c, lastFailoverStatus)
-			return
+			retryRound++
+			if retryRound >= maxRetryRounds {
+				handleGeminiFailoverExhausted(c, lastFailoverStatus)
+				return
+			}
+			log.Printf("All accounts failed in round %d/%d, retrying from top priority", retryRound, maxRetryRounds)
+			failedAccountIDs = make(map[int64]struct{})
+			continue
 		}
 		account := selection.Account
 		setOpsSelectedAccount(c, account.ID)
@@ -347,14 +354,9 @@ func (h *GatewayHandler) GeminiV1BetaModels(c *gin.Context) {
 			var failoverErr *service.UpstreamFailoverError
 			if errors.As(err, &failoverErr) {
 				failedAccountIDs[account.ID] = struct{}{}
-				if switchCount >= maxAccountSwitches {
-					lastFailoverStatus = failoverErr.StatusCode
-					handleGeminiFailoverExhausted(c, lastFailoverStatus)
-					return
-				}
 				lastFailoverStatus = failoverErr.StatusCode
 				switchCount++
-				log.Printf("Gemini account %d: upstream error %d, switching account %d/%d", account.ID, failoverErr.StatusCode, switchCount, maxAccountSwitches)
+				log.Printf("Gemini account %d: upstream error %d, switching account (switch %d, round %d/%d)", account.ID, failoverErr.StatusCode, switchCount, retryRound+1, maxRetryRounds)
 				continue
 			}
 			// ForwardNative already wrote the response

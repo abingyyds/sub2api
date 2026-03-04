@@ -639,6 +639,22 @@
                   {{ t('admin.settings.defaults.defaultConcurrencyHint') }}
                 </p>
               </div>
+              <div>
+                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {{ t('admin.settings.defaults.maxRetryRounds') }}
+                </label>
+                <input
+                  v-model.number="form.max_retry_rounds"
+                  type="number"
+                  min="1"
+                  max="10"
+                  class="input"
+                  placeholder="3"
+                />
+                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.settings.defaults.maxRetryRoundsHint') }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -1116,6 +1132,7 @@ const form = reactive<SettingsForm>({
   totp_encryption_key_configured: false,
   default_balance: 0,
   default_concurrency: 1,
+  max_retry_rounds: 3,
   site_name: 'Sub2API',
   site_logo: '',
   site_subtitle: 'Subscription to API Conversion Platform',
@@ -1244,6 +1261,7 @@ async function saveSettings() {
       totp_enabled: form.totp_enabled,
       default_balance: form.default_balance,
       default_concurrency: form.default_concurrency,
+      max_retry_rounds: form.max_retry_rounds,
       site_name: form.site_name,
       site_logo: form.site_logo,
       site_subtitle: form.site_subtitle,

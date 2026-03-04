@@ -587,12 +587,10 @@ func (s *OpenAIGatewayService) SelectAccountWithLoadAwareness(ctx context.Contex
 			if loadInfo == nil {
 				loadInfo = &AccountLoadInfo{AccountID: acc.ID}
 			}
-			if loadInfo.LoadRate < 100 {
-				available = append(available, accountWithLoad{
-					account:  acc,
-					loadInfo: loadInfo,
-				})
-			}
+			available = append(available, accountWithLoad{
+				account:  acc,
+				loadInfo: loadInfo,
+			})
 		}
 
 		if len(available) > 0 {
@@ -600,9 +598,6 @@ func (s *OpenAIGatewayService) SelectAccountWithLoadAwareness(ctx context.Contex
 				a, b := available[i], available[j]
 				if a.account.Priority != b.account.Priority {
 					return a.account.Priority < b.account.Priority
-				}
-				if a.loadInfo.LoadRate != b.loadInfo.LoadRate {
-					return a.loadInfo.LoadRate < b.loadInfo.LoadRate
 				}
 				switch {
 				case a.account.LastUsedAt == nil && b.account.LastUsedAt != nil:

@@ -3066,7 +3066,9 @@ export default {
         defaultBalance: '默认余额',
         defaultBalanceHint: '新用户的初始余额',
         defaultConcurrency: '默认并发数',
-        defaultConcurrencyHint: '新用户的最大并发请求数'
+        defaultConcurrencyHint: '新用户的最大并发请求数',
+        maxRetryRounds: '失败重试轮数',
+        maxRetryRoundsHint: '所有渠道失败后从头重试的最大轮数(1-10)'
       },
       site: {
         title: '站点设置',

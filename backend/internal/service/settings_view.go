@@ -39,6 +39,7 @@ type SystemSettings struct {
 
 	DefaultConcurrency int
 	DefaultBalance     float64
+	MaxRetryRounds     int
 
 	// Model fallback configuration
 	EnableModelFallback      bool   `json:"enable_model_fallback"`

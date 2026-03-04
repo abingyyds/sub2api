@@ -2914,7 +2914,9 @@ export default {
         defaultBalance: 'Default Balance',
         defaultBalanceHint: 'Initial balance for new users',
         defaultConcurrency: 'Default Concurrency',
-        defaultConcurrencyHint: 'Maximum concurrent requests for new users'
+        defaultConcurrencyHint: 'Maximum concurrent requests for new users',
+        maxRetryRounds: 'Max Retry Rounds',
+        maxRetryRoundsHint: 'Maximum rounds to retry all channels after all fail (1-10)'
       },
       site: {
         title: 'Site Settings',

@@ -750,20 +750,15 @@ func (s *GatewayService) SelectAccountWithLoadAwareness(ctx context.Context, gro
 				if loadInfo == nil {
 					loadInfo = &AccountLoadInfo{AccountID: acc.ID}
 				}
-				if loadInfo.LoadRate < 100 {
-					routingAvailable = append(routingAvailable, accountWithLoad{account: acc, loadInfo: loadInfo})
-				}
+				routingAvailable = append(routingAvailable, accountWithLoad{account: acc, loadInfo: loadInfo})
 			}
 
 			if len(routingAvailable) > 0 {
-				// 排序：优先级 > 负载率 > 最后使用时间
+				// 排序：严格按优先级 > 最后使用时间（LRU）
 				sort.SliceStable(routingAvailable, func(i, j int) bool {
 					a, b := routingAvailable[i], routingAvailable[j]
 					if a.account.Priority != b.account.Priority {
 						return a.account.Priority < b.account.Priority
-					}
-					if a.loadInfo.LoadRate != b.loadInfo.LoadRate {
-						return a.loadInfo.LoadRate < b.loadInfo.LoadRate
 					}
 					switch {
 					case a.account.LastUsedAt == nil && b.account.LastUsedAt != nil:
@@ -940,12 +935,10 @@ func (s *GatewayService) SelectAccountWithLoadAwareness(ctx context.Context, gro
 			if loadInfo == nil {
 				loadInfo = &AccountLoadInfo{AccountID: acc.ID}
 			}
-			if loadInfo.LoadRate < 100 {
-				available = append(available, accountWithLoad{
-					account:  acc,
-					loadInfo: loadInfo,
-				})
-			}
+			available = append(available, accountWithLoad{
+				account:  acc,
+				loadInfo: loadInfo,
+			})
 		}
 
 		if len(available) > 0 {
@@ -953,9 +946,6 @@ func (s *GatewayService) SelectAccountWithLoadAwareness(ctx context.Context, gro
 				a, b := available[i], available[j]
 				if a.account.Priority != b.account.Priority {
 					return a.account.Priority < b.account.Priority
-				}
-				if a.loadInfo.LoadRate != b.loadInfo.LoadRate {
-					return a.loadInfo.LoadRate < b.loadInfo.LoadRate
 				}
 				switch {
 				case a.account.LastUsedAt == nil && b.account.LastUsedAt != nil:
