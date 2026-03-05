@@ -11,7 +11,6 @@ import (
 
 	dbent "github.com/Wei-Shaw/sub2api/ent"
 	dbaccount "github.com/Wei-Shaw/sub2api/ent/account"
-	dbapikey "github.com/Wei-Shaw/sub2api/ent/apikey"
 	dbgroup "github.com/Wei-Shaw/sub2api/ent/group"
 	dbuser "github.com/Wei-Shaw/sub2api/ent/user"
 	dbusersub "github.com/Wei-Shaw/sub2api/ent/usersubscription"
@@ -2003,13 +2002,65 @@ func (r *usageLogRepository) loadAPIKeys(ctx context.Context, ids []int64) (map[
 	if len(ids) == 0 {
 		return out, nil
 	}
-	models, err := r.client.APIKey.Query().Where(dbapikey.IDIn(ids...)).All(ctx)
+
+	placeholders := make([]string, len(ids))
+	args := make([]any, len(ids))
+	for i, id := range ids {
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+		args[i] = id
+	}
+	query := "SELECT id, user_id, key, name, status, ip_whitelist, ip_blacklist, created_at, updated_at, group_id, org_id FROM api_keys WHERE id IN (" + strings.Join(placeholders, ",") + ")"
+
+	rows, err := r.sql.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
-	for _, m := range models {
-		out[m.ID] = apiKeyEntityToService(m)
+	defer rows.Close()
+
+	for rows.Next() {
+		var (
+			id          int64
+			userID      int64
+			key         string
+			name        string
+			status      string
+			ipWhitelist []string
+			ipBlacklist []string
+			createdAt   time.Time
+			updatedAt   time.Time
+			groupID     sql.NullInt64
+			orgID       sql.NullInt64
+		)
+		if err := rows.Scan(&id, &userID, &key, &name, &status, pq.Array(&ipWhitelist), pq.Array(&ipBlacklist), &createdAt, &updatedAt, &groupID, &orgID); err != nil {
+			return nil, err
+		}
+
+		apiKey := &service.APIKey{
+			ID:          id,
+			UserID:      userID,
+			Key:         key,
+			Name:        name,
+			Status:      status,
+			IPWhitelist: ipWhitelist,
+			IPBlacklist: ipBlacklist,
+			CreatedAt:   createdAt,
+			UpdatedAt:   updatedAt,
+		}
+		if groupID.Valid {
+			v := groupID.Int64
+			apiKey.GroupID = &v
+		}
+		if orgID.Valid {
+			v := orgID.Int64
+			apiKey.OrgID = &v
+		}
+
+		out[id] = apiKey
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return out, nil
 }
 
