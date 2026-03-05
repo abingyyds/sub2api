@@ -153,7 +153,7 @@ const form = ref({
   description: '',
   allowed_models_text: '',
   monthly_budget_usd: null as number | null,
-  status: 'active'
+  status: 'active' as 'active' | 'disabled'
 })
 
 const columns = computed(() => [
