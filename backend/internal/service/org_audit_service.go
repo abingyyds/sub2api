@@ -114,7 +114,7 @@ func (s *OrgAuditService) WriteOperationAudit(ctx context.Context, orgID, userID
 }
 
 func (s *OrgAuditService) ListAuditLogs(ctx context.Context, orgID int64, page, pageSize int, filters AuditLogFilters) ([]OrgAuditLog, *pagination.PaginationResult, error) {
-	params := pagination.NewPaginationParams(page, pageSize)
+	params := pagination.PaginationParams{Page: page, PageSize: pageSize}
 	return s.auditRepo.List(ctx, orgID, params, filters)
 }
 

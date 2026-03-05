@@ -60,7 +60,7 @@ func (s *OrgProjectService) GetByID(ctx context.Context, id int64) (*OrgProject,
 }
 
 func (s *OrgProjectService) ListByOrg(ctx context.Context, orgID int64, page, pageSize int) ([]OrgProject, *pagination.PaginationResult, error) {
-	params := pagination.NewPaginationParams(page, pageSize)
+	params := pagination.PaginationParams{Page: page, PageSize: pageSize}
 	return s.projectRepo.ListByOrg(ctx, orgID, params)
 }
 

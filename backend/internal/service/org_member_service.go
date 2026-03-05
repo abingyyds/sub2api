@@ -96,7 +96,7 @@ func (s *OrgMemberService) GetByOrgAndUser(ctx context.Context, orgID, userID in
 }
 
 func (s *OrgMemberService) ListByOrg(ctx context.Context, orgID int64, page, pageSize int) ([]OrgMember, *pagination.PaginationResult, error) {
-	params := pagination.NewPaginationParams(page, pageSize)
+	params := pagination.PaginationParams{Page: page, PageSize: pageSize}
 	return s.memberRepo.ListByOrg(ctx, orgID, params)
 }
 

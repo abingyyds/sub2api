@@ -133,7 +133,7 @@ func (s *OrganizationService) GetByOwnerID(ctx context.Context, ownerUserID int6
 }
 
 func (s *OrganizationService) List(ctx context.Context, page, pageSize int, status, search string) ([]Organization, *pagination.PaginationResult, error) {
-	params := pagination.NewPaginationParams(page, pageSize)
+	params := pagination.PaginationParams{Page: page, PageSize: pageSize}
 	return s.orgRepo.List(ctx, params, status, search)
 }
 
