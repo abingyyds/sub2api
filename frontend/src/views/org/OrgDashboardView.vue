@@ -20,22 +20,18 @@
         <StatCard
           :title="t('org.dashboard.balance')"
           :value="'$' + Number(dashboard.organization.balance).toFixed(4)"
-          icon="currency-dollar"
         />
         <StatCard
           :title="t('org.dashboard.memberCount')"
           :value="String(dashboard.member_count)"
-          icon="users"
         />
         <StatCard
           :title="t('org.dashboard.todayUsage')"
           :value="'$' + Number(dashboard.today_usage_usd).toFixed(4)"
-          icon="chart-bar"
         />
         <StatCard
           :title="t('org.dashboard.totalUsage')"
           :value="'$' + Number(dashboard.total_usage_usd).toFixed(4)"
-          icon="chart-bar"
         />
       </div>
 

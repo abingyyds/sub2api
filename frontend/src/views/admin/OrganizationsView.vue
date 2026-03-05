@@ -32,7 +32,7 @@
           </template>
 
           <template #cell-status="{ value }">
-            <StatusBadge :status="value" />
+            <StatusBadge :status="value" :label="t(`common.${value}`)" />
           </template>
 
           <template #cell-billing_mode="{ value }">
@@ -74,16 +74,16 @@
       <template #pagination>
         <Pagination
           v-if="pagination.pages > 1"
-          :current-page="pagination.page"
-          :total-pages="pagination.pages"
-          :total-items="pagination.total"
-          @page-change="handlePageChange"
+          :page="pagination.page"
+          :page-size="20"
+          :total="pagination.total"
+          @update:page="handlePageChange"
         />
       </template>
     </TablePageLayout>
 
     <!-- Create Modal -->
-    <BaseDialog v-model="showCreateModal" :title="t('admin.organizations.createTitle')">
+    <BaseDialog :show="showCreateModal" :title="t('admin.organizations.createTitle')" @close="showCreateModal = false">
       <form @submit.prevent="handleCreate">
         <div class="space-y-4">
           <Input v-model="createForm.name" :label="t('admin.organizations.name')" required />
@@ -103,7 +103,7 @@
     </BaseDialog>
 
     <!-- Edit Modal -->
-    <BaseDialog v-model="showEditModal" :title="t('admin.organizations.editTitle')">
+    <BaseDialog :show="showEditModal" :title="t('admin.organizations.editTitle')" @close="showEditModal = false">
       <form @submit.prevent="handleUpdate">
         <div class="space-y-4">
           <Input v-model="editForm.name" :label="t('admin.organizations.name')" />
@@ -122,7 +122,7 @@
     </BaseDialog>
 
     <!-- Balance Modal -->
-    <BaseDialog v-model="showBalanceModal" :title="t('admin.organizations.updateBalanceTitle')">
+    <BaseDialog :show="showBalanceModal" :title="t('admin.organizations.updateBalanceTitle')" @close="showBalanceModal = false">
       <form @submit.prevent="handleUpdateBalance">
         <div class="space-y-4">
           <div class="text-sm text-gray-500">
@@ -140,13 +140,13 @@
 
     <!-- Delete Confirm -->
     <ConfirmDialog
-      v-model="showDeleteConfirm"
+      :show="showDeleteConfirm"
       :title="t('admin.organizations.deleteTitle')"
       :message="t('admin.organizations.deleteConfirm', { name: selectedOrg?.name ?? '' })"
       :confirm-text="t('common.delete')"
       danger
-      :loading="deleting"
       @confirm="handleDelete"
+      @cancel="showDeleteConfirm = false"
     />
   </AppLayout>
 </template>

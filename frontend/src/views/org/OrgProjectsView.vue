@@ -76,7 +76,7 @@
     </TablePageLayout>
 
     <!-- Create/Edit Modal -->
-    <Modal v-model="showCreateModal" :title="editingProject ? t('org.projects.edit') : t('org.projects.create')">
+    <BaseDialog :show="showCreateModal" :title="editingProject ? t('org.projects.edit') : t('org.projects.create')" @close="showCreateModal = false">
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <FormField :label="t('org.projects.name')" required>
           <input v-model="form.name" type="text" class="input" required />
@@ -104,14 +104,15 @@
           <button type="submit" class="btn btn-primary" :disabled="submitting">{{ t('common.save') }}</button>
         </div>
       </form>
-    </Modal>
+    </BaseDialog>
 
     <!-- Delete Confirmation -->
     <ConfirmDialog
-      v-model="showDeleteConfirm"
+      :show="showDeleteConfirm"
       :title="t('org.projects.deleteTitle')"
-      :message="t('org.projects.deleteMessage')"
+      :message="t('org.projects.deleteMessage', { name: deletingProject?.name ?? '' })"
       @confirm="handleDelete"
+      @cancel="showDeleteConfirm = false"
     />
   </AppLayout>
 </template>
@@ -126,13 +127,13 @@ import TablePageLayout from '@/components/layout/TablePageLayout.vue'
 import DataTable from '@/components/common/DataTable.vue'
 import SearchInput from '@/components/common/SearchInput.vue'
 import Pagination from '@/components/common/Pagination.vue'
-import Modal from '@/components/common/Modal.vue'
+import BaseDialog from '@/components/common/BaseDialog.vue'
 import FormField from '@/components/common/FormField.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
-import { useToast } from '@/composables/useToast'
+import { useAppStore } from '@/stores/app'
 
 const { t } = useI18n()
-const toast = useToast()
+const appStore = useAppStore()
 
 const projects = ref<OrgProject[]>([])
 const loading = ref(false)
@@ -170,7 +171,7 @@ async function fetchProjects() {
     projects.value = res.items
     total.value = res.total
   } catch (e: any) {
-    toast.error(e.message || 'Failed to load projects')
+    appStore.showError(e.message || 'Failed to load projects')
   } finally {
     loading.value = false
   }
@@ -208,7 +209,7 @@ async function handleSubmit() {
         monthly_budget_usd: form.value.monthly_budget_usd,
         status: form.value.status
       })
-      toast.success(t('org.projects.updateSuccess'))
+      appStore.showSuccess(t('org.projects.updateSuccess'))
     } else {
       await orgAPI.createProject({
         name: form.value.name,
@@ -216,13 +217,13 @@ async function handleSubmit() {
         allowed_models: allowedModels,
         monthly_budget_usd: form.value.monthly_budget_usd
       })
-      toast.success(t('org.projects.createSuccess'))
+      appStore.showSuccess(t('org.projects.createSuccess'))
     }
     showCreateModal.value = false
     resetForm()
     fetchProjects()
   } catch (e: any) {
-    toast.error(e.message || 'Operation failed')
+    appStore.showError(e.message || 'Operation failed')
   } finally {
     submitting.value = false
   }
@@ -232,10 +233,10 @@ async function handleDelete() {
   if (!deletingProject.value) return
   try {
     await orgAPI.removeProject(deletingProject.value.id)
-    toast.success(t('org.projects.deleteSuccess'))
+    appStore.showSuccess(t('org.projects.deleteSuccess'))
     fetchProjects()
   } catch (e: any) {
-    toast.error(e.message || 'Delete failed')
+    appStore.showError(e.message || 'Delete failed')
   }
 }
 

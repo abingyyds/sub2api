@@ -51,7 +51,7 @@
           </template>
 
           <template #cell-status="{ value }">
-            <StatusBadge :status="value" />
+            <StatusBadge :status="value" :label="t(`common.${value}`)" />
           </template>
 
           <template #cell-actions="{ row }">
@@ -75,16 +75,16 @@
       <template #pagination>
         <Pagination
           v-if="pagination.pages > 1"
-          :current-page="pagination.page"
-          :total-pages="pagination.pages"
-          :total-items="pagination.total"
-          @page-change="handlePageChange"
+          :page="pagination.page"
+          :page-size="20"
+          :total="pagination.total"
+          @update:page="handlePageChange"
         />
       </template>
     </TablePageLayout>
 
     <!-- Create Employee Modal -->
-    <BaseDialog v-model="showCreateModal" :title="t('org.members.createTitle')">
+    <BaseDialog :show="showCreateModal" :title="t('org.members.createTitle')" @close="showCreateModal = false">
       <form @submit.prevent="handleCreate">
         <div class="space-y-4">
           <Input v-model="createForm.email" :label="t('org.members.email')" type="email" required />
@@ -102,7 +102,7 @@
     </BaseDialog>
 
     <!-- Edit Member Modal -->
-    <BaseDialog v-model="showEditModal" :title="t('org.members.editTitle')">
+    <BaseDialog :show="showEditModal" :title="t('org.members.editTitle')" @close="showEditModal = false">
       <form @submit.prevent="handleUpdate">
         <div class="space-y-4">
           <Select v-model="editForm.role" :label="t('org.members.role')" :options="roleOptions" />
@@ -119,13 +119,13 @@
 
     <!-- Delete Confirm -->
     <ConfirmDialog
-      v-model="showDeleteConfirm"
+      :show="showDeleteConfirm"
       :title="t('org.members.deleteTitle')"
       :message="t('org.members.deleteConfirm', { email: selectedMember?.email ?? '' })"
       :confirm-text="t('common.delete')"
       danger
-      :loading="deleting"
       @confirm="handleDelete"
+      @cancel="showDeleteConfirm = false"
     />
   </AppLayout>
 </template>

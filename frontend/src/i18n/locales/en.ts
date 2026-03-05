@@ -216,7 +216,6 @@ export default {
     members: 'Members',
     projects: 'Projects',
     auditLogs: 'Audit Logs',
-    members: 'Members',
     orgManagement: 'Organization',
     tutorial: 'Tutorial'
   },
@@ -3337,7 +3336,7 @@ export default {
       deleteTitle: 'Delete Project',
       deleteMessage: 'Are you sure you want to delete this project?',
       name: 'Project Name',
-      description: 'Description',
+      projectDescription: 'Description',
       allowedModels: 'Allowed Models',
       allowedModelsPlaceholder: 'e.g., claude-sonnet-4-*, gpt-4o',
       allowedModelsHint: 'Comma-separated list. Use * for wildcards. Leave empty for all models.',

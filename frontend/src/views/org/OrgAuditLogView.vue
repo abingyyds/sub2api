@@ -88,7 +88,7 @@
     </TablePageLayout>
 
     <!-- Detail Modal -->
-    <Modal v-model="showDetailModal" :title="t('org.audit.detail')">
+    <BaseDialog :show="showDetailModal" :title="t('org.audit.detail')" @close="showDetailModal = false">
       <div v-if="selectedLog" class="space-y-4">
         <div class="grid grid-cols-2 gap-4 text-sm">
           <div>
@@ -155,10 +155,10 @@
           </div>
         </div>
       </div>
-    </Modal>
+    </BaseDialog>
 
     <!-- Audit Config Modal -->
-    <Modal v-model="showConfigModal" :title="t('org.audit.configTitle')">
+    <BaseDialog :show="showConfigModal" :title="t('org.audit.configTitle')" @close="showConfigModal = false">
       <form @submit.prevent="handleUpdateConfig" class="space-y-4">
         <FormField :label="t('org.audit.auditMode')">
           <select v-model="configForm.audit_mode" class="input">
@@ -173,7 +173,7 @@
           <button type="submit" class="btn btn-primary" :disabled="submitting">{{ t('common.save') }}</button>
         </div>
       </form>
-    </Modal>
+    </BaseDialog>
   </AppLayout>
 </template>
 
@@ -186,12 +186,12 @@ import AppLayout from '@/components/layout/AppLayout.vue'
 import TablePageLayout from '@/components/layout/TablePageLayout.vue'
 import DataTable from '@/components/common/DataTable.vue'
 import Pagination from '@/components/common/Pagination.vue'
-import Modal from '@/components/common/Modal.vue'
+import BaseDialog from '@/components/common/BaseDialog.vue'
 import FormField from '@/components/common/FormField.vue'
-import { useToast } from '@/composables/useToast'
+import { useAppStore } from '@/stores/app'
 
 const { t } = useI18n()
-const toast = useToast()
+const appStore = useAppStore()
 
 const logs = ref<OrgAuditLog[]>([])
 const loading = ref(false)
@@ -235,7 +235,7 @@ async function fetchLogs() {
     logs.value = res.items
     total.value = res.total
   } catch (e: any) {
-    toast.error(e.message || 'Failed to load audit logs')
+    appStore.showError(e.message || 'Failed to load audit logs')
   } finally {
     loading.value = false
   }
@@ -259,10 +259,10 @@ async function handleUpdateConfig() {
   submitting.value = true
   try {
     await orgAPI.updateAuditConfig(configForm.value.audit_mode)
-    toast.success(t('org.audit.configUpdateSuccess'))
+    appStore.showSuccess(t('org.audit.configUpdateSuccess'))
     showConfigModal.value = false
   } catch (e: any) {
-    toast.error(e.message || 'Update failed')
+    appStore.showError(e.message || 'Update failed')
   } finally {
     submitting.value = false
   }

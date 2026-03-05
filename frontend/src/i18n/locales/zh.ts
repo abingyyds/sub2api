@@ -213,7 +213,6 @@ export default {
     members: '成员管理',
     projects: '项目管理',
     auditLogs: '审计日志',
-    members: '成员管理',
     orgManagement: '企业',
     tutorial: '使用教程'
   },
@@ -3486,7 +3485,7 @@ export default {
       deleteTitle: '删除项目',
       deleteMessage: '确定要删除项目 "{name}" 吗？',
       name: '项目名称',
-      description: '描述',
+      projectDescription: '描述',
       allowedModels: '允许的模型',
       allowedModelsPlaceholder: '输入模型名称，支持通配符，用逗号分隔。例如：claude-sonnet-4-*,gpt-4o',
       allowedModelsHint: '留空表示允许所有模型。支持通配符 * 匹配。',
