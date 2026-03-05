@@ -1,5 +1,5 @@
 -- +migrate Up
-CREATE TABLE IF NOT EXISTS org_projects (
+CREATE TABLE org_projects (
     id              BIGSERIAL PRIMARY KEY,
     org_id          BIGINT NOT NULL REFERENCES organizations(id),
     name            VARCHAR(200) NOT NULL,
@@ -15,15 +15,9 @@ CREATE TABLE IF NOT EXISTS org_projects (
     deleted_at      TIMESTAMPTZ
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_org_projects_org_name_active ON org_projects(org_id, name) WHERE deleted_at IS NULL;
-CREATE INDEX IF NOT EXISTS idx_org_projects_org_id ON org_projects(org_id);
-CREATE INDEX IF NOT EXISTS idx_org_projects_deleted_at ON org_projects(deleted_at);
-
--- Add org_project_id to api_keys table
-ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS org_project_id BIGINT REFERENCES org_projects(id);
-CREATE INDEX IF NOT EXISTS idx_api_keys_org_project_id ON api_keys(org_project_id);
+CREATE UNIQUE INDEX idx_org_projects_org_name_active ON org_projects(org_id, name) WHERE deleted_at IS NULL;
+CREATE INDEX idx_org_projects_org_id ON org_projects(org_id);
+CREATE INDEX idx_org_projects_deleted_at ON org_projects(deleted_at);
 
 -- +migrate Down
-DROP INDEX IF EXISTS idx_api_keys_org_project_id;
-ALTER TABLE api_keys DROP COLUMN IF EXISTS org_project_id;
 DROP TABLE IF EXISTS org_projects;
