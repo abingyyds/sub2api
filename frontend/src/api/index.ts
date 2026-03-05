@@ -20,5 +20,8 @@ export { totpAPI } from './totp'
 // Admin APIs
 export { adminAPI } from './admin'
 
+// Org APIs
+export { orgAPI } from './org'
+
 // Default export
 export { default } from './client'

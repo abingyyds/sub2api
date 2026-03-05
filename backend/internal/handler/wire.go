@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/Wei-Shaw/sub2api/internal/handler/admin"
+	"github.com/Wei-Shaw/sub2api/internal/handler/org"
 	"github.com/Wei-Shaw/sub2api/internal/service"
 
 	"github.com/google/wire"
@@ -28,6 +29,7 @@ func ProvideAdminHandlers(
 	userAttributeHandler *admin.UserAttributeHandler,
 	referralHandler *admin.ReferralHandler,
 	announcementHandler *admin.AnnouncementHandler,
+	organizationHandler *admin.OrganizationHandler,
 ) *AdminHandlers {
 	return &AdminHandlers{
 		Dashboard:        dashboardHandler,
@@ -49,6 +51,7 @@ func ProvideAdminHandlers(
 		UserAttribute:    userAttributeHandler,
 		Referral:         referralHandler,
 		Announcement:     announcementHandler,
+		Organization:     organizationHandler,
 	}
 }
 
@@ -62,6 +65,21 @@ func ProvideSettingHandler(settingService *service.SettingService, buildInfo Bui
 	return NewSettingHandler(settingService, buildInfo.Version)
 }
 
+// ProvideOrgHandlers creates the OrgHandlers struct
+func ProvideOrgHandlers(
+	dashboardHandler *org.DashboardHandler,
+	memberHandler *org.MemberHandler,
+	projectHandler *org.ProjectHandler,
+	auditLogHandler *org.AuditLogHandler,
+) *org.OrgHandlers {
+	return &org.OrgHandlers{
+		Dashboard: dashboardHandler,
+		Member:    memberHandler,
+		Project:   projectHandler,
+		AuditLog:  auditLogHandler,
+	}
+}
+
 // ProvideHandlers creates the Handlers struct
 func ProvideHandlers(
 	authHandler *AuthHandler,
@@ -71,6 +89,7 @@ func ProvideHandlers(
 	redeemHandler *RedeemHandler,
 	subscriptionHandler *SubscriptionHandler,
 	adminHandlers *AdminHandlers,
+	orgHandlers *org.OrgHandlers,
 	gatewayHandler *GatewayHandler,
 	openaiGatewayHandler *OpenAIGatewayHandler,
 	settingHandler *SettingHandler,
@@ -87,6 +106,7 @@ func ProvideHandlers(
 		Redeem:        redeemHandler,
 		Subscription:  subscriptionHandler,
 		Admin:         adminHandlers,
+		Org:           orgHandlers,
 		Gateway:       gatewayHandler,
 		OpenAIGateway: openaiGatewayHandler,
 		Setting:       settingHandler,
@@ -134,8 +154,16 @@ var ProviderSet = wire.NewSet(
 	admin.NewUserAttributeHandler,
 	admin.NewReferralHandler,
 	admin.NewAnnouncementHandler,
+	admin.NewOrganizationHandler,
 
-	// AdminHandlers and Handlers constructors
+	// Org handlers
+	org.NewDashboardHandler,
+	org.NewMemberHandler,
+	org.NewProjectHandler,
+	org.NewAuditLogHandler,
+
+	// AdminHandlers, OrgHandlers and Handlers constructors
 	ProvideAdminHandlers,
+	ProvideOrgHandlers,
 	ProvideHandlers,
 )

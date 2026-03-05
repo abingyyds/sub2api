@@ -41,6 +41,10 @@ func (u *User) IsFullAdmin() bool {
 	return u.Role == RoleAdmin
 }
 
+func (u *User) IsOrgAdmin() bool {
+	return u.Role == RoleOrgAdmin
+}
+
 func (u *User) IsActive() bool {
 	return u.Status == StatusActive
 }

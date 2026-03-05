@@ -15,6 +15,7 @@ const (
 	RoleAdmin    = "admin"
 	RoleSubAdmin = "sub_admin"
 	RoleUser     = "user"
+	RoleOrgAdmin = "org_admin"
 )
 
 // Platform constants
@@ -179,3 +180,29 @@ const (
 
 // AdminAPIKeyPrefix is the prefix for admin API keys (distinct from user "sk-" keys).
 const AdminAPIKeyPrefix = "admin-"
+
+// Organization billing mode constants
+const (
+	OrgBillingModeBalance      = "balance"
+	OrgBillingModeSubscription = "subscription"
+)
+
+// Organization status constants
+const (
+	OrgStatusActive    = "active"
+	OrgStatusSuspended = "suspended"
+	OrgStatusDisabled  = "disabled"
+)
+
+// Organization member role constants
+const (
+	OrgMemberRoleAdmin  = "org_admin"
+	OrgMemberRoleMember = "member"
+)
+
+// Organization audit mode constants
+const (
+	OrgAuditModeMetadata = "metadata"
+	OrgAuditModeSummary  = "summary"
+	OrgAuditModeFull     = "full"
+)

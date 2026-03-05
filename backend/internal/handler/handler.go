@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/Wei-Shaw/sub2api/internal/handler/admin"
+	"github.com/Wei-Shaw/sub2api/internal/handler/org"
 )
 
 // AdminHandlers contains all admin-related HTTP handlers
@@ -25,6 +26,7 @@ type AdminHandlers struct {
 	UserAttribute    *admin.UserAttributeHandler
 	Referral         *admin.ReferralHandler
 	Announcement     *admin.AnnouncementHandler
+	Organization     *admin.OrganizationHandler
 }
 
 // Handlers contains all HTTP handlers
@@ -36,6 +38,7 @@ type Handlers struct {
 	Redeem        *RedeemHandler
 	Subscription  *SubscriptionHandler
 	Admin         *AdminHandlers
+	Org           *org.OrgHandlers
 	Gateway       *GatewayHandler
 	OpenAIGateway *OpenAIGatewayHandler
 	Setting       *SettingHandler

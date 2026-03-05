@@ -70,6 +70,9 @@ func RegisterAdminRoutes(
 
 		// 公告管理
 		registerAnnouncementRoutes(admin, h)
+
+		// 企业管理
+		registerOrganizationRoutes(admin, h)
 	}
 }
 
@@ -394,5 +397,17 @@ func registerReferralRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	{
 		referrals.GET("", h.Admin.Referral.List)
 		referrals.GET("/stats", h.Admin.Referral.GetStats)
+	}
+}
+
+func registerOrganizationRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	organizations := admin.Group("/organizations")
+	{
+		organizations.GET("", h.Admin.Organization.List)
+		organizations.POST("", h.Admin.Organization.Create)
+		organizations.GET("/:id", h.Admin.Organization.GetByID)
+		organizations.PUT("/:id", h.Admin.Organization.Update)
+		organizations.DELETE("/:id", h.Admin.Organization.Delete)
+		organizations.POST("/:id/balance", h.Admin.Organization.UpdateBalance)
 	}
 }

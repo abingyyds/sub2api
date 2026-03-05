@@ -17,6 +17,8 @@ type UsageLog struct {
 
 	GroupID        *int64
 	SubscriptionID *int64
+	OrgID          *int64
+	OrgMemberID    *int64
 
 	InputTokens         int
 	OutputTokens        int

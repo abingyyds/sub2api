@@ -47,6 +47,12 @@ func (UsageLog) Fields() []ent.Field {
 		field.Int64("subscription_id").
 			Optional().
 			Nillable(),
+		field.Int64("org_id").
+			Optional().
+			Nillable(),
+		field.Int64("org_member_id").
+			Optional().
+			Nillable(),
 
 		// Token 计数字段
 		field.Int("input_tokens").
@@ -170,5 +176,7 @@ func (UsageLog) Indexes() []ent.Index {
 		// 复合索引用于时间范围查询
 		index.Fields("user_id", "created_at"),
 		index.Fields("api_key_id", "created_at"),
+		index.Fields("org_id"),
+		index.Fields("org_member_id"),
 	}
 }

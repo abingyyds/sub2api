@@ -170,6 +170,10 @@ type OpenAIGatewayService struct {
 	usageLogRepo        UsageLogRepository
 	userRepo            UserRepository
 	userSubRepo         UserSubscriptionRepository
+	orgRepo             OrganizationRepository
+	orgMemberRepo       OrgMemberRepository
+	orgProjectRepo      OrgProjectRepository
+	auditService        *OrgAuditService
 	cache               GatewayCache
 	cfg                 *config.Config
 	schedulerSnapshot   *SchedulerSnapshotService
@@ -189,6 +193,10 @@ func NewOpenAIGatewayService(
 	usageLogRepo UsageLogRepository,
 	userRepo UserRepository,
 	userSubRepo UserSubscriptionRepository,
+	orgRepo OrganizationRepository,
+	orgMemberRepo OrgMemberRepository,
+	orgProjectRepo OrgProjectRepository,
+	auditService *OrgAuditService,
 	cache GatewayCache,
 	cfg *config.Config,
 	schedulerSnapshot *SchedulerSnapshotService,
@@ -205,6 +213,10 @@ func NewOpenAIGatewayService(
 		usageLogRepo:        usageLogRepo,
 		userRepo:            userRepo,
 		userSubRepo:         userSubRepo,
+		orgRepo:             orgRepo,
+		orgMemberRepo:       orgMemberRepo,
+		orgProjectRepo:      orgProjectRepo,
+		auditService:        auditService,
 		cache:               cache,
 		cfg:                 cfg,
 		schedulerSnapshot:   schedulerSnapshot,
@@ -1618,6 +1630,11 @@ type OpenAIRecordUsageInput struct {
 	Subscription *UserSubscription
 	UserAgent    string // 请求的 User-Agent
 	IPAddress    string // 请求的客户端 IP 地址
+	// 企业计费字段（可选）
+	Organization *Organization
+	OrgMember    *OrgMember
+	OrgProject   *OrgProject
+	RequestBody  string // 请求体（用于审计日志）
 }
 
 // RecordUsage records usage and deducts balance
@@ -1708,6 +1725,13 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 	if subscription != nil {
 		usageLog.SubscriptionID = &subscription.ID
 	}
+	// 添加企业关联
+	if input.Organization != nil {
+		usageLog.OrgID = &input.Organization.ID
+	}
+	if input.OrgMember != nil {
+		usageLog.OrgMemberID = &input.OrgMember.ID
+	}
 
 	inserted, err := s.usageLogRepo.Create(ctx, usageLog)
 	if s.cfg != nil && s.cfg.RunMode == config.RunModeSimple {
@@ -1717,6 +1741,57 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 	}
 
 	shouldBill := inserted || err != nil
+
+	// === 企业计费路径 ===
+	isOrgBilling := input.Organization != nil && apiKey.OrgID != nil
+	if isOrgBilling && shouldBill && cost.ActualCost > 0 {
+		if input.Organization.BillingMode == OrgBillingModeBalance {
+			if s.orgRepo != nil {
+				_ = s.orgRepo.DeductBalance(ctx, input.Organization.ID, cost.ActualCost)
+			}
+		}
+		if input.OrgMember != nil && s.orgMemberRepo != nil {
+			_ = s.orgMemberRepo.IncrementUsage(ctx, input.OrgMember.ID, cost.ActualCost)
+		}
+		// 累加项目用量
+		if input.OrgProject != nil && s.orgProjectRepo != nil {
+			_ = s.orgProjectRepo.IncrementUsage(ctx, input.OrgProject.ID, cost.ActualCost)
+		}
+		// 写入审计日志
+		if s.auditService != nil {
+			var projectID *int64
+			if input.OrgProject != nil {
+				projectID = &input.OrgProject.ID
+			}
+			var memberID *int64
+			if input.OrgMember != nil {
+				memberID = &input.OrgMember.ID
+			}
+			model := result.Model
+			inputTokens := result.Usage.InputTokens
+			outputTokens := result.Usage.OutputTokens
+			go func() {
+				_ = s.auditService.WriteAuditLog(context.Background(), &WriteAuditInput{
+					OrgID:        input.Organization.ID,
+					UserID:       user.ID,
+					MemberID:     memberID,
+					ProjectID:    projectID,
+					UsageLogID:   &usageLog.ID,
+					Action:       AuditActionAPIRequest,
+					Model:        &model,
+					AuditMode:    input.Organization.AuditMode,
+					InputTokens:  &inputTokens,
+					OutputTokens: &outputTokens,
+					CostUSD:      &cost.ActualCost,
+					IPAddress:    &input.IPAddress,
+					UserAgent:    &input.UserAgent,
+					RequestBody:  input.RequestBody,
+				})
+			}()
+		}
+		s.deferredService.ScheduleLastUsedUpdate(account.ID)
+		return nil
+	}
 
 	// Deduct based on billing type
 	if isSubscriptionBilling {

@@ -8,6 +8,8 @@ type APIKey struct {
 	Key         string
 	Name        string
 	GroupID     *int64
+	OrgID          *int64
+	OrgProjectID   *int64
 	Status      string
 	IPWhitelist []string
 	IPBlacklist []string
@@ -15,6 +17,8 @@ type APIKey struct {
 	UpdatedAt   time.Time
 	User        *User
 	Group       *Group
+	Organization *Organization
+	OrgProject   *OrgProject
 }
 
 func (k *APIKey) IsActive() bool {

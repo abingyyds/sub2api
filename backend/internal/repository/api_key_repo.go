@@ -362,22 +362,27 @@ func apiKeyEntityToService(m *dbent.APIKey) *service.APIKey {
 		return nil
 	}
 	out := &service.APIKey{
-		ID:          m.ID,
-		UserID:      m.UserID,
-		Key:         m.Key,
-		Name:        m.Name,
-		Status:      m.Status,
-		IPWhitelist: m.IPWhitelist,
-		IPBlacklist: m.IPBlacklist,
-		CreatedAt:   m.CreatedAt,
-		UpdatedAt:   m.UpdatedAt,
-		GroupID:     m.GroupID,
+		ID:           m.ID,
+		UserID:       m.UserID,
+		Key:          m.Key,
+		Name:         m.Name,
+		Status:       m.Status,
+		IPWhitelist:  m.IPWhitelist,
+		IPBlacklist:  m.IPBlacklist,
+		CreatedAt:    m.CreatedAt,
+		UpdatedAt:    m.UpdatedAt,
+		GroupID:      m.GroupID,
+		OrgID:        m.OrgID,
+		OrgProjectID: m.OrgProjectID,
 	}
 	if m.Edges.User != nil {
 		out.User = userEntityToService(m.Edges.User)
 	}
 	if m.Edges.Group != nil {
 		out.Group = groupEntityToService(m.Edges.Group)
+	}
+	if m.Edges.Organization != nil {
+		out.Organization = organizationEntityToService(m.Edges.Organization)
 	}
 	return out
 }

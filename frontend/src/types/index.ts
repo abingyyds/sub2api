@@ -28,7 +28,7 @@ export interface User {
   id: number
   username: string
   email: string
-  role: 'admin' | 'sub_admin' | 'user' // User role for authorization
+  role: 'admin' | 'sub_admin' | 'org_admin' | 'user' // User role for authorization
   balance: number // User balance for API usage
   concurrency: number // Allowed concurrent requests
   status: 'active' | 'disabled' // Account status
@@ -1170,4 +1170,169 @@ export interface Announcement {
   priority: number
   created_at: string
   updated_at: string
+}
+
+// ==================== Organization Types ====================
+
+export interface Organization {
+  id: number
+  name: string
+  slug: string
+  description: string
+  owner_user_id: number
+  billing_mode: 'balance' | 'subscription'
+  balance: number
+  monthly_budget_usd: number | null
+  max_members: number
+  max_api_keys: number
+  status: 'active' | 'suspended' | 'disabled'
+  audit_mode: 'metadata' | 'summary' | 'full'
+  member_count?: number
+  api_key_count?: number
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateOrganizationRequest {
+  name: string
+  slug: string
+  description?: string
+  owner_user_id: number
+  billing_mode?: 'balance' | 'subscription'
+  balance?: number
+  monthly_budget_usd?: number | null
+  max_members?: number
+  max_api_keys?: number
+}
+
+export interface UpdateOrganizationRequest {
+  name?: string
+  slug?: string
+  description?: string
+  billing_mode?: 'balance' | 'subscription'
+  monthly_budget_usd?: number | null
+  max_members?: number
+  max_api_keys?: number
+  status?: 'active' | 'suspended' | 'disabled'
+}
+
+export interface UpdateOrgBalanceRequest {
+  action: 'add' | 'set'
+  amount: number
+}
+
+export interface OrgMember {
+  id: number
+  org_id: number
+  user_id: number
+  username: string
+  email: string
+  role: 'org_admin' | 'member'
+  monthly_quota_usd: number | null
+  daily_quota_usd: number | null
+  monthly_usage_usd: number
+  daily_usage_usd: number
+  status: 'active' | 'suspended'
+  notes: string
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateOrgMemberRequest {
+  email: string
+  password: string
+  username?: string
+  role?: 'org_admin' | 'member'
+  monthly_quota_usd?: number | null
+  daily_quota_usd?: number | null
+}
+
+export interface UpdateOrgMemberRequest {
+  role?: 'org_admin' | 'member'
+  monthly_quota_usd?: number | null
+  daily_quota_usd?: number | null
+  notes?: string
+}
+
+export interface OrgDashboard {
+  organization: Organization
+  member_count: number
+  api_key_count: number
+  total_usage_usd: number
+  today_usage_usd: number
+}
+
+// ==================== Organization Project Types ====================
+
+export interface OrgProject {
+  id: number
+  org_id: number
+  name: string
+  description: string | null
+  group_id: number | null
+  allowed_models: string[]
+  monthly_budget_usd: number | null
+  monthly_usage_usd: number
+  monthly_window_start: string | null
+  status: 'active' | 'disabled'
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateOrgProjectRequest {
+  name: string
+  description?: string
+  group_id?: number | null
+  allowed_models?: string[]
+  monthly_budget_usd?: number | null
+}
+
+export interface UpdateOrgProjectRequest {
+  name: string
+  description?: string
+  group_id?: number | null
+  allowed_models?: string[]
+  monthly_budget_usd?: number | null
+  status?: 'active' | 'disabled'
+}
+
+// ==================== Organization Audit Log Types ====================
+
+export interface OrgAuditLog {
+  id: number
+  org_id: number
+  user_id: number
+  member_id: number | null
+  project_id: number | null
+  usage_log_id: number | null
+  action: string
+  model: string | null
+  audit_mode: 'metadata' | 'summary' | 'full'
+  request_summary: string | null
+  request_content: string | null
+  response_summary: string | null
+  keywords: string[]
+  flagged: boolean
+  flag_reason: string | null
+  input_tokens: number | null
+  output_tokens: number | null
+  cost_usd: number | null
+  ip_address: string | null
+  user_agent: string | null
+  detail: Record<string, unknown> | null
+  created_at: string
+}
+
+export interface AuditLogFilters {
+  member_id?: number
+  project_id?: number
+  action?: string
+  model?: string
+  flagged?: boolean
+  start_date?: string
+  end_date?: string
+}
+
+export interface AuditConfig {
+  audit_mode: 'metadata' | 'summary' | 'full'
 }

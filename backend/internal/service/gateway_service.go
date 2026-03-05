@@ -202,6 +202,10 @@ type GatewayService struct {
 	usageLogRepo        UsageLogRepository
 	userRepo            UserRepository
 	userSubRepo         UserSubscriptionRepository
+	orgRepo             OrganizationRepository
+	orgMemberRepo       OrgMemberRepository
+	orgProjectRepo      OrgProjectRepository
+	auditService        *OrgAuditService
 	cache               GatewayCache
 	cfg                 *config.Config
 	schedulerSnapshot   *SchedulerSnapshotService
@@ -223,6 +227,10 @@ func NewGatewayService(
 	usageLogRepo UsageLogRepository,
 	userRepo UserRepository,
 	userSubRepo UserSubscriptionRepository,
+	orgRepo OrganizationRepository,
+	orgMemberRepo OrgMemberRepository,
+	orgProjectRepo OrgProjectRepository,
+	auditService *OrgAuditService,
 	cache GatewayCache,
 	cfg *config.Config,
 	schedulerSnapshot *SchedulerSnapshotService,
@@ -242,6 +250,10 @@ func NewGatewayService(
 		usageLogRepo:        usageLogRepo,
 		userRepo:            userRepo,
 		userSubRepo:         userSubRepo,
+		orgRepo:             orgRepo,
+		orgMemberRepo:       orgMemberRepo,
+		orgProjectRepo:      orgProjectRepo,
+		auditService:        auditService,
 		cache:               cache,
 		cfg:                 cfg,
 		schedulerSnapshot:   schedulerSnapshot,
@@ -3465,6 +3477,11 @@ type RecordUsageInput struct {
 	Subscription *UserSubscription // 可选：订阅信息
 	UserAgent    string            // 请求的 User-Agent
 	IPAddress    string            // 请求的客户端 IP 地址
+	// 企业计费字段（可选）
+	Organization *Organization // 企业信息（APIKey 绑定 org 时填充）
+	OrgMember    *OrgMember    // 企业成员信息
+	OrgProject   *OrgProject   // 企业项目信息（可选）
+	RequestBody  string        // 请求体（用于审计日志）
 }
 
 // RecordUsage 记录使用量并扣费（或更新订阅用量）
@@ -3572,6 +3589,13 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 	if subscription != nil {
 		usageLog.SubscriptionID = &subscription.ID
 	}
+	// 添加企业关联
+	if input.Organization != nil {
+		usageLog.OrgID = &input.Organization.ID
+	}
+	if input.OrgMember != nil {
+		usageLog.OrgMemberID = &input.OrgMember.ID
+	}
 
 	inserted, err := s.usageLogRepo.Create(ctx, usageLog)
 	if err != nil {
@@ -3585,6 +3609,67 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 	}
 
 	shouldBill := inserted || err != nil
+
+	// === 企业计费路径 ===
+	// 如果 API Key 绑定了企业，从企业余额扣费，跳过个人计费
+	isOrgBilling := input.Organization != nil && apiKey.OrgID != nil
+	if isOrgBilling && shouldBill && cost.ActualCost > 0 {
+		// 从企业余额扣款
+		if input.Organization.BillingMode == OrgBillingModeBalance {
+			if s.orgRepo != nil {
+				if err := s.orgRepo.DeductBalance(ctx, input.Organization.ID, cost.ActualCost); err != nil {
+					log.Printf("Deduct org balance failed: %v", err)
+				}
+			}
+		}
+		// 累加成员用量
+		if input.OrgMember != nil && s.orgMemberRepo != nil {
+			if err := s.orgMemberRepo.IncrementUsage(ctx, input.OrgMember.ID, cost.ActualCost); err != nil {
+				log.Printf("Increment org member usage failed: %v", err)
+			}
+		}
+		// 累加项目用量
+		if input.OrgProject != nil && s.orgProjectRepo != nil {
+			if err := s.orgProjectRepo.IncrementUsage(ctx, input.OrgProject.ID, cost.ActualCost); err != nil {
+				log.Printf("Increment org project usage failed: %v", err)
+			}
+		}
+		// 写入审计日志
+		if s.auditService != nil {
+			var projectID *int64
+			if input.OrgProject != nil {
+				projectID = &input.OrgProject.ID
+			}
+			var memberID *int64
+			if input.OrgMember != nil {
+				memberID = &input.OrgMember.ID
+			}
+			model := result.Model
+			inputTokens := result.Usage.InputTokens
+			outputTokens := result.Usage.OutputTokens
+			go func() {
+				_ = s.auditService.WriteAuditLog(context.Background(), &WriteAuditInput{
+					OrgID:        input.Organization.ID,
+					UserID:       user.ID,
+					MemberID:     memberID,
+					ProjectID:    projectID,
+					UsageLogID:   &usageLog.ID,
+					Action:       AuditActionAPIRequest,
+					Model:        &model,
+					AuditMode:    input.Organization.AuditMode,
+					InputTokens:  &inputTokens,
+					OutputTokens: &outputTokens,
+					CostUSD:      &cost.ActualCost,
+					IPAddress:    &input.IPAddress,
+					UserAgent:    &input.UserAgent,
+					RequestBody:  input.RequestBody,
+				})
+			}()
+		}
+		// Schedule batch update for account last_used_at
+		s.deferredService.ScheduleLastUsedUpdate(account.ID)
+		return nil
+	}
 
 	// 根据计费类型执行扣费
 	if isSubscriptionBilling {

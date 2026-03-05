@@ -15,12 +15,12 @@ import (
 )
 
 // NewAPIKeyAuthMiddleware 创建 API Key 认证中间件
-func NewAPIKeyAuthMiddleware(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, cfg *config.Config) APIKeyAuthMiddleware {
-	return APIKeyAuthMiddleware(apiKeyAuthWithSubscription(apiKeyService, subscriptionService, cfg))
+func NewAPIKeyAuthMiddleware(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, orgService *service.OrganizationService, orgMemberService *service.OrgMemberService, orgProjectService *service.OrgProjectService, cfg *config.Config) APIKeyAuthMiddleware {
+	return APIKeyAuthMiddleware(apiKeyAuthWithSubscription(apiKeyService, subscriptionService, orgService, orgMemberService, orgProjectService, cfg))
 }
 
 // apiKeyAuthWithSubscription API Key认证中间件（支持订阅验证）
-func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, cfg *config.Config) gin.HandlerFunc {
+func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, orgService *service.OrganizationService, orgMemberService *service.OrgMemberService, orgProjectService *service.OrgProjectService, cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		queryKey := strings.TrimSpace(c.Query("key"))
 		queryApiKey := strings.TrimSpace(c.Query("api_key"))
@@ -95,6 +95,59 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 		if !apiKey.User.IsActive() {
 			AbortWithError(c, 401, "USER_INACTIVE", "User account is not active")
 			return
+		}
+
+		// === 企业计费前置检查 ===
+		// 如果 API Key 绑定了组织，检查组织状态和成员限额
+		if apiKey.OrgID != nil {
+			org, err := orgService.GetByID(c.Request.Context(), *apiKey.OrgID)
+			if err != nil {
+				AbortWithError(c, 403, "ORG_NOT_FOUND", "Organization not found")
+				return
+			}
+			if !org.IsActive() {
+				AbortWithError(c, 403, "ORG_INACTIVE", "Organization is not active")
+				return
+			}
+
+			// Check org balance (for balance billing mode)
+			if org.BillingMode == service.OrgBillingModeBalance && org.Balance <= 0 {
+				AbortWithError(c, 403, "ORG_INSUFFICIENT_BALANCE", "Organization has insufficient balance")
+				return
+			}
+
+			// Check member quota (pre-check with 0 cost)
+			member, err := orgMemberService.GetByOrgAndUser(c.Request.Context(), org.ID, apiKey.User.ID)
+			if err != nil {
+				AbortWithError(c, 403, "ORG_MEMBER_NOT_FOUND", "User is not a member of this organization")
+				return
+			}
+			if !member.IsActive() {
+				AbortWithError(c, 403, "ORG_MEMBER_INACTIVE", "Organization membership is not active")
+				return
+			}
+			if err := orgMemberService.CheckMemberQuota(member, 0); err != nil {
+				AbortWithError(c, 429, "ORG_MEMBER_QUOTA_EXCEEDED", err.Error())
+				return
+			}
+
+			// Store org info in context for downstream billing
+			c.Set(string(ContextKeyOrganization), org)
+			c.Set(string(ContextKeyOrgMember), member)
+
+			// Check project model whitelist if API key is bound to a project
+			if apiKey.OrgProjectID != nil && orgProjectService != nil {
+				project, err := orgProjectService.GetByID(c.Request.Context(), *apiKey.OrgProjectID)
+				if err != nil {
+					AbortWithError(c, 403, "ORG_PROJECT_NOT_FOUND", "Organization project not found")
+					return
+				}
+				if !project.IsActive() {
+					AbortWithError(c, 403, "ORG_PROJECT_INACTIVE", "Organization project is not active")
+					return
+				}
+				c.Set(string(ContextKeyOrgProject), project)
+			}
 		}
 
 		if cfg.RunMode == config.RunModeSimple {

@@ -52,6 +52,12 @@ func (APIKey) Fields() []ent.Field {
 		field.JSON("ip_blacklist", []string{}).
 			Optional().
 			Comment("Blocked IPs/CIDRs"),
+		field.Int64("org_id").
+			Optional().
+			Nillable(),
+		field.Int64("org_project_id").
+			Optional().
+			Nillable(),
 	}
 }
 
@@ -66,6 +72,14 @@ func (APIKey) Edges() []ent.Edge {
 			Ref("api_keys").
 			Field("group_id").
 			Unique(),
+		edge.From("organization", Organization.Type).
+			Ref("api_keys").
+			Field("org_id").
+			Unique(),
+		edge.From("org_project", OrgProject.Type).
+			Ref("api_keys").
+			Field("org_project_id").
+			Unique(),
 		edge.To("usage_logs", UsageLog.Type),
 	}
 }
@@ -76,6 +90,8 @@ func (APIKey) Indexes() []ent.Index {
 		index.Fields("user_id"),
 		index.Fields("group_id"),
 		index.Fields("status"),
+		index.Fields("org_id"),
+		index.Fields("org_project_id"),
 		index.Fields("deleted_at"),
 	}
 }

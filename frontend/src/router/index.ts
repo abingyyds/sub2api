@@ -403,6 +403,72 @@ const routes: RouteRecordRaw[] = [
       descriptionKey: 'admin.referrals.description'
     }
   },
+  {
+    path: '/admin/organizations',
+    name: 'AdminOrganizations',
+    component: () => import('@/views/admin/OrganizationsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Organization Management',
+      titleKey: 'admin.organizations.title',
+      descriptionKey: 'admin.organizations.description'
+    }
+  },
+
+  // ==================== Org Admin Routes ====================
+  {
+    path: '/org',
+    redirect: '/org/dashboard'
+  },
+  {
+    path: '/org/dashboard',
+    name: 'OrgDashboard',
+    component: () => import('@/views/org/OrgDashboardView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresOrgAdmin: true,
+      title: 'Organization Dashboard',
+      titleKey: 'org.dashboard.title',
+      descriptionKey: 'org.dashboard.description'
+    }
+  },
+  {
+    path: '/org/members',
+    name: 'OrgMembers',
+    component: () => import('@/views/org/OrgMembersView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresOrgAdmin: true,
+      title: 'Organization Members',
+      titleKey: 'org.members.title',
+      descriptionKey: 'org.members.description'
+    }
+  },
+  {
+    path: '/org/projects',
+    name: 'OrgProjects',
+    component: () => import('@/views/org/OrgProjectsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresOrgAdmin: true,
+      title: 'Organization Projects',
+      titleKey: 'org.projects.title',
+      descriptionKey: 'org.projects.description'
+    }
+  },
+  {
+    path: '/org/audit-logs',
+    name: 'OrgAuditLogs',
+    component: () => import('@/views/org/OrgAuditLogView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresOrgAdmin: true,
+      title: 'Audit Logs',
+      titleKey: 'org.audit.title',
+      descriptionKey: 'org.audit.description'
+    }
+  },
 
   // ==================== 404 Not Found ====================
   {
@@ -470,8 +536,14 @@ router.beforeEach((to, _from, next) => {
   if (!requiresAuth) {
     // If already authenticated and trying to access login/register, redirect to appropriate dashboard
     if (authStore.isAuthenticated && (to.path === '/login' || to.path === '/register')) {
-      // Admin users go to admin dashboard, regular users go to user dashboard
-      next(authStore.isAdmin ? '/admin/dashboard' : '/dashboard')
+      // Admin users go to admin dashboard, org admins go to org dashboard, regular users go to user dashboard
+      if (authStore.isAdmin) {
+        next('/admin/dashboard')
+      } else if (authStore.isOrgAdmin) {
+        next('/org/dashboard')
+      } else {
+        next('/dashboard')
+      }
       return
     }
     next()
@@ -492,6 +564,13 @@ router.beforeEach((to, _from, next) => {
   if (requiresAdmin && !authStore.isAdmin) {
     // User is authenticated but not admin, redirect to user dashboard
     next('/dashboard')
+    return
+  }
+
+  // Check org admin requirement
+  const requiresOrgAdmin = to.meta.requiresOrgAdmin === true
+  if (requiresOrgAdmin && !authStore.isOrgAdmin) {
+    next(authStore.isAdmin ? '/admin/dashboard' : '/dashboard')
     return
   }
 
