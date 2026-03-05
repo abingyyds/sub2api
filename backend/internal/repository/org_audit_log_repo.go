@@ -123,7 +123,7 @@ func (r *orgAuditLogRepository) List(ctx context.Context, orgID int64, params pa
 		return nil, nil, err
 	}
 
-	paginationResult := paginationResultFromTotal(total, params)
+	paginationResult := paginationResultFromTotal(int64(total), params)
 	entities, err := query.
 		Offset(params.Offset()).
 		Limit(params.Limit()).

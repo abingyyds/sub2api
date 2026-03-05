@@ -106,7 +106,7 @@ func (r *orgProjectRepository) ListByOrg(ctx context.Context, orgID int64, param
 		return nil, nil, err
 	}
 
-	paginationResult := paginationResultFromTotal(total, params)
+	paginationResult := paginationResultFromTotal(int64(total), params)
 	entities, err := query.
 		Offset(params.Offset()).
 		Limit(params.Limit()).
