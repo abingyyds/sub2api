@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -2019,20 +2020,32 @@ func (r *usageLogRepository) loadAPIKeys(ctx context.Context, ids []int64) (map[
 
 	for rows.Next() {
 		var (
-			id          int64
-			userID      int64
-			key         string
-			name        string
-			status      string
-			ipWhitelist []string
-			ipBlacklist []string
-			createdAt   time.Time
-			updatedAt   time.Time
-			groupID     sql.NullInt64
-			orgID       sql.NullInt64
+			id              int64
+			userID          int64
+			key             string
+			name            string
+			status          string
+			ipWhitelistJSON []byte
+			ipBlacklistJSON []byte
+			createdAt       time.Time
+			updatedAt       time.Time
+			groupID         sql.NullInt64
+			orgID           sql.NullInt64
 		)
-		if err := rows.Scan(&id, &userID, &key, &name, &status, pq.Array(&ipWhitelist), pq.Array(&ipBlacklist), &createdAt, &updatedAt, &groupID, &orgID); err != nil {
+		if err := rows.Scan(&id, &userID, &key, &name, &status, &ipWhitelistJSON, &ipBlacklistJSON, &createdAt, &updatedAt, &groupID, &orgID); err != nil {
 			return nil, err
+		}
+
+		var ipWhitelist, ipBlacklist []string
+		if len(ipWhitelistJSON) > 0 {
+			if err := json.Unmarshal(ipWhitelistJSON, &ipWhitelist); err != nil {
+				return nil, fmt.Errorf("unmarshal ip_whitelist: %w", err)
+			}
+		}
+		if len(ipBlacklistJSON) > 0 {
+			if err := json.Unmarshal(ipBlacklistJSON, &ipBlacklist); err != nil {
+				return nil, fmt.Errorf("unmarshal ip_blacklist: %w", err)
+			}
 		}
 
 		apiKey := &service.APIKey{
