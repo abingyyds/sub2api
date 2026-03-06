@@ -3301,6 +3301,8 @@ export default {
     rate: '倍率',
     subscriptionType: '订阅制',
     standardType: '按量付费',
+    clickToCopy: '点击复制模型名',
+    modelCopied: '模型名已复制',
   },
 
   pricing: {

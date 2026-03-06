@@ -61,18 +61,16 @@
             </select>
           </div>
 
-          <!-- Model Selector (supports custom input) -->
+          <!-- Model Selector -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1.5">{{ t('tutorial.configExport.selectModel') }}</label>
-            <input
+            <select
               v-model="selectedModel"
-              list="model-suggestions"
-              placeholder="claude-sonnet-4-6"
               class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-dark-600 dark:bg-dark-800 dark:text-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-            />
-            <datalist id="model-suggestions">
-              <option v-for="model in popularModels" :key="model" :value="model" />
-            </datalist>
+            >
+              <option v-if="loadingModels" value="" disabled>{{ t('common.loading') }}...</option>
+              <option v-for="model in availableModels" :key="model" :value="model">{{ model }}</option>
+            </select>
           </div>
         </div>
 
@@ -166,6 +164,7 @@ import { computed, ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { keysAPI } from '@/api/keys'
+import { getModelPlaza } from '@/api/model-plaza'
 import { useClipboard } from '@/composables/useClipboard'
 import type { ApiKey } from '@/types'
 
@@ -175,28 +174,12 @@ const { copyToClipboard } = useClipboard()
 const apiBaseUrl = computed(() => window.location.origin)
 const selectedTool = ref('claudeCode')
 const selectedKeyId = ref<number | null>(null)
-const selectedModel = ref('claude-sonnet-4-6')
+const selectedModel = ref('')
 const apiKeys = ref<ApiKey[]>([])
 const loadingKeys = ref(true)
+const loadingModels = ref(true)
 const copied = ref(false)
-
-const popularModels = [
-  'claude-sonnet-4-6',
-  'claude-opus-4-6',
-  'claude-haiku-4-5-20251001',
-  'claude-sonnet-4-5-20250929',
-  'claude-opus-4-5-20251101',
-  'claude-sonnet-4-20250514',
-  'gpt-5.2-codex',
-  'gpt-5.1-codex',
-  'gpt-5.2',
-  'gpt-5.1',
-  'gemini-2.5-pro',
-  'gemini-2.5-flash',
-  'gemini-3-pro',
-  'gemini-3-flash',
-  'gemini-3.1-pro',
-]
+const availableModels = ref<string[]>([])
 
 const tools = computed(() => [
   { id: 'claudeCode', name: 'Claude Code' },
@@ -326,17 +309,35 @@ print(message.content)`
 })
 
 onMounted(async () => {
-  try {
-    const resp = await keysAPI.list(1, 100)
+  // Load API keys and models in parallel
+  const keysPromise = keysAPI.list(1, 100).then(resp => {
     apiKeys.value = (resp.items || []).filter((k: ApiKey) => k.status === 'active')
     if (apiKeys.value.length > 0) {
       selectedKeyId.value = apiKeys.value[0].id
     }
-  } catch {
-    // silently fail
-  } finally {
+  }).catch(() => {}).finally(() => {
     loadingKeys.value = false
-  }
+  })
+
+  const modelsPromise = getModelPlaza().then(groups => {
+    // Collect all unique model names across all groups
+    const modelSet = new Set<string>()
+    for (const g of groups) {
+      if (g.models) {
+        for (const m of g.models) modelSet.add(m)
+      }
+    }
+    availableModels.value = Array.from(modelSet).sort()
+    if (availableModels.value.length > 0) {
+      // Default to first claude model, or first model
+      const claudeModel = availableModels.value.find(m => m.includes('claude-sonnet'))
+      selectedModel.value = claudeModel || availableModels.value[0]
+    }
+  }).catch(() => {}).finally(() => {
+    loadingModels.value = false
+  })
+
+  await Promise.all([keysPromise, modelsPromise])
 })
 
 const copyConfig = async () => {

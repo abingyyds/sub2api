@@ -60,13 +60,15 @@
               {{ t('modelPlaza.availableModels') }} ({{ item.models.length }})
             </div>
             <div class="flex flex-wrap gap-2">
-              <span
+              <button
                 v-for="model in item.models"
                 :key="model"
-                class="inline-block rounded-md bg-gray-100 px-2.5 py-1 text-xs font-mono text-gray-700 dark:bg-dark-700 dark:text-dark-300"
+                @click="copyModel(model)"
+                class="inline-block rounded-md bg-gray-100 px-2.5 py-1 text-xs font-mono text-gray-700 dark:bg-dark-700 dark:text-dark-300 hover:bg-primary-100 hover:text-primary-700 dark:hover:bg-primary-900/30 dark:hover:text-primary-400 cursor-pointer transition-colors"
+                :title="t('modelPlaza.clickToCopy')"
               >
                 {{ model }}
-              </span>
+              </button>
             </div>
           </div>
           <div v-else class="text-sm text-gray-400 dark:text-dark-500 italic">
@@ -83,8 +85,10 @@ import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { getModelPlaza, type GroupModels } from '@/api/model-plaza'
+import { useClipboard } from '@/composables/useClipboard'
 
 const { t } = useI18n()
+const { copyToClipboard } = useClipboard()
 
 const loading = ref(true)
 const groupModels = ref<GroupModels[]>([])
@@ -98,6 +102,10 @@ function platformBadgeClass(platform: string) {
     multi: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
   }
   return map[platform] || map.multi
+}
+
+function copyModel(model: string) {
+  copyToClipboard(model, t('modelPlaza.modelCopied'))
 }
 
 onMounted(async () => {

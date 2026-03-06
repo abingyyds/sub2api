@@ -3151,6 +3151,8 @@ export default {
     rate: 'Rate',
     subscriptionType: 'Subscription',
     standardType: 'Standard',
+    clickToCopy: 'Click to copy model name',
+    modelCopied: 'Model name copied',
   },
 
   pricing: {
