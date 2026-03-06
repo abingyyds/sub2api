@@ -104,3 +104,32 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 
 	response.Success(c, dto.UserFromService(updatedUser))
 }
+
+// UpdateDiscoverySourceRequest 更新用户来源请求
+type UpdateDiscoverySourceRequest struct {
+	Source string `json:"source" binding:"required,max=50"`
+}
+
+// UpdateDiscoverySource 更新用户来源渠道
+// PUT /api/v1/user/discovery-source
+func (h *UserHandler) UpdateDiscoverySource(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "User not authenticated")
+		return
+	}
+
+	var req UpdateDiscoverySourceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	updatedUser, err := h.userService.UpdateDiscoverySource(c.Request.Context(), subject.UserID, req.Source)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, dto.UserFromService(updatedUser))
+}

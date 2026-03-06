@@ -221,6 +221,16 @@ export async function getActiveAnnouncements(): Promise<Announcement[]> {
   return data
 }
 
+/**
+ * Update user discovery source (how they found the platform)
+ * @param source - Discovery source identifier
+ * @returns Updated user data
+ */
+export async function updateDiscoverySource(source: string): Promise<AuthResponse['user']> {
+  const { data } = await apiClient.put<AuthResponse['user']>('/user/discovery-source', { source })
+  return data
+}
+
 export const authAPI = {
   login,
   login2FA,
@@ -237,7 +247,8 @@ export const authAPI = {
   validatePromoCode,
   forgotPassword,
   resetPassword,
-  getActiveAnnouncements
+  getActiveAnnouncements,
+  updateDiscoverySource
 }
 
 export default authAPI

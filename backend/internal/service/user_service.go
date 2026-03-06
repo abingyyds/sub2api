@@ -132,6 +132,21 @@ func (s *UserService) UpdateProfile(ctx context.Context, userID int64, req Updat
 	return user, nil
 }
 
+// UpdateDiscoverySource 更新用户来源渠道
+func (s *UserService) UpdateDiscoverySource(ctx context.Context, userID int64, source string) (*User, error) {
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get user: %w", err)
+	}
+
+	user.DiscoverySource = &source
+	if err := s.userRepo.Update(ctx, user); err != nil {
+		return nil, fmt.Errorf("update user: %w", err)
+	}
+
+	return user, nil
+}
+
 // ChangePassword 修改密码
 // Security: Increments TokenVersion to invalidate all existing JWT tokens
 func (s *UserService) ChangePassword(ctx context.Context, userID int64, req ChangePasswordRequest) error {

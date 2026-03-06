@@ -78,6 +78,12 @@ func (User) Fields() []ent.Field {
 			MaxLen(16).
 			Optional().
 			Nillable(),
+
+		// 用户来源（非邀请注册用户填写）
+		field.String("discovery_source").
+			MaxLen(50).
+			Optional().
+			Nillable(),
 	}
 }
 

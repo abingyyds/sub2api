@@ -1072,6 +1072,21 @@ func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(sql.AndPredicates(predicates...))
 }
 
+// InviteCodeEQ applies the EQ predicate on the "invite_code" field.
+func InviteCodeEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldInviteCode, v))
+}
+
+// DiscoverySourceEQ applies the EQ predicate on the "discovery_source" field.
+func DiscoverySourceEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldDiscoverySource, v))
+}
+
+// DiscoverySourceIsNil applies the IsNil predicate on the "discovery_source" field.
+func DiscoverySourceIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldDiscoverySource))
+}
+
 // Or groups predicates with the OR operator between them.
 func Or(predicates ...predicate.User) predicate.User {
 	return predicate.User(sql.OrPredicates(predicates...))

@@ -405,6 +405,7 @@ func userEntityToService(u *dbent.User) *service.User {
 		TotpEnabled:         u.TotpEnabled,
 		TotpEnabledAt:       u.TotpEnabledAt,
 		InviteCode:          u.InviteCode,
+		DiscoverySource:     u.DiscoverySource,
 		CreatedAt:           u.CreatedAt,
 		UpdatedAt:           u.UpdatedAt,
 	}

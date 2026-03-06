@@ -29,6 +29,9 @@ type User struct {
 	// 邀请码
 	InviteCode *string
 
+	// 用户来源
+	DiscoverySource *string
+
 	APIKeys       []APIKey
 	Subscriptions []UserSubscription
 }

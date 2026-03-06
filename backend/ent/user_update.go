@@ -241,6 +241,46 @@ func (_u *UserUpdate) ClearTotpEnabledAt() *UserUpdate {
 	return _u
 }
 
+// SetInviteCode sets the "invite_code" field.
+func (_u *UserUpdate) SetInviteCode(v string) *UserUpdate {
+	_u.mutation.SetInviteCode(v)
+	return _u
+}
+
+// SetNillableInviteCode sets the "invite_code" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableInviteCode(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetInviteCode(*v)
+	}
+	return _u
+}
+
+// ClearInviteCode clears the value of the "invite_code" field.
+func (_u *UserUpdate) ClearInviteCode() *UserUpdate {
+	_u.mutation.ClearInviteCode()
+	return _u
+}
+
+// SetDiscoverySource sets the "discovery_source" field.
+func (_u *UserUpdate) SetDiscoverySource(v string) *UserUpdate {
+	_u.mutation.SetDiscoverySource(v)
+	return _u
+}
+
+// SetNillableDiscoverySource sets the "discovery_source" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableDiscoverySource(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetDiscoverySource(*v)
+	}
+	return _u
+}
+
+// ClearDiscoverySource clears the value of the "discovery_source" field.
+func (_u *UserUpdate) ClearDiscoverySource() *UserUpdate {
+	_u.mutation.ClearDiscoverySource()
+	return _u
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *UserUpdate) AddAPIKeyIDs(ids ...int64) *UserUpdate {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -671,6 +711,18 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.TotpEnabledAtCleared() {
 		_spec.ClearField(user.FieldTotpEnabledAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.InviteCode(); ok {
+		_spec.SetField(user.FieldInviteCode, field.TypeString, value)
+	}
+	if _u.mutation.InviteCodeCleared() {
+		_spec.ClearField(user.FieldInviteCode, field.TypeString)
+	}
+	if value, ok := _u.mutation.DiscoverySource(); ok {
+		_spec.SetField(user.FieldDiscoverySource, field.TypeString, value)
+	}
+	if _u.mutation.DiscoverySourceCleared() {
+		_spec.ClearField(user.FieldDiscoverySource, field.TypeString)
 	}
 	if _u.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1270,6 +1322,46 @@ func (_u *UserUpdateOne) ClearTotpEnabledAt() *UserUpdateOne {
 	return _u
 }
 
+// SetInviteCode sets the "invite_code" field.
+func (_u *UserUpdateOne) SetInviteCode(v string) *UserUpdateOne {
+	_u.mutation.SetInviteCode(v)
+	return _u
+}
+
+// SetNillableInviteCode sets the "invite_code" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableInviteCode(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetInviteCode(*v)
+	}
+	return _u
+}
+
+// ClearInviteCode clears the value of the "invite_code" field.
+func (_u *UserUpdateOne) ClearInviteCode() *UserUpdateOne {
+	_u.mutation.ClearInviteCode()
+	return _u
+}
+
+// SetDiscoverySource sets the "discovery_source" field.
+func (_u *UserUpdateOne) SetDiscoverySource(v string) *UserUpdateOne {
+	_u.mutation.SetDiscoverySource(v)
+	return _u
+}
+
+// SetNillableDiscoverySource sets the "discovery_source" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableDiscoverySource(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetDiscoverySource(*v)
+	}
+	return _u
+}
+
+// ClearDiscoverySource clears the value of the "discovery_source" field.
+func (_u *UserUpdateOne) ClearDiscoverySource() *UserUpdateOne {
+	_u.mutation.ClearDiscoverySource()
+	return _u
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *UserUpdateOne) AddAPIKeyIDs(ids ...int64) *UserUpdateOne {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -1730,6 +1822,18 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if _u.mutation.TotpEnabledAtCleared() {
 		_spec.ClearField(user.FieldTotpEnabledAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.InviteCode(); ok {
+		_spec.SetField(user.FieldInviteCode, field.TypeString, value)
+	}
+	if _u.mutation.InviteCodeCleared() {
+		_spec.ClearField(user.FieldInviteCode, field.TypeString)
+	}
+	if value, ok := _u.mutation.DiscoverySource(); ok {
+		_spec.SetField(user.FieldDiscoverySource, field.TypeString, value)
+	}
+	if _u.mutation.DiscoverySourceCleared() {
+		_spec.ClearField(user.FieldDiscoverySource, field.TypeString)
 	}
 	if _u.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{

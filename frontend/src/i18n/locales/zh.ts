@@ -311,7 +311,26 @@ export default {
     invalidResetLink: '无效的重置链接',
     invalidResetLinkHint: '此密码重置链接无效或已过期。请重新请求一个新链接。',
     requestNewResetLink: '请求新的重置链接',
-    invalidOrExpiredToken: '密码重置链接无效或已过期。请重新请求一个新链接。'
+    invalidOrExpiredToken: '密码重置链接无效或已过期。请重新请求一个新链接。',
+    // 用户来源调查
+    discoverySource: {
+      title: '您是从哪里了解到我们的？',
+      subtitle: '帮助我们了解您的来源渠道',
+      douyin: '抖音',
+      xiaohongshu: '小红书',
+      bilibili: 'B站',
+      wechat: '微信/朋友圈',
+      twitter: 'Twitter/X',
+      telegram: 'Telegram',
+      github: 'GitHub',
+      search: '搜索引擎',
+      friend: '朋友推荐',
+      other: '其他',
+      otherPlaceholder: '请输入来源渠道',
+      submit: '提交',
+      submitting: '提交中...',
+      skip: '跳过'
+    }
   },
 
   // Dashboard

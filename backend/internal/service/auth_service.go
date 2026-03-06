@@ -161,6 +161,12 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 		if err := s.referralService.RecordReferral(ctx, inviteCode, user.ID); err != nil {
 			log.Printf("[Auth] Failed to record referral for user %d: %v", user.ID, err)
 		}
+		// 自动标记来源为邀请，这样前端不会再弹出来源调查弹窗
+		inviteSource := "invite"
+		user.DiscoverySource = &inviteSource
+		if err := s.userRepo.Update(ctx, user); err != nil {
+			log.Printf("[Auth] Failed to set discovery source for invited user %d: %v", user.ID, err)
+		}
 	}
 
 	// 应用优惠码（如果提供且功能已启用）

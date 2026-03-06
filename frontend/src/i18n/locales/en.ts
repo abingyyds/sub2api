@@ -314,7 +314,26 @@ export default {
     invalidResetLink: 'Invalid Reset Link',
     invalidResetLinkHint: 'This password reset link is invalid or has expired. Please request a new one.',
     requestNewResetLink: 'Request New Reset Link',
-    invalidOrExpiredToken: 'The password reset link is invalid or has expired. Please request a new one.'
+    invalidOrExpiredToken: 'The password reset link is invalid or has expired. Please request a new one.',
+    // Discovery source survey
+    discoverySource: {
+      title: 'How did you hear about us?',
+      subtitle: 'Help us understand how you found us',
+      douyin: 'Douyin/TikTok',
+      xiaohongshu: 'Xiaohongshu',
+      bilibili: 'Bilibili',
+      wechat: 'WeChat',
+      twitter: 'Twitter/X',
+      telegram: 'Telegram',
+      github: 'GitHub',
+      search: 'Search Engine',
+      friend: 'Friend Referral',
+      other: 'Other',
+      otherPlaceholder: 'Please specify',
+      submit: 'Submit',
+      submitting: 'Submitting...',
+      skip: 'Skip'
+    }
   },
 
   // Dashboard

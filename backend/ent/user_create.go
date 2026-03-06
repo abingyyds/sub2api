@@ -209,6 +209,34 @@ func (_c *UserCreate) SetNillableTotpEnabledAt(v *time.Time) *UserCreate {
 	return _c
 }
 
+// SetInviteCode sets the "invite_code" field.
+func (_c *UserCreate) SetInviteCode(v string) *UserCreate {
+	_c.mutation.SetInviteCode(v)
+	return _c
+}
+
+// SetNillableInviteCode sets the "invite_code" field if the given value is not nil.
+func (_c *UserCreate) SetNillableInviteCode(v *string) *UserCreate {
+	if v != nil {
+		_c.SetInviteCode(*v)
+	}
+	return _c
+}
+
+// SetDiscoverySource sets the "discovery_source" field.
+func (_c *UserCreate) SetDiscoverySource(v string) *UserCreate {
+	_c.mutation.SetDiscoverySource(v)
+	return _c
+}
+
+// SetNillableDiscoverySource sets the "discovery_source" field if the given value is not nil.
+func (_c *UserCreate) SetNillableDiscoverySource(v *string) *UserCreate {
+	if v != nil {
+		_c.SetDiscoverySource(*v)
+	}
+	return _c
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_c *UserCreate) AddAPIKeyIDs(ids ...int64) *UserCreate {
 	_c.mutation.AddAPIKeyIDs(ids...)
@@ -553,6 +581,14 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.TotpEnabledAt(); ok {
 		_spec.SetField(user.FieldTotpEnabledAt, field.TypeTime, value)
 		_node.TotpEnabledAt = &value
+	}
+	if value, ok := _c.mutation.InviteCode(); ok {
+		_spec.SetField(user.FieldInviteCode, field.TypeString, value)
+		_node.InviteCode = &value
+	}
+	if value, ok := _c.mutation.DiscoverySource(); ok {
+		_spec.SetField(user.FieldDiscoverySource, field.TypeString, value)
+		_node.DiscoverySource = &value
 	}
 	if nodes := _c.mutation.APIKeysIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

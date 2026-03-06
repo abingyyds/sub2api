@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { RouterView, useRouter, useRoute } from 'vue-router'
-import { onMounted, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import Toast from '@/components/common/Toast.vue'
 import NavigationProgress from '@/components/common/NavigationProgress.vue'
+import DiscoverySourceModal from '@/components/auth/DiscoverySourceModal.vue'
 import { useAppStore, useAuthStore, useSubscriptionStore } from '@/stores'
 import { getSetupStatus } from '@/api/setup'
 
@@ -11,6 +12,8 @@ const route = useRoute()
 const appStore = useAppStore()
 const authStore = useAuthStore()
 const subscriptionStore = useSubscriptionStore()
+
+const showDiscoverySource = ref(false)
 
 /**
  * Update favicon dynamically
@@ -59,9 +62,15 @@ watch(
         console.error('Failed to preload subscriptions:', error)
       })
       subscriptionStore.startPolling()
+
+      // Show discovery source survey if user hasn't filled it in
+      if (authStore.user && authStore.user.discovery_source == null) {
+        showDiscoverySource.value = true
+      }
     } else {
       // User logged out: clear data and stop polling
       subscriptionStore.clear()
+      showDiscoverySource.value = false
     }
   },
   { immediate: true }
@@ -88,4 +97,5 @@ onMounted(async () => {
   <NavigationProgress />
   <RouterView />
   <Toast />
+  <DiscoverySourceModal :show="showDiscoverySource" @close="showDiscoverySource = false" />
 </template>

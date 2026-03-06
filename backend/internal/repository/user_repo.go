@@ -145,6 +145,9 @@ func (r *userRepository) Update(ctx context.Context, userIn *service.User) error
 	if userIn.InviteCode != nil {
 		update = update.SetInviteCode(*userIn.InviteCode)
 	}
+	if userIn.DiscoverySource != nil {
+		update = update.SetDiscoverySource(*userIn.DiscoverySource)
+	}
 	updated, err := update.Save(ctx)
 	if err != nil {
 		return translatePersistenceError(err, service.ErrUserNotFound, service.ErrEmailExists)

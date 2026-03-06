@@ -14363,6 +14363,8 @@ type UserMutation struct {
 	totp_secret_encrypted         *string
 	totp_enabled                  *bool
 	totp_enabled_at               *time.Time
+	invite_code                   *string
+	discovery_source              *string
 	clearedFields                 map[string]struct{}
 	api_keys                      map[int64]struct{}
 	removedapi_keys               map[int64]struct{}
@@ -15072,6 +15074,100 @@ func (m *UserMutation) TotpEnabledAtCleared() bool {
 func (m *UserMutation) ResetTotpEnabledAt() {
 	m.totp_enabled_at = nil
 	delete(m.clearedFields, user.FieldTotpEnabledAt)
+}
+
+// SetInviteCode sets the "invite_code" field.
+func (m *UserMutation) SetInviteCode(s string) {
+	m.invite_code = &s
+}
+
+// InviteCode returns the value of the "invite_code" field in the mutation.
+func (m *UserMutation) InviteCode() (r string, exists bool) {
+	v := m.invite_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInviteCode returns the old "invite_code" field's value of the User entity.
+func (m *UserMutation) OldInviteCode(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInviteCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInviteCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInviteCode: %w", err)
+	}
+	return oldValue.InviteCode, nil
+}
+
+// ClearInviteCode clears the value of the "invite_code" field.
+func (m *UserMutation) ClearInviteCode() {
+	m.invite_code = nil
+	m.clearedFields[user.FieldInviteCode] = struct{}{}
+}
+
+// InviteCodeCleared returns if the "invite_code" field was cleared in this mutation.
+func (m *UserMutation) InviteCodeCleared() bool {
+	_, ok := m.clearedFields[user.FieldInviteCode]
+	return ok
+}
+
+// ResetInviteCode resets all changes to the "invite_code" field.
+func (m *UserMutation) ResetInviteCode() {
+	m.invite_code = nil
+	delete(m.clearedFields, user.FieldInviteCode)
+}
+
+// SetDiscoverySource sets the "discovery_source" field.
+func (m *UserMutation) SetDiscoverySource(s string) {
+	m.discovery_source = &s
+}
+
+// DiscoverySource returns the value of the "discovery_source" field in the mutation.
+func (m *UserMutation) DiscoverySource() (r string, exists bool) {
+	v := m.discovery_source
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDiscoverySource returns the old "discovery_source" field's value of the User entity.
+func (m *UserMutation) OldDiscoverySource(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDiscoverySource is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDiscoverySource requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDiscoverySource: %w", err)
+	}
+	return oldValue.DiscoverySource, nil
+}
+
+// ClearDiscoverySource clears the value of the "discovery_source" field.
+func (m *UserMutation) ClearDiscoverySource() {
+	m.discovery_source = nil
+	m.clearedFields[user.FieldDiscoverySource] = struct{}{}
+}
+
+// DiscoverySourceCleared returns if the "discovery_source" field was cleared in this mutation.
+func (m *UserMutation) DiscoverySourceCleared() bool {
+	_, ok := m.clearedFields[user.FieldDiscoverySource]
+	return ok
+}
+
+// ResetDiscoverySource resets all changes to the "discovery_source" field.
+func (m *UserMutation) ResetDiscoverySource() {
+	m.discovery_source = nil
+	delete(m.clearedFields, user.FieldDiscoverySource)
 }
 
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by ids.
