@@ -61,15 +61,18 @@
             </select>
           </div>
 
-          <!-- Model Selector -->
+          <!-- Model Selector (supports custom input) -->
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1.5">{{ t('tutorial.configExport.selectModel') }}</label>
-            <select
+            <input
               v-model="selectedModel"
+              list="model-suggestions"
+              placeholder="claude-sonnet-4-6"
               class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-dark-600 dark:bg-dark-800 dark:text-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-            >
-              <option v-for="model in popularModels" :key="model" :value="model">{{ model }}</option>
-            </select>
+            />
+            <datalist id="model-suggestions">
+              <option v-for="model in popularModels" :key="model" :value="model" />
+            </datalist>
           </div>
         </div>
 
