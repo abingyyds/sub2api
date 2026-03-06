@@ -323,7 +323,7 @@ print(message.content)`
 onMounted(async () => {
   try {
     const resp = await keysAPI.list(1, 100)
-    apiKeys.value = (resp.data || []).filter((k: ApiKey) => k.status === 'active')
+    apiKeys.value = (resp.items || []).filter((k: ApiKey) => k.status === 'active')
     if (apiKeys.value.length > 0) {
       selectedKeyId.value = apiKeys.value[0].id
     }
