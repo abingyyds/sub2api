@@ -3381,6 +3381,17 @@ export default {
       description: '本平台同时提供 OpenAI 兼容的接口，方便迁移现有代码',
       endpoint: 'OpenAI 兼容端点'
     },
+    configExport: {
+      title: '配置文件导出',
+      subtitle: '选择您的 API Key 和模型，一键生成配置文件',
+      selectKey: '选择 API Key',
+      selectModel: '选择模型',
+      selectTool: '选择工具',
+      noKeys: '暂无 API Key',
+      selectKeyHint: '请先选择一个 API Key 来生成配置文件',
+      noKeysHint: '您还没有创建 API Key',
+      createKey: '前往创建 API Key'
+    },
     tips: {
       title: '使用提示',
       tip1: '请妥善保管您的 API Key，不要泄露给他人',

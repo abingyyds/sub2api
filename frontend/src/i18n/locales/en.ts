@@ -3231,6 +3231,17 @@ export default {
       description: 'This platform also provides OpenAI-compatible endpoints for easy migration',
       endpoint: 'OpenAI Compatible Endpoint'
     },
+    configExport: {
+      title: 'Config Export',
+      subtitle: 'Select your API Key and model to generate configuration files',
+      selectKey: 'Select API Key',
+      selectModel: 'Select Model',
+      selectTool: 'Select Tool',
+      noKeys: 'No API Keys',
+      selectKeyHint: 'Please select an API Key to generate configuration',
+      noKeysHint: 'You have not created any API Keys yet',
+      createKey: 'Create API Key'
+    },
     tips: {
       title: 'Tips',
       tip1: 'Keep your API Key secure and do not share it with others',
