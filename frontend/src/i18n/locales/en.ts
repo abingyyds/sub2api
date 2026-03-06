@@ -3211,7 +3211,7 @@ export default {
       step2: 'Configure Base URL',
       step2Desc: 'Point your SDK or tool\'s Base URL to this service address, and fill in the API Key you just created.',
       step3: 'Start Calling',
-      step3Desc: 'Send requests using standard OpenAI SDK format. Change the model parameter to switch between different models, and the system will automatically route to the optimal channel.'
+      step3Desc: 'Send requests using Anthropic, OpenAI, or Gemini SDK format. Change the model parameter to switch between models. Supports three API formats: Anthropic Messages (/v1/messages), OpenAI Chat (/v1/chat/completions), and Gemini Native (/v1beta/).'
     },
     tools: {
       title: 'Tool Integration Guides',
@@ -3267,7 +3267,8 @@ export default {
       title: 'Tips',
       tip1: 'Keep your API Key secure and do not share it with others',
       tip2: 'View detailed call history and costs in the "Usage" page',
-      tip3: 'Check "Model Plaza" for model availability status if you encounter issues'
+      tip3: 'Check "Model Plaza" for model availability status if you encounter issues',
+      tip4: 'Supports three API formats: Anthropic (Claude models), OpenAI (GPT models), Gemini Native (Gemini models)'
     }
   },
 

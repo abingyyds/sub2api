@@ -189,21 +189,19 @@ func newGeminiQuotaPolicy() *GeminiQuotaPolicy {
 	return &GeminiQuotaPolicy{
 		tiers: map[string]GeminiTierPolicy{
 			// --- AI Studio / API Key (per-model) ---
-			// aistudio_free:
-			//   - gemini_pro:   50 RPD / 2 RPM
-			//   - gemini_flash: 1500 RPD / 15 RPM
-			GeminiTierAIStudioFree: {Quota: GeminiQuota{ProRPD: 50, ProRPM: 2, FlashRPD: 1500, FlashRPM: 15}, Cooldown: 30 * time.Minute},
-			// aistudio_paid: -1 means "unlimited/pay-as-you-go" for RPD.
-			GeminiTierAIStudioPaid: {Quota: GeminiQuota{ProRPD: -1, ProRPM: 1000, FlashRPD: -1, FlashRPM: 2000}, Cooldown: 5 * time.Minute},
+			// All tiers default to unlimited (-1) to avoid blocking requests.
+			// Operators can override via config or settings if upstream quotas apply.
+			GeminiTierAIStudioFree: {Quota: GeminiQuota{ProRPD: -1, ProRPM: -1, FlashRPD: -1, FlashRPM: -1}, Cooldown: 30 * time.Minute},
+			GeminiTierAIStudioPaid: {Quota: GeminiQuota{ProRPD: -1, ProRPM: -1, FlashRPD: -1, FlashRPM: -1}, Cooldown: 5 * time.Minute},
 
 			// --- Google One (shared pool) ---
-			GeminiTierGoogleOneFree: {Quota: GeminiQuota{SharedRPD: 1000, SharedRPM: 60}, Cooldown: 30 * time.Minute},
-			GeminiTierGoogleAIPro:   {Quota: GeminiQuota{SharedRPD: 1500, SharedRPM: 120}, Cooldown: 5 * time.Minute},
-			GeminiTierGoogleAIUltra: {Quota: GeminiQuota{SharedRPD: 2000, SharedRPM: 120}, Cooldown: 5 * time.Minute},
+			GeminiTierGoogleOneFree: {Quota: GeminiQuota{SharedRPD: -1, SharedRPM: -1}, Cooldown: 30 * time.Minute},
+			GeminiTierGoogleAIPro:   {Quota: GeminiQuota{SharedRPD: -1, SharedRPM: -1}, Cooldown: 5 * time.Minute},
+			GeminiTierGoogleAIUltra: {Quota: GeminiQuota{SharedRPD: -1, SharedRPM: -1}, Cooldown: 5 * time.Minute},
 
 			// --- GCP Code Assist (shared pool) ---
-			GeminiTierGCPStandard:   {Quota: GeminiQuota{SharedRPD: 1500, SharedRPM: 120}, Cooldown: 5 * time.Minute},
-			GeminiTierGCPEnterprise: {Quota: GeminiQuota{SharedRPD: 2000, SharedRPM: 120}, Cooldown: 5 * time.Minute},
+			GeminiTierGCPStandard:   {Quota: GeminiQuota{SharedRPD: -1, SharedRPM: -1}, Cooldown: 5 * time.Minute},
+			GeminiTierGCPEnterprise: {Quota: GeminiQuota{SharedRPD: -1, SharedRPM: -1}, Cooldown: 5 * time.Minute},
 		},
 	}
 }

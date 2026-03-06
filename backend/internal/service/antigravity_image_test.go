@@ -21,6 +21,17 @@ func TestIsImageGenerationModel_GeminiFlashImage(t *testing.T) {
 	require.True(t, isImageGenerationModel("gemini-2.5-flash-image-preview"))
 }
 
+// TestIsImageGenerationModel_Gemini31FlashImage 测试 gemini-3.1-flash-image 识别
+func TestIsImageGenerationModel_Gemini31FlashImage(t *testing.T) {
+	require.True(t, isImageGenerationModel("gemini-3.1-flash-image"))
+	require.True(t, isImageGenerationModel("gemini-3.1-flash-image-preview"))
+	require.True(t, isImageGenerationModel("gemini-3.1-flash-image-3x2"))
+	require.True(t, isImageGenerationModel("gemini-3.1-flash-image-4x3"))
+	require.True(t, isImageGenerationModel("gemini-3.1-flash-image-2k"))
+	require.True(t, isImageGenerationModel("gemini-3.1-flash-image-4k-16x9"))
+	require.True(t, isImageGenerationModel("models/gemini-3.1-flash-image"))
+}
+
 // TestIsImageGenerationModel_RegularModel 测试普通模型不被识别为图片模型
 func TestIsImageGenerationModel_RegularModel(t *testing.T) {
 	require.False(t, isImageGenerationModel("claude-3-opus"))

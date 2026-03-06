@@ -3361,7 +3361,7 @@ export default {
       step2: '配置 Base URL',
       step2Desc: '将你的 SDK 或工具的 Base URL 指向本服务地址，API Key 填入刚创建的密钥。',
       step3: '开始调用',
-      step3Desc: '使用标准 OpenAI SDK 格式发送请求，更换 model 参数即可切换不同模型，系统自动路由到最优渠道。'
+      step3Desc: '使用标准 OpenAI / Anthropic / Gemini SDK 格式发送请求，更换 model 参数即可切换不同模型，系统自动路由到最优渠道。支持三种 API 格式：Anthropic Messages（/v1/messages）、OpenAI Chat（/v1/chat/completions）、Gemini Native（/v1beta/）。'
     },
     tools: {
       title: '主流工具接入配置',
@@ -3417,7 +3417,8 @@ export default {
       title: '使用提示',
       tip1: '请妥善保管您的 API Key，不要泄露给他人',
       tip2: '在"使用记录"页面可以查看详细的调用历史和费用',
-      tip3: '如遇到问题，请查看"模型广场"了解模型可用状态'
+      tip3: '如遇到问题，请查看"模型广场"了解模型可用状态',
+      tip4: '支持三种 API 格式：Anthropic（Claude 模型）、OpenAI（GPT 模型）、Gemini Native（Gemini 模型）'
     }
   },
 

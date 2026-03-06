@@ -2547,7 +2547,7 @@ func (s *AntigravityGatewayService) extractImageSize(body []byte) string {
 }
 
 // isImageGenerationModel 判断模型是否为图片生成模型
-// 支持的模型：gemini-3-pro-image, gemini-3-pro-image-preview, gemini-2.5-flash-image 等
+// 支持的模型：gemini-3-pro-image, gemini-3-pro-image-preview, gemini-2.5-flash-image, gemini-3.1-flash-image 等
 func isImageGenerationModel(model string) bool {
 	modelLower := strings.ToLower(model)
 	// 移除 models/ 前缀
@@ -2559,7 +2559,10 @@ func isImageGenerationModel(model string) bool {
 		strings.HasPrefix(modelLower, "gemini-3-pro-image-") ||
 		modelLower == "gemini-2.5-flash-image" ||
 		modelLower == "gemini-2.5-flash-image-preview" ||
-		strings.HasPrefix(modelLower, "gemini-2.5-flash-image-")
+		strings.HasPrefix(modelLower, "gemini-2.5-flash-image-") ||
+		modelLower == "gemini-3.1-flash-image" ||
+		modelLower == "gemini-3.1-flash-image-preview" ||
+		strings.HasPrefix(modelLower, "gemini-3.1-flash-image-")
 }
 
 // cleanGeminiRequest 清理 Gemini 请求体中的 Schema

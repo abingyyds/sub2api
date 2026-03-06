@@ -151,6 +151,7 @@
               <li>&bull; {{ t('tutorial.tips.tip1') }}</li>
               <li>&bull; {{ t('tutorial.tips.tip2') }}</li>
               <li>&bull; {{ t('tutorial.tips.tip3') }}</li>
+              <li>&bull; {{ t('tutorial.tips.tip4') }}</li>
             </ul>
           </div>
         </div>
@@ -183,12 +184,16 @@ const availableModels = ref<string[]>([])
 
 const tools = computed(() => [
   { id: 'claudeCode', name: 'Claude Code' },
+  { id: 'geminiCli', name: 'Gemini CLI' },
   { id: 'openclaw', name: 'OpenClaw' },
   { id: 'opencode', name: 'OpenCode' },
   { id: 'cursor', name: 'Cursor' },
-  { id: 'api', name: 'cURL' },
-  { id: 'python', name: 'Python SDK' },
-  { id: 'anthropic', name: 'Anthropic SDK' },
+  { id: 'api', name: 'Anthropic cURL' },
+  { id: 'openaiApi', name: 'OpenAI cURL' },
+  { id: 'geminiApi', name: 'Gemini cURL' },
+  { id: 'python', name: 'Python (OpenAI)' },
+  { id: 'anthropic', name: 'Python (Anthropic)' },
+  { id: 'geminiPython', name: 'Python (Gemini)' },
 ])
 
 const selectedKey = computed(() => apiKeys.value.find(k => k.id === selectedKeyId.value))
@@ -197,12 +202,16 @@ const currentApiKey = computed(() => selectedKey.value?.key || 'sk-your-api-key'
 const configFilePath = computed(() => {
   switch (selectedTool.value) {
     case 'claudeCode': return '~/.claude/settings.json'
+    case 'geminiCli': return '~/.gemini/settings.json'
     case 'openclaw': return '~/.openclaw/openclaw.json'
     case 'opencode': return '~/.config/opencode/opencode.json'
     case 'cursor': return 'Cursor Settings'
-    case 'api': return 'Terminal'
+    case 'api': return 'Terminal (Anthropic API)'
+    case 'openaiApi': return 'Terminal (OpenAI API)'
+    case 'geminiApi': return 'Terminal (Gemini API)'
     case 'python': return 'main.py'
     case 'anthropic': return 'main.py'
+    case 'geminiPython': return 'main.py'
     default: return ''
   }
 })
@@ -220,6 +229,19 @@ const generatedConfig = computed(() => {
           ANTHROPIC_BASE_URL: base + '/',
           ANTHROPIC_MODEL: model
         }
+      }, null, 2)
+
+    case 'geminiCli':
+      return JSON.stringify({
+        cliApiKey: key,
+        models: {
+          cliModel: model,
+          planModel: model,
+          titleModel: model
+        },
+        authType: 'api-key',
+        selectedAuthType: 'api-key',
+        cliBaseUrl: base + '/v1beta/'
       }, null, 2)
 
     case 'openclaw':
@@ -269,6 +291,36 @@ const generatedConfig = computed(() => {
     ]
   }'`
 
+    case 'openaiApi':
+      return `curl ${base}/v1/chat/completions \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${key}" \\
+  -d '{
+    "model": "${model}",
+    "max_tokens": 1024,
+    "messages": [
+      {"role": "user", "content": "Hello"}
+    ]
+  }'`
+
+    case 'geminiApi':
+      return `curl "${base}/v1beta/models/${model}:generateContent?key=${key}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "contents": [
+      {"parts": [{"text": "Hello, Gemini"}]}
+    ]
+  }'
+
+# Streaming:
+curl "${base}/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${key}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "contents": [
+      {"parts": [{"text": "Hello, Gemini"}]}
+    ]
+  }'`
+
     case 'python':
       return `from openai import OpenAI
 
@@ -302,6 +354,27 @@ message = client.messages.create(
     ]
 )
 print(message.content)`
+
+    case 'geminiPython':
+      return `from google import genai
+
+client = genai.Client(
+    api_key="${key}",
+    http_options={"api_version": "v1beta", "base_url": "${base}"}
+)
+
+response = client.models.generate_content(
+    model="${model}",
+    contents="Hello, Gemini"
+)
+print(response.text)
+
+# Image Generation:
+# response = client.models.generate_content(
+#     model="gemini-3.1-flash-image",
+#     contents="Generate a cute cat illustration",
+#     config={"response_modalities": ["IMAGE", "TEXT"]}
+# )`
 
     default:
       return ''
