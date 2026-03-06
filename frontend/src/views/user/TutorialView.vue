@@ -202,7 +202,7 @@ const currentApiKey = computed(() => selectedKey.value?.key || 'sk-your-api-key'
 const configFilePath = computed(() => {
   switch (selectedTool.value) {
     case 'claudeCode': return '~/.claude/settings.json'
-    case 'geminiCli': return '~/.gemini/settings.json'
+    case 'geminiCli': return '~/.gemini/.env + settings.json'
     case 'openclaw': return '~/.openclaw/openclaw.json'
     case 'opencode': return '~/.config/opencode/opencode.json'
     case 'cursor': return 'Cursor Settings'
@@ -232,17 +232,23 @@ const generatedConfig = computed(() => {
       }, null, 2)
 
     case 'geminiCli':
-      return JSON.stringify({
-        cliApiKey: key,
-        models: {
-          cliModel: model,
-          planModel: model,
-          titleModel: model
-        },
-        authType: 'api-key',
-        selectedAuthType: 'api-key',
-        cliBaseUrl: base + '/v1beta/'
-      }, null, 2)
+      return `# Step 1: Install Gemini CLI
+npm install -g @google/gemini-cli
+
+# Step 2: Edit ~/.gemini/.env
+GOOGLE_GEMINI_BASE_URL=${base}/v1beta/
+GEMINI_API_KEY=${key}
+GEMINI_MODEL=${model}
+
+# Step 3: Edit ~/.gemini/settings.json
+${JSON.stringify({
+  ide: { enabled: true },
+  security: {
+    auth: { selectedType: 'gemini-api-key' }
+  }
+}, null, 2)}
+
+# If you see 401 error, run /auth in Gemini CLI and enter your API Key`
 
     case 'openclaw':
       return JSON.stringify({
