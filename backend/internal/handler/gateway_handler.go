@@ -194,6 +194,10 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 	} else if apiKey.Group != nil {
 		platform = apiKey.Group.Platform
 	}
+	// multi 平台：根据模型名推断实际平台
+	if platform == service.PlatformMulti && strings.HasPrefix(reqModel, "gemini") {
+		platform = service.PlatformGemini
+	}
 	sessionKey := sessionHash
 	if platform == service.PlatformGemini && sessionHash != "" {
 		sessionKey = "gemini:" + sessionHash
