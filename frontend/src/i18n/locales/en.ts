@@ -798,6 +798,7 @@ export default {
         balance: 'Balance',
         usage: 'Usage',
         concurrency: 'Concurrency',
+        discoverySource: 'Source',
         status: 'Status',
         created: 'Created',
         actions: 'Actions'

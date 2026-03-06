@@ -816,6 +816,7 @@ export default {
         balance: '余额',
         usage: '用量',
         concurrency: '并发数',
+        discoverySource: '来源渠道',
         status: '状态',
         created: '创建时间',
         actions: '操作'
