@@ -2565,6 +2565,27 @@ func isImageGenerationModel(model string) bool {
 		strings.HasPrefix(modelLower, "gemini-3.1-flash-image-")
 }
 
+// extractImageSizeFromBody 从 Gemini 请求体中提取图片尺寸（独立函数，供多个路径使用）
+func extractImageSizeFromBody(body []byte) string {
+	var parsed struct {
+		GenerationConfig *struct {
+			ImageConfig *struct {
+				ImageSize string `json:"imageSize"`
+			} `json:"imageConfig"`
+		} `json:"generationConfig"`
+	}
+	if err := json.Unmarshal(body, &parsed); err != nil {
+		return "2K"
+	}
+	if parsed.GenerationConfig != nil && parsed.GenerationConfig.ImageConfig != nil {
+		size := strings.ToUpper(strings.TrimSpace(parsed.GenerationConfig.ImageConfig.ImageSize))
+		if size == "1K" || size == "2K" || size == "4K" {
+			return size
+		}
+	}
+	return "2K"
+}
+
 // cleanGeminiRequest 清理 Gemini 请求体中的 Schema
 func cleanGeminiRequest(body []byte) ([]byte, error) {
 	var payload map[string]any

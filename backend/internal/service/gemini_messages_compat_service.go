@@ -938,6 +938,7 @@ func (s *GeminiMessagesCompatService) Forward(ctx context.Context, c *gin.Contex
 		Stream:       req.Stream,
 		Duration:     time.Since(startTime),
 		FirstTokenMs: firstTokenMs,
+		ImageCount:   func() int { if isImageGenerationModel(originalModel) { return 1 }; return 0 }(),
 	}, nil
 }
 
@@ -1371,6 +1372,14 @@ func (s *GeminiMessagesCompatService) ForwardNative(ctx context.Context, c *gin.
 		usage = &ClaudeUsage{}
 	}
 
+	// 检测图片生成模型，设置按次计费字段
+	imageCount := 0
+	imageSize := "2K"
+	if isImageGenerationModel(originalModel) {
+		imageCount = 1
+		imageSize = extractImageSizeFromBody(body)
+	}
+
 	return &ForwardResult{
 		RequestID:    requestID,
 		Usage:        *usage,
@@ -1378,6 +1387,8 @@ func (s *GeminiMessagesCompatService) ForwardNative(ctx context.Context, c *gin.
 		Stream:       stream,
 		Duration:     time.Since(startTime),
 		FirstTokenMs: firstTokenMs,
+		ImageCount:   imageCount,
+		ImageSize:    imageSize,
 	}, nil
 }
 
