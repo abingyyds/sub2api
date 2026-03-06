@@ -14,6 +14,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/config"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/antigravity"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/claude"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/ctxkey"
 	pkgerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/ip"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/openai"
@@ -197,6 +198,9 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 	// multi 平台：根据模型名推断实际平台
 	if platform == service.PlatformMulti && strings.HasPrefix(reqModel, "gemini") {
 		platform = service.PlatformGemini
+		// 同步覆盖 context 中的 RoutePlatform，确保 service 层账号选择也查 gemini 账号
+		ctx := context.WithValue(c.Request.Context(), ctxkey.RoutePlatform, service.PlatformGemini)
+		c.Request = c.Request.WithContext(ctx)
 	}
 	sessionKey := sessionHash
 	if platform == service.PlatformGemini && sessionHash != "" {
