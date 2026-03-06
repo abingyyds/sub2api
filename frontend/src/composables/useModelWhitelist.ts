@@ -22,12 +22,28 @@ export const claudeModels = [
 // Google Gemini
 const geminiModels = [
   // Keep in sync with backend curated Gemini lists.
-  // This list is intentionally conservative (models commonly available across OAuth/API key).
-  'gemini-2.0-flash',
-  'gemini-2.5-flash',
-  'gemini-2.5-pro',
-  'gemini-3-flash-preview',
-  'gemini-3-pro-preview'
+  'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro',
+  'gemini-3-flash', 'gemini-3-flash-preview',
+  'gemini-3-pro', 'gemini-3-pro-high', 'gemini-3-pro-preview',
+  'gemini-3.1-pro', 'gemini-3.1-pro-preview',
+  'gemini-3.1-flash-image',
+  'gemini-3.1-flash-image-3x2', 'gemini-3.1-flash-image-2x3',
+  'gemini-3.1-flash-image-3x4', 'gemini-3.1-flash-image-4x3',
+  'gemini-3.1-flash-image-4x5', 'gemini-3.1-flash-image-5x4',
+  'gemini-3.1-flash-image-9x16', 'gemini-3.1-flash-image-16x9',
+  'gemini-3.1-flash-image-21x9',
+  'gemini-3.1-flash-image-2k',
+  'gemini-3.1-flash-image-2k-3x2', 'gemini-3.1-flash-image-2k-2x3',
+  'gemini-3.1-flash-image-2k-3x4', 'gemini-3.1-flash-image-2k-4x3',
+  'gemini-3.1-flash-image-2k-4x5', 'gemini-3.1-flash-image-2k-5x4',
+  'gemini-3.1-flash-image-2k-9x16', 'gemini-3.1-flash-image-2k-16x9',
+  'gemini-3.1-flash-image-2k-21x9',
+  'gemini-3.1-flash-image-4k',
+  'gemini-3.1-flash-image-4k-3x2', 'gemini-3.1-flash-image-4k-2x3',
+  'gemini-3.1-flash-image-4k-3x4', 'gemini-3.1-flash-image-4k-4x3',
+  'gemini-3.1-flash-image-4k-4x5', 'gemini-3.1-flash-image-4k-5x4',
+  'gemini-3.1-flash-image-4k-9x16', 'gemini-3.1-flash-image-4k-16x9',
+  'gemini-3.1-flash-image-4k-21x9'
 ]
 
 // 智谱 GLM
@@ -206,9 +222,11 @@ const openaiPresetMappings = [
 ]
 
 const geminiPresetMappings = [
-  { label: 'Flash 2.0', from: 'gemini-2.0-flash', to: 'gemini-2.0-flash', color: 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400' },
-  { label: '2.5 Flash', from: 'gemini-2.5-flash', to: 'gemini-2.5-flash', color: 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400' },
-  { label: '2.5 Pro', from: 'gemini-2.5-pro', to: 'gemini-2.5-pro', color: 'bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400' }
+  { label: '2.5 Flash', from: 'gemini-2.5-flash', to: 'gemini-2.5-flash', color: 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400' },
+  { label: '2.5 Pro', from: 'gemini-2.5-pro', to: 'gemini-2.5-pro', color: 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400' },
+  { label: '3 Flash', from: 'gemini-3-flash', to: 'gemini-3-flash', color: 'bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400' },
+  { label: '3 Pro', from: 'gemini-3-pro', to: 'gemini-3-pro', color: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400' },
+  { label: '3.1 Pro', from: 'gemini-3.1-pro', to: 'gemini-3.1-pro', color: 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400' }
 ]
 
 // =====================
