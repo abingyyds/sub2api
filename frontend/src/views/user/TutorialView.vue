@@ -251,10 +251,20 @@ ${JSON.stringify({
 # If you see 401 error, run /auth in Gemini CLI and enter your API Key`
 
     case 'openclaw':
+      let provider = 'anthropic'
+      let api = 'anthropic-messages'
+      const lowerModel = model.toLowerCase()
+      if (lowerModel.includes('gpt') || lowerModel.includes('o1') || lowerModel.includes('o3')) {
+        provider = 'openai'
+        api = 'openai-chat'
+      } else if (lowerModel.includes('gemini')) {
+        provider = 'google'
+        api = 'google-chat'
+      }
       return JSON.stringify({
-        provider: 'anthropic',
+        provider,
         base_url: base + '/',
-        api: 'anthropic-messages',
+        api,
         api_key: key,
         model: {
           id: model,

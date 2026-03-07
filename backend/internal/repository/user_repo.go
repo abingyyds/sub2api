@@ -526,3 +526,33 @@ func (r *userRepository) DisableTotp(ctx context.Context, userID int64) error {
 	}
 	return nil
 }
+
+// GetDiscoverySourceStats 获取来源统计
+func (r *userRepository) GetDiscoverySourceStats(ctx context.Context, startTime, endTime time.Time) ([]service.DiscoverySourceStat, error) {
+	type result struct {
+		Source string
+		Count  int
+	}
+	var results []result
+	client := clientFromContext(ctx, r.client)
+	err := client.User.Query().
+		Where(
+			user.CreatedAtGTE(startTime),
+			user.CreatedAtLTE(endTime),
+			user.DiscoverySourceNotNil(),
+		).
+		GroupBy(user.FieldDiscoverySource).
+		Aggregate(ent.Count()).
+		Scan(ctx, &results)
+	if err != nil {
+		return nil, fmt.Errorf("query discovery source stats: %w", err)
+	}
+	stats := make([]service.DiscoverySourceStat, len(results))
+	for i, r := range results {
+		stats[i] = service.DiscoverySourceStat{
+			Source: r.Source,
+			Count:  r.Count,
+		}
+	}
+	return stats, nil
+}

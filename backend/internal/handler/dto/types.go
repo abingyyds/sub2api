@@ -393,3 +393,17 @@ type PromoCodeUsage struct {
 
 	User *User `json:"user,omitempty"`
 }
+
+// AdminInviteCode DTO
+type AdminInviteCode struct {
+	ID         int64     `json:"id"`
+	Code       string    `json:"code"`
+	SourceName string    `json:"source_name"`
+	CreatedBy  int64     `json:"created_by"`
+	UsedCount  int       `json:"used_count"`
+	MaxUses    *int      `json:"max_uses"`
+	Enabled    bool      `json:"enabled"`
+	Notes      string    `json:"notes"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+}

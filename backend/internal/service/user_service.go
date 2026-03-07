@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
@@ -46,6 +47,14 @@ type UserRepository interface {
 
 	// 邀请码
 	GetByInviteCode(ctx context.Context, code string) (*User, error)
+
+	// 来源统计
+	GetDiscoverySourceStats(ctx context.Context, startTime, endTime time.Time) ([]DiscoverySourceStat, error)
+}
+
+type DiscoverySourceStat struct {
+	Source string
+	Count  int
 }
 
 // UpdateProfileRequest 更新用户资料请求
@@ -243,4 +252,9 @@ func (s *UserService) Delete(ctx context.Context, userID int64) error {
 		return fmt.Errorf("delete user: %w", err)
 	}
 	return nil
+}
+
+// GetDiscoverySourceStats 获取来源统计
+func (s *UserService) GetDiscoverySourceStats(ctx context.Context, startTime, endTime time.Time) ([]DiscoverySourceStat, error) {
+	return s.userRepo.GetDiscoverySourceStats(ctx, startTime, endTime)
 }

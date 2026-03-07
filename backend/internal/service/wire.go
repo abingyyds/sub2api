@@ -278,4 +278,5 @@ var ProviderSet = wire.NewSet(
 	NewOrgMemberService,
 	NewOrgProjectService,
 	NewOrgAuditService,
+	NewAdminInviteCodeService,
 )

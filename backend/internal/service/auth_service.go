@@ -52,8 +52,9 @@ type AuthService struct {
 	emailService      *EmailService
 	turnstileService  *TurnstileService
 	emailQueueService *EmailQueueService
-	promoService      *PromoService
-	referralService   *ReferralService
+	promoService           *PromoService
+	referralService        *ReferralService
+	adminInviteCodeService *AdminInviteCodeService
 }
 
 // NewAuthService 创建认证服务实例
@@ -66,6 +67,7 @@ func NewAuthService(
 	emailQueueService *EmailQueueService,
 	promoService *PromoService,
 	referralService *ReferralService,
+	adminInviteCodeService *AdminInviteCodeService,
 ) *AuthService {
 	return &AuthService{
 		userRepo:          userRepo,
@@ -76,6 +78,7 @@ func NewAuthService(
 		emailQueueService: emailQueueService,
 		promoService:      promoService,
 		referralService:   referralService,
+		adminInviteCodeService: adminInviteCodeService,
 	}
 }
 
@@ -156,16 +159,46 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 		return "", nil, ErrServiceUnavailable
 	}
 
-	// 记录邀请关系（如果提供了邀请码且功能已启用）
-	if inviteCode != "" && s.referralService != nil {
-		if err := s.referralService.RecordReferral(ctx, inviteCode, user.ID); err != nil {
-			log.Printf("[Auth] Failed to record referral for user %d: %v", user.ID, err)
-		}
-		// 自动标记来源为邀请，这样前端不会再弹出来源调查弹窗
-		inviteSource := "invite"
-		user.DiscoverySource = &inviteSource
-		if err := s.userRepo.Update(ctx, user); err != nil {
-			log.Printf("[Auth] Failed to set discovery source for invited user %d: %v", user.ID, err)
+	// 处理邀请码（优先检查管理员邀请码）
+	if inviteCode != "" {
+		// 先检查是否是管理员邀请码
+		if s.adminInviteCodeService != nil {
+			sourceName, err := s.adminInviteCodeService.ValidateAndUse(ctx, inviteCode)
+			if err == nil {
+				// 是管理员邀请码，设置来源
+				user.DiscoverySource = &sourceName
+				if err := s.userRepo.Update(ctx, user); err != nil {
+					log.Printf("[Auth] Failed to set discovery source for user %d: %v", user.ID, err)
+				}
+			} else if err != ErrInviteCodeNotFound {
+				// 管理员邀请码存在但验证失败（禁用或达到上限）
+				log.Printf("[Auth] Admin invite code validation failed for user %d: %v", user.ID, err)
+			} else {
+				// 不是管理员邀请码，尝试用户推荐码
+				if s.referralService != nil {
+					if err := s.referralService.RecordReferral(ctx, inviteCode, user.ID); err != nil {
+						log.Printf("[Auth] Failed to record referral for user %d: %v", user.ID, err)
+					} else {
+						// 用户推荐成功，标记来源为邀请
+						inviteSource := "invite"
+						user.DiscoverySource = &inviteSource
+						if err := s.userRepo.Update(ctx, user); err != nil {
+							log.Printf("[Auth] Failed to set discovery source for invited user %d: %v", user.ID, err)
+						}
+					}
+				}
+			}
+		} else if s.referralService != nil {
+			// 没有管理员邀请码服务，直接尝试用户推荐
+			if err := s.referralService.RecordReferral(ctx, inviteCode, user.ID); err != nil {
+				log.Printf("[Auth] Failed to record referral for user %d: %v", user.ID, err)
+			} else {
+				inviteSource := "invite"
+				user.DiscoverySource = &inviteSource
+				if err := s.userRepo.Update(ctx, user); err != nil {
+					log.Printf("[Auth] Failed to set discovery source for invited user %d: %v", user.ID, err)
+				}
+			}
 		}
 	}
 

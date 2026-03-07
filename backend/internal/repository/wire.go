@@ -71,6 +71,7 @@ var ProviderSet = wire.NewSet(
 	NewOrgSubscriptionRepository,
 	NewOrgProjectRepository,
 	NewOrgAuditLogRepository,
+	NewAdminInviteCodeRepository,
 
 	// Cache implementations
 	NewGatewayCache,

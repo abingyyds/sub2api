@@ -73,6 +73,12 @@ func RegisterAdminRoutes(
 
 		// 企业管理
 		registerOrganizationRoutes(admin, h)
+
+		// 管理员邀请码管理
+		registerAdminInviteCodeRoutes(admin, h)
+
+		// 来源统计
+		registerDiscoverySourceStatsRoutes(admin, h)
 	}
 }
 
@@ -410,4 +416,18 @@ func registerOrganizationRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		organizations.DELETE("/:id", h.Admin.Organization.Delete)
 		organizations.POST("/:id/balance", h.Admin.Organization.UpdateBalance)
 	}
+}
+
+func registerAdminInviteCodeRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	inviteCodes := admin.Group("/invite-codes")
+	{
+		inviteCodes.GET("", h.Admin.AdminInviteCode.List)
+		inviteCodes.POST("", h.Admin.AdminInviteCode.Create)
+		inviteCodes.PUT("/:id", h.Admin.AdminInviteCode.Update)
+		inviteCodes.DELETE("/:id", h.Admin.AdminInviteCode.Delete)
+	}
+}
+
+func registerDiscoverySourceStatsRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	admin.GET("/discovery-source-stats", h.Admin.DiscoverySourceStats.GetStats)
 }

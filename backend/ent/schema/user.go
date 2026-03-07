@@ -102,6 +102,7 @@ func (User) Edges() []ent.Edge {
 		edge.To("referrals_as_invitee", Referral.Type),
 		edge.To("owned_organizations", Organization.Type),
 		edge.To("org_memberships", OrgMember.Type),
+		edge.To("admin_invite_codes", AdminInviteCode.Type),
 	}
 }
 

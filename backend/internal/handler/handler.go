@@ -24,9 +24,11 @@ type AdminHandlers struct {
 	Subscription     *admin.SubscriptionHandler
 	Usage            *admin.UsageHandler
 	UserAttribute    *admin.UserAttributeHandler
-	Referral         *admin.ReferralHandler
-	Announcement     *admin.AnnouncementHandler
-	Organization     *admin.OrganizationHandler
+	Referral              *admin.ReferralHandler
+	Announcement          *admin.AnnouncementHandler
+	Organization          *admin.OrganizationHandler
+	AdminInviteCode       *admin.AdminInviteCodeHandler
+	DiscoverySourceStats  *admin.DiscoverySourceStatsHandler
 }
 
 // Handlers contains all HTTP handlers
