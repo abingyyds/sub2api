@@ -3420,6 +3420,12 @@ export default {
       tip2: '在"使用记录"页面可以查看详细的调用历史和费用',
       tip3: '如遇到问题，请查看"模型广场"了解模型可用状态',
       tip4: '支持三种 API 格式：Anthropic（Claude 模型）、OpenAI（GPT 模型）、Gemini Native（Gemini 模型）'
+    },
+    geminiCli: {
+      step1: '安装 Gemini CLI',
+      step2: '编辑配置文件',
+      step3: '编辑或创建文件',
+      authTip: '若出现 401 错误，在 Gemini CLI 中输入 /auth，然后填入你的 API Key'
     }
   },
 

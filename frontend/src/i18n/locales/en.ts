@@ -3270,6 +3270,12 @@ export default {
       tip2: 'View detailed call history and costs in the "Usage" page',
       tip3: 'Check "Model Plaza" for model availability status if you encounter issues',
       tip4: 'Supports three API formats: Anthropic (Claude models), OpenAI (GPT models), Gemini Native (Gemini models)'
+    },
+    geminiCli: {
+      step1: 'Install Gemini CLI',
+      step2: 'Edit config file',
+      step3: 'Edit or create file',
+      authTip: 'If you see 401 error, run /auth in Gemini CLI and enter your API Key'
     }
   },
 

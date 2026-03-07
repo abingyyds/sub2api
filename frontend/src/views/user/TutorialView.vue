@@ -232,15 +232,15 @@ const generatedConfig = computed(() => {
       }, null, 2)
 
     case 'geminiCli':
-      return `# Step 1: Install Gemini CLI
+      return `# 1. ${t('tutorial.geminiCli.step1')}
 npm install -g @google/gemini-cli
 
-# Step 2: Edit ~/.gemini/.env
+# 2. ${t('tutorial.geminiCli.step2')} ~/.gemini/.env
 GOOGLE_GEMINI_BASE_URL=${base}/v1beta/
 GEMINI_API_KEY=${key}
 GEMINI_MODEL=${model}
 
-# Step 3: Edit ~/.gemini/settings.json
+# 3. ${t('tutorial.geminiCli.step3')} ~/.gemini/settings.json
 ${JSON.stringify({
   ide: { enabled: true },
   security: {
@@ -248,7 +248,7 @@ ${JSON.stringify({
   }
 }, null, 2)}
 
-# If you see 401 error, run /auth in Gemini CLI and enter your API Key`
+# ${t('tutorial.geminiCli.authTip')}`
 
     case 'openclaw':
       let provider = 'anthropic'
