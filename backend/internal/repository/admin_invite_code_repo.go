@@ -96,7 +96,7 @@ func (r *adminInviteCodeRepo) List(ctx context.Context, params pagination.Pagina
 		result[i] = *toServiceAdminInviteCode(c)
 	}
 	return result, &pagination.PaginationResult{
-		Total:    total,
+		Total:    int64(total),
 		Page:     params.Page,
 		PageSize: params.PageSize,
 		Pages:    (total + params.PageSize - 1) / params.PageSize,

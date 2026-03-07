@@ -537,12 +537,12 @@ func (r *userRepository) GetDiscoverySourceStats(ctx context.Context, startTime,
 	client := clientFromContext(ctx, r.client)
 	err := client.User.Query().
 		Where(
-			user.CreatedAtGTE(startTime),
-			user.CreatedAtLTE(endTime),
-			user.DiscoverySourceNotNil(),
+			dbuser.CreatedAtGTE(startTime),
+			dbuser.CreatedAtLTE(endTime),
+			dbuser.DiscoverySourceNotNil(),
 		).
-		GroupBy(user.FieldDiscoverySource).
-		Aggregate(ent.Count()).
+		GroupBy(dbuser.FieldDiscoverySource).
+		Aggregate(dbent.Count()).
 		Scan(ctx, &results)
 	if err != nil {
 		return nil, fmt.Errorf("query discovery source stats: %w", err)

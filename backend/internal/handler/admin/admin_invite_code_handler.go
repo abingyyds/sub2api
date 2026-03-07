@@ -1,7 +1,10 @@
 package admin
 
 import (
+	"strconv"
+
 	"github.com/Wei-Shaw/sub2api/internal/handler/dto"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
 	middleware2 "github.com/Wei-Shaw/sub2api/internal/server/middleware"
 	"github.com/Wei-Shaw/sub2api/internal/service"
@@ -45,27 +48,28 @@ func (h *AdminInviteCodeHandler) Create(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
-	response.Success(c, toDTO(code))
+	response.Success(c, toAdminInviteCodeDTO(code))
 }
 
 func (h *AdminInviteCodeHandler) List(c *gin.Context) {
-	page, pageSize := response.GetPaginationParams(c)
-	codes, pagination, err := h.service.List(c.Request.Context(), response.ToPaginationParams(page, pageSize))
+	page, pageSize := response.ParsePagination(c)
+	params := pagination.PaginationParams{Page: page, PageSize: pageSize}
+	codes, pag, err := h.service.List(c.Request.Context(), params)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
 	}
 	dtos := make([]dto.AdminInviteCode, len(codes))
 	for i, code := range codes {
-		dtos[i] = *toDTO(&code)
+		dtos[i] = *toAdminInviteCodeDTO(&code)
 	}
-	response.SuccessWithPagination(c, dtos, pagination)
+	response.Paginated(c, dtos, pag.Total, pag.Page, pag.PageSize)
 }
 
 func (h *AdminInviteCodeHandler) Update(c *gin.Context) {
-	id, err := response.GetIDParam(c)
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.BadRequest(c, err.Error())
+		response.BadRequest(c, "Invalid ID")
 		return
 	}
 	var req UpdateAdminInviteCodeRequest
@@ -78,13 +82,13 @@ func (h *AdminInviteCodeHandler) Update(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
-	response.Success(c, toDTO(code))
+	response.Success(c, toAdminInviteCodeDTO(code))
 }
 
 func (h *AdminInviteCodeHandler) Delete(c *gin.Context) {
-	id, err := response.GetIDParam(c)
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.BadRequest(c, err.Error())
+		response.BadRequest(c, "Invalid ID")
 		return
 	}
 	if err := h.service.Delete(c.Request.Context(), id); err != nil {
@@ -94,7 +98,7 @@ func (h *AdminInviteCodeHandler) Delete(c *gin.Context) {
 	response.Success(c, gin.H{"message": "Invite code deleted"})
 }
 
-func toDTO(code *service.AdminInviteCode) *dto.AdminInviteCode {
+func toAdminInviteCodeDTO(code *service.AdminInviteCode) *dto.AdminInviteCode {
 	return &dto.AdminInviteCode{
 		ID:         code.ID,
 		Code:       code.Code,
