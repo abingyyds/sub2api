@@ -10,15 +10,15 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/service"
 )
 
-type AdminInviteCodeRepo struct {
+type adminInviteCodeRepo struct {
 	client *ent.Client
 }
 
-func NewAdminInviteCodeRepo(client *ent.Client) *AdminInviteCodeRepo {
-	return &AdminInviteCodeRepo{client: client}
+func NewAdminInviteCodeRepo(client *ent.Client) service.AdminInviteCodeRepository {
+	return &adminInviteCodeRepo{client: client}
 }
 
-func (r *AdminInviteCodeRepo) Create(ctx context.Context, code *service.AdminInviteCode) error {
+func (r *adminInviteCodeRepo) Create(ctx context.Context, code *service.AdminInviteCode) error {
 	created, err := r.client.AdminInviteCode.Create().
 		SetCode(code.Code).
 		SetSourceName(code.SourceName).
@@ -39,7 +39,7 @@ func (r *AdminInviteCodeRepo) Create(ctx context.Context, code *service.AdminInv
 	return nil
 }
 
-func (r *AdminInviteCodeRepo) GetByID(ctx context.Context, id int64) (*service.AdminInviteCode, error) {
+func (r *adminInviteCodeRepo) GetByID(ctx context.Context, id int64) (*service.AdminInviteCode, error) {
 	code, err := r.client.AdminInviteCode.Get(ctx, id)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -50,7 +50,7 @@ func (r *AdminInviteCodeRepo) GetByID(ctx context.Context, id int64) (*service.A
 	return toServiceAdminInviteCode(code), nil
 }
 
-func (r *AdminInviteCodeRepo) GetByCode(ctx context.Context, code string) (*service.AdminInviteCode, error) {
+func (r *adminInviteCodeRepo) GetByCode(ctx context.Context, code string) (*service.AdminInviteCode, error) {
 	result, err := r.client.AdminInviteCode.Query().
 		Where(admininvitecode.CodeEQ(code)).
 		Only(ctx)
@@ -63,7 +63,7 @@ func (r *AdminInviteCodeRepo) GetByCode(ctx context.Context, code string) (*serv
 	return toServiceAdminInviteCode(result), nil
 }
 
-func (r *AdminInviteCodeRepo) Update(ctx context.Context, code *service.AdminInviteCode) error {
+func (r *adminInviteCodeRepo) Update(ctx context.Context, code *service.AdminInviteCode) error {
 	_, err := r.client.AdminInviteCode.UpdateOneID(code.ID).
 		SetSourceName(code.SourceName).
 		SetNillableMaxUses(code.MaxUses).
@@ -73,11 +73,11 @@ func (r *AdminInviteCodeRepo) Update(ctx context.Context, code *service.AdminInv
 	return err
 }
 
-func (r *AdminInviteCodeRepo) Delete(ctx context.Context, id int64) error {
+func (r *adminInviteCodeRepo) Delete(ctx context.Context, id int64) error {
 	return r.client.AdminInviteCode.DeleteOneID(id).Exec(ctx)
 }
 
-func (r *AdminInviteCodeRepo) List(ctx context.Context, params pagination.PaginationParams) ([]service.AdminInviteCode, *pagination.PaginationResult, error) {
+func (r *adminInviteCodeRepo) List(ctx context.Context, params pagination.PaginationParams) ([]service.AdminInviteCode, *pagination.PaginationResult, error) {
 	query := r.client.AdminInviteCode.Query()
 	total, err := query.Count(ctx)
 	if err != nil {
@@ -103,7 +103,7 @@ func (r *AdminInviteCodeRepo) List(ctx context.Context, params pagination.Pagina
 	}, nil
 }
 
-func (r *AdminInviteCodeRepo) IncrementUsedCount(ctx context.Context, id int64) error {
+func (r *adminInviteCodeRepo) IncrementUsedCount(ctx context.Context, id int64) error {
 	_, err := r.client.AdminInviteCode.UpdateOneID(id).
 		AddUsedCount(1).
 		Save(ctx)
