@@ -29,7 +29,7 @@ func (r *AdminInviteCodeRepo) Create(ctx context.Context, code *service.AdminInv
 		Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
-			return service.ErrInviteCodeExists
+			return service.ErrAdminInviteCodeExists
 		}
 		return fmt.Errorf("create admin invite code: %w", err)
 	}
@@ -43,7 +43,7 @@ func (r *AdminInviteCodeRepo) GetByID(ctx context.Context, id int64) (*service.A
 	code, err := r.client.AdminInviteCode.Get(ctx, id)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, service.ErrInviteCodeNotFound
+			return nil, service.ErrAdminInviteCodeNotFound
 		}
 		return nil, fmt.Errorf("get admin invite code: %w", err)
 	}
@@ -56,7 +56,7 @@ func (r *AdminInviteCodeRepo) GetByCode(ctx context.Context, code string) (*serv
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, service.ErrInviteCodeNotFound
+			return nil, service.ErrAdminInviteCodeNotFound
 		}
 		return nil, fmt.Errorf("get admin invite code by code: %w", err)
 	}

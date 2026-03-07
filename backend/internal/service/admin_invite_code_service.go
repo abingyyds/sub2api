@@ -12,10 +12,10 @@ import (
 )
 
 var (
-	ErrInviteCodeNotFound = infraerrors.NotFound("INVITE_CODE_NOT_FOUND", "invite code not found")
-	ErrInviteCodeExists   = infraerrors.Conflict("INVITE_CODE_EXISTS", "invite code already exists")
-	ErrInviteCodeDisabled = infraerrors.BadRequest("INVITE_CODE_DISABLED", "invite code is disabled")
-	ErrInviteCodeMaxUses  = infraerrors.BadRequest("INVITE_CODE_MAX_USES", "invite code has reached max uses")
+	ErrAdminInviteCodeNotFound = infraerrors.NotFound("ADMIN_INVITE_CODE_NOT_FOUND", "admin invite code not found")
+	ErrAdminInviteCodeExists   = infraerrors.Conflict("ADMIN_INVITE_CODE_EXISTS", "admin invite code already exists")
+	ErrAdminInviteCodeDisabled = infraerrors.BadRequest("ADMIN_INVITE_CODE_DISABLED", "admin invite code is disabled")
+	ErrAdminInviteCodeMaxUses  = infraerrors.BadRequest("ADMIN_INVITE_CODE_MAX_USES", "admin invite code has reached max uses")
 )
 
 type AdminInviteCode struct {
@@ -50,7 +50,7 @@ func NewAdminInviteCodeService(repo AdminInviteCodeRepository) *AdminInviteCodeS
 }
 
 func (s *AdminInviteCodeService) Create(ctx context.Context, sourceName string, createdBy int64, maxUses *int, notes string) (*AdminInviteCode, error) {
-	code := generateInviteCode()
+	code := generateAdminInviteCode()
 	inviteCode := &AdminInviteCode{
 		Code:       code,
 		SourceName: sourceName,
@@ -75,10 +75,10 @@ func (s *AdminInviteCodeService) ValidateAndUse(ctx context.Context, code string
 		return "", err
 	}
 	if !inviteCode.Enabled {
-		return "", ErrInviteCodeDisabled
+		return "", ErrAdminInviteCodeDisabled
 	}
 	if inviteCode.MaxUses != nil && inviteCode.UsedCount >= *inviteCode.MaxUses {
-		return "", ErrInviteCodeMaxUses
+		return "", ErrAdminInviteCodeMaxUses
 	}
 	if err := s.repo.IncrementUsedCount(ctx, inviteCode.ID); err != nil {
 		return "", fmt.Errorf("increment used count: %w", err)
@@ -117,7 +117,7 @@ func (s *AdminInviteCodeService) Delete(ctx context.Context, id int64) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func generateInviteCode() string {
+func generateAdminInviteCode() string {
 	b := make([]byte, 12)
 	rand.Read(b)
 	return base64.URLEncoding.EncodeToString(b)[:16]

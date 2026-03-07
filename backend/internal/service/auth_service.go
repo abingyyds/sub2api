@@ -170,7 +170,7 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 				if err := s.userRepo.Update(ctx, user); err != nil {
 					log.Printf("[Auth] Failed to set discovery source for user %d: %v", user.ID, err)
 				}
-			} else if err != ErrInviteCodeNotFound {
+			} else if err != ErrAdminInviteCodeNotFound {
 				// 管理员邀请码存在但验证失败（禁用或达到上限）
 				log.Printf("[Auth] Admin invite code validation failed for user %d: %v", user.ID, err)
 			} else {
