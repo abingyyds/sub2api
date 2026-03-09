@@ -200,7 +200,7 @@ async function handleBuy(plan: PaymentPlan) {
 
     // Render QR code
     if (order.code_url) {
-      qrLoading.value = true
+      qrLoading.value = false
       await nextTick()
       if (qrCanvas.value) {
         await QRCode.toCanvas(qrCanvas.value, order.code_url, {
@@ -209,7 +209,6 @@ async function handleBuy(plan: PaymentPlan) {
           color: { dark: '#000000', light: '#ffffff' },
         })
       }
-      qrLoading.value = false
     }
 
     // Start polling for payment status
@@ -224,7 +223,7 @@ async function handleBuy(plan: PaymentPlan) {
       }
     }, 1000)
   } catch (err: any) {
-    const msg = err?.response?.data?.message || err?.message || t('pricing.payment.createFailed')
+    const msg = err?.message || err?.response?.data?.message || t('pricing.payment.createFailed')
     alert(msg)
   } finally {
     creatingOrder.value = false
