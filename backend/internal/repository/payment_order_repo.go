@@ -27,6 +27,8 @@ func (r *paymentOrderRepo) Create(ctx context.Context, order *service.PaymentOrd
 		SetGroupID(order.GroupID).
 		SetAmountFen(order.AmountFen).
 		SetValidityDays(order.ValidityDays).
+		SetOrderType(order.OrderType).
+		SetBalanceAmount(order.BalanceAmount).
 		SetStatus(order.Status).
 		SetPayMethod(order.PayMethod).
 		SetExpiredAt(order.ExpiredAt)
@@ -139,6 +141,8 @@ func toServicePaymentOrder(e *dbent.PaymentOrder) *service.PaymentOrder {
 		GroupID:             e.GroupID,
 		AmountFen:           e.AmountFen,
 		ValidityDays:        e.ValidityDays,
+		OrderType:           e.OrderType,
+		BalanceAmount:       e.BalanceAmount,
 		Status:              e.Status,
 		PayMethod:           e.PayMethod,
 		WechatTransactionID: e.WechatTransactionID,

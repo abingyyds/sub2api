@@ -39,6 +39,11 @@ func (PaymentOrder) Fields() []ent.Field {
 		field.Int("amount_fen"),
 		field.Int("validity_days").
 			Default(30),
+		field.String("order_type").
+			MaxLen(20).
+			Default("subscription"),
+		field.Float("balance_amount").
+			Default(0),
 		field.String("status").
 			MaxLen(20).
 			Default("pending"),

@@ -3254,6 +3254,10 @@ export default {
     goRedeem: 'Go to Redeem →',
     warning: 'Please save the redeem code from your order details. Lost codes cannot be recovered.',
     buyNow: 'Buy Now',
+    subscriptionSection: 'Subscription Plans',
+    balanceSection: 'Balance Recharge',
+    rechargeNow: 'Recharge Now',
+    rechargeAmount: 'Recharge ¥{amount} to account balance',
     plans: {
       payg: { name: 'Pay As You Go', desc: 'Pay for what you use' },
       m289: { name: 'Monthly 289' },
@@ -3267,10 +3271,12 @@ export default {
       amount: 'Amount',
       waitingPayment: 'Waiting for payment...',
       paymentSuccess: 'Payment successful! Subscription activated',
+      rechargeSuccess: 'Recharge successful! Balance updated',
       orderExpired: 'Order expired, please try again',
       expiresIn: 'Expires in {minutes}m {seconds}s',
       cancel: 'Cancel',
       viewSubscription: 'View Subscription',
+      viewDashboard: 'View Dashboard',
       createFailed: 'Failed to create order, please try again'
     }
   },

@@ -3404,6 +3404,10 @@ export default {
     goRedeem: '前往兑换 →',
     warning: '购买后请务必保存下单详情里的兑换码，丢失无法找回。',
     buyNow: '立即购买',
+    subscriptionSection: '订阅套餐',
+    balanceSection: '余额充值',
+    rechargeNow: '立即充值',
+    rechargeAmount: '充值 {amount} 元到账户余额',
     plans: {
       payg: { name: '按量付费', desc: '用多少付多少' },
       m289: { name: '月卡 289' },
@@ -3417,10 +3421,12 @@ export default {
       amount: '支付金额',
       waitingPayment: '等待支付...',
       paymentSuccess: '支付成功！订阅已自动激活',
+      rechargeSuccess: '充值成功！余额已到账',
       orderExpired: '订单已过期，请重新下单',
       expiresIn: '剩余支付时间 {minutes} 分 {seconds} 秒',
       cancel: '取消',
       viewSubscription: '查看订阅',
+      viewDashboard: '查看仪表盘',
       createFailed: '创建订单失败，请稍后重试'
     }
   },

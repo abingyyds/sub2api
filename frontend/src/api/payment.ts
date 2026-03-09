@@ -11,6 +11,8 @@ export interface PaymentPlan {
   amount_fen: number
   group_id: number
   validity_days: number
+  type?: 'subscription' | 'balance'
+  balance_amount?: number
 }
 
 export interface CreateOrderResponse {

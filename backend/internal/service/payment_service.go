@@ -35,11 +35,13 @@ var (
 
 // PaymentPlan 套餐配置
 type PaymentPlan struct {
-	Key          string `json:"key"`
-	Name         string `json:"name"`
-	AmountFen    int    `json:"amount_fen"`
-	GroupID      int64  `json:"group_id"`
-	ValidityDays int    `json:"validity_days"`
+	Key           string  `json:"key"`
+	Name          string  `json:"name"`
+	AmountFen     int     `json:"amount_fen"`
+	GroupID       int64   `json:"group_id"`
+	ValidityDays  int     `json:"validity_days"`
+	Type          string  `json:"type,omitempty"`          // "subscription" (default) or "balance"
+	BalanceAmount float64 `json:"balance_amount,omitempty"` // 充值金额（元），仅 type=balance 时使用
 }
 
 // PaymentOrder 支付订单
@@ -51,6 +53,8 @@ type PaymentOrder struct {
 	GroupID              int64
 	AmountFen            int
 	ValidityDays         int
+	OrderType            string  // "subscription" or "balance"
+	BalanceAmount        float64 // 充值金额（元），仅 balance 类型
 	Status               string
 	PayMethod            string
 	WechatTransactionID  *string
@@ -76,6 +80,7 @@ type PaymentService struct {
 	settingService      *SettingService
 	subscriptionService *SubscriptionService
 	billingCache        *BillingCacheService
+	userRepo            UserRepository
 }
 
 // NewPaymentService 创建支付服务
@@ -84,12 +89,14 @@ func NewPaymentService(
 	settingService *SettingService,
 	subscriptionService *SubscriptionService,
 	billingCache *BillingCacheService,
+	userRepo UserRepository,
 ) *PaymentService {
 	return &PaymentService{
 		orderRepo:           orderRepo,
 		settingService:      settingService,
 		subscriptionService: subscriptionService,
 		billingCache:        billingCache,
+		userRepo:            userRepo,
 	}
 }
 
@@ -103,6 +110,12 @@ func (s *PaymentService) GetPlans(ctx context.Context) ([]PaymentPlan, error) {
 	if err := json.Unmarshal([]byte(plansJSON), &plans); err != nil {
 		log.Printf("[Payment] Failed to parse payment_plans JSON: %v, raw=%q", err, plansJSON)
 		return []PaymentPlan{}, nil
+	}
+	// Default type to "subscription" for backward compatibility
+	for i := range plans {
+		if plans[i].Type == "" {
+			plans[i].Type = "subscription"
+		}
 	}
 	return plans, nil
 }
@@ -134,17 +147,31 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 	// 生成订单号
 	orderNo := generateOrderNo()
 
+	// 确定订单类型
+	orderType := plan.Type
+	if orderType == "" {
+		orderType = "subscription"
+	}
+
 	// 创建订单记录
 	order := &PaymentOrder{
 		OrderNo:      orderNo,
 		UserID:       userID,
 		PlanKey:      plan.Key,
-		GroupID:      plan.GroupID,
 		AmountFen:    plan.AmountFen,
-		ValidityDays: plan.ValidityDays,
 		Status:       PaymentOrderStatusPending,
 		PayMethod:    "wechat_native",
+		OrderType:    orderType,
 		ExpiredAt:    time.Now().Add(30 * time.Minute), // 30分钟过期
+	}
+
+	if orderType == "balance" {
+		order.GroupID = 0
+		order.ValidityDays = 0
+		order.BalanceAmount = plan.BalanceAmount
+	} else {
+		order.GroupID = plan.GroupID
+		order.ValidityDays = plan.ValidityDays
 	}
 
 	// 调用微信支付 Native 下单
@@ -245,21 +272,35 @@ func (s *PaymentService) HandleWechatNotify(ctx context.Context, body []byte, we
 		return fmt.Errorf("update order status: %w", err)
 	}
 
-	// 7. 分配订阅
-	_, _, err = s.subscriptionService.AssignOrExtendSubscription(ctx, &AssignSubscriptionInput{
-		UserID:       order.UserID,
-		GroupID:      order.GroupID,
-		ValidityDays: order.ValidityDays,
-		AssignedBy:   0, // 系统自动分配
-		Notes:        fmt.Sprintf("微信支付订单 %s", order.OrderNo),
-	})
-	if err != nil {
-		log.Printf("[Payment] Failed to assign subscription for order %s, user %d: %v", order.OrderNo, order.UserID, err)
-		return fmt.Errorf("assign subscription: %w", err)
+	// 7. 根据订单类型处理
+	if order.OrderType == "balance" {
+		// 充值余额
+		if err := s.userRepo.UpdateBalance(ctx, order.UserID, order.BalanceAmount); err != nil {
+			log.Printf("[Payment] Failed to update balance for order %s, user %d: %v", order.OrderNo, order.UserID, err)
+			return fmt.Errorf("update balance: %w", err)
+		}
+		// 失效余额缓存
+		if err := s.billingCache.InvalidateUserBalance(ctx, order.UserID); err != nil {
+			log.Printf("[Payment] Failed to invalidate balance cache for user %d: %v", order.UserID, err)
+		}
+		log.Printf("[Payment] Order %s paid successfully, balance +%.2f for user %d",
+			order.OrderNo, order.BalanceAmount, order.UserID)
+	} else {
+		// 分配订阅
+		_, _, err = s.subscriptionService.AssignOrExtendSubscription(ctx, &AssignSubscriptionInput{
+			UserID:       order.UserID,
+			GroupID:      order.GroupID,
+			ValidityDays: order.ValidityDays,
+			AssignedBy:   0, // 系统自动分配
+			Notes:        fmt.Sprintf("微信支付订单 %s", order.OrderNo),
+		})
+		if err != nil {
+			log.Printf("[Payment] Failed to assign subscription for order %s, user %d: %v", order.OrderNo, order.UserID, err)
+			return fmt.Errorf("assign subscription: %w", err)
+		}
+		log.Printf("[Payment] Order %s paid successfully, subscription assigned for user %d, group %d, %d days",
+			order.OrderNo, order.UserID, order.GroupID, order.ValidityDays)
 	}
-
-	log.Printf("[Payment] Order %s paid successfully, subscription assigned for user %d, group %d, %d days",
-		order.OrderNo, order.UserID, order.GroupID, order.ValidityDays)
 
 	return nil
 }
