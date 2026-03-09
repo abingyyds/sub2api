@@ -101,7 +101,8 @@ func (s *PaymentService) GetPlans(ctx context.Context) ([]PaymentPlan, error) {
 	}
 	var plans []PaymentPlan
 	if err := json.Unmarshal([]byte(plansJSON), &plans); err != nil {
-		return nil, fmt.Errorf("parse payment plans: %w", err)
+		log.Printf("[Payment] Failed to parse payment_plans JSON: %v, raw=%q", err, plansJSON)
+		return []PaymentPlan{}, nil
 	}
 	return plans, nil
 }
