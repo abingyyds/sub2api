@@ -423,6 +423,66 @@
           </div>
         </div>
 
+        <!-- Payment / WeChat Pay Settings -->
+        <div class="card">
+          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('admin.settings.payment.title') }}
+            </h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {{ t('admin.settings.payment.description') }}
+            </p>
+          </div>
+          <div class="space-y-5 p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="font-medium text-gray-900 dark:text-white">{{
+                  t('admin.settings.payment.enable')
+                }}</label>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  {{ t('admin.settings.payment.enableHint') }}
+                </p>
+              </div>
+              <Toggle v-model="form.payment_enabled" />
+            </div>
+            <div v-if="form.payment_enabled" class="space-y-4 border-t border-gray-100 pt-4 dark:border-dark-700">
+              <div>
+                <label for="wechat_pay_appid" class="input-label">AppID</label>
+                <input id="wechat_pay_appid" v-model="form.wechat_pay_appid" type="text" class="input mt-1" placeholder="wx..." />
+              </div>
+              <div>
+                <label for="wechat_pay_mch_id" class="input-label">{{ t('admin.settings.payment.mchId') }}</label>
+                <input id="wechat_pay_mch_id" v-model="form.wechat_pay_mch_id" type="text" class="input mt-1" />
+              </div>
+              <div>
+                <label for="wechat_pay_apiv3_key" class="input-label">APIv3 {{ t('admin.settings.payment.key') }}</label>
+                <input id="wechat_pay_apiv3_key" v-model="form.wechat_pay_apiv3_key" type="password" class="input mt-1" :placeholder="form.wechat_pay_apiv3_key_configured ? t('admin.settings.payment.configured') : ''" />
+              </div>
+              <div>
+                <label for="wechat_pay_public_key_id" class="input-label">{{ t('admin.settings.payment.publicKeyId') }}</label>
+                <input id="wechat_pay_public_key_id" v-model="form.wechat_pay_public_key_id" type="text" class="input mt-1" placeholder="PUB_KEY_ID_..." />
+              </div>
+              <div>
+                <label for="wechat_pay_public_key" class="input-label">{{ t('admin.settings.payment.publicKey') }}</label>
+                <textarea id="wechat_pay_public_key" v-model="form.wechat_pay_public_key" rows="4" class="input mt-1 font-mono text-xs" :placeholder="form.wechat_pay_public_key_configured ? t('admin.settings.payment.configured') : '-----BEGIN PUBLIC KEY-----'" />
+              </div>
+              <div>
+                <label for="wechat_pay_private_key" class="input-label">{{ t('admin.settings.payment.privateKey') }}</label>
+                <textarea id="wechat_pay_private_key" v-model="form.wechat_pay_private_key" rows="4" class="input mt-1 font-mono text-xs" :placeholder="form.wechat_pay_private_key_configured ? t('admin.settings.payment.configured') : '-----BEGIN PRIVATE KEY-----'" />
+              </div>
+              <div>
+                <label for="wechat_pay_notify_url" class="input-label">{{ t('admin.settings.payment.notifyUrl') }}</label>
+                <input id="wechat_pay_notify_url" v-model="form.wechat_pay_notify_url" type="text" class="input mt-1" placeholder="https://example.com/api/v1/payment/wechat/notify" />
+              </div>
+              <div>
+                <label for="payment_plans" class="input-label">{{ t('admin.settings.payment.plans') }}</label>
+                <textarea id="payment_plans" v-model="form.payment_plans" rows="6" class="input mt-1 font-mono text-xs" :placeholder="'[{\"key\":\"m289\",\"name\":\"月卡 289\",\"amount_fen\":28900,\"group_id\":1,\"validity_days\":30}]'" />
+                <p class="input-hint">{{ t('admin.settings.payment.plansHint') }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Cloudflare Turnstile Settings -->
         <div class="card">
           <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
@@ -1176,7 +1236,20 @@ const form = reactive<SettingsForm>({
   ops_monitoring_enabled: true,
   ops_realtime_monitoring_enabled: true,
   ops_query_mode_default: 'auto',
-  ops_metrics_interval_seconds: 60
+  ops_metrics_interval_seconds: 60,
+  // Payment / WeChat Pay
+  payment_enabled: false,
+  wechat_pay_appid: '',
+  wechat_pay_mch_id: '',
+  wechat_pay_apiv3_key: '',
+  wechat_pay_apiv3_key_configured: false,
+  wechat_pay_public_key_id: '',
+  wechat_pay_public_key: '',
+  wechat_pay_public_key_configured: false,
+  wechat_pay_private_key: '',
+  wechat_pay_private_key_configured: false,
+  wechat_pay_notify_url: '',
+  payment_plans: ''
 })
 
 // LinuxDo OAuth redirect URL suggestion
@@ -1292,13 +1365,26 @@ async function saveSettings() {
       enable_identity_patch: form.enable_identity_patch,
       identity_patch_prompt: form.identity_patch_prompt,
       referral_enabled: form.referral_enabled,
-      referral_reward_amount: form.referral_reward_amount
+      referral_reward_amount: form.referral_reward_amount,
+      // Payment / WeChat Pay
+      payment_enabled: form.payment_enabled,
+      wechat_pay_appid: form.wechat_pay_appid,
+      wechat_pay_mch_id: form.wechat_pay_mch_id,
+      wechat_pay_apiv3_key: form.wechat_pay_apiv3_key || undefined,
+      wechat_pay_public_key_id: form.wechat_pay_public_key_id,
+      wechat_pay_public_key: form.wechat_pay_public_key || undefined,
+      wechat_pay_private_key: form.wechat_pay_private_key || undefined,
+      wechat_pay_notify_url: form.wechat_pay_notify_url,
+      payment_plans: form.payment_plans
     }
     const updated = await adminAPI.settings.updateSettings(payload)
     Object.assign(form, updated)
     form.smtp_password = ''
     form.turnstile_secret_key = ''
     form.linuxdo_connect_client_secret = ''
+    form.wechat_pay_apiv3_key = ''
+    form.wechat_pay_public_key = ''
+    form.wechat_pay_private_key = ''
     // Refresh cached public settings so sidebar/header update immediately
     await appStore.fetchPublicSettings(true)
     appStore.showSuccess(t('admin.settings.settingsSaved'))

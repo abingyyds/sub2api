@@ -59,6 +59,17 @@ type SystemSettings struct {
 	// Referral / Invite Reward
 	ReferralEnabled      bool    `json:"referral_enabled"`
 	ReferralRewardAmount float64 `json:"referral_reward_amount"`
+
+	// Payment / WeChat Pay
+	PaymentEnabled                bool   `json:"payment_enabled"`
+	WechatPayAppID                string `json:"wechat_pay_appid"`
+	WechatPayMchID                string `json:"wechat_pay_mch_id"`
+	WechatPayAPIv3KeyConfigured   bool   `json:"wechat_pay_apiv3_key_configured"`
+	WechatPayPublicKeyID          string `json:"wechat_pay_public_key_id"`
+	WechatPayPublicKeyConfigured  bool   `json:"wechat_pay_public_key_configured"`
+	WechatPayPrivateKeyConfigured bool   `json:"wechat_pay_private_key_configured"`
+	WechatPayNotifyURL            string `json:"wechat_pay_notify_url"`
+	PaymentPlans                  string `json:"payment_plans"`
 }
 
 type PublicSettings struct {

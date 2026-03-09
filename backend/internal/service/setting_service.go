@@ -252,6 +252,23 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 		updates[SettingKeyOpsMetricsIntervalSeconds] = strconv.Itoa(settings.OpsMetricsIntervalSeconds)
 	}
 
+	// Payment / WeChat Pay settings
+	updates[SettingKeyPaymentEnabled] = strconv.FormatBool(settings.PaymentEnabled)
+	updates[SettingKeyWechatPayAppID] = settings.WechatPayAppID
+	updates[SettingKeyWechatPayMchID] = settings.WechatPayMchID
+	if settings.WechatPayAPIv3Key != "" {
+		updates[SettingKeyWechatPayAPIv3Key] = settings.WechatPayAPIv3Key
+	}
+	updates[SettingKeyWechatPayPublicKeyID] = settings.WechatPayPublicKeyID
+	if settings.WechatPayPublicKey != "" {
+		updates[SettingKeyWechatPayPublicKey] = settings.WechatPayPublicKey
+	}
+	if settings.WechatPayPrivateKey != "" {
+		updates[SettingKeyWechatPayPrivateKey] = settings.WechatPayPrivateKey
+	}
+	updates[SettingKeyWechatPayNotifyURL] = settings.WechatPayNotifyURL
+	updates[SettingKeyPaymentPlans] = settings.PaymentPlans
+
 	err := s.settingRepo.SetMultiple(ctx, updates)
 	if err == nil && s.onUpdate != nil {
 		s.onUpdate() // Invalidate cache after settings update
@@ -540,6 +557,20 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 	if v, err := strconv.ParseFloat(settings[SettingKeyReferralRewardAmount], 64); err == nil {
 		result.ReferralRewardAmount = v
 	}
+
+	// Payment / WeChat Pay settings
+	result.PaymentEnabled = settings[SettingKeyPaymentEnabled] == "true"
+	result.WechatPayAppID = settings[SettingKeyWechatPayAppID]
+	result.WechatPayMchID = settings[SettingKeyWechatPayMchID]
+	result.WechatPayAPIv3Key = settings[SettingKeyWechatPayAPIv3Key]
+	result.WechatPayAPIv3KeyConfigured = settings[SettingKeyWechatPayAPIv3Key] != ""
+	result.WechatPayPublicKeyID = settings[SettingKeyWechatPayPublicKeyID]
+	result.WechatPayPublicKey = settings[SettingKeyWechatPayPublicKey]
+	result.WechatPayPublicKeyConfigured = settings[SettingKeyWechatPayPublicKey] != ""
+	result.WechatPayPrivateKey = settings[SettingKeyWechatPayPrivateKey]
+	result.WechatPayPrivateKeyConfigured = settings[SettingKeyWechatPayPrivateKey] != ""
+	result.WechatPayNotifyURL = settings[SettingKeyWechatPayNotifyURL]
+	result.PaymentPlans = settings[SettingKeyPaymentPlans]
 
 	return result
 }

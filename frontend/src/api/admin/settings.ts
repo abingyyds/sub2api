@@ -68,6 +68,17 @@ export interface SystemSettings {
   ops_realtime_monitoring_enabled: boolean
   ops_query_mode_default: 'auto' | 'raw' | 'preagg' | string
   ops_metrics_interval_seconds: number
+
+  // Payment / WeChat Pay
+  payment_enabled: boolean
+  wechat_pay_appid: string
+  wechat_pay_mch_id: string
+  wechat_pay_apiv3_key_configured: boolean
+  wechat_pay_public_key_id: string
+  wechat_pay_public_key_configured: boolean
+  wechat_pay_private_key_configured: boolean
+  wechat_pay_notify_url: string
+  payment_plans: string
 }
 
 export interface UpdateSettingsRequest {
@@ -114,6 +125,16 @@ export interface UpdateSettingsRequest {
   ops_realtime_monitoring_enabled?: boolean
   ops_query_mode_default?: 'auto' | 'raw' | 'preagg' | string
   ops_metrics_interval_seconds?: number
+  // Payment / WeChat Pay
+  payment_enabled?: boolean
+  wechat_pay_appid?: string
+  wechat_pay_mch_id?: string
+  wechat_pay_apiv3_key?: string
+  wechat_pay_public_key_id?: string
+  wechat_pay_public_key?: string
+  wechat_pay_private_key?: string
+  wechat_pay_notify_url?: string
+  payment_plans?: string
 }
 
 /**

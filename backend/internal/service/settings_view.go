@@ -61,6 +61,20 @@ type SystemSettings struct {
 	// Referral / Invite Reward
 	ReferralEnabled      bool
 	ReferralRewardAmount float64
+
+	// Payment / WeChat Pay
+	PaymentEnabled                bool
+	WechatPayAppID                string
+	WechatPayMchID                string
+	WechatPayAPIv3Key             string
+	WechatPayAPIv3KeyConfigured   bool
+	WechatPayPublicKeyID          string
+	WechatPayPublicKey            string
+	WechatPayPublicKeyConfigured  bool
+	WechatPayPrivateKey           string
+	WechatPayPrivateKeyConfigured bool
+	WechatPayNotifyURL            string
+	PaymentPlans                  string // JSON
 }
 
 type PublicSettings struct {

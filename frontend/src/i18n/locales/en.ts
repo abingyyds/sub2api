@@ -3092,6 +3092,21 @@ export default {
         rewardAmount: 'Reward Amount ($)',
         rewardAmountHint: 'Amount credited to the inviter when the invitee makes their first top-up'
       },
+      payment: {
+        title: 'Online Payment Settings',
+        description: 'Configure WeChat Pay Native scan-to-pay',
+        enable: 'Enable Online Payment',
+        enableHint: 'Allow users to purchase subscriptions via WeChat Pay',
+        mchId: 'Merchant ID',
+        key: 'Key',
+        publicKeyId: 'Public Key ID',
+        publicKey: 'WeChat Pay Public Key (PEM)',
+        privateKey: 'Merchant Private Key (PEM)',
+        notifyUrl: 'Payment Notify URL',
+        plans: 'Payment Plans (JSON)',
+        plansHint: 'JSON array, each item contains key, name, amount_fen, group_id, validity_days',
+        configured: 'Configured (leave empty to keep current value)'
+      },
       opsMonitoring: {
         title: 'Ops Monitoring',
         description: 'Enable ops monitoring for troubleshooting and health visibility',

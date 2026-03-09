@@ -3243,6 +3243,21 @@ export default {
         rewardAmount: '奖励金额 ($)',
         rewardAmountHint: '被邀请人首次充值时，邀请人获得的奖励金额'
       },
+      payment: {
+        title: '在线支付设置',
+        description: '配置微信支付 Native 扫码支付',
+        enable: '启用在线支付',
+        enableHint: '允许用户通过微信扫码直接购买订阅',
+        mchId: '商户号',
+        key: '密钥',
+        publicKeyId: '公钥ID',
+        publicKey: '微信支付公钥 (PEM)',
+        privateKey: '商户私钥 (PEM)',
+        notifyUrl: '支付回调通知URL',
+        plans: '套餐配置 (JSON)',
+        plansHint: 'JSON 数组，每项包含 key, name, amount_fen, group_id, validity_days',
+        configured: '已配置（留空保留当前值）'
+      },
       opsMonitoring: {
         title: '运维监控',
         description: '启用运维监控模块，用于排障与健康可视化',

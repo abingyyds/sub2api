@@ -89,6 +89,15 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		OpsMetricsIntervalSeconds:            settings.OpsMetricsIntervalSeconds,
 		ReferralEnabled:                      settings.ReferralEnabled,
 		ReferralRewardAmount:                 settings.ReferralRewardAmount,
+		PaymentEnabled:                       settings.PaymentEnabled,
+		WechatPayAppID:                       settings.WechatPayAppID,
+		WechatPayMchID:                       settings.WechatPayMchID,
+		WechatPayAPIv3KeyConfigured:          settings.WechatPayAPIv3KeyConfigured,
+		WechatPayPublicKeyID:                 settings.WechatPayPublicKeyID,
+		WechatPayPublicKeyConfigured:         settings.WechatPayPublicKeyConfigured,
+		WechatPayPrivateKeyConfigured:        settings.WechatPayPrivateKeyConfigured,
+		WechatPayNotifyURL:                   settings.WechatPayNotifyURL,
+		PaymentPlans:                         settings.PaymentPlans,
 	})
 }
 
@@ -156,6 +165,17 @@ type UpdateSettingsRequest struct {
 	// Referral / Invite Reward
 	ReferralEnabled      bool    `json:"referral_enabled"`
 	ReferralRewardAmount float64 `json:"referral_reward_amount"`
+
+	// Payment / WeChat Pay
+	PaymentEnabled       bool   `json:"payment_enabled"`
+	WechatPayAppID       string `json:"wechat_pay_appid"`
+	WechatPayMchID       string `json:"wechat_pay_mch_id"`
+	WechatPayAPIv3Key    string `json:"wechat_pay_apiv3_key"`
+	WechatPayPublicKeyID string `json:"wechat_pay_public_key_id"`
+	WechatPayPublicKey   string `json:"wechat_pay_public_key"`
+	WechatPayPrivateKey  string `json:"wechat_pay_private_key"`
+	WechatPayNotifyURL   string `json:"wechat_pay_notify_url"`
+	PaymentPlans         string `json:"payment_plans"`
 }
 
 // UpdateSettings 更新系统设置
@@ -332,6 +352,15 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		}(),
 		ReferralEnabled:      req.ReferralEnabled,
 		ReferralRewardAmount: req.ReferralRewardAmount,
+		PaymentEnabled:       req.PaymentEnabled,
+		WechatPayAppID:       req.WechatPayAppID,
+		WechatPayMchID:       req.WechatPayMchID,
+		WechatPayAPIv3Key:    req.WechatPayAPIv3Key,
+		WechatPayPublicKeyID: req.WechatPayPublicKeyID,
+		WechatPayPublicKey:   req.WechatPayPublicKey,
+		WechatPayPrivateKey:  req.WechatPayPrivateKey,
+		WechatPayNotifyURL:   req.WechatPayNotifyURL,
+		PaymentPlans:         req.PaymentPlans,
 	}
 
 	if err := h.settingService.UpdateSettings(c.Request.Context(), settings); err != nil {
