@@ -211,7 +211,7 @@ export default {
     logout: '退出登录',
     github: 'GitHub',
     mySubscriptions: '我的订阅',
-    pricing: '订阅 & 充值',
+    pricing: '购买订阅',
     recharge: '余额充值',
     modelPlaza: '模型广场',
     docs: '文档',
@@ -3427,6 +3427,33 @@ export default {
       expiresIn: '剩余支付时间 {minutes} 分 {seconds} 秒',
       cancel: '取消',
       viewSubscription: '查看订阅',
+      viewDashboard: '查看仪表盘',
+      createFailed: '创建订单失败，请稍后重试'
+    }
+  },
+
+  // Recharge Page
+  recharge: {
+    title: '余额充值',
+    subtitle: '为您的账户充值余额',
+    quickSelect: '选择充值额度',
+    customAmount: '自定义金额',
+    inputPlaceholder: '输入充值金额',
+    rechargeAmount: '充值金额',
+    payAmount: '实付金额',
+    paymentMethod: '支付方式',
+    wechatPay: '微信支付',
+    payNow: '立即支付 ¥{amount}',
+    enterAmount: '请输入充值金额',
+    creating: '创建订单中...',
+    payment: {
+      scanToPay: '微信扫码支付',
+      amount: '支付金额',
+      waiting: '等待支付...',
+      success: '充值成功！余额已到账',
+      expired: '订单已过期，请重新下单',
+      expiresIn: '剩余支付时间 {minutes} 分 {seconds} 秒',
+      cancel: '取消',
       viewDashboard: '查看仪表盘',
       createFailed: '创建订单失败，请稍后重试'
     }

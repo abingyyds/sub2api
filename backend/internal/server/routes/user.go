@@ -104,6 +104,7 @@ func RegisterUserRoutes(
 		authPayment := authenticated.Group("/payment")
 		{
 			authPayment.POST("/orders", h.Payment.CreateOrder)
+			authPayment.POST("/recharge", h.Payment.CreateRecharge)
 			authPayment.GET("/orders", h.Payment.ListOrders)
 			authPayment.GET("/orders/:orderNo", h.Payment.QueryOrder)
 		}

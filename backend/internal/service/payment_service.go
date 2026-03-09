@@ -190,6 +190,50 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 	return order, nil
 }
 
+// CreateRechargeOrder 创建余额充值订单（支持自定义金额）
+func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, amountYuan float64) (*PaymentOrder, error) {
+	// 检查支付是否启用
+	enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyPaymentEnabled)
+	if enabled != "true" {
+		return nil, ErrPaymentDisabled
+	}
+
+	if amountYuan <= 0 {
+		return nil, infraerrors.BadRequest("INVALID_AMOUNT", "recharge amount must be positive")
+	}
+
+	amountFen := int(amountYuan * 100)
+	orderNo := generateOrderNo()
+
+	order := &PaymentOrder{
+		OrderNo:       orderNo,
+		UserID:        userID,
+		PlanKey:       "recharge_custom",
+		AmountFen:     amountFen,
+		GroupID:       0,
+		ValidityDays:  0,
+		OrderType:     "balance",
+		BalanceAmount: amountYuan,
+		Status:        PaymentOrderStatusPending,
+		PayMethod:     "wechat_native",
+		ExpiredAt:     time.Now().Add(30 * time.Minute),
+	}
+
+	description := fmt.Sprintf("余额充值 %.2f 元", amountYuan)
+	codeURL, err := s.createWechatNativeOrder(ctx, order, description)
+	if err != nil {
+		log.Printf("[Payment] Failed to create wechat native order for recharge: %v", err)
+		return nil, err
+	}
+	order.CodeURL = &codeURL
+
+	if err := s.orderRepo.Create(ctx, order); err != nil {
+		return nil, fmt.Errorf("save recharge order: %w", err)
+	}
+
+	return order, nil
+}
+
 // QueryOrder 查询订单状态
 func (s *PaymentService) QueryOrder(ctx context.Context, userID int64, orderNo string) (*PaymentOrder, error) {
 	order, err := s.orderRepo.GetByOrderNo(ctx, orderNo)

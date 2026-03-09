@@ -214,7 +214,7 @@ export default {
     logout: 'Logout',
     github: 'GitHub',
     mySubscriptions: 'My Subscriptions',
-    pricing: 'Pricing & Recharge',
+    pricing: 'Pricing',
     recharge: 'Balance Recharge',
     modelPlaza: 'Model Plaza',
     docs: 'Docs',
@@ -3277,6 +3277,33 @@ export default {
       expiresIn: 'Expires in {minutes}m {seconds}s',
       cancel: 'Cancel',
       viewSubscription: 'View Subscription',
+      viewDashboard: 'View Dashboard',
+      createFailed: 'Failed to create order, please try again'
+    }
+  },
+
+  // Recharge Page
+  recharge: {
+    title: 'Balance Recharge',
+    subtitle: 'Top up your account balance',
+    quickSelect: 'Select Recharge Amount',
+    customAmount: 'Custom Amount',
+    inputPlaceholder: 'Enter recharge amount',
+    rechargeAmount: 'Recharge Amount',
+    payAmount: 'Payment Amount',
+    paymentMethod: 'Payment Method',
+    wechatPay: 'WeChat Pay',
+    payNow: 'Pay ¥{amount} Now',
+    enterAmount: 'Please enter an amount',
+    creating: 'Creating order...',
+    payment: {
+      scanToPay: 'Scan to Pay with WeChat',
+      amount: 'Amount',
+      waiting: 'Waiting for payment...',
+      success: 'Recharge successful! Balance updated',
+      expired: 'Order expired, please try again',
+      expiresIn: 'Expires in {minutes}m {seconds}s',
+      cancel: 'Cancel',
       viewDashboard: 'View Dashboard',
       createFailed: 'Failed to create order, please try again'
     }

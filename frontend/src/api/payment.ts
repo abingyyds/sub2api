@@ -53,6 +53,16 @@ export async function createOrder(planKey: string): Promise<CreateOrderResponse>
 }
 
 /**
+ * Create a balance recharge order with custom amount
+ */
+export async function createRechargeOrder(amount: number): Promise<CreateOrderResponse> {
+  const { data } = await apiClient.post<CreateOrderResponse>('/payment/recharge', {
+    amount,
+  })
+  return data
+}
+
+/**
  * Query order status
  */
 export async function queryOrder(orderNo: string): Promise<PaymentOrder> {
@@ -80,6 +90,7 @@ export async function listOrders(params?: {
 export const paymentAPI = {
   getPlans,
   createOrder,
+  createRechargeOrder,
   queryOrder,
   listOrders,
 }

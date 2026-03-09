@@ -40,6 +40,11 @@ type CreateOrderRequest struct {
 	PlanKey string `json:"plan_key" binding:"required"`
 }
 
+// CreateRechargeRequest represents the request body for creating a recharge order
+type CreateRechargeRequest struct {
+	Amount float64 `json:"amount" binding:"required,gt=0"`
+}
+
 // CreateOrder creates a new payment order
 // POST /api/v1/payment/orders
 func (h *PaymentHandler) CreateOrder(c *gin.Context) {
@@ -56,6 +61,35 @@ func (h *PaymentHandler) CreateOrder(c *gin.Context) {
 	}
 
 	order, err := h.paymentService.CreateOrder(c.Request.Context(), subject.UserID, req.PlanKey)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{
+		"order_no":   order.OrderNo,
+		"code_url":   order.CodeURL,
+		"amount_fen": order.AmountFen,
+		"expired_at": order.ExpiredAt,
+	})
+}
+
+// CreateRecharge creates a new balance recharge order with custom amount
+// POST /api/v1/payment/recharge
+func (h *PaymentHandler) CreateRecharge(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "User not found in context")
+		return
+	}
+
+	var req CreateRechargeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "invalid request: amount is required and must be positive")
+		return
+	}
+
+	order, err := h.paymentService.CreateRechargeOrder(c.Request.Context(), subject.UserID, req.Amount)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
