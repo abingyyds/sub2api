@@ -614,6 +614,7 @@ const adminNavItems = computed(() => {
     { path: '/admin/proxies', label: t('nav.proxies'), icon: ServerIcon },
     { path: '/admin/redeem', label: t('nav.redeemCodes'), icon: TicketIcon, hideInSimpleMode: true },
     { path: '/admin/promo-codes', label: t('nav.promoCodes'), icon: GiftIcon, hideInSimpleMode: true },
+    { path: '/admin/invite-codes', label: t('nav.inviteCodes'), icon: TicketIcon, hideInSimpleMode: true },
     ...(appStore.referralEnabled
       ? [{ path: '/admin/referrals', label: t('nav.referrals'), icon: ShareIcon, hideInSimpleMode: true }]
       : []),

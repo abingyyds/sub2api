@@ -415,6 +415,18 @@ const routes: RouteRecordRaw[] = [
       descriptionKey: 'admin.organizations.description'
     }
   },
+  {
+    path: '/admin/invite-codes',
+    name: 'AdminInviteCodes',
+    component: () => import('@/views/admin/InviteCodesView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Invite Code Management',
+      titleKey: 'admin.inviteCodes.title',
+      descriptionKey: 'admin.inviteCodes.description'
+    }
+  },
 
   // ==================== Org Admin Routes ====================
   {

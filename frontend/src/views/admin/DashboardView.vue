@@ -255,6 +255,89 @@
               </div>
             </div>
           </div>
+
+          <!-- Discovery Source Stats -->
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <!-- 7-Day Source Stats -->
+            <div class="card p-4">
+              <div class="mb-4 flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
+                  {{ t('admin.dashboard.sourceStats7d') }}
+                </h3>
+                <span class="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                  {{ t('common.total') }}: {{ sourceStats?.total || 0 }}
+                </span>
+              </div>
+              <div v-if="sourceStatsLoading" class="flex items-center justify-center py-8">
+                <LoadingSpinner />
+              </div>
+              <div v-else-if="sourceStats?.day7?.length" class="space-y-2">
+                <div
+                  v-for="item in sourceStats.day7"
+                  :key="item.source"
+                  class="flex items-center gap-3"
+                >
+                  <span class="w-20 truncate text-xs font-medium text-gray-600 dark:text-dark-300" :title="sourceLabel(item.source)">
+                    {{ sourceLabel(item.source) }}
+                  </span>
+                  <div class="flex-1">
+                    <div class="h-5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-dark-700">
+                      <div
+                        class="flex h-full items-center rounded-full px-2 text-xs font-medium text-white transition-all"
+                        :class="sourceColor(item.source)"
+                        :style="{ width: Math.max((item.count / maxSourceCount7d) * 100, 8) + '%' }"
+                      >
+                        {{ item.count }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="flex items-center justify-center py-8 text-sm text-gray-500 dark:text-dark-400">
+                {{ t('admin.dashboard.noDataAvailable') }}
+              </div>
+            </div>
+
+            <!-- 24h Source Stats -->
+            <div class="card p-4">
+              <div class="mb-4 flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
+                  {{ t('admin.dashboard.sourceStats24h') }}
+                </h3>
+                <span class="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                  {{ t('common.total') }}: {{ sourceStats?.day1?.reduce((s: number, i: any) => s + i.count, 0) || 0 }}
+                </span>
+              </div>
+              <div v-if="sourceStatsLoading" class="flex items-center justify-center py-8">
+                <LoadingSpinner />
+              </div>
+              <div v-else-if="sourceStats?.day1?.length" class="space-y-2">
+                <div
+                  v-for="item in sourceStats.day1"
+                  :key="item.source"
+                  class="flex items-center gap-3"
+                >
+                  <span class="w-20 truncate text-xs font-medium text-gray-600 dark:text-dark-300" :title="sourceLabel(item.source)">
+                    {{ sourceLabel(item.source) }}
+                  </span>
+                  <div class="flex-1">
+                    <div class="h-5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-dark-700">
+                      <div
+                        class="flex h-full items-center rounded-full px-2 text-xs font-medium text-white transition-all"
+                        :class="sourceColor(item.source)"
+                        :style="{ width: Math.max((item.count / maxSourceCount24h) * 100, 8) + '%' }"
+                      >
+                        {{ item.count }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="flex items-center justify-center py-8 text-sm text-gray-500 dark:text-dark-400">
+                {{ t('admin.dashboard.noDataAvailable') }}
+              </div>
+            </div>
+          </div>
         </div>
       </template>
     </div>
@@ -269,6 +352,7 @@ import { useAppStore } from '@/stores/app'
 const { t } = useI18n()
 import { adminAPI } from '@/api/admin'
 import type { DashboardStats, TrendDataPoint, ModelStat, UserUsageTrendPoint } from '@/types'
+import type { DiscoverySourceStatsResponse } from '@/api/admin/discoverySourceStats'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import Icon from '@/components/icons/Icon.vue'
@@ -311,6 +395,58 @@ const chartsLoading = ref(false)
 const trendData = ref<TrendDataPoint[]>([])
 const modelStats = ref<ModelStat[]>([])
 const userTrend = ref<UserUsageTrendPoint[]>([])
+
+// Source stats
+const sourceStats = ref<DiscoverySourceStatsResponse | null>(null)
+const sourceStatsLoading = ref(false)
+
+const maxSourceCount7d = computed(() => {
+  if (!sourceStats.value?.day7?.length) return 1
+  return Math.max(...sourceStats.value.day7.map(s => s.count), 1)
+})
+
+const maxSourceCount24h = computed(() => {
+  if (!sourceStats.value?.day1?.length) return 1
+  return Math.max(...sourceStats.value.day1.map(s => s.count), 1)
+})
+
+const sourceLabels: Record<string, string> = {
+  douyin: '抖音',
+  xiaohongshu: '小红书',
+  bilibili: 'Bilibili',
+  wechat: '微信',
+  twitter: 'X/Twitter',
+  telegram: 'Telegram',
+  github: 'GitHub',
+  search: '搜索引擎',
+  friend: '朋友推荐',
+  invite: '邀请注册',
+  skip: '未填写',
+  other: '其他'
+}
+
+const sourceLabel = (source: string): string => {
+  return sourceLabels[source] || source
+}
+
+const sourceColorMap: Record<string, string> = {
+  douyin: 'bg-gray-800 dark:bg-gray-600',
+  xiaohongshu: 'bg-red-500',
+  bilibili: 'bg-cyan-500',
+  wechat: 'bg-green-500',
+  twitter: 'bg-gray-800 dark:bg-gray-600',
+  telegram: 'bg-blue-500',
+  github: 'bg-gray-700',
+  search: 'bg-blue-600',
+  friend: 'bg-indigo-500',
+  invite: 'bg-purple-500',
+  skip: 'bg-gray-400',
+  other: 'bg-amber-500'
+}
+
+const sourceColor = (source: string): string => {
+  return sourceColorMap[source] || 'bg-primary-500'
+}
 
 // Helper function to format date in local timezone
 const formatLocalDate = (date: Date): string => {
@@ -550,9 +686,21 @@ const loadChartData = async () => {
   }
 }
 
+const loadSourceStats = async () => {
+  sourceStatsLoading.value = true
+  try {
+    sourceStats.value = await adminAPI.discoverySourceStats.getStats()
+  } catch (error) {
+    console.error('Error loading source stats:', error)
+  } finally {
+    sourceStatsLoading.value = false
+  }
+}
+
 onMounted(() => {
   loadDashboardStats()
   loadChartData()
+  loadSourceStats()
 })
 </script>
 

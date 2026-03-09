@@ -20,6 +20,8 @@ import userAttributesAPI from './userAttributes'
 import opsAPI from './ops'
 import announcementsAPI from './announcements'
 import organizationsAPI from './organizations'
+import inviteCodesAPI from './inviteCodes'
+import discoverySourceStatsAPI from './discoverySourceStats'
 
 /**
  * Unified admin API object for convenient access
@@ -41,7 +43,9 @@ export const adminAPI = {
   userAttributes: userAttributesAPI,
   ops: opsAPI,
   announcements: announcementsAPI,
-  organizations: organizationsAPI
+  organizations: organizationsAPI,
+  inviteCodes: inviteCodesAPI,
+  discoverySourceStats: discoverySourceStatsAPI
 }
 
 export {
@@ -61,7 +65,9 @@ export {
   userAttributesAPI,
   opsAPI,
   announcementsAPI,
-  organizationsAPI
+  organizationsAPI,
+  inviteCodesAPI,
+  discoverySourceStatsAPI
 }
 
 export default adminAPI
