@@ -476,7 +476,7 @@
               </div>
               <div>
                 <label for="payment_plans" class="input-label">{{ t('admin.settings.payment.plans') }}</label>
-                <textarea id="payment_plans" v-model="form.payment_plans" rows="6" class="input mt-1 font-mono text-xs" :placeholder="'[{\"key\":\"m289\",\"name\":\"月卡 289\",\"amount_fen\":28900,\"group_id\":1,\"validity_days\":30}]'" />
+                <textarea id="payment_plans" v-model="form.payment_plans" rows="6" class="input mt-1 font-mono text-xs" placeholder='[{"key":"m289","name":"月卡 289","amount_fen":28900,"group_id":1,"validity_days":30}]' />
                 <p class="input-hint">{{ t('admin.settings.payment.plansHint') }}</p>
               </div>
             </div>
