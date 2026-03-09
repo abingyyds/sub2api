@@ -458,9 +458,9 @@ func decryptAEAD(apiKey, nonce, ciphertext, associatedData string) ([]byte, erro
 
 func generateOrderNo() string {
 	now := time.Now()
-	b := make([]byte, 8)
+	b := make([]byte, 7)
 	rand.Read(b)
-	return fmt.Sprintf("PAY%s%X", now.Format("20060102150405"), b)
+	return fmt.Sprintf("P%s%X", now.Format("20060102150405"), b)
 }
 
 func generateNonce() string {
