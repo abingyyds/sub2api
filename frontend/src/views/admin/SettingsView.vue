@@ -1181,6 +1181,9 @@ type SettingsForm = SystemSettings & {
   smtp_password: string
   turnstile_secret_key: string
   linuxdo_connect_client_secret: string
+  wechat_pay_apiv3_key: string
+  wechat_pay_public_key: string
+  wechat_pay_private_key: string
 }
 
 const form = reactive<SettingsForm>({
