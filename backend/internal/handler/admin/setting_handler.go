@@ -420,6 +420,17 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		OpsRealtimeMonitoringEnabled:         updatedSettings.OpsRealtimeMonitoringEnabled,
 		OpsQueryModeDefault:                  updatedSettings.OpsQueryModeDefault,
 		OpsMetricsIntervalSeconds:            updatedSettings.OpsMetricsIntervalSeconds,
+		ReferralEnabled:                      updatedSettings.ReferralEnabled,
+		ReferralRewardAmount:                 updatedSettings.ReferralRewardAmount,
+		PaymentEnabled:                       updatedSettings.PaymentEnabled,
+		WechatPayAppID:                       updatedSettings.WechatPayAppID,
+		WechatPayMchID:                       updatedSettings.WechatPayMchID,
+		WechatPayAPIv3KeyConfigured:          updatedSettings.WechatPayAPIv3KeyConfigured,
+		WechatPayPublicKeyID:                 updatedSettings.WechatPayPublicKeyID,
+		WechatPayPublicKeyConfigured:         updatedSettings.WechatPayPublicKeyConfigured,
+		WechatPayPrivateKeyConfigured:        updatedSettings.WechatPayPrivateKeyConfigured,
+		WechatPayNotifyURL:                   updatedSettings.WechatPayNotifyURL,
+		PaymentPlans:                         updatedSettings.PaymentPlans,
 	})
 }
 

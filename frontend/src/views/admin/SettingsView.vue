@@ -1317,6 +1317,9 @@ async function loadSettings() {
     form.smtp_password = ''
     form.turnstile_secret_key = ''
     form.linuxdo_connect_client_secret = ''
+    form.wechat_pay_apiv3_key = ''
+    form.wechat_pay_public_key = ''
+    form.wechat_pay_private_key = ''
   } catch (error: any) {
     appStore.showError(
       t('admin.settings.failedToLoad') + ': ' + (error.message || t('common.unknownError'))
