@@ -471,14 +471,44 @@ func (s *PaymentService) verifyWechatSignature(ctx context.Context, timestamp, n
 		return fmt.Errorf("failed to decode public key PEM")
 	}
 
-	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
-	if err != nil {
-		return fmt.Errorf("parse public key: %w", err)
-	}
+	var rsaPub *rsa.PublicKey
 
-	rsaPub, ok := pub.(*rsa.PublicKey)
-	if !ok {
-		return fmt.Errorf("not an RSA public key")
+	switch block.Type {
+	case "CERTIFICATE":
+		// 微信平台证书模式：从 X.509 证书中提取公钥
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return fmt.Errorf("parse certificate: %w", err)
+		}
+		var ok bool
+		rsaPub, ok = cert.PublicKey.(*rsa.PublicKey)
+		if !ok {
+			return fmt.Errorf("certificate does not contain RSA public key")
+		}
+	case "RSA PUBLIC KEY":
+		// PKCS#1 格式公钥
+		var err error
+		rsaPub, err = x509.ParsePKCS1PublicKey(block.Bytes)
+		if err != nil {
+			return fmt.Errorf("parse PKCS1 public key: %w", err)
+		}
+	default:
+		// PKIX 格式公钥 (PUBLIC KEY)
+		pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+		if err != nil {
+			// 再尝试 PKCS#1 格式
+			rsaPub2, err2 := x509.ParsePKCS1PublicKey(block.Bytes)
+			if err2 != nil {
+				return fmt.Errorf("parse public key: PKIX=%w, PKCS1=%v", err, err2)
+			}
+			rsaPub = rsaPub2
+		} else {
+			var ok bool
+			rsaPub, ok = pub.(*rsa.PublicKey)
+			if !ok {
+				return fmt.Errorf("not an RSA public key")
+			}
+		}
 	}
 
 	// 构造签名串
