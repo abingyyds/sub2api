@@ -368,6 +368,21 @@ const CreditCardIcon = {
     )
 }
 
+const WalletIcon = {
+  render: () =>
+    h(
+      'svg',
+      { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' },
+      [
+        h('path', {
+          'stroke-linecap': 'round',
+          'stroke-linejoin': 'round',
+          d: 'M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 110 6h3.75A2.25 2.25 0 0021 13.5v-1.5zm0 0V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316a2.31 2.31 0 01-1.64 1.055 47.78 47.78 0 00-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-6z'
+        })
+      ]
+    )
+}
+
 const GlobeIcon = {
   render: () =>
     h(
@@ -560,6 +575,7 @@ const userNavItems = computed(() => {
     { path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon },
     { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
     { path: '/pricing', label: t('nav.pricing'), icon: ShoppingBagIcon },
+    { path: '/pricing#recharge', label: t('nav.recharge'), icon: WalletIcon },
     { path: '/tutorial', label: t('nav.tutorial'), icon: BookIcon },
     { path: '/model-plaza', label: t('nav.modelPlaza'), icon: CubeIcon },
     { path: '/subscriptions', label: t('nav.mySubscriptions'), icon: CreditCardIcon, hideInSimpleMode: true },
@@ -586,6 +602,7 @@ const personalNavItems = computed(() => {
     { path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon },
     { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
     { path: '/pricing', label: t('nav.pricing'), icon: ShoppingBagIcon },
+    { path: '/pricing#recharge', label: t('nav.recharge'), icon: WalletIcon },
     { path: '/tutorial', label: t('nav.tutorial'), icon: BookIcon },
     { path: '/model-plaza', label: t('nav.modelPlaza'), icon: CubeIcon },
     { path: '/subscriptions', label: t('nav.mySubscriptions'), icon: CreditCardIcon, hideInSimpleMode: true },
@@ -670,6 +687,12 @@ function handleMenuItemClick(itemPath: string) {
 }
 
 function isActive(path: string): boolean {
+  // Handle paths with hash (e.g., /pricing#recharge)
+  const basePath = path.split('#')[0]
+  const hash = path.includes('#') ? '#' + path.split('#')[1] : ''
+  if (hash) {
+    return route.path === basePath && route.hash === hash
+  }
   return route.path === path || route.path.startsWith(path + '/')
 }
 

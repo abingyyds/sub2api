@@ -58,7 +58,7 @@
         </div>
 
         <!-- Balance Recharge Section -->
-        <div v-if="balancePlans.length > 0">
+        <div v-if="balancePlans.length > 0" id="recharge">
           <h2 class="mb-4 text-xl font-semibold text-gray-900 dark:text-white">{{ t('pricing.balanceSection') }}</h2>
           <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <div
@@ -179,7 +179,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import QRCode from 'qrcode'
 import AppLayout from '@/components/layout/AppLayout.vue'
@@ -188,6 +188,7 @@ import type { PaymentPlan } from '@/api/payment'
 
 const { t } = useI18n()
 const router = useRouter()
+const route = useRoute()
 
 const loading = ref(true)
 const plans = ref<PaymentPlan[]>([])
@@ -214,6 +215,12 @@ onMounted(async () => {
     // silently fail, show empty state
   } finally {
     loading.value = false
+  }
+
+  // Scroll to recharge section if hash is #recharge
+  if (route.hash === '#recharge') {
+    await nextTick()
+    document.getElementById('recharge')?.scrollIntoView({ behavior: 'smooth' })
   }
 })
 
