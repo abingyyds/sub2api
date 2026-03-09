@@ -2210,6 +2210,7 @@ export default {
       create: '创建邀请码',
       edit: '编辑邀请码',
       code: '邀请码',
+      inviteLink: '邀请链接',
       sourceName: '来源名称',
       sourceNamePlaceholder: '如: twitter_campaign, bilibili_video',
       sourceNameHint: '用户通过此邀请码注册后，来源将自动设为该名称',

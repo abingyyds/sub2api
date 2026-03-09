@@ -2063,6 +2063,7 @@ export default {
       create: 'Create Invite Code',
       edit: 'Edit Invite Code',
       code: 'Invite Code',
+      inviteLink: 'Invite Link',
       sourceName: 'Source Name',
       sourceNamePlaceholder: 'e.g. twitter_campaign, youtube_video',
       sourceNameHint: 'Users registering with this code will be tagged with this source name',

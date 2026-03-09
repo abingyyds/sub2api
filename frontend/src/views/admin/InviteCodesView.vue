@@ -43,7 +43,7 @@
         <table v-else class="min-w-full divide-y divide-gray-200 dark:divide-dark-700">
           <thead class="bg-gray-50 dark:bg-dark-800">
             <tr>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-dark-400">{{ t('admin.inviteCodes.code') }}</th>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-dark-400">{{ t('admin.inviteCodes.inviteLink') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-dark-400">{{ t('admin.inviteCodes.sourceName') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-dark-400">{{ t('admin.inviteCodes.usedCount') }}</th>
               <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-dark-400">{{ t('admin.inviteCodes.maxUses') }}</th>
@@ -62,10 +62,10 @@
             <tr v-for="code in codes" :key="code.id" class="hover:bg-gray-50 dark:hover:bg-dark-800/50">
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2">
-                  <code class="rounded bg-gray-100 px-2 py-0.5 text-xs font-mono text-gray-800 dark:bg-dark-700 dark:text-dark-200">
-                    {{ code.code }}
-                  </code>
-                  <button @click="copyCode(code.code)" class="text-gray-400 hover:text-gray-600 dark:hover:text-dark-200" :title="t('common.copy')">
+                  <span class="max-w-[280px] truncate text-xs text-blue-600 dark:text-blue-400" :title="getInviteLink(code.code)">
+                    {{ getInviteLink(code.code) }}
+                  </span>
+                  <button @click="copyInviteLink(code.code)" class="flex-shrink-0 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400" :title="t('admin.inviteCodes.copyLink')">
                     <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
                     </svg>
@@ -99,11 +99,6 @@
               </td>
               <td class="whitespace-nowrap px-4 py-3 text-right">
                 <div class="flex items-center justify-end gap-2">
-                  <button @click="copyInviteLink(code.code)" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300" :title="t('admin.inviteCodes.copyLink')">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-                    </svg>
-                  </button>
                   <button @click="openEditModal(code)" class="text-gray-400 hover:text-gray-600 dark:hover:text-dark-200">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                       <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z" />
@@ -344,13 +339,12 @@ const toggleEnabled = async (code: AdminInviteCode) => {
   }
 }
 
-const copyCode = (code: string) => {
-  copyToClipboard(code, t('common.copied'))
+const getInviteLink = (code: string): string => {
+  return `${window.location.origin}/register?invite=${code}`
 }
 
 const copyInviteLink = (code: string) => {
-  const link = `${window.location.origin}/register?invite=${code}`
-  copyToClipboard(link, t('admin.inviteCodes.linkCopied'))
+  copyToClipboard(getInviteLink(code), t('admin.inviteCodes.linkCopied'))
 }
 
 const formatDate = (dateStr: string): string => {
