@@ -13,6 +13,14 @@ func RegisterUserRoutes(
 	h *handler.Handlers,
 	jwtAuth middleware.JWTAuthMiddleware,
 ) {
+	// 支付回调通知（无需认证，微信服务器调用）
+	payment := v1.Group("/payment")
+	{
+		payment.POST("/wechat/notify", h.Payment.WechatNotify)
+		// 公开接口：获取套餐列表（无需认证）
+		payment.GET("/plans", h.Payment.GetPlans)
+	}
+
 	authenticated := v1.Group("")
 	authenticated.Use(gin.HandlerFunc(jwtAuth))
 	{
@@ -90,6 +98,14 @@ func RegisterUserRoutes(
 			referral.GET("/code", h.Referral.GetInviteCode)
 			referral.GET("/invitees", h.Referral.ListInvitees)
 			referral.GET("/stats", h.Referral.GetStats)
+		}
+
+		// 在线支付（需要认证）
+		authPayment := authenticated.Group("/payment")
+		{
+			authPayment.POST("/orders", h.Payment.CreateOrder)
+			authPayment.GET("/orders", h.Payment.ListOrders)
+			authPayment.GET("/orders/:orderNo", h.Payment.QueryOrder)
 		}
 	}
 }

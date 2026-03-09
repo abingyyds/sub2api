@@ -3226,8 +3226,11 @@ export default {
     daily: '${amount} daily',
     noWeeklyLimit: 'No weekly limit',
     validity: '30-day validity',
+    validityDays: '{days}-day validity',
     stackableTag: 'Stackable',
     stackable: 'Monthly plans are stackable / Group purchases available',
+    wechatPay: 'WeChat Scan to Pay',
+    noPlans: 'No plans available',
     howToBuy: 'How to Purchase',
     step1: 'Click on a plan card to go to the purchase page, pay and save the redeem code',
     step2: 'Save the redeem code from your order details after purchase',
@@ -3242,6 +3245,17 @@ export default {
       m459: { name: 'Monthly 459' },
       m559: { name: 'Monthly 559' },
       m1180: { name: 'Monthly 1180' }
+    },
+    payment: {
+      scanToPay: 'Scan to Pay with WeChat',
+      amount: 'Amount',
+      waitingPayment: 'Waiting for payment...',
+      paymentSuccess: 'Payment successful! Subscription activated',
+      orderExpired: 'Order expired, please try again',
+      expiresIn: 'Expires in {minutes}m {seconds}s',
+      cancel: 'Cancel',
+      viewSubscription: 'View Subscription',
+      createFailed: 'Failed to create order, please try again'
     }
   },
 

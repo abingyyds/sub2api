@@ -48,6 +48,7 @@ type Handlers struct {
 	Referral      *ReferralHandler
 	Announcement  *AnnouncementHandler
 	ModelPlaza    *ModelPlazaHandler
+	Payment       *PaymentHandler
 }
 
 // BuildInfo contains build-time information

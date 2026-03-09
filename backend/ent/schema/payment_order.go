@@ -1,0 +1,90 @@
+package schema
+
+import (
+	"time"
+
+	"entgo.io/ent"
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/entsql"
+	"entgo.io/ent/schema"
+	"entgo.io/ent/schema/edge"
+	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
+)
+
+// PaymentOrder holds the schema definition for the PaymentOrder entity.
+type PaymentOrder struct {
+	ent.Schema
+}
+
+func (PaymentOrder) Annotations() []schema.Annotation {
+	return []schema.Annotation{
+		entsql.Annotation{Table: "payment_orders"},
+	}
+}
+
+// Fields of the PaymentOrder.
+func (PaymentOrder) Fields() []ent.Field {
+	return []ent.Field{
+		field.Int64("id"),
+		field.String("order_no").
+			MaxLen(64).
+			Unique().
+			NotEmpty(),
+		field.Int64("user_id"),
+		field.String("plan_key").
+			MaxLen(50).
+			NotEmpty(),
+		field.Int64("group_id"),
+		field.Int("amount_fen"),
+		field.Int("validity_days").
+			Default(30),
+		field.String("status").
+			MaxLen(20).
+			Default("pending"),
+		field.String("pay_method").
+			MaxLen(20).
+			Default("wechat_native"),
+		field.String("wechat_transaction_id").
+			MaxLen(64).
+			Optional().
+			Nillable(),
+		field.Text("code_url").
+			Optional().
+			Nillable(),
+		field.Time("paid_at").
+			Optional().
+			Nillable().
+			SchemaType(map[string]string{dialect.Postgres: "timestamp"}),
+		field.Time("expired_at").
+			SchemaType(map[string]string{dialect.Postgres: "timestamp"}),
+		field.Time("created_at").
+			Default(time.Now).
+			Immutable().
+			SchemaType(map[string]string{dialect.Postgres: "timestamp"}),
+		field.Time("updated_at").
+			Default(time.Now).
+			UpdateDefault(time.Now).
+			SchemaType(map[string]string{dialect.Postgres: "timestamp"}),
+	}
+}
+
+// Edges of the PaymentOrder.
+func (PaymentOrder) Edges() []ent.Edge {
+	return []ent.Edge{
+		edge.From("user", User.Type).
+			Ref("payment_orders").
+			Field("user_id").
+			Unique().
+			Required(),
+	}
+}
+
+// Indexes of the PaymentOrder.
+func (PaymentOrder) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("user_id"),
+		index.Fields("order_no"),
+		index.Fields("status"),
+	}
+}

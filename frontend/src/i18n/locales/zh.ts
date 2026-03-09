@@ -3376,8 +3376,11 @@ export default {
     daily: '每日 {amount} 美金',
     noWeeklyLimit: '无周限额',
     validity: '30 天有效期',
+    validityDays: '{days} 天有效期',
     stackableTag: '支持叠加',
     stackable: '月卡支持叠加使用 / 支持企业组团购买',
+    wechatPay: '微信扫码支付',
+    noPlans: '暂无可用套餐',
     howToBuy: '购买方式',
     step1: '点击套餐卡片跳转到购买页面，支付后保存兑换码',
     step2: '购买后请保存下单详情里的兑换码',
@@ -3392,6 +3395,17 @@ export default {
       m459: { name: '月卡 459' },
       m559: { name: '月卡 559' },
       m1180: { name: '月卡 1180' }
+    },
+    payment: {
+      scanToPay: '微信扫码支付',
+      amount: '支付金额',
+      waitingPayment: '等待支付...',
+      paymentSuccess: '支付成功！订阅已自动激活',
+      orderExpired: '订单已过期，请重新下单',
+      expiresIn: '剩余支付时间 {minutes} 分 {seconds} 秒',
+      cancel: '取消',
+      viewSubscription: '查看订阅',
+      createFailed: '创建订单失败，请稍后重试'
     }
   },
 

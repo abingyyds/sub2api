@@ -101,6 +101,7 @@ func ProvideHandlers(
 	modelPlazaHandler *ModelPlazaHandler,
 	referralHandler *ReferralHandler,
 	announcementHandler *AnnouncementHandler,
+	paymentHandler *PaymentHandler,
 ) *Handlers {
 	return &Handlers{
 		Auth:          authHandler,
@@ -118,6 +119,7 @@ func ProvideHandlers(
 		ModelPlaza:    modelPlazaHandler,
 		Referral:      referralHandler,
 		Announcement:  announcementHandler,
+		Payment:       paymentHandler,
 	}
 }
 
@@ -136,6 +138,7 @@ var ProviderSet = wire.NewSet(
 	NewReferralHandler,
 	NewAnnouncementHandler,
 	NewModelPlazaHandler,
+	NewPaymentHandler,
 	ProvideSettingHandler,
 
 	// Admin handlers
