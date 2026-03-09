@@ -150,7 +150,8 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 	// 调用微信支付 Native 下单
 	codeURL, err := s.createWechatNativeOrder(ctx, order, plan.Name)
 	if err != nil {
-		return nil, fmt.Errorf("create wechat order: %w", err)
+		log.Printf("[Payment] Failed to create wechat native order: %v", err)
+		return nil, err
 	}
 	order.CodeURL = &codeURL
 
@@ -275,8 +276,24 @@ func (s *PaymentService) createWechatNativeOrder(ctx context.Context, order *Pay
 	privateKeyPEM, _ := s.settingService.GetSettingValue(ctx, SettingKeyWechatPayPrivateKey)
 	publicKeyID, _ := s.settingService.GetSettingValue(ctx, SettingKeyWechatPayPublicKeyID)
 
-	if mchID == "" || notifyURL == "" || privateKeyPEM == "" {
-		return "", ErrPaymentConfigMissing
+	if appID == "" || mchID == "" || notifyURL == "" || privateKeyPEM == "" || publicKeyID == "" {
+		missing := make([]string, 0, 5)
+		if appID == "" {
+			missing = append(missing, "appid")
+		}
+		if mchID == "" {
+			missing = append(missing, "mch_id")
+		}
+		if notifyURL == "" {
+			missing = append(missing, "notify_url")
+		}
+		if privateKeyPEM == "" {
+			missing = append(missing, "private_key")
+		}
+		if publicKeyID == "" {
+			missing = append(missing, "public_key_id")
+		}
+		return "", infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", fmt.Sprintf("payment configuration incomplete, missing: %s", strings.Join(missing, ", ")))
 	}
 
 	// 构造请求体
@@ -304,7 +321,7 @@ func (s *PaymentService) createWechatNativeOrder(ctx context.Context, order *Pay
 
 	privateKey, err := parsePrivateKey(privateKeyPEM)
 	if err != nil {
-		return "", fmt.Errorf("parse private key: %w", err)
+		return "", infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", "invalid private key PEM format")
 	}
 
 	signature, err := signSHA256WithRSA(privateKey, []byte(signStr))
@@ -335,7 +352,7 @@ func (s *PaymentService) createWechatNativeOrder(ctx context.Context, order *Pay
 
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("[Payment] WeChat API error: status=%d body=%s", resp.StatusCode, string(respBody))
-		return "", fmt.Errorf("wechat api returned %d: %s", resp.StatusCode, string(respBody))
+		return "", infraerrors.BadRequest("WECHAT_API_ERROR", fmt.Sprintf("wechat pay api error: %s", string(respBody)))
 	}
 
 	var result struct {
