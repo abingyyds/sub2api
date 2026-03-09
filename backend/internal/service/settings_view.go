@@ -68,6 +68,7 @@ type SystemSettings struct {
 	WechatPayMchID                string
 	WechatPayAPIv3Key             string
 	WechatPayAPIv3KeyConfigured   bool
+	WechatPayMchSerialNo          string
 	WechatPayPublicKeyID          string
 	WechatPayPublicKey            string
 	WechatPayPublicKeyConfigured  bool

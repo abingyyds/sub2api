@@ -459,6 +459,10 @@
                 <input id="wechat_pay_apiv3_key" v-model="form.wechat_pay_apiv3_key" type="password" class="input mt-1" :placeholder="form.wechat_pay_apiv3_key_configured ? t('admin.settings.payment.configured') : ''" />
               </div>
               <div>
+                <label for="wechat_pay_mch_serial_no" class="input-label">{{ t('admin.settings.payment.mchSerialNo') }}</label>
+                <input id="wechat_pay_mch_serial_no" v-model="form.wechat_pay_mch_serial_no" type="text" class="input mt-1" />
+              </div>
+              <div>
                 <label for="wechat_pay_public_key_id" class="input-label">{{ t('admin.settings.payment.publicKeyId') }}</label>
                 <input id="wechat_pay_public_key_id" v-model="form.wechat_pay_public_key_id" type="text" class="input mt-1" placeholder="PUB_KEY_ID_..." />
               </div>
@@ -1246,6 +1250,7 @@ const form = reactive<SettingsForm>({
   wechat_pay_mch_id: '',
   wechat_pay_apiv3_key: '',
   wechat_pay_apiv3_key_configured: false,
+  wechat_pay_mch_serial_no: '',
   wechat_pay_public_key_id: '',
   wechat_pay_public_key: '',
   wechat_pay_public_key_configured: false,
@@ -1377,6 +1382,7 @@ async function saveSettings() {
       wechat_pay_appid: form.wechat_pay_appid,
       wechat_pay_mch_id: form.wechat_pay_mch_id,
       wechat_pay_apiv3_key: form.wechat_pay_apiv3_key || undefined,
+      wechat_pay_mch_serial_no: form.wechat_pay_mch_serial_no,
       wechat_pay_public_key_id: form.wechat_pay_public_key_id,
       wechat_pay_public_key: form.wechat_pay_public_key || undefined,
       wechat_pay_private_key: form.wechat_pay_private_key || undefined,

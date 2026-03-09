@@ -74,6 +74,7 @@ export interface SystemSettings {
   wechat_pay_appid: string
   wechat_pay_mch_id: string
   wechat_pay_apiv3_key_configured: boolean
+  wechat_pay_mch_serial_no: string
   wechat_pay_public_key_id: string
   wechat_pay_public_key_configured: boolean
   wechat_pay_private_key_configured: boolean
@@ -130,6 +131,7 @@ export interface UpdateSettingsRequest {
   wechat_pay_appid?: string
   wechat_pay_mch_id?: string
   wechat_pay_apiv3_key?: string
+  wechat_pay_mch_serial_no?: string
   wechat_pay_public_key_id?: string
   wechat_pay_public_key?: string
   wechat_pay_private_key?: string

@@ -65,6 +65,7 @@ type SystemSettings struct {
 	WechatPayAppID                string `json:"wechat_pay_appid"`
 	WechatPayMchID                string `json:"wechat_pay_mch_id"`
 	WechatPayAPIv3KeyConfigured   bool   `json:"wechat_pay_apiv3_key_configured"`
+	WechatPayMchSerialNo          string `json:"wechat_pay_mch_serial_no"`
 	WechatPayPublicKeyID          string `json:"wechat_pay_public_key_id"`
 	WechatPayPublicKeyConfigured  bool   `json:"wechat_pay_public_key_configured"`
 	WechatPayPrivateKeyConfigured bool   `json:"wechat_pay_private_key_configured"`

@@ -259,6 +259,7 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	if settings.WechatPayAPIv3Key != "" {
 		updates[SettingKeyWechatPayAPIv3Key] = settings.WechatPayAPIv3Key
 	}
+	updates[SettingKeyWechatPayMchSerialNo] = settings.WechatPayMchSerialNo
 	updates[SettingKeyWechatPayPublicKeyID] = settings.WechatPayPublicKeyID
 	if settings.WechatPayPublicKey != "" {
 		updates[SettingKeyWechatPayPublicKey] = settings.WechatPayPublicKey
@@ -564,6 +565,7 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 	result.WechatPayMchID = settings[SettingKeyWechatPayMchID]
 	result.WechatPayAPIv3Key = settings[SettingKeyWechatPayAPIv3Key]
 	result.WechatPayAPIv3KeyConfigured = settings[SettingKeyWechatPayAPIv3Key] != ""
+	result.WechatPayMchSerialNo = settings[SettingKeyWechatPayMchSerialNo]
 	result.WechatPayPublicKeyID = settings[SettingKeyWechatPayPublicKeyID]
 	result.WechatPayPublicKey = settings[SettingKeyWechatPayPublicKey]
 	result.WechatPayPublicKeyConfigured = settings[SettingKeyWechatPayPublicKey] != ""

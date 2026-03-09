@@ -93,6 +93,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		WechatPayAppID:                       settings.WechatPayAppID,
 		WechatPayMchID:                       settings.WechatPayMchID,
 		WechatPayAPIv3KeyConfigured:          settings.WechatPayAPIv3KeyConfigured,
+		WechatPayMchSerialNo:                 settings.WechatPayMchSerialNo,
 		WechatPayPublicKeyID:                 settings.WechatPayPublicKeyID,
 		WechatPayPublicKeyConfigured:         settings.WechatPayPublicKeyConfigured,
 		WechatPayPrivateKeyConfigured:        settings.WechatPayPrivateKeyConfigured,
@@ -171,6 +172,7 @@ type UpdateSettingsRequest struct {
 	WechatPayAppID       string `json:"wechat_pay_appid"`
 	WechatPayMchID       string `json:"wechat_pay_mch_id"`
 	WechatPayAPIv3Key    string `json:"wechat_pay_apiv3_key"`
+	WechatPayMchSerialNo string `json:"wechat_pay_mch_serial_no"`
 	WechatPayPublicKeyID string `json:"wechat_pay_public_key_id"`
 	WechatPayPublicKey   string `json:"wechat_pay_public_key"`
 	WechatPayPrivateKey  string `json:"wechat_pay_private_key"`
@@ -356,6 +358,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		WechatPayAppID:       req.WechatPayAppID,
 		WechatPayMchID:       req.WechatPayMchID,
 		WechatPayAPIv3Key:    req.WechatPayAPIv3Key,
+		WechatPayMchSerialNo: req.WechatPayMchSerialNo,
 		WechatPayPublicKeyID: req.WechatPayPublicKeyID,
 		WechatPayPublicKey:   req.WechatPayPublicKey,
 		WechatPayPrivateKey:  req.WechatPayPrivateKey,

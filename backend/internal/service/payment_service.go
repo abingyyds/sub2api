@@ -274,9 +274,9 @@ func (s *PaymentService) createWechatNativeOrder(ctx context.Context, order *Pay
 	mchID, _ := s.settingService.GetSettingValue(ctx, SettingKeyWechatPayMchID)
 	notifyURL, _ := s.settingService.GetSettingValue(ctx, SettingKeyWechatPayNotifyURL)
 	privateKeyPEM, _ := s.settingService.GetSettingValue(ctx, SettingKeyWechatPayPrivateKey)
-	publicKeyID, _ := s.settingService.GetSettingValue(ctx, SettingKeyWechatPayPublicKeyID)
+	mchSerialNo, _ := s.settingService.GetSettingValue(ctx, SettingKeyWechatPayMchSerialNo)
 
-	if appID == "" || mchID == "" || notifyURL == "" || privateKeyPEM == "" || publicKeyID == "" {
+	if appID == "" || mchID == "" || notifyURL == "" || privateKeyPEM == "" || mchSerialNo == "" {
 		missing := make([]string, 0, 5)
 		if appID == "" {
 			missing = append(missing, "appid")
@@ -290,8 +290,8 @@ func (s *PaymentService) createWechatNativeOrder(ctx context.Context, order *Pay
 		if privateKeyPEM == "" {
 			missing = append(missing, "private_key")
 		}
-		if publicKeyID == "" {
-			missing = append(missing, "public_key_id")
+		if mchSerialNo == "" {
+			missing = append(missing, "mch_serial_no")
 		}
 		return "", infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", fmt.Sprintf("payment configuration incomplete, missing: %s", strings.Join(missing, ", ")))
 	}
@@ -338,7 +338,7 @@ func (s *PaymentService) createWechatNativeOrder(ctx context.Context, order *Pay
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf(
 		`WECHATPAY2-SHA256-RSA2048 mchid="%s",nonce_str="%s",timestamp="%s",serial_no="%s",signature="%s"`,
-		mchID, nonce, timestamp, publicKeyID, signature,
+		mchID, nonce, timestamp, mchSerialNo, signature,
 	))
 
 	client := &http.Client{Timeout: 10 * time.Second}

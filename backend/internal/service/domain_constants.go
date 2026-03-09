@@ -183,13 +183,14 @@ const (
 
 	SettingKeyPaymentEnabled         = "payment_enabled"          // 是否启用在线支付
 	SettingKeyPaymentPlans           = "payment_plans"            // 套餐配置 JSON
-	SettingKeyWechatPayAppID         = "wechat_pay_appid"         // 微信支付关联的AppID
-	SettingKeyWechatPayMchID         = "wechat_pay_mch_id"        // 微信支付商户号
-	SettingKeyWechatPayAPIv3Key      = "wechat_pay_apiv3_key"     // APIv3 密钥
-	SettingKeyWechatPayPublicKeyID   = "wechat_pay_public_key_id" // 微信支付公钥ID
-	SettingKeyWechatPayPublicKey     = "wechat_pay_public_key"    // 微信支付公钥内容(PEM)
-	SettingKeyWechatPayPrivateKey    = "wechat_pay_private_key"   // 商户API私钥(PEM)
-	SettingKeyWechatPayNotifyURL     = "wechat_pay_notify_url"    // 支付回调通知URL
+	SettingKeyWechatPayAppID         = "wechat_pay_appid"          // 微信支付关联的AppID
+	SettingKeyWechatPayMchID         = "wechat_pay_mch_id"         // 微信支付商户号
+	SettingKeyWechatPayAPIv3Key      = "wechat_pay_apiv3_key"      // APIv3 密钥
+	SettingKeyWechatPayMchSerialNo   = "wechat_pay_mch_serial_no"  // 商户API证书序列号
+	SettingKeyWechatPayPublicKeyID   = "wechat_pay_public_key_id"  // 微信支付公钥ID（验证回调）
+	SettingKeyWechatPayPublicKey     = "wechat_pay_public_key"     // 微信支付公钥内容(PEM)
+	SettingKeyWechatPayPrivateKey    = "wechat_pay_private_key"    // 商户API私钥(PEM)
+	SettingKeyWechatPayNotifyURL     = "wechat_pay_notify_url"     // 支付回调通知URL
 )
 
 // AdminAPIKeyPrefix is the prefix for admin API keys (distinct from user "sk-" keys).
