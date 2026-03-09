@@ -602,7 +602,7 @@ const personalNavItems = computed(() => {
     { path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon },
     { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
     { path: '/pricing', label: t('nav.pricing'), icon: ShoppingBagIcon },
-    { path: '/pricing#recharge', label: t('nav.recharge'), icon: WalletIcon },
+    { path: '/recharge', label: t('nav.recharge'), icon: WalletIcon },
     { path: '/tutorial', label: t('nav.tutorial'), icon: BookIcon },
     { path: '/model-plaza', label: t('nav.modelPlaza'), icon: CubeIcon },
     { path: '/subscriptions', label: t('nav.mySubscriptions'), icon: CreditCardIcon, hideInSimpleMode: true },
