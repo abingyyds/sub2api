@@ -118,6 +118,43 @@ func (r *paymentOrderRepo) ListByUserID(ctx context.Context, userID int64, param
 	}, nil
 }
 
+func (r *paymentOrderRepo) ListAll(ctx context.Context, params pagination.PaginationParams, status string, orderType string) ([]service.PaymentOrder, *pagination.PaginationResult, error) {
+	query := r.client.PaymentOrder.Query()
+
+	if status != "" {
+		query = query.Where(paymentorder.StatusEQ(status))
+	}
+	if orderType != "" {
+		query = query.Where(paymentorder.OrderTypeEQ(orderType))
+	}
+
+	total, err := query.Count(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("count payment orders: %w", err)
+	}
+
+	orders, err := query.
+		Order(dbent.Desc(paymentorder.FieldCreatedAt)).
+		Limit(params.PageSize).
+		Offset((params.Page - 1) * params.PageSize).
+		All(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("list all payment orders: %w", err)
+	}
+
+	result := make([]service.PaymentOrder, len(orders))
+	for i, o := range orders {
+		result[i] = *toServicePaymentOrder(o)
+	}
+
+	return result, &pagination.PaginationResult{
+		Total:    int64(total),
+		Page:     params.Page,
+		PageSize: params.PageSize,
+		Pages:    (total + params.PageSize - 1) / params.PageSize,
+	}, nil
+}
+
 func (r *paymentOrderRepo) CloseExpiredOrders(ctx context.Context) (int64, error) {
 	affected, err := r.client.PaymentOrder.Update().
 		Where(

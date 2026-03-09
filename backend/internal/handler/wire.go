@@ -32,6 +32,7 @@ func ProvideAdminHandlers(
 	organizationHandler *admin.OrganizationHandler,
 	adminInviteCodeHandler *admin.AdminInviteCodeHandler,
 	discoverySourceStatsHandler *admin.DiscoverySourceStatsHandler,
+	paymentOrderHandler *admin.PaymentOrderHandler,
 ) *AdminHandlers {
 	return &AdminHandlers{
 		Dashboard:            dashboardHandler,
@@ -56,6 +57,7 @@ func ProvideAdminHandlers(
 		Organization:         organizationHandler,
 		AdminInviteCode:      adminInviteCodeHandler,
 		DiscoverySourceStats: discoverySourceStatsHandler,
+		PaymentOrder:         paymentOrderHandler,
 	}
 }
 
@@ -164,6 +166,7 @@ var ProviderSet = wire.NewSet(
 	admin.NewOrganizationHandler,
 	admin.NewAdminInviteCodeHandler,
 	admin.NewDiscoverySourceStatsHandler,
+	admin.NewPaymentOrderHandler,
 
 	// Org handlers
 	org.NewDashboardHandler,

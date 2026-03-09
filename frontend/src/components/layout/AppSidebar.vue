@@ -636,6 +636,7 @@ const adminNavItems = computed(() => {
       ? [{ path: '/admin/referrals', label: t('nav.referrals'), icon: ShareIcon, hideInSimpleMode: true }]
       : []),
     { path: '/admin/usage', label: t('nav.usage'), icon: ChartIcon },
+    { path: '/admin/orders', label: t('nav.orders'), icon: ShoppingBagIcon },
     { path: '/admin/announcements', label: t('nav.announcements'), icon: MegaphoneIcon },
     { path: '/admin/organizations', label: t('nav.organizations'), icon: GlobeIcon },
   ]

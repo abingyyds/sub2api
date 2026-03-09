@@ -71,6 +71,7 @@ type PaymentOrderRepository interface {
 	GetByOrderNo(ctx context.Context, orderNo string) (*PaymentOrder, error)
 	UpdateStatus(ctx context.Context, orderNo string, status string, transactionID *string, paidAt *time.Time) error
 	ListByUserID(ctx context.Context, userID int64, params pagination.PaginationParams) ([]PaymentOrder, *pagination.PaginationResult, error)
+	ListAll(ctx context.Context, params pagination.PaginationParams, status string, orderType string) ([]PaymentOrder, *pagination.PaginationResult, error)
 	CloseExpiredOrders(ctx context.Context) (int64, error)
 }
 
@@ -251,10 +252,16 @@ func (s *PaymentService) ListOrders(ctx context.Context, userID int64, params pa
 	return s.orderRepo.ListByUserID(ctx, userID, params)
 }
 
+// ListAllOrders 列出所有订单（管理员）
+func (s *PaymentService) ListAllOrders(ctx context.Context, params pagination.PaginationParams, status string, orderType string) ([]PaymentOrder, *pagination.PaginationResult, error) {
+	return s.orderRepo.ListAll(ctx, params, status, orderType)
+}
+
 // HandleWechatNotify 处理微信支付回调通知
 func (s *PaymentService) HandleWechatNotify(ctx context.Context, body []byte, wechatpayTimestamp, wechatpayNonce, wechatpaySignature, wechatpaySerial string) error {
 	// 1. 验证签名（使用微信支付公钥）
 	if err := s.verifyWechatSignature(ctx, wechatpayTimestamp, wechatpayNonce, string(body), wechatpaySignature, wechatpaySerial); err != nil {
+		log.Printf("[Payment] WechatNotify signature verification failed: %v (serial=%s)", err, wechatpaySerial)
 		return ErrPaymentSignature
 	}
 

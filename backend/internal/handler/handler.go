@@ -29,6 +29,7 @@ type AdminHandlers struct {
 	Organization          *admin.OrganizationHandler
 	AdminInviteCode       *admin.AdminInviteCodeHandler
 	DiscoverySourceStats  *admin.DiscoverySourceStatsHandler
+	PaymentOrder          *admin.PaymentOrderHandler
 }
 
 // Handlers contains all HTTP handlers

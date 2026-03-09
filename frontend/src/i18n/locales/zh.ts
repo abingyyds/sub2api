@@ -216,6 +216,7 @@ export default {
     modelPlaza: '模型广场',
     docs: '文档',
     announcements: '公告管理',
+    orders: '订单管理',
     organizations: '企业管理',
     members: '成员管理',
     projects: '项目管理',
@@ -2345,6 +2346,28 @@ export default {
       loadError: '加载公告失败',
       saveError: '保存公告失败',
       deleteError: '删除公告失败'
+    },
+
+    // 订单管理
+    orders: {
+      title: '订单管理',
+      description: '管理所有支付订单',
+      orderNo: '订单号',
+      userId: '用户 ID',
+      orderType: '订单类型',
+      amount: '金额',
+      planKey: '套餐',
+      paidAt: '支付时间',
+      allStatus: '全部状态',
+      allTypes: '全部类型',
+      typeSubscription: '订阅',
+      typeBalance: '充值',
+      statusPending: '待支付',
+      statusPaid: '已支付',
+      statusClosed: '已关闭',
+      noData: '暂无订单',
+      noDataDesc: '还没有任何支付订单记录。',
+      loadError: '加载订单失败'
     },
 
     // 企业管理

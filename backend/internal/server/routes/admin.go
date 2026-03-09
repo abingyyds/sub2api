@@ -79,6 +79,9 @@ func RegisterAdminRoutes(
 
 		// 来源统计
 		registerDiscoverySourceStatsRoutes(admin, h)
+
+		// 订单管理
+		registerPaymentOrderRoutes(admin, h)
 	}
 }
 
@@ -430,4 +433,11 @@ func registerAdminInviteCodeRoutes(admin *gin.RouterGroup, h *handler.Handlers) 
 
 func registerDiscoverySourceStatsRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	admin.GET("/discovery-source-stats", h.Admin.DiscoverySourceStats.GetStats)
+}
+
+func registerPaymentOrderRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	orders := admin.Group("/orders")
+	{
+		orders.GET("", h.Admin.PaymentOrder.List)
+	}
 }

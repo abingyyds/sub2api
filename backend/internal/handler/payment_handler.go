@@ -2,6 +2,7 @@ package handler
 
 import (
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
@@ -201,6 +202,7 @@ func (h *PaymentHandler) WechatNotify(c *gin.Context) {
 		wechatpaySignature,
 		wechatpaySerial,
 	); err != nil {
+		log.Printf("[Payment] WechatNotify error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code":    "FAIL",
 			"message": err.Error(),

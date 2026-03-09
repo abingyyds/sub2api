@@ -219,6 +219,7 @@ export default {
     modelPlaza: 'Model Plaza',
     docs: 'Docs',
     announcements: 'Announcements',
+    orders: 'Orders',
     organizations: 'Organizations',
     members: 'Members',
     projects: 'Projects',
@@ -2198,6 +2199,28 @@ export default {
       loadError: 'Failed to load announcements',
       saveError: 'Failed to save announcement',
       deleteError: 'Failed to delete announcement'
+    },
+
+    // Orders
+    orders: {
+      title: 'Order Management',
+      description: 'Manage all payment orders',
+      orderNo: 'Order No',
+      userId: 'User ID',
+      orderType: 'Type',
+      amount: 'Amount',
+      planKey: 'Plan',
+      paidAt: 'Paid At',
+      allStatus: 'All Status',
+      allTypes: 'All Types',
+      typeSubscription: 'Subscription',
+      typeBalance: 'Recharge',
+      statusPending: 'Pending',
+      statusPaid: 'Paid',
+      statusClosed: 'Closed',
+      noData: 'No Orders',
+      noDataDesc: 'No payment orders yet.',
+      loadError: 'Failed to load orders'
     },
 
     // Organizations
