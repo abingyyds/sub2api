@@ -1068,7 +1068,10 @@ export default {
         noRulesHint: 'Add routing rules to route specific model requests to designated accounts',
         searchAccountPlaceholder: 'Search accounts...',
         accountsHint: 'Select accounts to prioritize for this model pattern'
-      }
+      },
+      priceFen: 'Plan Price (Fen)',
+      priceFenPlaceholder: '0',
+      priceFenHint: 'Set a price > 0 to automatically display this group as a purchasable subscription plan'
     },
 
     // Subscriptions

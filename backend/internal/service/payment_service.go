@@ -106,25 +106,73 @@ func NewPaymentService(
 	}
 }
 
-// GetPlans 获取所有套餐
+// GetPlans 获取所有套餐（从分组的 price_fen 自动生成 + 兼容旧 JSON 配置）
 func (s *PaymentService) GetPlans(ctx context.Context) ([]PaymentPlan, error) {
-	plansJSON, err := s.settingService.GetSettingValue(ctx, SettingKeyPaymentPlans)
-	if err != nil || plansJSON == "" {
-		return []PaymentPlan{}, nil
-	}
 	var plans []PaymentPlan
-	if err := json.Unmarshal([]byte(plansJSON), &plans); err != nil {
-		log.Printf("[Payment] Failed to parse payment_plans JSON: %v, raw=%q", err, plansJSON)
-		return []PaymentPlan{}, nil
-	}
-	// Default type to "subscription" for backward compatibility
-	for i := range plans {
-		if plans[i].Type == "" {
-			plans[i].Type = "subscription"
+
+	// 1. 从分组自动生成套餐：price_fen > 0 的活跃分组
+	groups, err := s.groupRepo.ListActive(ctx)
+	if err != nil {
+		log.Printf("[Payment] Failed to list active groups for plans: %v", err)
+	} else {
+		for _, g := range groups {
+			if g.PriceFen <= 0 {
+				continue
+			}
+			plan := PaymentPlan{
+				Key:          fmt.Sprintf("group_%d", g.ID),
+				Name:         g.Name,
+				Description:  g.Description,
+				AmountFen:    g.PriceFen,
+				GroupID:      g.ID,
+				ValidityDays: g.DefaultValidityDays,
+				Type:         "subscription",
+			}
+			// 自动生成特性列表
+			features := make([]string, 0, 4)
+			if g.DailyLimitUSD != nil && *g.DailyLimitUSD > 0 {
+				features = append(features, fmt.Sprintf("每日额度 $%.0f", *g.DailyLimitUSD))
+			}
+			if g.MonthlyLimitUSD != nil && *g.MonthlyLimitUSD > 0 {
+				features = append(features, fmt.Sprintf("每月额度 $%.0f", *g.MonthlyLimitUSD))
+			}
+			if g.RateMultiplier != 1.0 {
+				features = append(features, fmt.Sprintf("费率倍率 %.1fx", g.RateMultiplier))
+			}
+			plan.Features = features
+			plans = append(plans, plan)
 		}
 	}
-	// 自动从分组信息填充 description 和 features
-	s.enrichPlansFromGroups(ctx, plans)
+
+	// 2. 兼容旧的 JSON 配置（如有）
+	plansJSON, err := s.settingService.GetSettingValue(ctx, SettingKeyPaymentPlans)
+	if err == nil && plansJSON != "" {
+		var jsonPlans []PaymentPlan
+		if err := json.Unmarshal([]byte(plansJSON), &jsonPlans); err != nil {
+			log.Printf("[Payment] Failed to parse payment_plans JSON: %v, raw=%q", err, plansJSON)
+		} else {
+			// 用 map 去重：如果分组已通过 price_fen 生成了套餐，跳过 JSON 中同 group_id 的配置
+			existingGroupIDs := make(map[int64]bool, len(plans))
+			for _, p := range plans {
+				existingGroupIDs[p.GroupID] = true
+			}
+			for i := range jsonPlans {
+				if jsonPlans[i].Type == "" {
+					jsonPlans[i].Type = "subscription"
+				}
+				if jsonPlans[i].Type == "subscription" && existingGroupIDs[jsonPlans[i].GroupID] {
+					continue // 分组已通过 price_fen 生成
+				}
+				plans = append(plans, jsonPlans[i])
+			}
+			// 对 JSON 中的套餐补充分组信息
+			s.enrichPlansFromGroups(ctx, plans)
+		}
+	}
+
+	if plans == nil {
+		plans = []PaymentPlan{}
+	}
 	return plans, nil
 }
 

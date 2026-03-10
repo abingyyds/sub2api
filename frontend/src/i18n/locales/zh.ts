@@ -1143,7 +1143,10 @@ export default {
         noRulesHint: '添加路由规则以将特定模型请求优先路由到指定账号',
         searchAccountPlaceholder: '搜索账号...',
         accountsHint: '选择此模型模式优先使用的账号'
-      }
+      },
+      priceFen: '套餐价格（分）',
+      priceFenPlaceholder: '0',
+      priceFenHint: '设置大于 0 的价格后，此分组将自动显示为可购买的订阅套餐'
     },
 
     // Subscriptions Management

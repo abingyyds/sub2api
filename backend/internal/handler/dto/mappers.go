@@ -139,6 +139,7 @@ func groupFromServiceBase(g *service.Group) Group {
 		ImagePrice4K:     g.ImagePrice4K,
 		ClaudeCodeOnly:   g.ClaudeCodeOnly,
 		FallbackGroupID:  g.FallbackGroupID,
+		PriceFen:         g.PriceFen,
 		CreatedAt:        g.CreatedAt,
 		UpdatedAt:        g.UpdatedAt,
 	}

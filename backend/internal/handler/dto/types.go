@@ -67,6 +67,9 @@ type Group struct {
 	ClaudeCodeOnly  bool   `json:"claude_code_only"`
 	FallbackGroupID *int64 `json:"fallback_group_id"`
 
+	// 套餐价格（分），>0 时分组自动显示为可购买套餐
+	PriceFen int `json:"price_fen"`
+
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

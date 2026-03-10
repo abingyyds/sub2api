@@ -36,6 +36,9 @@ type Group struct {
 	ModelRouting        map[string][]int64
 	ModelRoutingEnabled bool
 
+	// 套餐价格（分），>0 时分组自动显示为可购买套餐
+	PriceFen int
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 

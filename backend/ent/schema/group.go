@@ -106,6 +106,11 @@ func (Group) Fields() []ent.Field {
 		field.Bool("model_routing_enabled").
 			Default(false).
 			Comment("是否启用模型路由配置"),
+
+		// 套餐价格（分），>0 时分组自动显示为可购买套餐 (added by migration 061)
+		field.Int("price_fen").
+			Default(0).
+			Comment("套餐价格（分），大于0时自动显示为可购买套餐"),
 	}
 }
 

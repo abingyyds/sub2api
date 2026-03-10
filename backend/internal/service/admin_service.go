@@ -113,6 +113,8 @@ type CreateGroupInput struct {
 	// 模型路由配置（仅 anthropic 平台使用）
 	ModelRouting        map[string][]int64
 	ModelRoutingEnabled bool // 是否启用模型路由
+	// 套餐价格（分），>0 时分组自动显示为可购买套餐
+	PriceFen int
 }
 
 type UpdateGroupInput struct {
@@ -135,6 +137,8 @@ type UpdateGroupInput struct {
 	// 模型路由配置（仅 anthropic 平台使用）
 	ModelRouting        map[string][]int64
 	ModelRoutingEnabled *bool // 是否启用模型路由
+	// 套餐价格（分），>0 时分组自动显示为可购买套餐
+	PriceFen *int
 }
 
 type CreateAccountInput struct {
@@ -603,6 +607,7 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 		ClaudeCodeOnly:   input.ClaudeCodeOnly,
 		FallbackGroupID:  input.FallbackGroupID,
 		ModelRouting:     input.ModelRouting,
+		PriceFen:         input.PriceFen,
 	}
 	if err := s.groupRepo.Create(ctx, group); err != nil {
 		return nil, err
@@ -737,6 +742,11 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 	}
 	if input.ModelRoutingEnabled != nil {
 		group.ModelRoutingEnabled = *input.ModelRoutingEnabled
+	}
+
+	// 套餐价格
+	if input.PriceFen != nil {
+		group.PriceFen = *input.PriceFen
 	}
 
 	if err := s.groupRepo.Update(ctx, group); err != nil {

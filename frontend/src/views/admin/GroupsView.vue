@@ -359,6 +359,24 @@
           </div>
         </div>
 
+        <!-- 套餐价格 -->
+        <div class="border-t pt-4">
+          <label class="input-label">
+            {{ t('admin.groups.priceFen') }}
+          </label>
+          <input
+            v-model.number="createForm.price_fen"
+            type="number"
+            min="0"
+            step="1"
+            class="input"
+            :placeholder="t('admin.groups.priceFenPlaceholder')"
+          />
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {{ t('admin.groups.priceFenHint') }}
+          </p>
+        </div>
+
         <!-- 图片生成计费配置（antigravity 和 gemini 平台） -->
         <div v-if="createForm.platform === 'antigravity' || createForm.platform === 'gemini'" class="border-t pt-4">
           <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
@@ -801,6 +819,24 @@
               />
             </div>
           </div>
+        </div>
+
+        <!-- 套餐价格 -->
+        <div class="border-t pt-4">
+          <label class="input-label">
+            {{ t('admin.groups.priceFen') }}
+          </label>
+          <input
+            v-model.number="editForm.price_fen"
+            type="number"
+            min="0"
+            step="1"
+            class="input"
+            :placeholder="t('admin.groups.priceFenPlaceholder')"
+          />
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {{ t('admin.groups.priceFenHint') }}
+          </p>
         </div>
 
         <!-- 图片生成计费配置（antigravity 和 gemini 平台） -->
@@ -1246,7 +1282,9 @@ const createForm = reactive({
   claude_code_only: false,
   fallback_group_id: null as number | null,
   // 模型路由开关
-  model_routing_enabled: false
+  model_routing_enabled: false,
+  // 套餐价格（分）
+  price_fen: 0
 })
 
 // 简单账号类型（用于模型路由选择）
@@ -1417,7 +1455,9 @@ const editForm = reactive({
   claude_code_only: false,
   fallback_group_id: null as number | null,
   // 模型路由开关
-  model_routing_enabled: false
+  model_routing_enabled: false,
+  // 套餐价格（分）
+  price_fen: 0
 })
 
 // 根据分组类型返回不同的删除确认消息
@@ -1499,6 +1539,7 @@ const closeCreateModal = () => {
   createForm.image_price_4k = null
   createForm.claude_code_only = false
   createForm.fallback_group_id = null
+  createForm.price_fen = 0
   createModelRoutingRules.value = []
 }
 
@@ -1549,6 +1590,7 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.claude_code_only = group.claude_code_only || false
   editForm.fallback_group_id = group.fallback_group_id
   editForm.model_routing_enabled = group.model_routing_enabled || false
+  editForm.price_fen = group.price_fen || 0
   // 加载模型路由规则（异步加载账号名称）
   editModelRoutingRules.value = await convertApiFormatToRoutingRules(group.model_routing)
   showEditModal.value = true
