@@ -8,6 +8,8 @@ import { apiClient } from './client'
 export interface PaymentPlan {
   key: string
   name: string
+  description?: string
+  features?: string[]
   amount_fen: number
   group_id: number
   validity_days: number

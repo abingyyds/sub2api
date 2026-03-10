@@ -26,6 +26,7 @@
           </div>
           <div class="flex flex-1 flex-col p-6">
             <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ plan.name }}</h3>
+            <p v-if="plan.description" class="mt-1 text-sm text-gray-500 dark:text-dark-400">{{ plan.description }}</p>
             <div class="mt-3 text-3xl font-bold text-primary-600">
               ¥{{ (plan.amount_fen / 100).toFixed(plan.amount_fen % 100 === 0 ? 0 : 2) }}
             </div>
@@ -35,6 +36,12 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
                 {{ t('pricing.validityDays', { days: plan.validity_days }) }}
+              </li>
+              <li v-for="(feature, fi) in (plan.features || [])" :key="fi" class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                <svg class="h-4 w-4 flex-shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                {{ feature }}
               </li>
               <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
                 <svg class="h-4 w-4 flex-shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

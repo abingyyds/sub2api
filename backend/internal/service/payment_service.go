@@ -35,13 +35,15 @@ var (
 
 // PaymentPlan 套餐配置
 type PaymentPlan struct {
-	Key           string  `json:"key"`
-	Name          string  `json:"name"`
-	AmountFen     int     `json:"amount_fen"`
-	GroupID       int64   `json:"group_id"`
-	ValidityDays  int     `json:"validity_days"`
-	Type          string  `json:"type,omitempty"`          // "subscription" (default) or "balance"
-	BalanceAmount float64 `json:"balance_amount,omitempty"` // 充值金额（元），仅 type=balance 时使用
+	Key           string   `json:"key"`
+	Name          string   `json:"name"`
+	Description   string   `json:"description,omitempty"`    // 套餐描述
+	Features      []string `json:"features,omitempty"`       // 特性列表
+	AmountFen     int      `json:"amount_fen"`
+	GroupID       int64    `json:"group_id"`
+	ValidityDays  int      `json:"validity_days"`
+	Type          string   `json:"type,omitempty"`           // "subscription" (default) or "balance"
+	BalanceAmount float64  `json:"balance_amount,omitempty"` // 充值金额（元），仅 type=balance 时使用
 }
 
 // PaymentOrder 支付订单
