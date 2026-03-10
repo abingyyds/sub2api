@@ -279,6 +279,8 @@ export interface Group {
   // Claude Code 客户端限制
   claude_code_only: boolean
   fallback_group_id: number | null
+  // 套餐价格（分），>0 时分组自动显示为可购买套餐
+  price_fen: number
   created_at: string
   updated_at: string
 }
