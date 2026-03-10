@@ -17,6 +17,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -488,11 +489,18 @@ func (s *PaymentService) createWechatNativeOrder(ctx context.Context, order *Pay
 		return "", infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", fmt.Sprintf("payment configuration incomplete, missing: %s", strings.Join(missing, ", ")))
 	}
 
+	// 过滤 planName 中的 emoji 和非 BMP 字符（微信支付不接受）
+	safeDesc := regexp.MustCompile(`[^\x{0000}-\x{FFFF}]`).ReplaceAllString(planName, "")
+	safeDesc = strings.TrimSpace(safeDesc)
+	if safeDesc == "" {
+		safeDesc = "订单支付"
+	}
+
 	// 构造请求体
 	reqBody := map[string]any{
 		"appid":        appID,
 		"mchid":        mchID,
-		"description":  planName,
+		"description":  safeDesc,
 		"out_trade_no": order.OrderNo,
 		"time_expire":  order.ExpiredAt.Format(time.RFC3339),
 		"notify_url":   notifyURL,
