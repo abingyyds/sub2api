@@ -84,6 +84,7 @@ type PaymentService struct {
 	subscriptionService *SubscriptionService
 	billingCache        *BillingCacheService
 	userRepo            UserRepository
+	groupRepo           GroupRepository
 }
 
 // NewPaymentService 创建支付服务
@@ -93,6 +94,7 @@ func NewPaymentService(
 	subscriptionService *SubscriptionService,
 	billingCache *BillingCacheService,
 	userRepo UserRepository,
+	groupRepo GroupRepository,
 ) *PaymentService {
 	return &PaymentService{
 		orderRepo:           orderRepo,
@@ -100,6 +102,7 @@ func NewPaymentService(
 		subscriptionService: subscriptionService,
 		billingCache:        billingCache,
 		userRepo:            userRepo,
+		groupRepo:           groupRepo,
 	}
 }
 
@@ -120,7 +123,43 @@ func (s *PaymentService) GetPlans(ctx context.Context) ([]PaymentPlan, error) {
 			plans[i].Type = "subscription"
 		}
 	}
+	// 自动从分组信息填充 description 和 features
+	s.enrichPlansFromGroups(ctx, plans)
 	return plans, nil
+}
+
+// enrichPlansFromGroups 从分组信息自动填充套餐的描述和特性
+func (s *PaymentService) enrichPlansFromGroups(ctx context.Context, plans []PaymentPlan) {
+	for i := range plans {
+		plan := &plans[i]
+		if plan.Type != "subscription" || plan.GroupID == 0 {
+			continue
+		}
+		// 如果已手动配置了 features，跳过
+		if len(plan.Features) > 0 {
+			continue
+		}
+		group, err := s.groupRepo.GetByID(ctx, plan.GroupID)
+		if err != nil {
+			continue
+		}
+		// 填充描述
+		if plan.Description == "" && group.Description != "" {
+			plan.Description = group.Description
+		}
+		// 自动生成特性列表
+		features := make([]string, 0, 4)
+		if group.DailyLimitUSD != nil && *group.DailyLimitUSD > 0 {
+			features = append(features, fmt.Sprintf("每日额度 $%.0f", *group.DailyLimitUSD))
+		}
+		if group.MonthlyLimitUSD != nil && *group.MonthlyLimitUSD > 0 {
+			features = append(features, fmt.Sprintf("每月额度 $%.0f", *group.MonthlyLimitUSD))
+		}
+		if group.RateMultiplier != 1.0 {
+			features = append(features, fmt.Sprintf("费率倍率 %.1fx", group.RateMultiplier))
+		}
+		plan.Features = features
+	}
 }
 
 // CreateOrder 创建支付订单
