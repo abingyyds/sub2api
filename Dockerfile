@@ -26,9 +26,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY frontend/package.json frontend/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
-# Copy frontend source and build
-# CACHE_BUST arg invalidates Docker cache when changed
-ARG CACHE_BUST=1
+# Copy frontend source and build (no-cache: always rebuild)
 COPY frontend/ ./
 RUN pnpm run build
 
