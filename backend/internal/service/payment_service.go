@@ -511,6 +511,9 @@ func (s *PaymentService) verifyWechatSignature(ctx context.Context, timestamp, n
 		}
 	}
 
+	log.Printf("[Payment] verifyWechatSignature: PEM block type=%q, key bits=%d, serial=%s", block.Type, rsaPub.N.BitLen(), serial)
+	log.Printf("[Payment] verifyWechatSignature: timestamp=%q nonce=%q signature_len=%d body_len=%d", timestamp, nonce, len(signature), len(body))
+
 	// 构造签名串
 	signStr := fmt.Sprintf("%s\n%s\n%s\n", timestamp, nonce, body)
 	hash := sha256.Sum256([]byte(signStr))
@@ -522,7 +525,11 @@ func (s *PaymentService) verifyWechatSignature(ctx context.Context, timestamp, n
 	}
 
 	// 验证签名
-	return rsa.VerifyPKCS1v15(rsaPub, crypto.SHA256, hash[:], sig)
+	if err := rsa.VerifyPKCS1v15(rsaPub, crypto.SHA256, hash[:], sig); err != nil {
+		log.Printf("[Payment] RSA verify failed: %v (sig_bytes=%d, hash=%x)", err, len(sig), hash[:8])
+		return err
+	}
+	return nil
 }
 
 // ===========================

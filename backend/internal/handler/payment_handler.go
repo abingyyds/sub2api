@@ -194,6 +194,9 @@ func (h *PaymentHandler) WechatNotify(c *gin.Context) {
 	wechatpaySignature := c.GetHeader("Wechatpay-Signature")
 	wechatpaySerial := c.GetHeader("Wechatpay-Serial")
 
+	log.Printf("[Payment] WechatNotify headers: Timestamp=%q Nonce=%q Serial=%q Signature_len=%d Body_len=%d",
+		wechatpayTimestamp, wechatpayNonce, wechatpaySerial, len(wechatpaySignature), len(body))
+
 	if err := h.paymentService.HandleWechatNotify(
 		c.Request.Context(),
 		body,
