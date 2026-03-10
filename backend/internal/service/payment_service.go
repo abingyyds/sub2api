@@ -141,8 +141,12 @@ func (s *PaymentService) enrichPlansFromGroups(ctx context.Context, plans []Paym
 		}
 		group, err := s.groupRepo.GetByID(ctx, plan.GroupID)
 		if err != nil {
+			log.Printf("[Payment] enrichPlans: failed to get group %d for plan %s: %v", plan.GroupID, plan.Key, err)
 			continue
 		}
+		log.Printf("[Payment] enrichPlans: plan=%s group=%d name=%q desc=%q daily=%.2f monthly=%.2f rate=%.2f",
+			plan.Key, group.ID, group.Name, group.Description,
+			floatVal(group.DailyLimitUSD), floatVal(group.MonthlyLimitUSD), group.RateMultiplier)
 		// 填充描述
 		if plan.Description == "" && group.Description != "" {
 			plan.Description = group.Description
@@ -160,6 +164,13 @@ func (s *PaymentService) enrichPlansFromGroups(ctx context.Context, plans []Paym
 		}
 		plan.Features = features
 	}
+}
+
+func floatVal(f *float64) float64 {
+	if f == nil {
+		return 0
+	}
+	return *f
 }
 
 // CreateOrder 创建支付订单
