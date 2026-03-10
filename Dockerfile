@@ -27,6 +27,8 @@ COPY frontend/package.json frontend/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 # Copy frontend source and build
+# CACHE_BUST arg invalidates Docker cache when changed
+ARG CACHE_BUST=1
 COPY frontend/ ./
 RUN pnpm run build
 
