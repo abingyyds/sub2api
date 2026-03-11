@@ -37,6 +37,22 @@
         <label class="input-label">{{ t('admin.users.columns.concurrency') }}</label>
         <input v-model.number="form.concurrency" type="number" class="input" />
       </div>
+      <div>
+        <label class="input-label">{{ t('admin.users.columns.discoverySource') }}</label>
+        <div class="flex gap-2">
+          <select v-model="form.discovery_source" class="input flex-1">
+            <option value="">-</option>
+            <option v-for="opt in discoverySourceOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+          </select>
+          <input
+            v-if="form.discovery_source === '__custom__'"
+            v-model="form.custom_discovery_source"
+            type="text"
+            class="input flex-1"
+            :placeholder="t('admin.users.customSource')"
+          />
+        </div>
+      </div>
       <div v-if="authStore.isFullAdmin">
         <label class="input-label">{{ t('admin.users.columns.role') }}</label>
         <select v-model="form.role" class="input">
@@ -59,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { useAuthStore } from '@/stores/auth'
@@ -75,11 +91,34 @@ const emit = defineEmits(['close', 'success'])
 const { t } = useI18n(); const appStore = useAppStore(); const authStore = useAuthStore(); const { copyToClipboard } = useClipboard()
 
 const submitting = ref(false); const passwordCopied = ref(false)
-const form = reactive({ email: '', password: '', username: '', notes: '', concurrency: 1, role: 'user' as string, customAttributes: {} as UserAttributeValuesMap })
+const form = reactive({ email: '', password: '', username: '', notes: '', concurrency: 1, role: 'user' as string, discovery_source: '' as string, custom_discovery_source: '', customAttributes: {} as UserAttributeValuesMap })
+
+const discoverySourceOptions = computed(() => [
+  { value: 'douyin', label: t('auth.discoverySource.douyin') },
+  { value: 'xiaohongshu', label: t('auth.discoverySource.xiaohongshu') },
+  { value: 'bilibili', label: t('auth.discoverySource.bilibili') },
+  { value: 'wechat', label: t('auth.discoverySource.wechat') },
+  { value: 'twitter', label: t('auth.discoverySource.twitter') },
+  { value: 'telegram', label: t('auth.discoverySource.telegram') },
+  { value: 'github', label: t('auth.discoverySource.github') },
+  { value: 'search', label: t('auth.discoverySource.search') },
+  { value: 'friend', label: t('auth.discoverySource.friend') },
+  { value: 'other', label: t('auth.discoverySource.other') },
+  { value: '__custom__', label: t('admin.users.customSourceOption') }
+])
 
 watch(() => props.user, (u) => {
   if (u) {
-    Object.assign(form, { email: u.email, password: '', username: u.username || '', notes: u.notes || '', concurrency: u.concurrency, role: u.role || 'user', customAttributes: {} })
+    const knownSources = ['douyin', 'xiaohongshu', 'bilibili', 'wechat', 'twitter', 'telegram', 'github', 'search', 'friend', 'other', 'skip']
+    const src = u.discovery_source || ''
+    const isKnown = !src || src === 'skip' || knownSources.includes(src)
+    Object.assign(form, {
+      email: u.email, password: '', username: u.username || '', notes: u.notes || '',
+      concurrency: u.concurrency, role: u.role || 'user',
+      discovery_source: isKnown ? (src === 'skip' ? '' : src) : '__custom__',
+      custom_discovery_source: isKnown ? '' : src,
+      customAttributes: {}
+    })
     passwordCopied.value = false
   }
 }, { immediate: true })
@@ -109,6 +148,9 @@ const handleUpdateUser = async () => {
     const data: any = { email: form.email, username: form.username, notes: form.notes, concurrency: form.concurrency }
     if (form.password.trim()) data.password = form.password.trim()
     if (authStore.isFullAdmin && form.role) data.role = form.role
+    // Set discovery_source: custom text if __custom__, selected value otherwise, null to clear
+    const resolvedSource = form.discovery_source === '__custom__' ? (form.custom_discovery_source.trim() || null) : (form.discovery_source || null)
+    data.discovery_source = resolvedSource
     await adminAPI.users.update(props.user.id, data)
     if (Object.keys(form.customAttributes).length > 0) await adminAPI.userAttributes.updateUserAttributeValues(props.user.id, form.customAttributes)
     appStore.showSuccess(t('admin.users.userUpdated'))

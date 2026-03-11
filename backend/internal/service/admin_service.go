@@ -81,17 +81,18 @@ type CreateUserInput struct {
 }
 
 type UpdateUserInput struct {
-	Email         string
-	Password      string
-	Username      *string
-	Notes         *string
-	Balance       *float64 // 使用指针区分"未提供"和"设置为0"
-	Concurrency   *int     // 使用指针区分"未提供"和"设置为0"
-	Status        string
-	Role          string // 角色变更（仅完整管理员可操作）
-	CallerRole    string // 调用者角色
-	CallerID      int64  // 调用者用户ID
-	AllowedGroups *[]int64 // 使用指针区分"未提供"和"设置为空数组"
+	Email           string
+	Password        string
+	Username        *string
+	Notes           *string
+	Balance         *float64 // 使用指针区分"未提供"和"设置为0"
+	Concurrency     *int     // 使用指针区分"未提供"和"设置为0"
+	Status          string
+	Role            string // 角色变更（仅完整管理员可操作）
+	CallerRole      string // 调用者角色
+	CallerID        int64  // 调用者用户ID
+	AllowedGroups   *[]int64 // 使用指针区分"未提供"和"设置为空数组"
+	DiscoverySource *string  // 来源渠道
 }
 
 type CreateGroupInput struct {
@@ -401,6 +402,10 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 
 	if input.AllowedGroups != nil {
 		user.AllowedGroups = *input.AllowedGroups
+	}
+
+	if input.DiscoverySource != nil {
+		user.DiscoverySource = input.DiscoverySource
 	}
 
 	if err := s.userRepo.Update(ctx, user); err != nil {

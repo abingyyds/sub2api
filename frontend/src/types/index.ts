@@ -862,6 +862,7 @@ export interface UpdateUserRequest {
   concurrency?: number
   status?: 'active' | 'disabled'
   allowed_groups?: number[] | null
+  discovery_source?: string | null
 }
 
 export interface ChangePasswordRequest {
