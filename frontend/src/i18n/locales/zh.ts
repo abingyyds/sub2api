@@ -3292,6 +3292,8 @@ export default {
         notifyUrl: '支付回调通知URL',
         plans: '套餐配置 (JSON)',
         plansHint: 'JSON 数组，每项包含 key, name, amount_fen, group_id, validity_days',
+        plansManageHint: '订阅套餐现已通过分组管理配置',
+        plansManageDetail: '前往「分组管理」，编辑分组 → 设置套餐价格 → 开启「上架到购买页面」开关即可。无需在此手动编写 JSON。',
         rechargeMinAmount: '充值最低金额（元）',
         rechargeMinAmountHint: '设置为 0 表示不限制最低充值金额',
         rechargePlans: '充值优惠套餐',

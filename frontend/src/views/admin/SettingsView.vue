@@ -478,10 +478,16 @@
                 <label for="wechat_pay_notify_url" class="input-label">{{ t('admin.settings.payment.notifyUrl') }}</label>
                 <input id="wechat_pay_notify_url" v-model="form.wechat_pay_notify_url" type="text" class="input mt-1" placeholder="https://example.com/api/v1/payment/wechat/notify" />
               </div>
-              <div>
-                <label for="payment_plans" class="input-label">{{ t('admin.settings.payment.plans') }}</label>
-                <textarea id="payment_plans" v-model="form.payment_plans" rows="6" class="input mt-1 font-mono text-xs" placeholder='[{"key":"m289","name":"月卡 289","amount_fen":28900,"group_id":1,"validity_days":30}]' />
-                <p class="input-hint">{{ t('admin.settings.payment.plansHint') }}</p>
+              <div class="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20 p-4">
+                <div class="flex items-start gap-3">
+                  <svg class="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                  </svg>
+                  <div>
+                    <p class="text-sm font-medium text-blue-800 dark:text-blue-300">{{ t('admin.settings.payment.plansManageHint') }}</p>
+                    <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">{{ t('admin.settings.payment.plansManageDetail') }}</p>
+                  </div>
+                </div>
               </div>
               <div>
                 <label for="recharge_min_amount" class="input-label">{{ t('admin.settings.payment.rechargeMinAmount') }}</label>

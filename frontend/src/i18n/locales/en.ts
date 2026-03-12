@@ -3141,6 +3141,8 @@ export default {
         notifyUrl: 'Payment Notify URL',
         plans: 'Payment Plans (JSON)',
         plansHint: 'JSON array, each item contains key, name, amount_fen, group_id, validity_days',
+        plansManageHint: 'Subscription plans are now managed via Group Management',
+        plansManageDetail: 'Go to "Group Management", edit a group → set plan price → enable "List on Pricing Page" toggle. No need to write JSON manually.',
         rechargeMinAmount: 'Minimum Recharge Amount (Yuan)',
         rechargeMinAmountHint: 'Set to 0 for no minimum',
         rechargePlans: 'Recharge Plans',
