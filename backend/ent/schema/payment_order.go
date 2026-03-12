@@ -44,6 +44,14 @@ func (PaymentOrder) Fields() []ent.Field {
 			Default("subscription"),
 		field.Float("balance_amount").
 			Default(0),
+		field.String("promo_code").
+			MaxLen(32).
+			Optional().
+			Default("").
+			Comment("使用的优惠码"),
+		field.Int("discount_amount").
+			Default(0).
+			Comment("优惠码折扣金额(分)"),
 		field.String("status").
 			MaxLen(20).
 			Default("pending"),

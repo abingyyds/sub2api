@@ -47,6 +47,12 @@ const (
 	PromoCodeStatusDisabled = "disabled"
 )
 
+// PromoCode discount type constants
+const (
+	PromoCodeDiscountTypeFixed      = "fixed"      // 固定金额减免（分）
+	PromoCodeDiscountTypePercentage = "percentage"  // 百分比折扣
+)
+
 // Admin adjustment type constants
 const (
 	AdjustmentTypeAdminBalance     = "admin_balance"     // 管理员调整余额
@@ -194,6 +200,9 @@ const (
 	SettingKeyWechatPayPublicKey     = "wechat_pay_public_key"     // 微信支付公钥内容(PEM)
 	SettingKeyWechatPayPrivateKey    = "wechat_pay_private_key"    // 商户API私钥(PEM)
 	SettingKeyWechatPayNotifyURL     = "wechat_pay_notify_url"     // 支付回调通知URL
+
+	// 初始余额有效期
+	SettingKeyInitialBalanceExpiryDays = "initial_balance_expiry_days" // 新用户初始余额有效天数（0=永不过期）
 )
 
 // AdminAPIKeyPrefix is the prefix for admin API keys (distinct from user "sk-" keys).

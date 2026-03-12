@@ -16,7 +16,7 @@ import (
 
 // PromoCode holds the schema definition for the PromoCode entity.
 //
-// 注册优惠码：用户注册时使用，可获得赠送余额
+// 购买优惠码：用户购买时使用，可获得折扣（满减或打折）
 // 与 RedeemCode 不同，PromoCode 支持多次使用（有使用次数限制）
 //
 // 删除策略：硬删除
@@ -37,10 +37,17 @@ func (PromoCode) Fields() []ent.Field {
 			NotEmpty().
 			Unique().
 			Comment("优惠码"),
-		field.Float("bonus_amount").
+		field.Float("discount_amount").
 			SchemaType(map[string]string{dialect.Postgres: "decimal(20,8)"}).
 			Default(0).
-			Comment("赠送余额金额"),
+			Comment("折扣金额: fixed时为分, percentage时为百分比(如10=减10%)"),
+		field.String("discount_type").
+			MaxLen(20).
+			Default("fixed").
+			Comment("折扣类型: fixed(固定减免/分), percentage(百分比折扣)"),
+		field.Int("min_order_amount").
+			Default(0).
+			Comment("最低订单金额(分), 0表示无门槛"),
 		field.Int("max_uses").
 			Default(0).
 			Comment("最大使用次数，0表示无限制"),

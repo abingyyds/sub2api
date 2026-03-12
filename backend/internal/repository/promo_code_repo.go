@@ -22,7 +22,9 @@ func (r *promoCodeRepository) Create(ctx context.Context, code *service.PromoCod
 	client := clientFromContext(ctx, r.client)
 	builder := client.PromoCode.Create().
 		SetCode(code.Code).
-		SetBonusAmount(code.BonusAmount).
+		SetDiscountAmount(code.DiscountAmount).
+		SetDiscountType(code.DiscountType).
+		SetMinOrderAmount(code.MinOrderAmount).
 		SetMaxUses(code.MaxUses).
 		SetUsedCount(code.UsedCount).
 		SetStatus(code.Status).
@@ -88,7 +90,9 @@ func (r *promoCodeRepository) Update(ctx context.Context, code *service.PromoCod
 	client := clientFromContext(ctx, r.client)
 	builder := client.PromoCode.UpdateOneID(code.ID).
 		SetCode(code.Code).
-		SetBonusAmount(code.BonusAmount).
+		SetDiscountAmount(code.DiscountAmount).
+		SetDiscountType(code.DiscountType).
+		SetMinOrderAmount(code.MinOrderAmount).
 		SetMaxUses(code.MaxUses).
 		SetUsedCount(code.UsedCount).
 		SetStatus(code.Status).
@@ -153,12 +157,17 @@ func (r *promoCodeRepository) ListWithFilters(ctx context.Context, params pagina
 
 func (r *promoCodeRepository) CreateUsage(ctx context.Context, usage *service.PromoCodeUsage) error {
 	client := clientFromContext(ctx, r.client)
-	created, err := client.PromoCodeUsage.Create().
+	builder := client.PromoCodeUsage.Create().
 		SetPromoCodeID(usage.PromoCodeID).
 		SetUserID(usage.UserID).
-		SetBonusAmount(usage.BonusAmount).
-		SetUsedAt(usage.UsedAt).
-		Save(ctx)
+		SetDiscountAmount(usage.DiscountAmount).
+		SetUsedAt(usage.UsedAt)
+
+	if usage.OrderNo != "" {
+		builder.SetOrderNo(usage.OrderNo)
+	}
+
+	created, err := builder.Save(ctx)
 	if err != nil {
 		return err
 	}
@@ -222,16 +231,18 @@ func promoCodeEntityToService(m *dbent.PromoCode) *service.PromoCode {
 		return nil
 	}
 	return &service.PromoCode{
-		ID:          m.ID,
-		Code:        m.Code,
-		BonusAmount: m.BonusAmount,
-		MaxUses:     m.MaxUses,
-		UsedCount:   m.UsedCount,
-		Status:      m.Status,
-		ExpiresAt:   m.ExpiresAt,
-		Notes:       derefString(m.Notes),
-		CreatedAt:   m.CreatedAt,
-		UpdatedAt:   m.UpdatedAt,
+		ID:             m.ID,
+		Code:           m.Code,
+		DiscountAmount: m.DiscountAmount,
+		DiscountType:   m.DiscountType,
+		MinOrderAmount: m.MinOrderAmount,
+		MaxUses:        m.MaxUses,
+		UsedCount:      m.UsedCount,
+		Status:         m.Status,
+		ExpiresAt:      m.ExpiresAt,
+		Notes:          derefString(m.Notes),
+		CreatedAt:      m.CreatedAt,
+		UpdatedAt:      m.UpdatedAt,
 	}
 }
 
@@ -250,11 +261,12 @@ func promoCodeUsageEntityToService(m *dbent.PromoCodeUsage) *service.PromoCodeUs
 		return nil
 	}
 	out := &service.PromoCodeUsage{
-		ID:          m.ID,
-		PromoCodeID: m.PromoCodeID,
-		UserID:      m.UserID,
-		BonusAmount: m.BonusAmount,
-		UsedAt:      m.UsedAt,
+		ID:             m.ID,
+		PromoCodeID:    m.PromoCodeID,
+		UserID:         m.UserID,
+		DiscountAmount: m.DiscountAmount,
+		OrderNo:        m.OrderNo,
+		UsedAt:         m.UsedAt,
 	}
 	if m.Edges.User != nil {
 		out.User = userEntityToService(m.Edges.User)

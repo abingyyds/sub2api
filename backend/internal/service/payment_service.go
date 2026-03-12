@@ -59,6 +59,8 @@ type PaymentOrder struct {
 	ValidityDays         int
 	OrderType            string  // "subscription" or "balance"
 	BalanceAmount        float64 // 充值金额（元），仅 balance 类型
+	PromoCode            string  // 使用的优惠码
+	DiscountAmount       int     // 优惠码折扣金额（分）
 	Status               string
 	PayMethod            string
 	WechatTransactionID  *string
@@ -87,6 +89,7 @@ type PaymentService struct {
 	billingCache        *BillingCacheService
 	userRepo            UserRepository
 	groupRepo           GroupRepository
+	promoService        *PromoService
 }
 
 // NewPaymentService 创建支付服务
@@ -97,6 +100,7 @@ func NewPaymentService(
 	billingCache *BillingCacheService,
 	userRepo UserRepository,
 	groupRepo GroupRepository,
+	promoService *PromoService,
 ) *PaymentService {
 	return &PaymentService{
 		orderRepo:           orderRepo,
@@ -105,6 +109,7 @@ func NewPaymentService(
 		billingCache:        billingCache,
 		userRepo:            userRepo,
 		groupRepo:           groupRepo,
+		promoService:        promoService,
 	}
 }
 
@@ -268,7 +273,7 @@ func floatVal(f *float64) float64 {
 }
 
 // CreateOrder 创建支付订单
-func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey string) (*PaymentOrder, error) {
+func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey string, promoCode string) (*PaymentOrder, error) {
 	// 检查支付是否启用
 	enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyPaymentEnabled)
 	if enabled != "true" {
@@ -291,6 +296,23 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 		return nil, ErrPaymentPlanNotFound
 	}
 
+	// 计算优惠码折扣
+	var discountFen int
+	promoCode = strings.TrimSpace(promoCode)
+	if promoCode != "" && s.promoService != nil && s.settingService.IsPromoCodeEnabled(ctx) {
+		discount, _, err := s.promoService.ValidateAndCalculateDiscount(ctx, userID, promoCode, plan.AmountFen)
+		if err != nil {
+			return nil, err
+		}
+		discountFen = discount
+	}
+
+	// 计算最终金额
+	finalAmount := plan.AmountFen - discountFen
+	if finalAmount < 1 {
+		finalAmount = 1 // 最低 1 分
+	}
+
 	// 生成订单号
 	orderNo := generateOrderNo()
 
@@ -302,14 +324,16 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 
 	// 创建订单记录
 	order := &PaymentOrder{
-		OrderNo:      orderNo,
-		UserID:       userID,
-		PlanKey:      plan.Key,
-		AmountFen:    plan.AmountFen,
-		Status:       PaymentOrderStatusPending,
-		PayMethod:    "wechat_native",
-		OrderType:    orderType,
-		ExpiredAt:    time.Now().Add(30 * time.Minute), // 30分钟过期
+		OrderNo:        orderNo,
+		UserID:         userID,
+		PlanKey:        plan.Key,
+		AmountFen:      finalAmount,
+		Status:         PaymentOrderStatusPending,
+		PayMethod:      "wechat_native",
+		OrderType:      orderType,
+		PromoCode:      promoCode,
+		DiscountAmount: discountFen,
+		ExpiredAt:      time.Now().Add(30 * time.Minute), // 30分钟过期
 	}
 
 	if orderType == "balance" {
@@ -338,7 +362,7 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 }
 
 // CreateRechargeOrder 创建余额充值订单（支持自定义金额）
-func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, amountYuan float64) (*PaymentOrder, error) {
+func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, amountYuan float64, promoCode string) (*PaymentOrder, error) {
 	// 检查支付是否启用
 	enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyPaymentEnabled)
 	if enabled != "true" {
@@ -359,17 +383,36 @@ func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, 
 	}
 
 	amountFen := int(amountYuan * 100)
+
+	// 计算优惠码折扣
+	var discountFen int
+	promoCode = strings.TrimSpace(promoCode)
+	if promoCode != "" && s.promoService != nil && s.settingService.IsPromoCodeEnabled(ctx) {
+		discount, _, err := s.promoService.ValidateAndCalculateDiscount(ctx, userID, promoCode, amountFen)
+		if err != nil {
+			return nil, err
+		}
+		discountFen = discount
+	}
+
+	finalAmount := amountFen - discountFen
+	if finalAmount < 1 {
+		finalAmount = 1
+	}
+
 	orderNo := generateOrderNo()
 
 	order := &PaymentOrder{
-		OrderNo:       orderNo,
-		UserID:        userID,
-		PlanKey:       "recharge_custom",
-		AmountFen:     amountFen,
-		GroupID:       0,
+		OrderNo:        orderNo,
+		UserID:         userID,
+		PlanKey:        "recharge_custom",
+		AmountFen:      finalAmount,
+		GroupID:        0,
 		ValidityDays:  0,
 		OrderType:     "balance",
 		BalanceAmount: amountYuan,
+		PromoCode:      promoCode,
+		DiscountAmount: discountFen,
 		Status:        PaymentOrderStatusPending,
 		PayMethod:     "wechat_native",
 		ExpiredAt:     time.Now().Add(30 * time.Minute),
@@ -506,6 +549,14 @@ func (s *PaymentService) HandleWechatNotify(ctx context.Context, body []byte, we
 		}
 		log.Printf("[Payment] Order %s paid successfully, subscription assigned for user %d, group %d, %d days",
 			order.OrderNo, order.UserID, order.GroupID, order.ValidityDays)
+	}
+
+	// 8. 记录优惠码使用（支付成功后才记录）
+	if order.PromoCode != "" && order.DiscountAmount > 0 && s.promoService != nil {
+		if err := s.promoService.ApplyPromoCode(ctx, order.UserID, order.PromoCode, order.OrderNo, float64(order.DiscountAmount)); err != nil {
+			log.Printf("[Payment] Failed to apply promo code for order %s: %v", order.OrderNo, err)
+			// 不阻断支付流程
+		}
 	}
 
 	return nil

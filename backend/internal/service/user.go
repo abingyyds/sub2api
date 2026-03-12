@@ -32,6 +32,10 @@ type User struct {
 	// 用户来源
 	DiscoverySource *string
 
+	// 初始余额有效期
+	InitialBalance          float64
+	InitialBalanceExpiresAt *time.Time
+
 	APIKeys       []APIKey
 	Subscriptions []UserSubscription
 }

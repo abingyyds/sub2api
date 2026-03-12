@@ -55,7 +55,6 @@ export interface RegisterRequest {
   password: string
   verify_code?: string
   turnstile_token?: string
-  promo_code?: string
   invite_code?: string
 }
 
@@ -1085,7 +1084,9 @@ export interface UserAttributeValuesMap {
 export interface PromoCode {
   id: number
   code: string
-  bonus_amount: number
+  discount_amount: number
+  discount_type: 'fixed' | 'percentage'
+  min_order_amount: number
   max_uses: number
   used_count: number
   status: 'active' | 'disabled'
@@ -1099,14 +1100,17 @@ export interface PromoCodeUsage {
   id: number
   promo_code_id: number
   user_id: number
-  bonus_amount: number
+  discount_amount: number
+  order_no: string
   used_at: string
   user?: User
 }
 
 export interface CreatePromoCodeRequest {
   code?: string
-  bonus_amount: number
+  discount_amount: number
+  discount_type?: 'fixed' | 'percentage'
+  min_order_amount?: number
   max_uses?: number
   expires_at?: number | null
   notes?: string
@@ -1114,7 +1118,9 @@ export interface CreatePromoCodeRequest {
 
 export interface UpdatePromoCodeRequest {
   code?: string
-  bonus_amount?: number
+  discount_amount?: number
+  discount_type?: 'fixed' | 'percentage'
+  min_order_amount?: number
   max_uses?: number
   status?: 'active' | 'disabled'
   expires_at?: number | null

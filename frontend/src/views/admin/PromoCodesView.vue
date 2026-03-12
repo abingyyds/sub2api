@@ -68,9 +68,22 @@
             </div>
           </template>
 
-          <template #cell-bonus_amount="{ value }">
+          <template #cell-discount_amount="{ value, row }">
             <span class="text-sm font-medium text-gray-900 dark:text-white">
-              ${{ value.toFixed(2) }}
+              <template v-if="row.discount_type === 'percentage'">{{ value }}%</template>
+              <template v-else>¥{{ (value / 100).toFixed(2) }}</template>
+            </span>
+          </template>
+
+          <template #cell-discount_type="{ value }">
+            <span :class="['badge', value === 'percentage' ? 'badge-primary' : 'badge-secondary']">
+              {{ value === 'percentage' ? t('admin.promo.typePercentage') : t('admin.promo.typeFixed') }}
+            </span>
+          </template>
+
+          <template #cell-min_order_amount="{ value }">
+            <span class="text-sm text-gray-600 dark:text-gray-300">
+              {{ value > 0 ? '¥' + (value / 100).toFixed(0) : t('admin.promo.noMinOrder') }}
             </span>
           </template>
 
@@ -106,9 +119,9 @@
           <template #cell-actions="{ row }">
             <div class="flex items-center space-x-1">
               <button
-                @click="copyRegisterLink(row)"
+                @click="copyPromoCode(row)"
                 class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400"
-                :title="t('admin.promo.copyRegisterLink')"
+                :title="t('admin.promo.copyCode')"
               >
                 <Icon name="link" size="sm" />
               </button>
@@ -171,15 +184,35 @@
           />
         </div>
         <div>
-          <label class="input-label">{{ t('admin.promo.bonusAmount') }}</label>
+          <label class="input-label">{{ t('admin.promo.discountType') }}</label>
+          <Select v-model="createForm.discount_type" :options="discountTypeOptions" />
+        </div>
+        <div>
+          <label class="input-label">{{ t('admin.promo.discountAmount') }}</label>
           <input
-            v-model.number="createForm.bonus_amount"
+            v-model.number="createForm.discount_amount"
             type="number"
             step="0.01"
             min="0"
             required
             class="input"
           />
+          <p class="mt-1 text-xs text-gray-400 dark:text-dark-500">
+            {{ createForm.discount_type === 'percentage' ? t('admin.promo.discountAmountHintPercent') : t('admin.promo.discountAmountHintFixed') }}
+          </p>
+        </div>
+        <div>
+          <label class="input-label">
+            {{ t('admin.promo.minOrderAmount') }}
+            <span class="ml-1 text-xs font-normal text-gray-400">({{ t('admin.promo.zeroNoLimit') }})</span>
+          </label>
+          <input
+            v-model.number="createForm.min_order_amount"
+            type="number"
+            min="0"
+            class="input"
+          />
+          <p class="mt-1 text-xs text-gray-400 dark:text-dark-500">{{ t('admin.promo.minOrderAmountHint') }}</p>
         </div>
         <div>
           <label class="input-label">
@@ -246,15 +279,35 @@
           />
         </div>
         <div>
-          <label class="input-label">{{ t('admin.promo.bonusAmount') }}</label>
+          <label class="input-label">{{ t('admin.promo.discountType') }}</label>
+          <Select v-model="editForm.discount_type" :options="discountTypeOptions" />
+        </div>
+        <div>
+          <label class="input-label">{{ t('admin.promo.discountAmount') }}</label>
           <input
-            v-model.number="editForm.bonus_amount"
+            v-model.number="editForm.discount_amount"
             type="number"
             step="0.01"
             min="0"
             required
             class="input"
           />
+          <p class="mt-1 text-xs text-gray-400 dark:text-dark-500">
+            {{ editForm.discount_type === 'percentage' ? t('admin.promo.discountAmountHintPercent') : t('admin.promo.discountAmountHintFixed') }}
+          </p>
+        </div>
+        <div>
+          <label class="input-label">
+            {{ t('admin.promo.minOrderAmount') }}
+            <span class="ml-1 text-xs font-normal text-gray-400">({{ t('admin.promo.zeroNoLimit') }})</span>
+          </label>
+          <input
+            v-model.number="editForm.min_order_amount"
+            type="number"
+            min="0"
+            class="input"
+          />
+          <p class="mt-1 text-xs text-gray-400 dark:text-dark-500">{{ t('admin.promo.minOrderAmountHint') }}</p>
         </div>
         <div>
           <label class="input-label">
@@ -341,8 +394,11 @@
           </div>
           <div class="text-right">
             <span class="text-sm font-medium text-green-600 dark:text-green-400">
-              +${{ usage.bonus_amount.toFixed(2) }}
+              -¥{{ (usage.discount_amount / 100).toFixed(2) }}
             </span>
+            <p v-if="usage.order_no" class="text-xs text-gray-400 dark:text-dark-500">
+              {{ usage.order_no }}
+            </p>
           </div>
         </div>
         <!-- Usages Pagination -->
@@ -440,7 +496,9 @@ const usagesTotal = ref(0)
 // Forms
 const createForm = reactive({
   code: '',
-  bonus_amount: 1,
+  discount_amount: 100,
+  discount_type: 'fixed' as 'fixed' | 'percentage',
+  min_order_amount: 0,
   max_uses: 0,
   expires_at_str: '',
   notes: ''
@@ -448,7 +506,9 @@ const createForm = reactive({
 
 const editForm = reactive({
   code: '',
-  bonus_amount: 0,
+  discount_amount: 0,
+  discount_type: 'fixed' as 'fixed' | 'percentage',
+  min_order_amount: 0,
   max_uses: 0,
   status: 'active' as 'active' | 'disabled',
   expires_at_str: '',
@@ -467,9 +527,16 @@ const statusOptions = computed(() => [
   { value: 'disabled', label: t('admin.promo.statusDisabled') }
 ])
 
+const discountTypeOptions = computed(() => [
+  { value: 'fixed', label: t('admin.promo.typeFixed') },
+  { value: 'percentage', label: t('admin.promo.typePercentage') }
+])
+
 const columns = computed<Column[]>(() => [
   { key: 'code', label: t('admin.promo.columns.code') },
-  { key: 'bonus_amount', label: t('admin.promo.columns.bonusAmount'), sortable: true },
+  { key: 'discount_type', label: t('admin.promo.columns.discountType') },
+  { key: 'discount_amount', label: t('admin.promo.columns.discountAmount'), sortable: true },
+  { key: 'min_order_amount', label: t('admin.promo.columns.minOrderAmount') },
   { key: 'usage', label: t('admin.promo.columns.usage') },
   { key: 'status', label: t('admin.promo.columns.status'), sortable: true },
   { key: 'expires_at', label: t('admin.promo.columns.expiresAt'), sortable: true },
@@ -570,7 +637,9 @@ const handleCreate = async () => {
   try {
     await adminAPI.promo.create({
       code: createForm.code || undefined,
-      bonus_amount: createForm.bonus_amount,
+      discount_amount: createForm.discount_amount,
+      discount_type: createForm.discount_type,
+      min_order_amount: createForm.min_order_amount,
       max_uses: createForm.max_uses,
       expires_at: createForm.expires_at_str ? Math.floor(new Date(createForm.expires_at_str).getTime() / 1000) : undefined,
       notes: createForm.notes || undefined
@@ -588,7 +657,9 @@ const handleCreate = async () => {
 
 const resetCreateForm = () => {
   createForm.code = ''
-  createForm.bonus_amount = 1
+  createForm.discount_amount = 100
+  createForm.discount_type = 'fixed'
+  createForm.min_order_amount = 0
   createForm.max_uses = 0
   createForm.expires_at_str = ''
   createForm.notes = ''
@@ -598,7 +669,9 @@ const resetCreateForm = () => {
 const handleEdit = (code: PromoCode) => {
   editingCode.value = code
   editForm.code = code.code
-  editForm.bonus_amount = code.bonus_amount
+  editForm.discount_amount = code.discount_amount
+  editForm.discount_type = code.discount_type
+  editForm.min_order_amount = code.min_order_amount
   editForm.max_uses = code.max_uses
   editForm.status = code.status
   editForm.expires_at_str = code.expires_at ? new Date(code.expires_at).toISOString().slice(0, 16) : ''
@@ -618,7 +691,9 @@ const handleUpdate = async () => {
   try {
     await adminAPI.promo.update(editingCode.value.id, {
       code: editForm.code,
-      bonus_amount: editForm.bonus_amount,
+      discount_amount: editForm.discount_amount,
+      discount_type: editForm.discount_type,
+      min_order_amount: editForm.min_order_amount,
       max_uses: editForm.max_uses,
       status: editForm.status,
       expires_at: editForm.expires_at_str ? Math.floor(new Date(editForm.expires_at_str).getTime() / 1000) : 0,
@@ -634,23 +709,20 @@ const handleUpdate = async () => {
   }
 }
 
-// Copy Register Link
-const copyRegisterLink = async (code: PromoCode) => {
-  const baseUrl = window.location.origin
-  const registerLink = `${baseUrl}/register?promo=${encodeURIComponent(code.code)}`
-
+// Copy Promo Code
+const copyPromoCode = async (code: PromoCode) => {
   try {
-    await navigator.clipboard.writeText(registerLink)
-    appStore.showSuccess(t('admin.promo.registerLinkCopied'))
+    await navigator.clipboard.writeText(code.code)
+    appStore.showSuccess(t('admin.promo.codeCopied'))
   } catch (error) {
     // Fallback for older browsers
     const textArea = document.createElement('textarea')
-    textArea.value = registerLink
+    textArea.value = code.code
     document.body.appendChild(textArea)
     textArea.select()
     document.execCommand('copy')
     document.body.removeChild(textArea)
-    appStore.showSuccess(t('admin.promo.registerLinkCopied'))
+    appStore.showSuccess(t('admin.promo.codeCopied'))
   }
 }
 

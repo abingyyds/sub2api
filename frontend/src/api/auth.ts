@@ -150,18 +150,23 @@ export async function sendVerifyCode(
  */
 export interface ValidatePromoCodeResponse {
   valid: boolean
-  bonus_amount?: number
+  discount_type?: string
+  discount_amount?: number
+  discount_fen?: number
+  final_amount_fen?: number
+  min_order_amount?: number
   error_code?: string
   message?: string
 }
 
 /**
- * Validate promo code (public endpoint, no auth required)
+ * Validate promo code for purchase discount
  * @param code - Promo code to validate
- * @returns Validation result with bonus amount if valid
+ * @param amount_fen - Order amount in fen to calculate discount
+ * @returns Validation result with discount info if valid
  */
-export async function validatePromoCode(code: string): Promise<ValidatePromoCodeResponse> {
-  const { data } = await apiClient.post<ValidatePromoCodeResponse>('/auth/validate-promo-code', { code })
+export async function validatePromoCode(code: string, amount_fen: number): Promise<ValidatePromoCodeResponse> {
+  const { data } = await apiClient.post<ValidatePromoCodeResponse>('/auth/validate-promo-code', { code, amount_fen })
   return data
 }
 

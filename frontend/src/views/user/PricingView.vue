@@ -36,6 +36,52 @@
         <div class="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"></div>
       </div>
 
+      <!-- Promo Code Input (shared across tabs) -->
+      <div v-if="!loading" class="mx-auto max-w-lg">
+        <div class="flex items-center gap-3">
+          <div class="relative flex-1">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <Icon name="gift" size="md" :class="promoValidation.valid ? 'text-green-500' : 'text-gray-400 dark:text-dark-500'" />
+            </div>
+            <input
+              v-model="promoCode"
+              type="text"
+              class="input pl-10 pr-10"
+              :class="{
+                'border-green-500 focus:border-green-500 focus:ring-green-500': promoValidation.valid,
+                'border-red-500 focus:border-red-500 focus:ring-red-500': promoValidation.invalid
+              }"
+              :placeholder="t('pricing.promoCodePlaceholder')"
+              @input="handlePromoCodeInput"
+            />
+            <div v-if="promoValidating" class="absolute inset-y-0 right-0 flex items-center pr-3">
+              <svg class="h-4 w-4 animate-spin text-gray-400" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+            <div v-else-if="promoValidation.valid" class="absolute inset-y-0 right-0 flex items-center pr-3">
+              <Icon name="checkCircle" size="md" class="text-green-500" />
+            </div>
+            <div v-else-if="promoValidation.invalid" class="absolute inset-y-0 right-0 flex items-center pr-3">
+              <Icon name="exclamationCircle" size="md" class="text-red-500" />
+            </div>
+          </div>
+        </div>
+        <!-- Promo code validation result -->
+        <transition name="fade">
+          <div v-if="promoValidation.valid" class="mt-2 flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 dark:bg-green-900/20">
+            <Icon name="gift" size="sm" class="text-green-600 dark:text-green-400" />
+            <span class="text-sm text-green-700 dark:text-green-400">
+              {{ formatDiscountText() }}
+            </span>
+          </div>
+          <p v-else-if="promoValidation.invalid" class="mt-1 text-sm text-red-500">
+            {{ promoValidation.message }}
+          </p>
+        </transition>
+      </div>
+
       <!-- ==================== Subscription Tab ==================== -->
       <template v-if="!loading && activeTab === 'subscription'">
         <div v-if="decoratedPlans.length > 0" class="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
@@ -278,7 +324,9 @@ import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import QRCode from 'qrcode'
 import AppLayout from '@/components/layout/AppLayout.vue'
+import Icon from '@/components/icons/Icon.vue'
 import { paymentAPI } from '@/api/payment'
+import { validatePromoCode } from '@/api/auth'
 import type { PaymentPlan, RechargePlan } from '@/api/payment'
 
 const { t } = useI18n()
@@ -304,6 +352,30 @@ const currentOrderNo = ref('')
 const currentOrderAmount = ref('')
 const countdown = ref(0)
 const customInput = ref('')
+
+// Promo code state
+const promoCode = ref('')
+const promoValidating = ref(false)
+const promoValidation = ref<{
+  valid: boolean
+  invalid: boolean
+  discountType: string
+  discountAmount: number
+  discountFen: number
+  finalAmountFen: number
+  minOrderAmount: number
+  message: string
+}>({
+  valid: false,
+  invalid: false,
+  discountType: '',
+  discountAmount: 0,
+  discountFen: 0,
+  finalAmountFen: 0,
+  minOrderAmount: 0,
+  message: ''
+})
+let promoValidateTimeout: ReturnType<typeof setTimeout> | null = null
 
 let pollTimer: ReturnType<typeof setInterval> | null = null
 let countdownTimer: ReturnType<typeof setInterval> | null = null
@@ -453,6 +525,110 @@ const decoratedPlans = computed<DecoratedPlan[]>(() => {
   })
 })
 
+// === Promo Code Validation ===
+function resetPromoValidation() {
+  promoValidation.value = {
+    valid: false,
+    invalid: false,
+    discountType: '',
+    discountAmount: 0,
+    discountFen: 0,
+    finalAmountFen: 0,
+    minOrderAmount: 0,
+    message: ''
+  }
+}
+
+function handlePromoCodeInput() {
+  const code = promoCode.value.trim()
+  resetPromoValidation()
+
+  if (!code) {
+    promoValidating.value = false
+    return
+  }
+
+  // We don't auto-validate here because we need an amount_fen.
+  // Validation happens when user clicks buy.
+}
+
+async function validatePromoForAmount(code: string, amountFen: number): Promise<boolean> {
+  if (!code.trim()) return true // No promo code = ok
+
+  promoValidating.value = true
+  try {
+    const result = await validatePromoCode(code, amountFen)
+    if (result.valid) {
+      promoValidation.value = {
+        valid: true,
+        invalid: false,
+        discountType: result.discount_type || '',
+        discountAmount: result.discount_amount || 0,
+        discountFen: result.discount_fen || 0,
+        finalAmountFen: result.final_amount_fen || amountFen,
+        minOrderAmount: result.min_order_amount || 0,
+        message: ''
+      }
+      return true
+    } else {
+      promoValidation.value = {
+        valid: false,
+        invalid: true,
+        discountType: '',
+        discountAmount: 0,
+        discountFen: 0,
+        finalAmountFen: 0,
+        minOrderAmount: result.min_order_amount || 0,
+        message: getPromoErrorMessage(result.error_code)
+      }
+      return false
+    }
+  } catch {
+    promoValidation.value = {
+      valid: false,
+      invalid: true,
+      discountType: '',
+      discountAmount: 0,
+      discountFen: 0,
+      finalAmountFen: 0,
+      minOrderAmount: 0,
+      message: t('pricing.promoCodeInvalid')
+    }
+    return false
+  } finally {
+    promoValidating.value = false
+  }
+}
+
+function getPromoErrorMessage(errorCode?: string): string {
+  switch (errorCode) {
+    case 'PROMO_CODE_NOT_FOUND':
+      return t('pricing.promoCodeNotFound')
+    case 'PROMO_CODE_EXPIRED':
+      return t('pricing.promoCodeExpired')
+    case 'PROMO_CODE_DISABLED':
+      return t('pricing.promoCodeDisabled')
+    case 'PROMO_CODE_MAX_USED':
+      return t('pricing.promoCodeMaxUsed')
+    case 'PROMO_CODE_ALREADY_USED':
+      return t('pricing.promoCodeAlreadyUsed')
+    case 'PROMO_CODE_MIN_ORDER':
+      return t('pricing.promoCodeMinOrder', { amount: (promoValidation.value.minOrderAmount / 100).toFixed(0) })
+    default:
+      return t('pricing.promoCodeInvalid')
+  }
+}
+
+function formatDiscountText(): string {
+  const v = promoValidation.value
+  if (!v.valid) return ''
+  const amountYuan = (v.discountFen / 100).toFixed(2)
+  if (v.discountType === 'percentage') {
+    return t('pricing.promoDiscountPercent', { percent: v.discountAmount, amount: amountYuan })
+  }
+  return t('pricing.promoDiscountFixed', { amount: amountYuan })
+}
+
 onMounted(async () => {
   try {
     const [allPlans, rechargeInfo] = await Promise.all([
@@ -471,6 +647,9 @@ onMounted(async () => {
 
 onUnmounted(() => {
   clearTimers()
+  if (promoValidateTimeout) {
+    clearTimeout(promoValidateTimeout)
+  }
 })
 
 function clearTimers() {
@@ -481,10 +660,18 @@ function clearTimers() {
 // === Subscription purchase ===
 async function handleBuy(plan: PaymentPlan) {
   if (creatingOrder.value) return
+
+  // Validate promo code if entered
+  const code = promoCode.value.trim()
+  if (code) {
+    const valid = await validatePromoForAmount(code, plan.amount_fen)
+    if (!valid) return
+  }
+
   paymentOrderType.value = 'subscription'
   creatingOrder.value = true
   try {
-    const order = await paymentAPI.createOrder(plan.key)
+    const order = await paymentAPI.createOrder(plan.key, code || undefined)
     await showQRModal(order)
   } catch (err: any) {
     const msg = err?.message || err?.response?.data?.message || t('pricing.payment.createFailed')
@@ -497,11 +684,19 @@ async function handleBuy(plan: PaymentPlan) {
 // === Recharge preset ===
 async function handleRechargePreset(rp: RechargePlan) {
   if (creatingOrder.value) return
+
+  // Validate promo code if entered
+  const code = promoCode.value.trim()
+  if (code) {
+    const valid = await validatePromoForAmount(code, rp.pay_amount_fen)
+    if (!valid) return
+  }
+
   paymentOrderType.value = 'recharge'
   creatingOrder.value = true
   try {
     const payYuan = rp.pay_amount_fen / 100
-    const order = await paymentAPI.createRechargeOrder(payYuan)
+    const order = await paymentAPI.createRechargeOrder(payYuan, code || undefined)
     await showQRModal(order)
   } catch (err: any) {
     const msg = err?.message || err?.response?.data?.message || t('recharge.payment.createFailed')
@@ -515,10 +710,19 @@ async function handleRechargePreset(rp: RechargePlan) {
 async function handleCustomRecharge() {
   if (customFinalAmount.value <= 0 || creatingOrder.value) return
   if (rechargeMinAmount.value > 0 && customFinalAmount.value < rechargeMinAmount.value) return
+
+  // Validate promo code if entered
+  const code = promoCode.value.trim()
+  const amountFen = Math.round(customFinalAmount.value * 100)
+  if (code) {
+    const valid = await validatePromoForAmount(code, amountFen)
+    if (!valid) return
+  }
+
   paymentOrderType.value = 'recharge'
   creatingOrder.value = true
   try {
-    const order = await paymentAPI.createRechargeOrder(customFinalAmount.value)
+    const order = await paymentAPI.createRechargeOrder(customFinalAmount.value, code || undefined)
     await showQRModal(order)
   } catch (err: any) {
     const msg = err?.message || err?.response?.data?.message || t('recharge.payment.createFailed')
@@ -593,3 +797,16 @@ function goAfterPayment() {
   }
 }
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+</style>

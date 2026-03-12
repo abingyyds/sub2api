@@ -14,7 +14,7 @@ import (
 
 // PromoCodeUsage holds the schema definition for the PromoCodeUsage entity.
 //
-// 优惠码使用记录：记录每个用户使用优惠码的情况
+// 优惠码使用记录：记录每个用户在订单中使用优惠码的情况
 type PromoCodeUsage struct {
 	ent.Schema
 }
@@ -31,9 +31,14 @@ func (PromoCodeUsage) Fields() []ent.Field {
 			Comment("优惠码ID"),
 		field.Int64("user_id").
 			Comment("使用用户ID"),
-		field.Float("bonus_amount").
+		field.Float("discount_amount").
 			SchemaType(map[string]string{dialect.Postgres: "decimal(20,8)"}).
-			Comment("实际赠送金额"),
+			Comment("实际折扣金额(分)"),
+		field.String("order_no").
+			MaxLen(64).
+			Optional().
+			Default("").
+			Comment("关联订单号"),
 		field.Time("used_at").
 			Default(time.Now).
 			SchemaType(map[string]string{dialect.Postgres: "timestamptz"}).

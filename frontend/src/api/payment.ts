@@ -35,6 +35,7 @@ export interface CreateOrderResponse {
   order_no: string
   code_url: string | null
   amount_fen: number
+  discount_amount: number
   expired_at: string
 }
 
@@ -42,6 +43,8 @@ export interface PaymentOrder {
   order_no: string
   plan_key: string
   amount_fen: number
+  promo_code: string
+  discount_amount: number
   status: 'pending' | 'paid' | 'closed' | 'refunded'
   pay_method: string
   code_url?: string | null
@@ -69,9 +72,10 @@ export async function getRechargeInfo(): Promise<RechargeInfo> {
 /**
  * Create a payment order
  */
-export async function createOrder(planKey: string): Promise<CreateOrderResponse> {
+export async function createOrder(planKey: string, promoCode?: string): Promise<CreateOrderResponse> {
   const { data } = await apiClient.post<CreateOrderResponse>('/payment/orders', {
     plan_key: planKey,
+    promo_code: promoCode || '',
   })
   return data
 }
@@ -79,9 +83,10 @@ export async function createOrder(planKey: string): Promise<CreateOrderResponse>
 /**
  * Create a balance recharge order with custom amount
  */
-export async function createRechargeOrder(amount: number): Promise<CreateOrderResponse> {
+export async function createRechargeOrder(amount: number, promoCode?: string): Promise<CreateOrderResponse> {
   const { data } = await apiClient.post<CreateOrderResponse>('/payment/recharge', {
     amount,
+    promo_code: promoCode || '',
   })
   return data
 }

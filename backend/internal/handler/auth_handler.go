@@ -41,7 +41,6 @@ type RegisterRequest struct {
 	Password       string `json:"password" binding:"required,min=6"`
 	VerifyCode     string `json:"verify_code"`
 	TurnstileToken string `json:"turnstile_token"`
-	PromoCode      string `json:"promo_code"`  // 注册优惠码
 	InviteCode     string `json:"invite_code"` // 邀请码
 }
 
@@ -88,7 +87,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		}
 	}
 
-	token, user, err := h.authService.RegisterWithVerification(c.Request.Context(), req.Email, req.Password, req.VerifyCode, req.PromoCode, req.InviteCode)
+	token, user, err := h.authService.RegisterWithVerification(c.Request.Context(), req.Email, req.Password, req.VerifyCode, "", req.InviteCode)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
@@ -280,18 +279,23 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 
 // ValidatePromoCodeRequest 验证优惠码请求
 type ValidatePromoCodeRequest struct {
-	Code string `json:"code" binding:"required"`
+	Code      string `json:"code" binding:"required"`
+	AmountFen int    `json:"amount_fen"` // 订单金额（分），用于计算折扣
 }
 
 // ValidatePromoCodeResponse 验证优惠码响应
 type ValidatePromoCodeResponse struct {
-	Valid       bool    `json:"valid"`
-	BonusAmount float64 `json:"bonus_amount,omitempty"`
-	ErrorCode   string  `json:"error_code,omitempty"`
-	Message     string  `json:"message,omitempty"`
+	Valid          bool    `json:"valid"`
+	DiscountType   string  `json:"discount_type,omitempty"`   // "fixed" 或 "percentage"
+	DiscountAmount float64 `json:"discount_amount,omitempty"` // 折扣值（fixed=分, percentage=百分比）
+	DiscountFen    int     `json:"discount_fen,omitempty"`    // 实际折扣金额（分）
+	FinalAmountFen int    `json:"final_amount_fen,omitempty"` // 折后金额（分）
+	MinOrderAmount int     `json:"min_order_amount,omitempty"` // 满减门槛（分）
+	ErrorCode      string  `json:"error_code,omitempty"`
+	Message        string  `json:"message,omitempty"`
 }
 
-// ValidatePromoCode 验证优惠码（公开接口，注册前调用）
+// ValidatePromoCode 验证优惠码（购买前调用）
 // POST /api/v1/auth/validate-promo-code
 func (h *AuthHandler) ValidatePromoCode(c *gin.Context) {
 	// 检查优惠码功能是否启用
@@ -341,9 +345,34 @@ func (h *AuthHandler) ValidatePromoCode(c *gin.Context) {
 		return
 	}
 
+	// 检查满减门槛
+	if promoCode.MinOrderAmount > 0 && req.AmountFen > 0 && req.AmountFen < promoCode.MinOrderAmount {
+		response.Success(c, ValidatePromoCodeResponse{
+			Valid:          false,
+			ErrorCode:      "PROMO_CODE_MIN_ORDER",
+			MinOrderAmount: promoCode.MinOrderAmount,
+		})
+		return
+	}
+
+	// 计算折扣
+	var discountFen int
+	var finalAmountFen int
+	if req.AmountFen > 0 {
+		discountFen = promoCode.CalculateDiscount(req.AmountFen)
+		finalAmountFen = req.AmountFen - discountFen
+		if finalAmountFen < 1 {
+			finalAmountFen = 1
+		}
+	}
+
 	response.Success(c, ValidatePromoCodeResponse{
-		Valid:       true,
-		BonusAmount: promoCode.BonusAmount,
+		Valid:          true,
+		DiscountType:   promoCode.DiscountType,
+		DiscountAmount: promoCode.DiscountAmount,
+		DiscountFen:    discountFen,
+		FinalAmountFen: finalAmountFen,
+		MinOrderAmount: promoCode.MinOrderAmount,
 	})
 }
 

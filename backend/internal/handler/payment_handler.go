@@ -49,12 +49,14 @@ func (h *PaymentHandler) GetRechargeInfo(c *gin.Context) {
 
 // CreateOrderRequest represents the request body for creating a payment order
 type CreateOrderRequest struct {
-	PlanKey string `json:"plan_key" binding:"required"`
+	PlanKey   string `json:"plan_key" binding:"required"`
+	PromoCode string `json:"promo_code"` // 优惠码
 }
 
 // CreateRechargeRequest represents the request body for creating a recharge order
 type CreateRechargeRequest struct {
-	Amount float64 `json:"amount" binding:"required,gt=0"`
+	Amount    float64 `json:"amount" binding:"required,gt=0"`
+	PromoCode string  `json:"promo_code"` // 优惠码
 }
 
 // CreateOrder creates a new payment order
@@ -72,17 +74,18 @@ func (h *PaymentHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	order, err := h.paymentService.CreateOrder(c.Request.Context(), subject.UserID, req.PlanKey)
+	order, err := h.paymentService.CreateOrder(c.Request.Context(), subject.UserID, req.PlanKey, req.PromoCode)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
 	}
 
 	response.Success(c, gin.H{
-		"order_no":   order.OrderNo,
-		"code_url":   order.CodeURL,
-		"amount_fen": order.AmountFen,
-		"expired_at": order.ExpiredAt,
+		"order_no":        order.OrderNo,
+		"code_url":        order.CodeURL,
+		"amount_fen":      order.AmountFen,
+		"discount_amount": order.DiscountAmount,
+		"expired_at":      order.ExpiredAt,
 	})
 }
 
@@ -101,17 +104,18 @@ func (h *PaymentHandler) CreateRecharge(c *gin.Context) {
 		return
 	}
 
-	order, err := h.paymentService.CreateRechargeOrder(c.Request.Context(), subject.UserID, req.Amount)
+	order, err := h.paymentService.CreateRechargeOrder(c.Request.Context(), subject.UserID, req.Amount, req.PromoCode)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
 	}
 
 	response.Success(c, gin.H{
-		"order_no":   order.OrderNo,
-		"code_url":   order.CodeURL,
-		"amount_fen": order.AmountFen,
-		"expired_at": order.ExpiredAt,
+		"order_no":        order.OrderNo,
+		"code_url":        order.CodeURL,
+		"amount_fen":      order.AmountFen,
+		"discount_amount": order.DiscountAmount,
+		"expired_at":      order.ExpiredAt,
 	})
 }
 
