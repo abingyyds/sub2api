@@ -36,6 +36,17 @@ func (h *PaymentHandler) GetPlans(c *gin.Context) {
 	response.Success(c, plans)
 }
 
+// GetRechargeInfo returns recharge plans and minimum amount
+// GET /api/v1/payment/recharge-info
+func (h *PaymentHandler) GetRechargeInfo(c *gin.Context) {
+	info, err := h.paymentService.GetRechargeInfo(c.Request.Context())
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, info)
+}
+
 // CreateOrderRequest represents the request body for creating a payment order
 type CreateOrderRequest struct {
 	PlanKey string `json:"plan_key" binding:"required"`

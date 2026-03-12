@@ -76,6 +76,8 @@ type SystemSettings struct {
 	WechatPayPrivateKeyConfigured bool
 	WechatPayNotifyURL            string
 	PaymentPlans                  string // JSON
+	RechargeMinAmount             float64
+	RechargePlans                 string // JSON
 }
 
 type PublicSettings struct {

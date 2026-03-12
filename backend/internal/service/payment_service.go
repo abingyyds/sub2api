@@ -18,6 +18,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -177,6 +178,46 @@ func (s *PaymentService) GetPlans(ctx context.Context) ([]PaymentPlan, error) {
 	return plans, nil
 }
 
+// RechargePlan 充值优惠套餐
+type RechargePlan struct {
+	Key           string `json:"key"`
+	Name          string `json:"name"`
+	Description   string `json:"description,omitempty"`
+	PayAmountFen  int    `json:"pay_amount_fen"`  // 实付金额（分）
+	BalanceAmount float64 `json:"balance_amount"` // 到账金额（美元）
+	Popular       bool   `json:"popular,omitempty"`
+}
+
+// RechargeInfo 充值信息（含优惠套餐和最低金额）
+type RechargeInfo struct {
+	MinAmount float64        `json:"min_amount"` // 最低充值金额（元）
+	Plans     []RechargePlan `json:"plans"`
+}
+
+// GetRechargeInfo 获取充值信息
+func (s *PaymentService) GetRechargeInfo(ctx context.Context) (*RechargeInfo, error) {
+	info := &RechargeInfo{
+		MinAmount: 0,
+		Plans:     []RechargePlan{},
+	}
+
+	// 读取最低充值金额
+	if minStr, _ := s.settingService.GetSettingValue(ctx, SettingKeyRechargeMinAmount); minStr != "" {
+		if v, err := strconv.ParseFloat(minStr, 64); err == nil && v > 0 {
+			info.MinAmount = v
+		}
+	}
+
+	// 读取充值优惠套餐
+	if plansJSON, _ := s.settingService.GetSettingValue(ctx, SettingKeyRechargePlans); plansJSON != "" {
+		if err := json.Unmarshal([]byte(plansJSON), &info.Plans); err != nil {
+			log.Printf("[Payment] Failed to parse recharge_plans JSON: %v", err)
+		}
+	}
+
+	return info, nil
+}
+
 // enrichPlansFromGroups 从分组信息自动填充套餐的描述和特性
 func (s *PaymentService) enrichPlansFromGroups(ctx context.Context, plans []PaymentPlan) {
 	for i := range plans {
@@ -302,6 +343,15 @@ func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, 
 
 	if amountYuan <= 0 {
 		return nil, infraerrors.BadRequest("INVALID_AMOUNT", "recharge amount must be positive")
+	}
+
+	// 检查最低充值金额
+	if minAmountStr, _ := s.settingService.GetSettingValue(ctx, SettingKeyRechargeMinAmount); minAmountStr != "" {
+		if minAmount, err := strconv.ParseFloat(minAmountStr, 64); err == nil && minAmount > 0 {
+			if amountYuan < minAmount {
+				return nil, infraerrors.BadRequest("AMOUNT_TOO_LOW", fmt.Sprintf("minimum recharge amount is ¥%.0f", minAmount))
+			}
+		}
 	}
 
 	amountFen := int(amountYuan * 100)

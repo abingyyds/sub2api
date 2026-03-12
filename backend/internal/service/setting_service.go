@@ -269,6 +269,8 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	}
 	updates[SettingKeyWechatPayNotifyURL] = settings.WechatPayNotifyURL
 	updates[SettingKeyPaymentPlans] = settings.PaymentPlans
+	updates[SettingKeyRechargeMinAmount] = fmt.Sprintf("%g", settings.RechargeMinAmount)
+	updates[SettingKeyRechargePlans] = settings.RechargePlans
 
 	err := s.settingRepo.SetMultiple(ctx, updates)
 	if err == nil && s.onUpdate != nil {
@@ -573,6 +575,10 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 	result.WechatPayPrivateKeyConfigured = settings[SettingKeyWechatPayPrivateKey] != ""
 	result.WechatPayNotifyURL = settings[SettingKeyWechatPayNotifyURL]
 	result.PaymentPlans = settings[SettingKeyPaymentPlans]
+	if v, err := strconv.ParseFloat(settings[SettingKeyRechargeMinAmount], 64); err == nil {
+		result.RechargeMinAmount = v
+	}
+	result.RechargePlans = settings[SettingKeyRechargePlans]
 
 	return result
 }

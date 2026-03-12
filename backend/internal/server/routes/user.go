@@ -19,6 +19,8 @@ func RegisterUserRoutes(
 		payment.POST("/wechat/notify", h.Payment.WechatNotify)
 		// 公开接口：获取套餐列表（无需认证）
 		payment.GET("/plans", h.Payment.GetPlans)
+		// 公开接口：获取充值信息（无需认证）
+		payment.GET("/recharge-info", h.Payment.GetRechargeInfo)
 	}
 
 	authenticated := v1.Group("")

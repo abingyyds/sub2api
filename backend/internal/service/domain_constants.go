@@ -183,6 +183,8 @@ const (
 
 	SettingKeyPaymentEnabled         = "payment_enabled"          // 是否启用在线支付
 	SettingKeyPaymentPlans           = "payment_plans"            // 套餐配置 JSON
+	SettingKeyRechargeMinAmount      = "recharge_min_amount"      // 充值最低金额（元）
+	SettingKeyRechargePlans          = "recharge_plans"           // 充值优惠套餐配置 JSON
 	SettingKeyWechatPayAppID         = "wechat_pay_appid"          // 微信支付关联的AppID
 	SettingKeyWechatPayMchID         = "wechat_pay_mch_id"         // 微信支付商户号
 	SettingKeyWechatPayAPIv3Key      = "wechat_pay_apiv3_key"      // APIv3 密钥

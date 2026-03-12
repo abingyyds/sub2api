@@ -17,6 +17,20 @@ export interface PaymentPlan {
   balance_amount?: number
 }
 
+export interface RechargePlan {
+  key: string
+  name: string
+  description?: string
+  pay_amount_fen: number
+  balance_amount: number
+  popular?: boolean
+}
+
+export interface RechargeInfo {
+  min_amount: number
+  plans: RechargePlan[]
+}
+
 export interface CreateOrderResponse {
   order_no: string
   code_url: string | null
@@ -41,6 +55,14 @@ export interface PaymentOrder {
  */
 export async function getPlans(): Promise<PaymentPlan[]> {
   const { data } = await apiClient.get<PaymentPlan[]>('/payment/plans')
+  return data
+}
+
+/**
+ * Get recharge info (plans + min amount)
+ */
+export async function getRechargeInfo(): Promise<RechargeInfo> {
+  const { data } = await apiClient.get<RechargeInfo>('/payment/recharge-info')
   return data
 }
 
@@ -91,6 +113,7 @@ export async function listOrders(params?: {
 
 export const paymentAPI = {
   getPlans,
+  getRechargeInfo,
   createOrder,
   createRechargeOrder,
   queryOrder,

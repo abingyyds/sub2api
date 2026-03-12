@@ -1,10 +1,34 @@
 <template>
   <AppLayout>
-    <div class="mx-auto max-w-6xl space-y-8">
+    <div class="mx-auto max-w-6xl space-y-6">
       <!-- Title -->
       <div class="text-center">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ t('pricing.title') }}</h1>
         <p class="mt-2 text-gray-500 dark:text-dark-400">{{ t('pricing.subtitle') }}</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex justify-center">
+        <div class="inline-flex rounded-lg border border-gray-200 bg-gray-100 p-1 dark:border-dark-600 dark:bg-dark-800">
+          <button
+            class="rounded-md px-5 py-2 text-sm font-medium transition-all"
+            :class="activeTab === 'subscription'
+              ? 'bg-white text-gray-900 shadow-sm dark:bg-dark-700 dark:text-white'
+              : 'text-gray-500 hover:text-gray-700 dark:text-dark-400 dark:hover:text-dark-200'"
+            @click="activeTab = 'subscription'"
+          >
+            {{ t('pricing.tabSubscription') }}
+          </button>
+          <button
+            class="rounded-md px-5 py-2 text-sm font-medium transition-all"
+            :class="activeTab === 'recharge'
+              ? 'bg-white text-gray-900 shadow-sm dark:bg-dark-700 dark:text-white'
+              : 'text-gray-500 hover:text-gray-700 dark:text-dark-400 dark:hover:text-dark-200'"
+            @click="activeTab = 'recharge'"
+          >
+            {{ t('pricing.tabRecharge') }}
+          </button>
+        </div>
       </div>
 
       <!-- Loading -->
@@ -12,62 +36,154 @@
         <div class="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"></div>
       </div>
 
-      <!-- Plans Grid -->
-      <div v-else-if="plans.length > 0" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div
-          v-for="(plan, index) in plans"
-          :key="plan.key"
-          class="card relative flex flex-col overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer"
-          :class="{ 'ring-2 ring-primary-500': index === 0 }"
-          @click="handleBuy(plan)"
-        >
-          <div v-if="index === 0" class="absolute right-4 top-4">
-            <span class="badge badge-primary text-xs">{{ t('pricing.recommended') }}</span>
-          </div>
-          <div class="flex flex-1 flex-col p-6">
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ plan.name }}</h3>
-            <p v-if="plan.description" class="mt-1 text-sm text-gray-500 dark:text-dark-400">{{ plan.description }}</p>
-            <div class="mt-3 text-3xl font-bold text-primary-600">
-              ¥{{ (plan.amount_fen / 100).toFixed(plan.amount_fen % 100 === 0 ? 0 : 2) }}
+      <!-- ==================== Subscription Tab ==================== -->
+      <template v-if="!loading && activeTab === 'subscription'">
+        <div v-if="plans.length > 0" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div
+            v-for="(plan, index) in plans"
+            :key="plan.key"
+            class="card relative flex flex-col overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer"
+            :class="{ 'ring-2 ring-primary-500': index === 0 }"
+            @click="handleBuy(plan)"
+          >
+            <div v-if="index === 0" class="absolute right-4 top-4">
+              <span class="badge badge-primary text-xs">{{ t('pricing.recommended') }}</span>
             </div>
-            <ul class="mt-5 flex-1 space-y-2.5">
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <svg class="h-4 w-4 flex-shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-                {{ t('pricing.validityDays', { days: plan.validity_days }) }}
-              </li>
-              <li v-for="(feature, fi) in (plan.features || [])" :key="fi" class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <svg class="h-4 w-4 flex-shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-                {{ feature }}
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <svg class="h-4 w-4 flex-shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-                {{ t('pricing.wechatPay') }}
-              </li>
-            </ul>
-            <div
-              class="mt-4 flex items-center justify-center rounded-lg bg-primary-600 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
-              :class="{ 'opacity-50 pointer-events-none': creatingOrder }"
-            >
-              {{ t('pricing.buyNow') }}
+            <div class="flex flex-1 flex-col p-6">
+              <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ plan.name }}</h3>
+              <p v-if="plan.description" class="mt-1 text-sm text-gray-500 dark:text-dark-400">{{ plan.description }}</p>
+              <div class="mt-3 text-3xl font-bold text-primary-600">
+                ¥{{ (plan.amount_fen / 100).toFixed(plan.amount_fen % 100 === 0 ? 0 : 2) }}
+              </div>
+              <ul class="mt-5 flex-1 space-y-2.5">
+                <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                  <svg class="h-4 w-4 flex-shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  {{ t('pricing.validityDays', { days: plan.validity_days }) }}
+                </li>
+                <li v-for="(feature, fi) in (plan.features || [])" :key="fi" class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                  <svg class="h-4 w-4 flex-shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  {{ feature }}
+                </li>
+                <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                  <svg class="h-4 w-4 flex-shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  {{ t('pricing.wechatPay') }}
+                </li>
+              </ul>
+              <div
+                class="mt-4 flex items-center justify-center rounded-lg bg-primary-600 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
+                :class="{ 'opacity-50 pointer-events-none': creatingOrder }"
+              >
+                {{ t('pricing.buyNow') }}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+        <div v-else class="text-center py-12 text-gray-500 dark:text-dark-400">
+          {{ t('pricing.noPlans') }}
+        </div>
+        <p v-if="plans.length > 0" class="text-center text-sm text-gray-500 dark:text-dark-400">
+          {{ t('pricing.stackable') }}
+        </p>
+      </template>
 
-      <!-- No Plans -->
-      <div v-else class="text-center py-12 text-gray-500 dark:text-dark-400">
-        {{ t('pricing.noPlans') }}
-      </div>
+      <!-- ==================== Recharge Tab ==================== -->
+      <template v-if="!loading && activeTab === 'recharge'">
+        <!-- Recharge Plans (if configured) -->
+        <div v-if="rechargePlans.length > 0" class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div
+            v-for="rp in rechargePlans"
+            :key="rp.key"
+            class="card relative flex flex-col overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer"
+            :class="{ 'ring-2 ring-primary-500': rp.popular }"
+            @click="handleRechargePreset(rp)"
+          >
+            <div v-if="rp.popular" class="absolute right-4 top-4">
+              <span class="badge badge-primary text-xs">{{ t('pricing.mostPopular') }}</span>
+            </div>
+            <div class="flex flex-1 flex-col p-5">
+              <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ rp.name }}</h3>
+              <div class="mt-2 flex items-baseline gap-1">
+                <span class="text-xs text-gray-500 dark:text-dark-400">{{ t('pricing.rechargeGet') }}</span>
+                <span class="text-2xl font-bold text-primary-600">${{ rp.balance_amount }}</span>
+              </div>
+              <p v-if="rp.description" class="mt-2 text-sm text-gray-500 dark:text-dark-400">{{ rp.description }}</p>
+              <div class="mt-auto pt-4">
+                <div v-if="rp.pay_amount_fen !== rp.balance_amount * 100" class="mb-1 text-center">
+                  <span class="text-xs text-gray-400 line-through dark:text-dark-500">¥{{ rp.balance_amount * 100 / 100 }}</span>
+                </div>
+                <div
+                  class="flex items-center justify-center rounded-lg bg-primary-600 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
+                  :class="{ 'opacity-50 pointer-events-none': creatingOrder }"
+                >
+                  {{ t('pricing.rechargeNow') }} ¥{{ (rp.pay_amount_fen / 100).toFixed(rp.pay_amount_fen % 100 === 0 ? 0 : 2) }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      <p v-if="plans.length > 0" class="text-center text-sm text-gray-500 dark:text-dark-400">
-        {{ t('pricing.stackable') }}
-      </p>
+        <!-- Custom Amount Input -->
+        <div class="card mx-auto max-w-lg p-6 space-y-5">
+          <h3 class="text-center text-lg font-semibold text-gray-900 dark:text-white">{{ t('pricing.customRecharge') }}</h3>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-2">
+              {{ t('recharge.customAmount') }}
+            </label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-dark-400 font-medium">¥</span>
+              <input
+                v-model="customInput"
+                type="number"
+                min="1"
+                step="1"
+                :placeholder="rechargeMinAmount > 0 ? t('pricing.minAmountHint', { amount: rechargeMinAmount }) : t('recharge.inputPlaceholder')"
+                class="w-full rounded-lg border border-gray-300 bg-white py-3 pl-8 pr-4 text-lg font-medium text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-dark-600 dark:bg-dark-800 dark:text-white dark:placeholder-dark-500"
+              />
+            </div>
+            <p v-if="rechargeMinAmount > 0" class="mt-1 text-xs text-gray-400 dark:text-dark-500">
+              {{ t('pricing.minAmountNote', { amount: rechargeMinAmount }) }}
+            </p>
+          </div>
+
+          <!-- Amount Summary -->
+          <div v-if="customFinalAmount > 0" class="rounded-lg bg-gray-50 dark:bg-dark-800 p-4">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-600 dark:text-dark-400">{{ t('recharge.rechargeAmount') }}</span>
+              <span class="text-lg font-bold text-primary-600">¥{{ customFinalAmount.toFixed(2) }}</span>
+            </div>
+          </div>
+
+          <!-- Payment Method -->
+          <div class="flex items-center gap-3 rounded-lg border-2 border-primary-500 bg-primary-50 dark:bg-primary-900/20 p-3">
+            <svg class="h-6 w-6 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M9.5 4C5.36 4 2 6.69 2 10c0 1.89 1.08 3.56 2.78 4.66L4 17l2.5-1.5C7.55 15.82 8.5 16 9.5 16c.34 0 .68-.02 1-.06A5.95 5.95 0 0110 14c0-3.31 2.69-6 6-6 .34 0 .68.03 1 .08C16.32 5.68 13.17 4 9.5 4zM7 9a1 1 0 110 2 1 1 0 010-2zm5 0a1 1 0 110 2 1 1 0 010-2zm4 3c-2.76 0-5 1.79-5 4s2.24 4 5 4c.71 0 1.39-.11 2-.31L20 21l-.5-1.8C20.45 18.22 21 17.16 21 16c0-2.21-2.24-4-5-4zm-1.5 2.5a.75.75 0 110 1.5.75.75 0 010-1.5zm3 0a.75.75 0 110 1.5.75.75 0 010-1.5z"/>
+            </svg>
+            <span class="font-medium text-gray-900 dark:text-white">{{ t('recharge.wechatPay') }}</span>
+          </div>
+
+          <!-- Submit -->
+          <button
+            class="w-full rounded-lg bg-primary-600 py-3 text-base font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="customFinalAmount <= 0 || (rechargeMinAmount > 0 && customFinalAmount < rechargeMinAmount) || creatingOrder"
+            @click="handleCustomRecharge"
+          >
+            <span v-if="creatingOrder" class="flex items-center justify-center gap-2">
+              <div class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+              {{ t('recharge.creating') }}
+            </span>
+            <span v-else>
+              {{ customFinalAmount > 0 ? t('recharge.payNow', { amount: customFinalAmount.toFixed(2) }) : t('recharge.enterAmount') }}
+            </span>
+          </button>
+        </div>
+      </template>
     </div>
 
     <!-- Payment QR Code Modal -->
@@ -104,7 +220,7 @@
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              {{ t('pricing.payment.paymentSuccess') }}
+              {{ paymentOrderType === 'subscription' ? t('pricing.payment.paymentSuccess') : t('recharge.payment.success') }}
             </div>
             <div v-else-if="paymentStatus === 'closed'" class="text-sm text-red-500">
               {{ t('pricing.payment.orderExpired') }}
@@ -128,9 +244,9 @@
             <button
               v-if="paymentStatus === 'paid'"
               class="btn btn-primary flex-1"
-              @click="goToSubscriptions"
+              @click="goAfterPayment"
             >
-              {{ t('pricing.payment.viewSubscription') }}
+              {{ paymentOrderType === 'subscription' ? t('pricing.payment.viewSubscription') : t('recharge.payment.viewDashboard') }}
             </button>
           </div>
         </div>
@@ -140,38 +256,60 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import QRCode from 'qrcode'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { paymentAPI } from '@/api/payment'
-import type { PaymentPlan } from '@/api/payment'
+import type { PaymentPlan, RechargePlan } from '@/api/payment'
 
 const { t } = useI18n()
 const router = useRouter()
+const route = useRoute()
+
+// Tab state
+const activeTab = ref<'subscription' | 'recharge'>(
+  route.query.tab === 'recharge' ? 'recharge' : 'subscription'
+)
 
 const loading = ref(true)
 const plans = ref<PaymentPlan[]>([])
+const rechargePlans = ref<RechargePlan[]>([])
+const rechargeMinAmount = ref(0)
 const creatingOrder = ref(false)
 const showPaymentModal = ref(false)
 const qrLoading = ref(false)
 const qrCanvas = ref<HTMLCanvasElement | null>(null)
 const paymentStatus = ref<'pending' | 'paid' | 'closed'>('pending')
+const paymentOrderType = ref<'subscription' | 'recharge'>('subscription')
 const currentOrderNo = ref('')
 const currentOrderAmount = ref('')
 const countdown = ref(0)
+const customInput = ref('')
 
 let pollTimer: ReturnType<typeof setInterval> | null = null
 let countdownTimer: ReturnType<typeof setInterval> | null = null
 
+const customFinalAmount = computed(() => {
+  if (customInput.value !== '') {
+    const val = parseFloat(customInput.value)
+    return isNaN(val) || val <= 0 ? 0 : val
+  }
+  return 0
+})
+
 onMounted(async () => {
   try {
-    const allPlans = await paymentAPI.getPlans()
-    // Only show subscription plans on this page
+    const [allPlans, rechargeInfo] = await Promise.all([
+      paymentAPI.getPlans(),
+      paymentAPI.getRechargeInfo()
+    ])
     plans.value = allPlans.filter(p => (p.type || 'subscription') === 'subscription')
+    rechargePlans.value = rechargeInfo.plans || []
+    rechargeMinAmount.value = rechargeInfo.min_amount || 0
   } catch {
-    // silently fail, show empty state
+    // silently fail
   } finally {
     loading.value = false
   }
@@ -182,61 +320,91 @@ onUnmounted(() => {
 })
 
 function clearTimers() {
-  if (pollTimer) {
-    clearInterval(pollTimer)
-    pollTimer = null
-  }
-  if (countdownTimer) {
-    clearInterval(countdownTimer)
-    countdownTimer = null
-  }
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null }
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null }
 }
 
+// === Subscription purchase ===
 async function handleBuy(plan: PaymentPlan) {
   if (creatingOrder.value) return
-
+  paymentOrderType.value = 'subscription'
   creatingOrder.value = true
   try {
     const order = await paymentAPI.createOrder(plan.key)
-    currentOrderNo.value = order.order_no
-    currentOrderAmount.value = (order.amount_fen / 100).toFixed(order.amount_fen % 100 === 0 ? 0 : 2)
-    paymentStatus.value = 'pending'
-    showPaymentModal.value = true
-
-    // Calculate countdown
-    const expiresAt = new Date(order.expired_at).getTime()
-    countdown.value = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000))
-
-    // Render QR code
-    if (order.code_url) {
-      qrLoading.value = false
-      await nextTick()
-      if (qrCanvas.value) {
-        await QRCode.toCanvas(qrCanvas.value, order.code_url, {
-          width: 192,
-          margin: 2,
-          color: { dark: '#000000', light: '#ffffff' },
-        })
-      }
-    }
-
-    // Start polling for payment status
-    startPolling()
-
-    // Start countdown
-    countdownTimer = setInterval(() => {
-      countdown.value--
-      if (countdown.value <= 0) {
-        paymentStatus.value = 'closed'
-        clearTimers()
-      }
-    }, 1000)
+    await showQRModal(order)
   } catch (err: any) {
     const msg = err?.message || err?.response?.data?.message || t('pricing.payment.createFailed')
     alert(msg)
   } finally {
     creatingOrder.value = false
   }
+}
+
+// === Recharge preset ===
+async function handleRechargePreset(rp: RechargePlan) {
+  if (creatingOrder.value) return
+  paymentOrderType.value = 'recharge'
+  creatingOrder.value = true
+  try {
+    const payYuan = rp.pay_amount_fen / 100
+    const order = await paymentAPI.createRechargeOrder(payYuan)
+    await showQRModal(order)
+  } catch (err: any) {
+    const msg = err?.message || err?.response?.data?.message || t('recharge.payment.createFailed')
+    alert(msg)
+  } finally {
+    creatingOrder.value = false
+  }
+}
+
+// === Custom recharge ===
+async function handleCustomRecharge() {
+  if (customFinalAmount.value <= 0 || creatingOrder.value) return
+  if (rechargeMinAmount.value > 0 && customFinalAmount.value < rechargeMinAmount.value) return
+  paymentOrderType.value = 'recharge'
+  creatingOrder.value = true
+  try {
+    const order = await paymentAPI.createRechargeOrder(customFinalAmount.value)
+    await showQRModal(order)
+  } catch (err: any) {
+    const msg = err?.message || err?.response?.data?.message || t('recharge.payment.createFailed')
+    alert(msg)
+  } finally {
+    creatingOrder.value = false
+  }
+}
+
+// === Shared QR modal logic ===
+async function showQRModal(order: { order_no: string; code_url: string | null; amount_fen: number; expired_at: string }) {
+  currentOrderNo.value = order.order_no
+  currentOrderAmount.value = (order.amount_fen / 100).toFixed(order.amount_fen % 100 === 0 ? 0 : 2)
+  paymentStatus.value = 'pending'
+  showPaymentModal.value = true
+
+  const expiresAt = new Date(order.expired_at).getTime()
+  countdown.value = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000))
+
+  if (order.code_url) {
+    qrLoading.value = false
+    await nextTick()
+    if (qrCanvas.value) {
+      await QRCode.toCanvas(qrCanvas.value, order.code_url, {
+        width: 192,
+        margin: 2,
+        color: { dark: '#000000', light: '#ffffff' },
+      })
+    }
+  }
+
+  startPolling()
+
+  countdownTimer = setInterval(() => {
+    countdown.value--
+    if (countdown.value <= 0) {
+      paymentStatus.value = 'closed'
+      clearTimers()
+    }
+  }, 1000)
 }
 
 function startPolling() {
@@ -261,9 +429,13 @@ function cancelPayment() {
   clearTimers()
 }
 
-function goToSubscriptions() {
+function goAfterPayment() {
   showPaymentModal.value = false
   clearTimers()
-  router.push('/subscriptions')
+  if (paymentOrderType.value === 'subscription') {
+    router.push('/subscriptions')
+  } else {
+    router.push('/dashboard')
+  }
 }
 </script>

@@ -99,6 +99,8 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		WechatPayPrivateKeyConfigured:        settings.WechatPayPrivateKeyConfigured,
 		WechatPayNotifyURL:                   settings.WechatPayNotifyURL,
 		PaymentPlans:                         settings.PaymentPlans,
+		RechargeMinAmount:                    settings.RechargeMinAmount,
+		RechargePlans:                        settings.RechargePlans,
 	})
 }
 
@@ -178,6 +180,8 @@ type UpdateSettingsRequest struct {
 	WechatPayPrivateKey  string `json:"wechat_pay_private_key"`
 	WechatPayNotifyURL   string `json:"wechat_pay_notify_url"`
 	PaymentPlans         string `json:"payment_plans"`
+	RechargeMinAmount    float64 `json:"recharge_min_amount"`
+	RechargePlans        string  `json:"recharge_plans"`
 }
 
 // UpdateSettings 更新系统设置
@@ -364,6 +368,8 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		WechatPayPrivateKey:  req.WechatPayPrivateKey,
 		WechatPayNotifyURL:   req.WechatPayNotifyURL,
 		PaymentPlans:         req.PaymentPlans,
+		RechargeMinAmount:    req.RechargeMinAmount,
+		RechargePlans:        req.RechargePlans,
 	}
 
 	if err := h.settingService.UpdateSettings(c.Request.Context(), settings); err != nil {
@@ -434,6 +440,8 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		WechatPayPrivateKeyConfigured:        updatedSettings.WechatPayPrivateKeyConfigured,
 		WechatPayNotifyURL:                   updatedSettings.WechatPayNotifyURL,
 		PaymentPlans:                         updatedSettings.PaymentPlans,
+		RechargeMinAmount:                    updatedSettings.RechargeMinAmount,
+		RechargePlans:                        updatedSettings.RechargePlans,
 	})
 }
 

@@ -215,6 +215,7 @@ export default {
     github: 'GitHub',
     mySubscriptions: 'My Subscriptions',
     pricing: 'Pricing',
+    purchase: 'Purchase',
     recharge: 'Balance Recharge',
     modelPlaza: 'Model Plaza',
     docs: 'Docs',
@@ -3135,6 +3136,10 @@ export default {
         notifyUrl: 'Payment Notify URL',
         plans: 'Payment Plans (JSON)',
         plansHint: 'JSON array, each item contains key, name, amount_fen, group_id, validity_days',
+        rechargeMinAmount: 'Minimum Recharge Amount (Yuan)',
+        rechargeMinAmountHint: 'Set to 0 for no minimum',
+        rechargePlans: 'Recharge Plans (JSON)',
+        rechargePlansHint: 'JSON array, each item contains key, name, description, pay_amount_fen, balance_amount, popular(optional)',
         configured: 'Configured (leave empty to keep current value)'
       },
       opsMonitoring: {
@@ -3265,9 +3270,12 @@ export default {
   },
 
   pricing: {
-    title: 'Pricing',
+    title: 'Purchase',
     subtitle: 'Choose the plan that fits your needs',
+    tabSubscription: 'Subscription Plans',
+    tabRecharge: 'Balance Recharge',
     recommended: 'Recommended',
+    mostPopular: 'Most Popular',
     daily: '${amount} daily',
     noWeeklyLimit: 'No weekly limit',
     validity: '30-day validity',
@@ -3285,8 +3293,12 @@ export default {
     buyNow: 'Buy Now',
     subscriptionSection: 'Subscription Plans',
     balanceSection: 'Balance Recharge',
-    rechargeNow: 'Recharge Now',
+    rechargeNow: 'Recharge',
+    rechargeGet: 'Get',
     rechargeAmount: 'Recharge ¥{amount} to account balance',
+    customRecharge: 'Custom Recharge Amount',
+    minAmountHint: 'Minimum ¥{amount}',
+    minAmountNote: 'Minimum recharge amount is ¥{amount}',
     plans: {
       payg: { name: 'Pay As You Go', desc: 'Pay for what you use' },
       m289: { name: 'Monthly 289' },

@@ -195,15 +195,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/recharge',
-    name: 'Recharge',
-    component: () => import('@/views/user/RechargeView.vue'),
-    meta: {
-      requiresAuth: true,
-      requiresAdmin: false,
-      title: 'Balance Recharge',
-      titleKey: 'recharge.title',
-      descriptionKey: 'recharge.subtitle'
-    }
+    redirect: '/pricing?tab=recharge'
   },
   {
     path: '/tutorial',

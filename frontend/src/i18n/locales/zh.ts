@@ -212,6 +212,7 @@ export default {
     github: 'GitHub',
     mySubscriptions: '我的订阅',
     pricing: '购买订阅',
+    purchase: '充值购买',
     recharge: '余额充值',
     modelPlaza: '模型广场',
     docs: '文档',
@@ -3286,6 +3287,10 @@ export default {
         notifyUrl: '支付回调通知URL',
         plans: '套餐配置 (JSON)',
         plansHint: 'JSON 数组，每项包含 key, name, amount_fen, group_id, validity_days',
+        rechargeMinAmount: '充值最低金额（元）',
+        rechargeMinAmountHint: '设置为 0 表示不限制最低充值金额',
+        rechargePlans: '充值优惠套餐 (JSON)',
+        rechargePlansHint: 'JSON 数组，每项包含 key, name, description, pay_amount_fen(实付分), balance_amount(到账美元), popular(可选)',
         configured: '已配置（留空保留当前值）'
       },
       opsMonitoring: {
@@ -3415,9 +3420,12 @@ export default {
   },
 
   pricing: {
-    title: '购买订阅',
+    title: '充值购买',
     subtitle: '选择适合您的套餐方案',
+    tabSubscription: '订阅套餐',
+    tabRecharge: '余额充值',
     recommended: '推荐',
+    mostPopular: '最受欢迎',
     daily: '每日 {amount} 美金',
     noWeeklyLimit: '无周限额',
     validity: '30 天有效期',
@@ -3436,7 +3444,11 @@ export default {
     subscriptionSection: '订阅套餐',
     balanceSection: '余额充值',
     rechargeNow: '立即充值',
+    rechargeGet: '充值到账',
     rechargeAmount: '充值 {amount} 元到账户余额',
+    customRecharge: '自定义充值金额',
+    minAmountHint: '最低充值 ¥{amount}',
+    minAmountNote: '最低充值金额 ¥{amount}',
     plans: {
       payg: { name: '按量付费', desc: '用多少付多少' },
       m289: { name: '月卡 289' },

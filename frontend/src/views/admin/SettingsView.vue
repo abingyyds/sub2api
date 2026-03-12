@@ -483,6 +483,16 @@
                 <textarea id="payment_plans" v-model="form.payment_plans" rows="6" class="input mt-1 font-mono text-xs" placeholder='[{"key":"m289","name":"月卡 289","amount_fen":28900,"group_id":1,"validity_days":30}]' />
                 <p class="input-hint">{{ t('admin.settings.payment.plansHint') }}</p>
               </div>
+              <div>
+                <label for="recharge_min_amount" class="input-label">{{ t('admin.settings.payment.rechargeMinAmount') }}</label>
+                <input id="recharge_min_amount" v-model.number="form.recharge_min_amount" type="number" min="0" step="1" class="input mt-1" placeholder="0" />
+                <p class="input-hint">{{ t('admin.settings.payment.rechargeMinAmountHint') }}</p>
+              </div>
+              <div>
+                <label for="recharge_plans" class="input-label">{{ t('admin.settings.payment.rechargePlans') }}</label>
+                <textarea id="recharge_plans" v-model="form.recharge_plans" rows="6" class="input mt-1 font-mono text-xs" :placeholder='rechargeePlansPlaceholder' />
+                <p class="input-hint">{{ t('admin.settings.payment.rechargePlansHint') }}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -1257,7 +1267,9 @@ const form = reactive<SettingsForm>({
   wechat_pay_private_key: '',
   wechat_pay_private_key_configured: false,
   wechat_pay_notify_url: '',
-  payment_plans: ''
+  payment_plans: '',
+  recharge_min_amount: 0,
+  recharge_plans: ''
 })
 
 // LinuxDo OAuth redirect URL suggestion
@@ -1267,6 +1279,9 @@ const linuxdoRedirectUrlSuggestion = computed(() => {
     window.location.origin || `${window.location.protocol}//${window.location.host}`
   return `${origin}/api/v1/auth/oauth/linuxdo/callback`
 })
+
+// Recharge plans placeholder
+const rechargeePlansPlaceholder = '[{"key":"r100","name":"入门档 $100","description":"零门槛体验","pay_amount_fen":10000,"balance_amount":100},{"key":"r200","name":"进阶档 $200","description":"适合个人开发者","pay_amount_fen":19500,"balance_amount":200,"popular":true}]'
 
 async function setAndCopyLinuxdoRedirectUrl() {
   const url = linuxdoRedirectUrlSuggestion.value
@@ -1387,7 +1402,9 @@ async function saveSettings() {
       wechat_pay_public_key: form.wechat_pay_public_key || undefined,
       wechat_pay_private_key: form.wechat_pay_private_key || undefined,
       wechat_pay_notify_url: form.wechat_pay_notify_url,
-      payment_plans: form.payment_plans
+      payment_plans: form.payment_plans,
+      recharge_min_amount: form.recharge_min_amount,
+      recharge_plans: form.recharge_plans
     }
     const updated = await adminAPI.settings.updateSettings(payload)
     Object.assign(form, updated)
