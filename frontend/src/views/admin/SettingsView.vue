@@ -788,6 +788,21 @@
               </div>
               <div>
                 <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {{ t('admin.settings.defaults.initialBalanceExpiryDays') }}
+                </label>
+                <input
+                  v-model.number="form.initial_balance_expiry_days"
+                  type="number"
+                  min="0"
+                  class="input"
+                  placeholder="0"
+                />
+                <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.settings.defaults.initialBalanceExpiryDaysHint') }}
+                </p>
+              </div>
+              <div>
+                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   {{ t('admin.settings.defaults.defaultConcurrency') }}
                 </label>
                 <input
@@ -1296,6 +1311,7 @@ const form = reactive<SettingsForm>({
   totp_enabled: false,
   totp_encryption_key_configured: false,
   default_balance: 0,
+  initial_balance_expiry_days: 0,
   default_concurrency: 1,
   max_retry_rounds: 3,
   site_name: 'Sub2API',
@@ -1504,6 +1520,7 @@ async function saveSettings() {
       password_reset_enabled: form.password_reset_enabled,
       totp_enabled: form.totp_enabled,
       default_balance: form.default_balance,
+      initial_balance_expiry_days: form.initial_balance_expiry_days,
       default_concurrency: form.default_concurrency,
       max_retry_rounds: form.max_retry_rounds,
       site_name: form.site_name,

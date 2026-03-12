@@ -229,6 +229,9 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 		updates[SettingKeyMaxRetryRounds] = strconv.Itoa(settings.MaxRetryRounds)
 	}
 
+	// 初始余额有效期
+	updates[SettingKeyInitialBalanceExpiryDays] = strconv.Itoa(settings.InitialBalanceExpiryDays)
+
 	// Model fallback configuration
 	updates[SettingKeyEnableModelFallback] = strconv.FormatBool(settings.EnableModelFallback)
 	updates[SettingKeyFallbackModelAnthropic] = settings.FallbackModelAnthropic
@@ -386,6 +389,18 @@ func (s *SettingService) GetMaxRetryRounds(ctx context.Context) int {
 	return 3 // 默认 3 轮
 }
 
+// GetInitialBalanceExpiryDays 获取初始余额有效天数（0=永不过期）
+func (s *SettingService) GetInitialBalanceExpiryDays(ctx context.Context) int {
+	value, err := s.settingRepo.GetValue(ctx, SettingKeyInitialBalanceExpiryDays)
+	if err != nil {
+		return 0
+	}
+	if v, err := strconv.Atoi(value); err == nil && v >= 0 {
+		return v
+	}
+	return 0
+}
+
 // InitializeDefaultSettings 初始化默认设置
 func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 	// 检查是否已有设置
@@ -423,6 +438,9 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyReferralEnabled:      "false",
 		SettingKeyReferralRewardAmount: "0",
 		SettingKeyInviteeRewardAmount:  "0",
+
+		// 初始余额有效期（默认永不过期）
+		SettingKeyInitialBalanceExpiryDays: "0",
 
 		// Ops monitoring defaults (vNext)
 		SettingKeyOpsMonitoringEnabled:         "true",
@@ -487,6 +505,11 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		result.MaxRetryRounds = rounds
 	} else {
 		result.MaxRetryRounds = 3
+	}
+
+	// 解析初始余额有效天数
+	if days, err := strconv.Atoi(settings[SettingKeyInitialBalanceExpiryDays]); err == nil && days >= 0 {
+		result.InitialBalanceExpiryDays = days
 	}
 
 	// 敏感信息直接返回，方便测试连接时使用

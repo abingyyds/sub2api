@@ -50,6 +50,9 @@ type UserRepository interface {
 
 	// 来源统计
 	GetDiscoverySourceStats(ctx context.Context, startTime, endTime time.Time) ([]DiscoverySourceStat, error)
+
+	// 初始余额过期清理
+	ClearExpiredInitialBalances(ctx context.Context) ([]int64, error)
 }
 
 type DiscoverySourceStat struct {

@@ -84,6 +84,14 @@ func (User) Fields() []ent.Field {
 			MaxLen(50).
 			Optional().
 			Nillable(),
+
+		// 初始余额有效期（注册赠送余额到期后清零）
+		field.Float("initial_balance").
+			SchemaType(map[string]string{dialect.Postgres: "decimal(20,8)"}).
+			Default(0),
+		field.Time("initial_balance_expires_at").
+			Optional().
+			Nillable(),
 	}
 }
 

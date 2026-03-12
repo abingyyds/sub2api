@@ -60,9 +60,20 @@ func (r *userRepository) Create(ctx context.Context, userIn *service.User) error
 		SetBalance(userIn.Balance).
 		SetConcurrency(userIn.Concurrency).
 		SetStatus(userIn.Status).
+		SetInitialBalance(userIn.InitialBalance).
 		Save(ctx)
 	if err != nil {
 		return translatePersistenceError(err, nil, service.ErrEmailExists)
+	}
+
+	// Set initial_balance_expires_at if provided (nillable field)
+	if userIn.InitialBalanceExpiresAt != nil {
+		created, err = txClient.User.UpdateOneID(created.ID).
+			SetInitialBalanceExpiresAt(*userIn.InitialBalanceExpiresAt).
+			Save(ctx)
+		if err != nil {
+			return fmt.Errorf("set initial_balance_expires_at: %w", err)
+		}
 	}
 
 	if err := r.syncUserAllowedGroupsWithClient(ctx, txClient, created.ID, userIn.AllowedGroups); err != nil {
@@ -555,4 +566,46 @@ func (r *userRepository) GetDiscoverySourceStats(ctx context.Context, startTime,
 		}
 	}
 	return stats, nil
+}
+
+// ClearExpiredInitialBalances 批量清理过期初始余额
+// 对 initial_balance_expires_at < NOW() AND initial_balance > 0 的用户：
+// balance = max(0, balance - initial_balance), initial_balance = 0, initial_balance_expires_at = NULL
+// 返回受影响的用户ID列表
+func (r *userRepository) ClearExpiredInitialBalances(ctx context.Context) ([]int64, error) {
+	if r.sql == nil {
+		return nil, fmt.Errorf("sql executor is not configured")
+	}
+
+	query := `
+		UPDATE users
+		SET balance = GREATEST(0, balance - initial_balance),
+		    initial_balance = 0,
+		    initial_balance_expires_at = NULL,
+		    updated_at = NOW()
+		WHERE initial_balance_expires_at < NOW()
+		  AND initial_balance > 0
+		  AND deleted_at IS NULL
+		RETURNING id
+	`
+
+	rows, err := r.sql.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("clear expired initial balances: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	var userIDs []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("scan user id: %w", err)
+		}
+		userIDs = append(userIDs, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate rows: %w", err)
+	}
+
+	return userIDs, nil
 }

@@ -76,6 +76,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		DefaultConcurrency:                   settings.DefaultConcurrency,
 		DefaultBalance:                       settings.DefaultBalance,
 		MaxRetryRounds:                       settings.MaxRetryRounds,
+		InitialBalanceExpiryDays:             settings.InitialBalanceExpiryDays,
 		EnableModelFallback:                  settings.EnableModelFallback,
 		FallbackModelAnthropic:               settings.FallbackModelAnthropic,
 		FallbackModelOpenAI:                  settings.FallbackModelOpenAI,
@@ -148,6 +149,9 @@ type UpdateSettingsRequest struct {
 	DefaultBalance     float64 `json:"default_balance"`
 	MaxRetryRounds     int     `json:"max_retry_rounds"`
 
+	// 初始余额有效期
+	InitialBalanceExpiryDays int `json:"initial_balance_expiry_days"`
+
 	// Model fallback configuration
 	EnableModelFallback      bool   `json:"enable_model_fallback"`
 	FallbackModelAnthropic   string `json:"fallback_model_anthropic"`
@@ -214,6 +218,9 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	}
 	if req.SMTPPort <= 0 {
 		req.SMTPPort = 587
+	}
+	if req.InitialBalanceExpiryDays < 0 {
+		req.InitialBalanceExpiryDays = 0
 	}
 
 	// Turnstile 参数验证
@@ -325,6 +332,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		DefaultConcurrency:         req.DefaultConcurrency,
 		DefaultBalance:             req.DefaultBalance,
 		MaxRetryRounds:             req.MaxRetryRounds,
+		InitialBalanceExpiryDays:   req.InitialBalanceExpiryDays,
 		EnableModelFallback:        req.EnableModelFallback,
 		FallbackModelAnthropic:     req.FallbackModelAnthropic,
 		FallbackModelOpenAI:        req.FallbackModelOpenAI,
@@ -418,6 +426,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		DefaultConcurrency:                   updatedSettings.DefaultConcurrency,
 		DefaultBalance:                       updatedSettings.DefaultBalance,
 		MaxRetryRounds:                       updatedSettings.MaxRetryRounds,
+		InitialBalanceExpiryDays:             updatedSettings.InitialBalanceExpiryDays,
 		EnableModelFallback:                  updatedSettings.EnableModelFallback,
 		FallbackModelAnthropic:               updatedSettings.FallbackModelAnthropic,
 		FallbackModelOpenAI:                  updatedSettings.FallbackModelOpenAI,
@@ -586,6 +595,9 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	}
 	if before.OpsMetricsIntervalSeconds != after.OpsMetricsIntervalSeconds {
 		changed = append(changed, "ops_metrics_interval_seconds")
+	}
+	if before.InitialBalanceExpiryDays != after.InitialBalanceExpiryDays {
+		changed = append(changed, "initial_balance_expiry_days")
 	}
 	return changed
 }

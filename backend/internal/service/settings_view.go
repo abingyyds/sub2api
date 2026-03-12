@@ -41,6 +41,9 @@ type SystemSettings struct {
 	DefaultBalance     float64
 	MaxRetryRounds     int
 
+	// 初始余额有效期
+	InitialBalanceExpiryDays int
+
 	// Model fallback configuration
 	EnableModelFallback      bool   `json:"enable_model_fallback"`
 	FallbackModelAnthropic   string `json:"fallback_model_anthropic"`
