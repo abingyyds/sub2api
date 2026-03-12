@@ -38,56 +38,73 @@
 
       <!-- ==================== Subscription Tab ==================== -->
       <template v-if="!loading && activeTab === 'subscription'">
-        <div v-if="plans.length > 0" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div v-if="decoratedPlans.length > 0" class="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
           <div
-            v-for="(plan, index) in plans"
-            :key="plan.key"
-            class="card relative flex flex-col overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer"
-            :class="{ 'ring-2 ring-primary-500': index === 0 }"
-            @click="handleBuy(plan)"
+            v-for="dp in decoratedPlans"
+            :key="dp.plan.key"
+            class="relative flex flex-col overflow-hidden rounded-2xl border transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+            :class="dp.featured
+              ? 'border-primary-500 ring-2 ring-primary-500 shadow-lg scale-[1.02]'
+              : 'border-gray-200 dark:border-dark-600 shadow-sm'"
+            @click="handleBuy(dp.plan)"
           >
-            <div v-if="index === 0" class="absolute right-4 top-4">
-              <span class="badge badge-primary text-xs">{{ t('pricing.recommended') }}</span>
+            <!-- Top badge ribbon -->
+            <div
+              v-if="dp.badge"
+              class="w-full py-1.5 text-center text-xs font-bold tracking-wide"
+              :class="dp.featured
+                ? 'bg-primary-600 text-white'
+                : 'bg-gray-100 text-gray-600 dark:bg-dark-700 dark:text-dark-300'"
+            >
+              {{ dp.badge }}
             </div>
+
             <div class="flex flex-1 flex-col p-6">
-              <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ plan.name }}</h3>
-              <p v-if="plan.description" class="mt-1 text-sm text-gray-500 dark:text-dark-400">{{ plan.description }}</p>
-              <div class="mt-3 text-3xl font-bold text-primary-600">
-                ¥{{ (plan.amount_fen / 100).toFixed(plan.amount_fen % 100 === 0 ? 0 : 2) }}
+              <!-- Target audience -->
+              <p class="text-xs font-medium text-primary-500 dark:text-primary-400">{{ dp.audience }}</p>
+
+              <!-- Plan name -->
+              <h3 class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ dp.plan.name }}</h3>
+
+              <!-- Price -->
+              <div class="mt-3 flex items-baseline gap-1">
+                <span class="text-4xl font-extrabold text-gray-900 dark:text-white">¥{{ (dp.plan.amount_fen / 100).toFixed(0) }}</span>
+                <span class="text-sm text-gray-500 dark:text-dark-400">/月</span>
               </div>
-              <ul class="mt-5 flex-1 space-y-2.5">
-                <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                  <svg class="h-4 w-4 flex-shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+
+              <!-- Highlight text -->
+              <p class="mt-3 text-sm font-medium text-primary-600 dark:text-primary-400">{{ dp.highlight }}</p>
+
+              <!-- Divider -->
+              <div class="my-4 border-t border-gray-100 dark:border-dark-600"></div>
+
+              <!-- Feature list -->
+              <ul class="flex-1 space-y-3">
+                <li v-for="(feat, fi) in dp.features" :key="fi" class="flex items-start gap-2.5 text-sm text-gray-600 dark:text-dark-300">
+                  <svg class="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                   </svg>
-                  {{ t('pricing.validityDays', { days: plan.validity_days }) }}
-                </li>
-                <li v-for="(feature, fi) in (plan.features || [])" :key="fi" class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                  <svg class="h-4 w-4 flex-shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
-                  {{ feature }}
-                </li>
-                <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                  <svg class="h-4 w-4 flex-shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
-                  {{ t('pricing.wechatPay') }}
+                  <span>{{ feat }}</span>
                 </li>
               </ul>
-              <div
-                class="mt-4 flex items-center justify-center rounded-lg bg-primary-600 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
-                :class="{ 'opacity-50 pointer-events-none': creatingOrder }"
+
+              <!-- CTA button -->
+              <button
+                class="mt-6 w-full rounded-xl py-3 text-sm font-bold transition-colors"
+                :class="dp.featured
+                  ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-md'
+                  : 'bg-gray-900 text-white hover:bg-gray-800 dark:bg-dark-500 dark:hover:bg-dark-400'"
+                :disabled="creatingOrder"
               >
-                {{ t('pricing.buyNow') }}
-              </div>
+                {{ dp.cta }}
+              </button>
             </div>
           </div>
         </div>
         <div v-else class="text-center py-12 text-gray-500 dark:text-dark-400">
           {{ t('pricing.noPlans') }}
         </div>
-        <p v-if="plans.length > 0" class="text-center text-sm text-gray-500 dark:text-dark-400">
+        <p v-if="decoratedPlans.length > 0" class="text-center text-sm text-gray-500 dark:text-dark-400">
           {{ t('pricing.stackable') }}
         </p>
       </template>
@@ -297,6 +314,143 @@ const customFinalAmount = computed(() => {
     return isNaN(val) || val <= 0 ? 0 : val
   }
   return 0
+})
+
+// === Hardcoded plan decoration data ===
+interface DecoratedPlan {
+  plan: PaymentPlan
+  badge: string
+  audience: string
+  highlight: string
+  features: string[]
+  cta: string
+  featured: boolean
+}
+
+const planDecorations: Record<string, Omit<DecoratedPlan, 'plan'>> = {
+  // Match by amount_fen (29900 = ¥299)
+  '29900': {
+    badge: '',
+    audience: '',
+    highlight: '',
+    features: [
+      '$30/day',
+      '$600/month',
+      '',
+      '',
+      '',
+    ],
+    cta: '',
+    featured: false,
+  },
+  // Match by amount_fen (58900 = ¥589)
+  '58900': {
+    badge: '',
+    audience: '',
+    highlight: '',
+    features: [
+      '$60/day',
+      '$1,300/month',
+      '',
+      '',
+      '',
+      '',
+    ],
+    cta: '',
+    featured: true,
+  },
+  // Match by amount_fen (118900 = ¥1189)
+  '118900': {
+    badge: '',
+    audience: '',
+    highlight: '',
+    features: [
+      '$120/day',
+      '$2,500/month',
+      '',
+      '',
+      '',
+    ],
+    cta: '',
+    featured: false,
+  },
+}
+
+// Chinese decoration text (hardcoded)
+const planDecoZh: Record<string, Omit<DecoratedPlan, 'plan'>> = {
+  '29900': {
+    badge: '个人首选',
+    audience: '适合：独立开发者 / 个人项目',
+    highlight: '总额$600：官方价格体系，无需复杂换算',
+    features: [
+      '每日 $30 高速配额：专属通道，响应丝滑无卡顿',
+      '总额 $600/月：充足算力，轻松覆盖日常开发',
+      '永不掉线保障：额度用尽自动转按量，业务 7x24 在线',
+      '超高性价比：个人开发首选，一次付费全月无忧',
+      '微信扫码支付：便捷安全',
+    ],
+    cta: '购买开发者版',
+    featured: false,
+  },
+  '58900': {
+    badge: '生产环境推荐 / 主推套餐',
+    audience: '适合：全职开发 / 生产级应用',
+    highlight: '折合 $1=¥0.45，立省 55% 成本！',
+    features: [
+      '每日 $60 高速配额：生产级优先级，拒绝排队等待',
+      '总额 $1,300/月：充足算力储备，应对高频调用',
+      '无损计费机制：拒绝倍率陷阱，每一分实打实可用',
+      '熔断智能防护：异常流量自动隔离，生产环境稳定如磐石',
+      '永不掉线保障：额度用尽自动转按量，业务不中断',
+      '微信扫码支付：便捷安全',
+    ],
+    cta: '立即购买，释放生产力',
+    featured: true,
+  },
+  '118900': {
+    badge: '团队专属 / SLA 保障',
+    audience: '适合：开发团队 / AI 产品项目',
+    highlight: '总额$2,500：顶配储备，支撑海量高并发接入',
+    features: [
+      '每日 $120 高速配额：团队级 VIP 优先级调度，秒级响应',
+      '总额 $2,500/月：顶配算力，满足团队级高频需求',
+      '高可用服务保障：极致架构，满足企业级稳定运营标准',
+      '无感溢出续航：额度海量储备，确保 AI 工作流永不断供',
+      '微信扫码支付：便捷安全',
+    ],
+    cta: '购买旗舰版',
+    featured: false,
+  },
+}
+
+const decoratedPlans = computed<DecoratedPlan[]>(() => {
+  // Target plans by amount_fen: 29900, 58900, 118900
+  const targetAmounts = [29900, 58900, 118900]
+  const matched = plans.value.filter(p => targetAmounts.includes(p.amount_fen))
+
+  // If none of the target amounts match, fall back to showing all plans with generic decoration
+  const source = matched.length > 0 ? matched : plans.value
+
+  return source.map(plan => {
+    const key = String(plan.amount_fen)
+    const deco = planDecoZh[key] || planDecorations[key]
+    if (deco) {
+      return { ...deco, plan }
+    }
+    // Fallback for undecorated plans
+    return {
+      plan,
+      badge: '',
+      audience: '',
+      highlight: plan.description || '',
+      features: [
+        ...(plan.features || []),
+        '微信扫码支付',
+      ],
+      cta: '立即购买',
+      featured: false,
+    }
+  })
 })
 
 onMounted(async () => {
