@@ -80,6 +80,10 @@ export interface SystemSettings {
   wechat_pay_private_key_configured: boolean
   wechat_pay_notify_url: string
   payment_plans: string
+
+  // Recharge settings
+  recharge_min_amount: number
+  recharge_plans: string
 }
 
 export interface UpdateSettingsRequest {
@@ -137,6 +141,10 @@ export interface UpdateSettingsRequest {
   wechat_pay_private_key?: string
   wechat_pay_notify_url?: string
   payment_plans?: string
+
+  // Recharge settings
+  recharge_min_amount?: number
+  recharge_plans?: string
 }
 
 /**
