@@ -1,6 +1,9 @@
 [service]
 name = "sub2api"
 
+[build]
+dockerfilePath = "Dockerfile"
+
 [deploy]
 startCommand = 'sh -lc "
 set -eu
