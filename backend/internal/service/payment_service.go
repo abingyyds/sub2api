@@ -112,13 +112,13 @@ func NewPaymentService(
 func (s *PaymentService) GetPlans(ctx context.Context) ([]PaymentPlan, error) {
 	var plans []PaymentPlan
 
-	// 1. 从分组自动生成套餐：price_fen > 0 的活跃分组
+	// 1. 从分组自动生成套餐：已上架（listed=true）且 price_fen > 0 的活跃分组
 	groups, err := s.groupRepo.ListActive(ctx)
 	if err != nil {
 		log.Printf("[Payment] Failed to list active groups for plans: %v", err)
 	} else {
 		for _, g := range groups {
-			if g.PriceFen <= 0 {
+			if !g.Listed || g.PriceFen <= 0 {
 				continue
 			}
 			plan := PaymentPlan{

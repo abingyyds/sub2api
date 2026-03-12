@@ -111,6 +111,11 @@ func (Group) Fields() []ent.Field {
 		field.Int("price_fen").
 			Default(0).
 			Comment("套餐价格（分），大于0时自动显示为可购买套餐"),
+
+		// 是否上架到购买页面 (added by migration 062)
+		field.Bool("listed").
+			Default(false).
+			Comment("是否上架到购买页面展示"),
 	}
 }
 

@@ -39,6 +39,9 @@ type Group struct {
 	// 套餐价格（分），>0 时分组自动显示为可购买套餐
 	PriceFen int
 
+	// 是否上架到购买页面
+	Listed bool
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 

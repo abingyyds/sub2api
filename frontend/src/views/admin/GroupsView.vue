@@ -375,6 +375,39 @@
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
             {{ t('admin.groups.priceFenHint') }}
           </p>
+
+          <!-- 上架开关 -->
+          <div class="mt-3 flex items-center justify-between">
+            <div>
+              <label class="input-label mb-0">{{ t('admin.groups.listed') }}</label>
+              <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('admin.groups.listedHint') }}</p>
+            </div>
+            <button
+              type="button"
+              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+              :class="createForm.listed ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-500'"
+              @click="createForm.listed = !createForm.listed"
+            >
+              <span
+                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                :class="createForm.listed ? 'translate-x-5' : 'translate-x-0'"
+              />
+            </button>
+          </div>
+
+          <!-- 有效期天数 -->
+          <div class="mt-3">
+            <label class="input-label">{{ t('admin.groups.defaultValidityDays') }}</label>
+            <input
+              v-model.number="createForm.default_validity_days"
+              type="number"
+              min="1"
+              step="1"
+              class="input"
+              :placeholder="t('admin.groups.defaultValidityDaysPlaceholder')"
+            />
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t('admin.groups.defaultValidityDaysHint') }}</p>
+          </div>
         </div>
 
         <!-- 图片生成计费配置（antigravity 和 gemini 平台） -->
@@ -837,6 +870,39 @@
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
             {{ t('admin.groups.priceFenHint') }}
           </p>
+
+          <!-- 上架开关 -->
+          <div class="mt-3 flex items-center justify-between">
+            <div>
+              <label class="input-label mb-0">{{ t('admin.groups.listed') }}</label>
+              <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('admin.groups.listedHint') }}</p>
+            </div>
+            <button
+              type="button"
+              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+              :class="editForm.listed ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-500'"
+              @click="editForm.listed = !editForm.listed"
+            >
+              <span
+                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                :class="editForm.listed ? 'translate-x-5' : 'translate-x-0'"
+              />
+            </button>
+          </div>
+
+          <!-- 有效期天数 -->
+          <div class="mt-3">
+            <label class="input-label">{{ t('admin.groups.defaultValidityDays') }}</label>
+            <input
+              v-model.number="editForm.default_validity_days"
+              type="number"
+              min="1"
+              step="1"
+              class="input"
+              :placeholder="t('admin.groups.defaultValidityDaysPlaceholder')"
+            />
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t('admin.groups.defaultValidityDaysHint') }}</p>
+          </div>
         </div>
 
         <!-- 图片生成计费配置（antigravity 和 gemini 平台） -->
@@ -1284,7 +1350,11 @@ const createForm = reactive({
   // 模型路由开关
   model_routing_enabled: false,
   // 套餐价格（分）
-  price_fen: 0
+  price_fen: 0,
+  // 是否上架
+  listed: false,
+  // 有效期天数
+  default_validity_days: 30
 })
 
 // 简单账号类型（用于模型路由选择）
@@ -1457,7 +1527,11 @@ const editForm = reactive({
   // 模型路由开关
   model_routing_enabled: false,
   // 套餐价格（分）
-  price_fen: 0
+  price_fen: 0,
+  // 是否上架
+  listed: false,
+  // 有效期天数
+  default_validity_days: 30
 })
 
 // 根据分组类型返回不同的删除确认消息
@@ -1540,6 +1614,8 @@ const closeCreateModal = () => {
   createForm.claude_code_only = false
   createForm.fallback_group_id = null
   createForm.price_fen = 0
+  createForm.listed = false
+  createForm.default_validity_days = 30
   createModelRoutingRules.value = []
 }
 
@@ -1591,6 +1667,8 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.fallback_group_id = group.fallback_group_id
   editForm.model_routing_enabled = group.model_routing_enabled || false
   editForm.price_fen = group.price_fen || 0
+  editForm.listed = group.listed || false
+  editForm.default_validity_days = group.default_validity_days || 30
   // 加载模型路由规则（异步加载账号名称）
   editModelRoutingRules.value = await convertApiFormatToRoutingRules(group.model_routing)
   showEditModal.value = true

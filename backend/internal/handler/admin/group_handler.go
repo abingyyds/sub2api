@@ -45,6 +45,10 @@ type CreateGroupRequest struct {
 	ModelRoutingEnabled bool               `json:"model_routing_enabled"`
 	// 套餐价格（分），>0 时分组自动显示为可购买套餐
 	PriceFen int `json:"price_fen"`
+	// 是否上架到购买页面
+	Listed bool `json:"listed"`
+	// 有效期天数
+	DefaultValidityDays int `json:"default_validity_days"`
 }
 
 // UpdateGroupRequest represents update group request
@@ -70,6 +74,10 @@ type UpdateGroupRequest struct {
 	ModelRoutingEnabled *bool              `json:"model_routing_enabled"`
 	// 套餐价格（分），>0 时分组自动显示为可购买套餐
 	PriceFen *int `json:"price_fen"`
+	// 是否上架到购买页面
+	Listed *bool `json:"listed"`
+	// 有效期天数
+	DefaultValidityDays *int `json:"default_validity_days"`
 }
 
 // List handles listing all groups with pagination
@@ -176,6 +184,8 @@ func (h *GroupHandler) Create(c *gin.Context) {
 		ModelRouting:        req.ModelRouting,
 		ModelRoutingEnabled: req.ModelRoutingEnabled,
 		PriceFen:            req.PriceFen,
+		Listed:              req.Listed,
+		DefaultValidityDays: req.DefaultValidityDays,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)
@@ -219,6 +229,8 @@ func (h *GroupHandler) Update(c *gin.Context) {
 		ModelRouting:        req.ModelRouting,
 		ModelRoutingEnabled: req.ModelRoutingEnabled,
 		PriceFen:            req.PriceFen,
+		Listed:              req.Listed,
+		DefaultValidityDays: req.DefaultValidityDays,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)

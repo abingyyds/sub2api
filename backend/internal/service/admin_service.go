@@ -116,6 +116,10 @@ type CreateGroupInput struct {
 	ModelRoutingEnabled bool // 是否启用模型路由
 	// 套餐价格（分），>0 时分组自动显示为可购买套餐
 	PriceFen int
+	// 是否上架到购买页面
+	Listed bool
+	// 有效期天数
+	DefaultValidityDays int
 }
 
 type UpdateGroupInput struct {
@@ -140,6 +144,10 @@ type UpdateGroupInput struct {
 	ModelRoutingEnabled *bool // 是否启用模型路由
 	// 套餐价格（分），>0 时分组自动显示为可购买套餐
 	PriceFen *int
+	// 是否上架到购买页面
+	Listed *bool
+	// 有效期天数
+	DefaultValidityDays *int
 }
 
 type CreateAccountInput struct {
@@ -613,6 +621,8 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 		FallbackGroupID:  input.FallbackGroupID,
 		ModelRouting:     input.ModelRouting,
 		PriceFen:         input.PriceFen,
+		Listed:           input.Listed,
+		DefaultValidityDays: input.DefaultValidityDays,
 	}
 	if err := s.groupRepo.Create(ctx, group); err != nil {
 		return nil, err
@@ -752,6 +762,16 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 	// 套餐价格
 	if input.PriceFen != nil {
 		group.PriceFen = *input.PriceFen
+	}
+
+	// 是否上架
+	if input.Listed != nil {
+		group.Listed = *input.Listed
+	}
+
+	// 有效期天数
+	if input.DefaultValidityDays != nil {
+		group.DefaultValidityDays = *input.DefaultValidityDays
 	}
 
 	if err := s.groupRepo.Update(ctx, group); err != nil {

@@ -70,6 +70,12 @@ type Group struct {
 	// 套餐价格（分），>0 时分组自动显示为可购买套餐
 	PriceFen int `json:"price_fen"`
 
+	// 是否上架到购买页面
+	Listed bool `json:"listed"`
+
+	// 有效期天数
+	DefaultValidityDays int `json:"default_validity_days"`
+
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

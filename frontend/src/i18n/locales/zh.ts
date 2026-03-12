@@ -1149,7 +1149,12 @@ export default {
       },
       priceFen: '套餐价格（分）',
       priceFenPlaceholder: '0',
-      priceFenHint: '设置大于 0 的价格后，此分组将自动显示为可购买的订阅套餐'
+      priceFenHint: '设置大于 0 的价格后，此分组将自动显示为可购买的订阅套餐',
+      listed: '上架到购买页面',
+      listedHint: '开启后该套餐将展示在用户购买页面',
+      defaultValidityDays: '有效期（天）',
+      defaultValidityDaysPlaceholder: '30',
+      defaultValidityDaysHint: '购买后订阅的有效期天数'
     },
 
     // Subscriptions Management

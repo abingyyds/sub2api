@@ -1074,7 +1074,12 @@ export default {
       },
       priceFen: 'Plan Price (Fen)',
       priceFenPlaceholder: '0',
-      priceFenHint: 'Set a price > 0 to automatically display this group as a purchasable subscription plan'
+      priceFenHint: 'Set a price > 0 to automatically display this group as a purchasable subscription plan',
+      listed: 'List on Pricing Page',
+      listedHint: 'When enabled, this plan will be shown on the user pricing page',
+      defaultValidityDays: 'Validity Period (Days)',
+      defaultValidityDaysPlaceholder: '30',
+      defaultValidityDaysHint: 'Number of days the subscription is valid after purchase'
     },
 
     // Subscriptions

@@ -281,6 +281,10 @@ export interface Group {
   fallback_group_id: number | null
   // 套餐价格（分），>0 时分组自动显示为可购买套餐
   price_fen: number
+  // 是否上架到购买页面
+  listed: boolean
+  // 有效期天数
+  default_validity_days: number
   created_at: string
   updated_at: string
 }
