@@ -489,9 +489,88 @@
                 <p class="input-hint">{{ t('admin.settings.payment.rechargeMinAmountHint') }}</p>
               </div>
               <div>
-                <label for="recharge_plans" class="input-label">{{ t('admin.settings.payment.rechargePlans') }}</label>
-                <textarea id="recharge_plans" v-model="form.recharge_plans" rows="6" class="input mt-1 font-mono text-xs" :placeholder='rechargeePlansPlaceholder' />
-                <p class="input-hint">{{ t('admin.settings.payment.rechargePlansHint') }}</p>
+                <div class="flex items-center justify-between mb-3">
+                  <label class="input-label mb-0">{{ t('admin.settings.payment.rechargePlans') }}</label>
+                  <button type="button" class="btn btn-primary btn-sm" @click="addRechargePlan">
+                    <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    {{ t('admin.settings.payment.addRechargePlan') }}
+                  </button>
+                </div>
+                <p class="input-hint mb-3">{{ t('admin.settings.payment.rechargePlansHint') }}</p>
+
+                <!-- Recharge plan cards -->
+                <div v-if="rechargePlansList.length > 0" class="space-y-3">
+                  <div
+                    v-for="(rp, idx) in rechargePlansList"
+                    :key="idx"
+                    class="relative rounded-lg border border-gray-200 dark:border-dark-600 p-4"
+                  >
+                    <!-- Delete button -->
+                    <button
+                      type="button"
+                      class="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
+                      @click="removeRechargePlan(idx)"
+                    >
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+
+                    <div class="grid grid-cols-2 gap-3">
+                      <!-- Name -->
+                      <div>
+                        <label class="text-xs font-medium text-gray-600 dark:text-dark-400">{{ t('admin.settings.payment.rpName') }}</label>
+                        <input v-model="rp.name" type="text" class="input mt-0.5 text-sm" :placeholder="t('admin.settings.payment.rpNamePlaceholder')" />
+                      </div>
+                      <!-- Key -->
+                      <div>
+                        <label class="text-xs font-medium text-gray-600 dark:text-dark-400">{{ t('admin.settings.payment.rpKey') }}</label>
+                        <input v-model="rp.key" type="text" class="input mt-0.5 text-sm" :placeholder="t('admin.settings.payment.rpKeyPlaceholder')" />
+                      </div>
+                      <!-- Pay amount (yuan) -->
+                      <div>
+                        <label class="text-xs font-medium text-gray-600 dark:text-dark-400">{{ t('admin.settings.payment.rpPayAmount') }}</label>
+                        <div class="relative mt-0.5">
+                          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-500">¥</span>
+                          <input v-model.number="rp.pay_yuan" type="number" min="0" step="0.01" class="input text-sm pl-7" placeholder="0" />
+                        </div>
+                      </div>
+                      <!-- Balance amount (USD) -->
+                      <div>
+                        <label class="text-xs font-medium text-gray-600 dark:text-dark-400">{{ t('admin.settings.payment.rpBalanceAmount') }}</label>
+                        <div class="relative mt-0.5">
+                          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-500">$</span>
+                          <input v-model.number="rp.balance_amount" type="number" min="0" step="1" class="input text-sm pl-7" placeholder="0" />
+                        </div>
+                      </div>
+                      <!-- Description -->
+                      <div>
+                        <label class="text-xs font-medium text-gray-600 dark:text-dark-400">{{ t('admin.settings.payment.rpDescription') }}</label>
+                        <input v-model="rp.description" type="text" class="input mt-0.5 text-sm" :placeholder="t('admin.settings.payment.rpDescriptionPlaceholder')" />
+                      </div>
+                      <!-- Popular -->
+                      <div class="flex items-end">
+                        <label class="flex items-center gap-2 cursor-pointer pb-1">
+                          <input v-model="rp.popular" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+                          <span class="text-xs font-medium text-gray-600 dark:text-dark-400">{{ t('admin.settings.payment.rpPopular') }}</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Preview -->
+                    <div v-if="rp.pay_yuan > 0 && rp.balance_amount > 0" class="mt-2 text-xs text-gray-500 dark:text-dark-500">
+                      {{ rp.name || '未命名' }}：充 ¥{{ rp.pay_yuan }} 得 ${{ rp.balance_amount }}
+                      <span v-if="rp.pay_yuan !== rp.balance_amount" class="text-green-600">
+                        ({{ rp.pay_yuan < rp.balance_amount ? '优惠' : '' }}折合 $1 = ¥{{ (rp.pay_yuan / rp.balance_amount).toFixed(2) }})
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="text-center py-6 text-sm text-gray-400 dark:text-dark-500 border border-dashed border-gray-200 dark:border-dark-600 rounded-lg">
+                  {{ t('admin.settings.payment.noRechargePlans') }}
+                </div>
               </div>
             </div>
           </div>
@@ -1280,8 +1359,62 @@ const linuxdoRedirectUrlSuggestion = computed(() => {
   return `${origin}/api/v1/auth/oauth/linuxdo/callback`
 })
 
-// Recharge plans placeholder
-const rechargeePlansPlaceholder = '[{"key":"r100","name":"入门档 $100","description":"零门槛体验","pay_amount_fen":10000,"balance_amount":100},{"key":"r200","name":"进阶档 $200","description":"适合个人开发者","pay_amount_fen":19500,"balance_amount":200,"popular":true}]'
+// Recharge plans visual editor
+interface RechargePlanForm {
+  key: string
+  name: string
+  description: string
+  pay_yuan: number
+  balance_amount: number
+  popular: boolean
+}
+
+const rechargePlansList = ref<RechargePlanForm[]>([])
+
+function parseRechargePlans(json: string): RechargePlanForm[] {
+  if (!json) return []
+  try {
+    const arr = JSON.parse(json) as any[]
+    return arr.map((p: any) => ({
+      key: p.key || '',
+      name: p.name || '',
+      description: p.description || '',
+      pay_yuan: (p.pay_amount_fen || 0) / 100,
+      balance_amount: p.balance_amount || 0,
+      popular: p.popular || false
+    }))
+  } catch {
+    return []
+  }
+}
+
+function serializeRechargePlans(plans: RechargePlanForm[]): string {
+  if (plans.length === 0) return ''
+  const arr = plans.filter(p => p.key && p.name && p.pay_yuan > 0 && p.balance_amount > 0).map(p => ({
+    key: p.key,
+    name: p.name,
+    description: p.description || undefined,
+    pay_amount_fen: Math.round(p.pay_yuan * 100),
+    balance_amount: p.balance_amount,
+    popular: p.popular || undefined
+  }))
+  return arr.length > 0 ? JSON.stringify(arr) : ''
+}
+
+function addRechargePlan() {
+  rechargePlansList.value.push({
+    key: `r${Date.now() % 10000}`,
+    name: '',
+    description: '',
+    pay_yuan: 0,
+    balance_amount: 0,
+    popular: false
+  })
+}
+
+function removeRechargePlan(idx: number) {
+  rechargePlansList.value.splice(idx, 1)
+}
 
 async function setAndCopyLinuxdoRedirectUrl() {
   const url = linuxdoRedirectUrlSuggestion.value
@@ -1340,6 +1473,8 @@ async function loadSettings() {
     form.wechat_pay_apiv3_key = ''
     form.wechat_pay_public_key = ''
     form.wechat_pay_private_key = ''
+    // Parse recharge plans JSON into visual editor
+    rechargePlansList.value = parseRechargePlans(form.recharge_plans)
   } catch (error: any) {
     appStore.showError(
       t('admin.settings.failedToLoad') + ': ' + (error.message || t('common.unknownError'))
@@ -1404,7 +1539,7 @@ async function saveSettings() {
       wechat_pay_notify_url: form.wechat_pay_notify_url,
       payment_plans: form.payment_plans,
       recharge_min_amount: form.recharge_min_amount,
-      recharge_plans: form.recharge_plans
+      recharge_plans: serializeRechargePlans(rechargePlansList.value)
     }
     const updated = await adminAPI.settings.updateSettings(payload)
     Object.assign(form, updated)
@@ -1414,6 +1549,8 @@ async function saveSettings() {
     form.wechat_pay_apiv3_key = ''
     form.wechat_pay_public_key = ''
     form.wechat_pay_private_key = ''
+    // Re-parse recharge plans from updated response
+    rechargePlansList.value = parseRechargePlans(form.recharge_plans)
     // Refresh cached public settings so sidebar/header update immediately
     await appStore.fetchPublicSettings(true)
     appStore.showSuccess(t('admin.settings.settingsSaved'))
