@@ -2,6 +2,7 @@
 name = "sub2api"
 
 [build]
+builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
