@@ -185,6 +185,15 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 						if err := s.userRepo.Update(ctx, user); err != nil {
 							log.Printf("[Auth] Failed to set discovery source for invited user %d: %v", user.ID, err)
 						}
+						// 给被邀请人发放注册奖励
+						inviteeReward := s.settingService.GetInviteeRewardAmount(ctx)
+						if inviteeReward > 0 {
+							if err := s.userRepo.UpdateBalance(ctx, user.ID, inviteeReward); err != nil {
+								log.Printf("[Auth] failed to add invitee reward for user %d: %v", user.ID, err)
+							} else {
+								log.Printf("[Auth] added invitee reward %.8f to user %d", inviteeReward, user.ID)
+							}
+						}
 					}
 				}
 			}
@@ -197,6 +206,15 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 				user.DiscoverySource = &inviteSource
 				if err := s.userRepo.Update(ctx, user); err != nil {
 					log.Printf("[Auth] Failed to set discovery source for invited user %d: %v", user.ID, err)
+				}
+				// 给被邀请人发放注册奖励
+				inviteeReward := s.settingService.GetInviteeRewardAmount(ctx)
+				if inviteeReward > 0 {
+					if err := s.userRepo.UpdateBalance(ctx, user.ID, inviteeReward); err != nil {
+						log.Printf("[Auth] failed to add invitee reward for user %d: %v", user.ID, err)
+					} else {
+						log.Printf("[Auth] added invitee reward %.8f to user %d", inviteeReward, user.ID)
+					}
 				}
 			}
 		}

@@ -142,6 +142,7 @@ func groupFromServiceBase(g *service.Group) Group {
 		PriceFen:         g.PriceFen,
 		Listed:           g.Listed,
 		DefaultValidityDays: g.DefaultValidityDays,
+		PlanFeatures:     g.PlanFeatures,
 		CreatedAt:        g.CreatedAt,
 		UpdatedAt:        g.UpdatedAt,
 	}

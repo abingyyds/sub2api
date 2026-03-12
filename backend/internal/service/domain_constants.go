@@ -169,6 +169,7 @@ const (
 
 	SettingKeyReferralEnabled      = "referral_enabled"       // 是否启用邀请返利功能
 	SettingKeyReferralRewardAmount = "referral_reward_amount"  // 邀请奖励金额
+	SettingKeyInviteeRewardAmount  = "invitee_reward_amount"   // 被邀请人注册奖励金额
 
 	// =========================
 	// Stream Timeout Handling

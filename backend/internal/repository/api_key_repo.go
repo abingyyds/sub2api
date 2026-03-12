@@ -438,6 +438,7 @@ func groupEntityToService(g *dbent.Group) *service.Group {
 		ModelRoutingEnabled: g.ModelRoutingEnabled,
 		PriceFen:            g.PriceFen,
 		Listed:              g.Listed,
+		PlanFeatures:        g.PlanFeatures,
 		CreatedAt:           g.CreatedAt,
 		UpdatedAt:           g.UpdatedAt,
 	}

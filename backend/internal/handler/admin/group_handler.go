@@ -49,6 +49,8 @@ type CreateGroupRequest struct {
 	Listed bool `json:"listed"`
 	// 有效期天数
 	DefaultValidityDays int `json:"default_validity_days"`
+	// 套餐自定义特性列表
+	PlanFeatures []string `json:"plan_features"`
 }
 
 // UpdateGroupRequest represents update group request
@@ -78,6 +80,8 @@ type UpdateGroupRequest struct {
 	Listed *bool `json:"listed"`
 	// 有效期天数
 	DefaultValidityDays *int `json:"default_validity_days"`
+	// 套餐自定义特性列表
+	PlanFeatures []string `json:"plan_features"`
 }
 
 // List handles listing all groups with pagination
@@ -186,6 +190,7 @@ func (h *GroupHandler) Create(c *gin.Context) {
 		PriceFen:            req.PriceFen,
 		Listed:              req.Listed,
 		DefaultValidityDays: req.DefaultValidityDays,
+		PlanFeatures:        req.PlanFeatures,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)
@@ -231,6 +236,7 @@ func (h *GroupHandler) Update(c *gin.Context) {
 		PriceFen:            req.PriceFen,
 		Listed:              req.Listed,
 		DefaultValidityDays: req.DefaultValidityDays,
+		PlanFeatures:        req.PlanFeatures,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)

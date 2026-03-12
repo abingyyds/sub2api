@@ -243,6 +243,7 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	// Referral settings
 	updates[SettingKeyReferralEnabled] = strconv.FormatBool(settings.ReferralEnabled)
 	updates[SettingKeyReferralRewardAmount] = strconv.FormatFloat(settings.ReferralRewardAmount, 'f', 8, 64)
+	updates[SettingKeyInviteeRewardAmount] = strconv.FormatFloat(settings.InviteeRewardAmount, 'f', 8, 64)
 
 	// Ops monitoring (vNext)
 	updates[SettingKeyOpsMonitoringEnabled] = strconv.FormatBool(settings.OpsMonitoringEnabled)
@@ -421,6 +422,7 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		// Referral defaults (disabled by default)
 		SettingKeyReferralEnabled:      "false",
 		SettingKeyReferralRewardAmount: "0",
+		SettingKeyInviteeRewardAmount:  "0",
 
 		// Ops monitoring defaults (vNext)
 		SettingKeyOpsMonitoringEnabled:         "true",
@@ -560,6 +562,9 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 	if v, err := strconv.ParseFloat(settings[SettingKeyReferralRewardAmount], 64); err == nil {
 		result.ReferralRewardAmount = v
 	}
+	if v, err := strconv.ParseFloat(settings[SettingKeyInviteeRewardAmount], 64); err == nil {
+		result.InviteeRewardAmount = v
+	}
 
 	// Payment / WeChat Pay settings
 	result.PaymentEnabled = settings[SettingKeyPaymentEnabled] == "true"
@@ -612,6 +617,18 @@ func (s *SettingService) IsReferralEnabled(ctx context.Context) bool {
 // GetReferralRewardAmount 获取邀请奖励金额
 func (s *SettingService) GetReferralRewardAmount(ctx context.Context) float64 {
 	value, err := s.settingRepo.GetValue(ctx, SettingKeyReferralRewardAmount)
+	if err != nil {
+		return 0
+	}
+	if v, err := strconv.ParseFloat(value, 64); err == nil && v > 0 {
+		return v
+	}
+	return 0
+}
+
+// GetInviteeRewardAmount 获取被邀请人注册奖励金额
+func (s *SettingService) GetInviteeRewardAmount(ctx context.Context) float64 {
+	value, err := s.settingRepo.GetValue(ctx, SettingKeyInviteeRewardAmount)
 	if err != nil {
 		return 0
 	}

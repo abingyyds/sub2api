@@ -396,8 +396,8 @@ async function handleVerify(): Promise<void> {
     // Show success toast
     appStore.showSuccess('Account created successfully! Welcome to ' + siteName.value + '.')
 
-    // Redirect to dashboard
-    await router.push('/dashboard')
+    // Redirect to pricing page so new users can purchase/recharge
+    await router.push('/pricing')
   } catch (error: unknown) {
     const err = error as { message?: string; response?: { data?: { detail?: string } } }
 

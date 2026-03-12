@@ -62,6 +62,7 @@ export interface SystemSettings {
   // Referral settings
   referral_enabled: boolean
   referral_reward_amount: number
+  invitee_reward_amount: number
 
   // Ops Monitoring (vNext)
   ops_monitoring_enabled: boolean
@@ -126,6 +127,7 @@ export interface UpdateSettingsRequest {
   identity_patch_prompt?: string
   referral_enabled?: boolean
   referral_reward_amount?: number
+  invitee_reward_amount?: number
   ops_monitoring_enabled?: boolean
   ops_realtime_monitoring_enabled?: boolean
   ops_query_mode_default?: 'auto' | 'raw' | 'preagg' | string

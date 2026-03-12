@@ -258,6 +258,8 @@ export default {
     registrationFailed: 'Registration failed. Please try again.',
     loginSuccess: 'Login successful! Welcome back.',
     accountCreatedSuccess: 'Account created successfully! Welcome to {siteName}.',
+    agreeToTermsPrefix: 'I have read and agree to the',
+    termsOfService: 'Terms of Service',
     reloginRequired: 'Session expired. Please log in again.',
     turnstileExpired: 'Verification expired, please try again',
     turnstileFailed: 'Verification failed, please try again',
@@ -1079,7 +1081,12 @@ export default {
       listedHint: 'When enabled, this plan will be shown on the user pricing page',
       defaultValidityDays: 'Validity Period (Days)',
       defaultValidityDaysPlaceholder: '30',
-      defaultValidityDaysHint: 'Number of days the subscription is valid after purchase'
+      defaultValidityDaysHint: 'Number of days the subscription is valid after purchase',
+      listedConfig: 'Listing Configuration',
+      planFeatures: 'Custom Feature List',
+      addFeature: 'Add Feature',
+      planFeaturesHint: 'Features shown on the pricing page. Leave empty to auto-generate from group settings',
+      featurePlaceholder: 'e.g. Daily quota $100'
     },
 
     // Subscriptions
@@ -3125,7 +3132,9 @@ export default {
         enable: 'Enable Referral',
         enableHint: 'Allow users to invite others and earn rewards',
         rewardAmount: 'Reward Amount ($)',
-        rewardAmountHint: 'Amount credited to the inviter when the invitee makes their first top-up'
+        rewardAmountHint: 'Amount credited to the inviter when the invitee makes their first top-up',
+        inviteeRewardAmount: 'Invitee Reward Amount ($)',
+        inviteeRewardAmountHint: 'Balance reward given to invitee when registering with an invite code'
       },
       payment: {
         title: 'Online Payment Settings',

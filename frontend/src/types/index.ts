@@ -285,6 +285,8 @@ export interface Group {
   listed: boolean
   // 有效期天数
   default_validity_days: number
+  // 套餐自定义特性列表
+  plan_features: string[]
   created_at: string
   updated_at: string
 }

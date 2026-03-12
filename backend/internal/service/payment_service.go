@@ -130,18 +130,22 @@ func (s *PaymentService) GetPlans(ctx context.Context) ([]PaymentPlan, error) {
 				ValidityDays: g.DefaultValidityDays,
 				Type:         "subscription",
 			}
-			// 自动生成特性列表
-			features := make([]string, 0, 4)
-			if g.DailyLimitUSD != nil && *g.DailyLimitUSD > 0 {
-				features = append(features, fmt.Sprintf("每日额度 $%.0f", *g.DailyLimitUSD))
+			// 特性列表：优先使用管理员自定义，否则自动生成
+			if len(g.PlanFeatures) > 0 {
+				plan.Features = g.PlanFeatures
+			} else {
+				features := make([]string, 0, 4)
+				if g.DailyLimitUSD != nil && *g.DailyLimitUSD > 0 {
+					features = append(features, fmt.Sprintf("每日额度 $%.0f", *g.DailyLimitUSD))
+				}
+				if g.MonthlyLimitUSD != nil && *g.MonthlyLimitUSD > 0 {
+					features = append(features, fmt.Sprintf("每月额度 $%.0f", *g.MonthlyLimitUSD))
+				}
+				if g.RateMultiplier != 1.0 {
+					features = append(features, fmt.Sprintf("费率倍率 %.1fx", g.RateMultiplier))
+				}
+				plan.Features = features
 			}
-			if g.MonthlyLimitUSD != nil && *g.MonthlyLimitUSD > 0 {
-				features = append(features, fmt.Sprintf("每月额度 $%.0f", *g.MonthlyLimitUSD))
-			}
-			if g.RateMultiplier != 1.0 {
-				features = append(features, fmt.Sprintf("费率倍率 %.1fx", g.RateMultiplier))
-			}
-			plan.Features = features
 			plans = append(plans, plan)
 		}
 	}

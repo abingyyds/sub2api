@@ -61,6 +61,7 @@ type SystemSettings struct {
 	// Referral / Invite Reward
 	ReferralEnabled      bool
 	ReferralRewardAmount float64
+	InviteeRewardAmount  float64 `json:"invitee_reward_amount"`
 
 	// Payment / WeChat Pay
 	PaymentEnabled                bool

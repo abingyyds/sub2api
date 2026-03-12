@@ -359,25 +359,10 @@
           </div>
         </div>
 
-        <!-- 套餐价格 -->
+        <!-- 套餐上架设置 -->
         <div class="border-t pt-4">
-          <label class="input-label">
-            {{ t('admin.groups.priceFen') }}
-          </label>
-          <input
-            v-model.number="createForm.price_fen"
-            type="number"
-            min="0"
-            step="1"
-            class="input"
-            :placeholder="t('admin.groups.priceFenPlaceholder')"
-          />
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {{ t('admin.groups.priceFenHint') }}
-          </p>
-
           <!-- 上架开关 -->
-          <div class="mt-3 flex items-center justify-between">
+          <div class="flex items-center justify-between">
             <div>
               <label class="input-label mb-0">{{ t('admin.groups.listed') }}</label>
               <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('admin.groups.listedHint') }}</p>
@@ -395,18 +380,59 @@
             </button>
           </div>
 
-          <!-- 有效期天数 -->
-          <div class="mt-3">
-            <label class="input-label">{{ t('admin.groups.defaultValidityDays') }}</label>
-            <input
-              v-model.number="createForm.default_validity_days"
-              type="number"
-              min="1"
-              step="1"
-              class="input"
-              :placeholder="t('admin.groups.defaultValidityDaysPlaceholder')"
-            />
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t('admin.groups.defaultValidityDaysHint') }}</p>
+          <!-- 上架后展开的配置 -->
+          <div v-if="createForm.listed" class="mt-4 space-y-3 rounded-lg border border-primary-200 dark:border-primary-800 bg-primary-50/50 dark:bg-primary-900/10 p-4">
+            <p class="text-xs font-medium text-primary-600 dark:text-primary-400">{{ t('admin.groups.listedConfig') }}</p>
+
+            <!-- 套餐价格 -->
+            <div>
+              <label class="input-label">{{ t('admin.groups.priceFen') }}</label>
+              <input
+                v-model.number="createForm.price_fen"
+                type="number"
+                min="0"
+                step="1"
+                class="input"
+                :placeholder="t('admin.groups.priceFenPlaceholder')"
+              />
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t('admin.groups.priceFenHint') }}</p>
+            </div>
+
+            <!-- 有效期天数 -->
+            <div>
+              <label class="input-label">{{ t('admin.groups.defaultValidityDays') }}</label>
+              <input
+                v-model.number="createForm.default_validity_days"
+                type="number"
+                min="1"
+                step="1"
+                class="input"
+                :placeholder="t('admin.groups.defaultValidityDaysPlaceholder')"
+              />
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t('admin.groups.defaultValidityDaysHint') }}</p>
+            </div>
+
+            <!-- 自定义特性列表 -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="input-label mb-0">{{ t('admin.groups.planFeatures') }}</label>
+                <button type="button" class="text-xs text-primary-600 hover:text-primary-700" @click="createPlanFeatures.push('')">
+                  + {{ t('admin.groups.addFeature') }}
+                </button>
+              </div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">{{ t('admin.groups.planFeaturesHint') }}</p>
+              <div v-for="(_, fi) in createPlanFeatures" :key="fi" class="flex items-center gap-2 mb-1.5">
+                <input
+                  v-model="createPlanFeatures[fi]"
+                  type="text"
+                  class="input text-sm flex-1"
+                  :placeholder="t('admin.groups.featurePlaceholder')"
+                />
+                <button type="button" class="text-gray-400 hover:text-red-500" @click="createPlanFeatures.splice(fi, 1)">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -854,25 +880,10 @@
           </div>
         </div>
 
-        <!-- 套餐价格 -->
+        <!-- 套餐上架设置 -->
         <div class="border-t pt-4">
-          <label class="input-label">
-            {{ t('admin.groups.priceFen') }}
-          </label>
-          <input
-            v-model.number="editForm.price_fen"
-            type="number"
-            min="0"
-            step="1"
-            class="input"
-            :placeholder="t('admin.groups.priceFenPlaceholder')"
-          />
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {{ t('admin.groups.priceFenHint') }}
-          </p>
-
           <!-- 上架开关 -->
-          <div class="mt-3 flex items-center justify-between">
+          <div class="flex items-center justify-between">
             <div>
               <label class="input-label mb-0">{{ t('admin.groups.listed') }}</label>
               <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('admin.groups.listedHint') }}</p>
@@ -890,18 +901,59 @@
             </button>
           </div>
 
-          <!-- 有效期天数 -->
-          <div class="mt-3">
-            <label class="input-label">{{ t('admin.groups.defaultValidityDays') }}</label>
-            <input
-              v-model.number="editForm.default_validity_days"
-              type="number"
-              min="1"
-              step="1"
-              class="input"
-              :placeholder="t('admin.groups.defaultValidityDaysPlaceholder')"
-            />
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t('admin.groups.defaultValidityDaysHint') }}</p>
+          <!-- 上架后展开的配置 -->
+          <div v-if="editForm.listed" class="mt-4 space-y-3 rounded-lg border border-primary-200 dark:border-primary-800 bg-primary-50/50 dark:bg-primary-900/10 p-4">
+            <p class="text-xs font-medium text-primary-600 dark:text-primary-400">{{ t('admin.groups.listedConfig') }}</p>
+
+            <!-- 套餐价格 -->
+            <div>
+              <label class="input-label">{{ t('admin.groups.priceFen') }}</label>
+              <input
+                v-model.number="editForm.price_fen"
+                type="number"
+                min="0"
+                step="1"
+                class="input"
+                :placeholder="t('admin.groups.priceFenPlaceholder')"
+              />
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t('admin.groups.priceFenHint') }}</p>
+            </div>
+
+            <!-- 有效期天数 -->
+            <div>
+              <label class="input-label">{{ t('admin.groups.defaultValidityDays') }}</label>
+              <input
+                v-model.number="editForm.default_validity_days"
+                type="number"
+                min="1"
+                step="1"
+                class="input"
+                :placeholder="t('admin.groups.defaultValidityDaysPlaceholder')"
+              />
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t('admin.groups.defaultValidityDaysHint') }}</p>
+            </div>
+
+            <!-- 自定义特性列表 -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="input-label mb-0">{{ t('admin.groups.planFeatures') }}</label>
+                <button type="button" class="text-xs text-primary-600 hover:text-primary-700" @click="editPlanFeatures.push('')">
+                  + {{ t('admin.groups.addFeature') }}
+                </button>
+              </div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">{{ t('admin.groups.planFeaturesHint') }}</p>
+              <div v-for="(_, fi) in editPlanFeatures" :key="fi" class="flex items-center gap-2 mb-1.5">
+                <input
+                  v-model="editPlanFeatures[fi]"
+                  type="text"
+                  class="input text-sm flex-1"
+                  :placeholder="t('admin.groups.featurePlaceholder')"
+                />
+                <button type="button" class="text-gray-400 hover:text-red-500" @click="editPlanFeatures.splice(fi, 1)">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1375,6 +1427,10 @@ const createModelRoutingRules = ref<ModelRoutingRule[]>([])
 // 编辑表单的模型路由规则
 const editModelRoutingRules = ref<ModelRoutingRule[]>([])
 
+// 套餐自定义特性列表
+const createPlanFeatures = ref<string[]>([])
+const editPlanFeatures = ref<string[]>([])
+
 // 账号搜索相关状态
 const accountSearchKeyword = ref<Record<string, string>>({}) // 每个规则的搜索关键词 (key: "create-0" 或 "edit-0")
 const accountSearchResults = ref<Record<string, SimpleAccount[]>>({}) // 每个规则的搜索结果
@@ -1617,6 +1673,7 @@ const closeCreateModal = () => {
   createForm.listed = false
   createForm.default_validity_days = 30
   createModelRoutingRules.value = []
+  createPlanFeatures.value = []
 }
 
 const handleCreateGroup = async () => {
@@ -1629,7 +1686,8 @@ const handleCreateGroup = async () => {
     // 构建请求数据，包含模型路由配置
     const requestData = {
       ...createForm,
-      model_routing: convertRoutingRulesToApiFormat(createModelRoutingRules.value)
+      model_routing: convertRoutingRulesToApiFormat(createModelRoutingRules.value),
+      plan_features: createPlanFeatures.value.filter(f => f.trim() !== '')
     }
     await adminAPI.groups.create(requestData)
     appStore.showSuccess(t('admin.groups.groupCreated'))
@@ -1669,6 +1727,7 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.price_fen = group.price_fen || 0
   editForm.listed = group.listed || false
   editForm.default_validity_days = group.default_validity_days || 30
+  editPlanFeatures.value = group.plan_features ? [...group.plan_features] : []
   // 加载模型路由规则（异步加载账号名称）
   editModelRoutingRules.value = await convertApiFormatToRoutingRules(group.model_routing)
   showEditModal.value = true
@@ -1678,6 +1737,7 @@ const closeEditModal = () => {
   showEditModal.value = false
   editingGroup.value = null
   editModelRoutingRules.value = []
+  editPlanFeatures.value = []
 }
 
 const handleUpdateGroup = async () => {
@@ -1693,7 +1753,8 @@ const handleUpdateGroup = async () => {
     const payload = {
       ...editForm,
       fallback_group_id: editForm.fallback_group_id === null ? 0 : editForm.fallback_group_id,
-      model_routing: convertRoutingRulesToApiFormat(editModelRoutingRules.value)
+      model_routing: convertRoutingRulesToApiFormat(editModelRoutingRules.value),
+      plan_features: editPlanFeatures.value.filter(f => f.trim() !== '')
     }
     await adminAPI.groups.update(editingGroup.value.id, payload)
     appStore.showSuccess(t('admin.groups.groupUpdated'))

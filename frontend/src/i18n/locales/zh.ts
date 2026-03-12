@@ -255,6 +255,8 @@ export default {
     registrationFailed: '注册失败，请重试。',
     loginSuccess: '登录成功！欢迎回来。',
     accountCreatedSuccess: '账户创建成功！欢迎使用 {siteName}。',
+    agreeToTermsPrefix: '我已阅读并同意',
+    termsOfService: '《用户协议》',
     reloginRequired: '会话已过期，请重新登录。',
     turnstileExpired: '验证已过期，请重试',
     turnstileFailed: '验证失败，请重试',
@@ -1154,7 +1156,12 @@ export default {
       listedHint: '开启后该套餐将展示在用户购买页面',
       defaultValidityDays: '有效期（天）',
       defaultValidityDaysPlaceholder: '30',
-      defaultValidityDaysHint: '购买后订阅的有效期天数'
+      defaultValidityDaysHint: '购买后订阅的有效期天数',
+      listedConfig: '上架配置',
+      planFeatures: '自定义特性列表',
+      addFeature: '添加特性',
+      planFeaturesHint: '展示在购买页面的卖点特性，留空则自动根据分组配置生成',
+      featurePlaceholder: '例如：每日额度 $100'
     },
 
     // Subscriptions Management
@@ -3276,7 +3283,9 @@ export default {
         enable: '启用邀请返利',
         enableHint: '允许用户邀请他人注册并获得奖励',
         rewardAmount: '奖励金额 ($)',
-        rewardAmountHint: '被邀请人首次充值时，邀请人获得的奖励金额'
+        rewardAmountHint: '被邀请人首次充值时，邀请人获得的奖励金额',
+        inviteeRewardAmount: '被邀请人奖励金额 ($)',
+        inviteeRewardAmountHint: '被邀请人通过邀请码注册时获得的余额奖励'
       },
       payment: {
         title: '在线支付设置',

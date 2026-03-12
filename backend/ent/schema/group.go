@@ -116,6 +116,12 @@ func (Group) Fields() []ent.Field {
 		field.Bool("listed").
 			Default(false).
 			Comment("是否上架到购买页面展示"),
+
+		// 套餐自定义特性列表 (added by migration 063)
+		field.JSON("plan_features", []string{}).
+			Optional().
+			SchemaType(map[string]string{dialect.Postgres: "jsonb"}).
+			Comment("套餐自定义特性列表，上架时展示在购买页面"),
 	}
 }
 

@@ -42,6 +42,9 @@ type Group struct {
 	// 是否上架到购买页面
 	Listed bool
 
+	// 套餐自定义特性列表
+	PlanFeatures []string
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 

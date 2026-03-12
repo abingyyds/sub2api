@@ -76,6 +76,9 @@ type Group struct {
 	// 有效期天数
 	DefaultValidityDays int `json:"default_validity_days"`
 
+	// 套餐自定义特性列表
+	PlanFeatures []string `json:"plan_features"`
+
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

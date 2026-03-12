@@ -52,7 +52,8 @@ func (r *groupRepository) Create(ctx context.Context, groupIn *service.Group) er
 		SetNillableFallbackGroupID(groupIn.FallbackGroupID).
 		SetModelRoutingEnabled(groupIn.ModelRoutingEnabled).
 		SetPriceFen(groupIn.PriceFen).
-		SetListed(groupIn.Listed)
+		SetListed(groupIn.Listed).
+		SetPlanFeatures(groupIn.PlanFeatures)
 
 	// 设置模型路由配置
 	if groupIn.ModelRouting != nil {
@@ -112,7 +113,8 @@ func (r *groupRepository) Update(ctx context.Context, groupIn *service.Group) er
 		SetClaudeCodeOnly(groupIn.ClaudeCodeOnly).
 		SetModelRoutingEnabled(groupIn.ModelRoutingEnabled).
 		SetPriceFen(groupIn.PriceFen).
-		SetListed(groupIn.Listed)
+		SetListed(groupIn.Listed).
+		SetPlanFeatures(groupIn.PlanFeatures)
 
 	// 处理 FallbackGroupID：nil 时清除，否则设置
 	if groupIn.FallbackGroupID != nil {

@@ -53,6 +53,15 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/legal/terms',
+    name: 'Terms',
+    component: () => import('@/views/legal/TermsView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: '用户协议'
+    }
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/auth/LoginView.vue'),

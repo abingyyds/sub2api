@@ -160,6 +160,25 @@
           </p>
         </div>
 
+        <!-- Agreement Checkbox -->
+        <div class="flex items-start gap-2">
+          <input
+            id="agree_terms"
+            v-model="agreedToTerms"
+            type="checkbox"
+            :disabled="isLoading"
+            class="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-dark-600 dark:bg-dark-700"
+          />
+          <label for="agree_terms" class="text-sm text-gray-500 dark:text-dark-400">
+            {{ t('auth.agreeToTermsPrefix') }}
+            <router-link
+              to="/legal/terms"
+              target="_blank"
+              class="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
+            >{{ t('auth.termsOfService') }}</router-link>
+          </label>
+        </div>
+
         <!-- Error Message -->
         <transition name="fade">
           <div
@@ -180,7 +199,7 @@
         <!-- Submit Button -->
         <button
           type="submit"
-          :disabled="isLoading || (turnstileEnabled && !turnstileToken)"
+          :disabled="isLoading || (turnstileEnabled && !turnstileToken) || !agreedToTerms"
           class="btn btn-primary w-full"
         >
           <svg
@@ -281,6 +300,7 @@ const promoValidation = reactive({
 let promoValidateTimeout: ReturnType<typeof setTimeout> | null = null
 
 const inviteCode = ref<string>('')
+const agreedToTerms = ref<boolean>(false)
 
 const formData = reactive({
   email: '',
@@ -526,8 +546,8 @@ async function handleRegister(): Promise<void> {
     // Show success toast
     appStore.showSuccess(t('auth.accountCreatedSuccess', { siteName: siteName.value }))
 
-    // Redirect to dashboard
-    await router.push('/dashboard')
+    // Redirect to pricing page so new users can purchase/recharge
+    await router.push('/pricing')
   } catch (error: unknown) {
     // Reset Turnstile on error
     if (turnstileRef.value) {
