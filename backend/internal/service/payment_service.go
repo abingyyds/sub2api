@@ -856,7 +856,8 @@ func (s *PaymentService) initAlipayClient(ctx context.Context) (*alipay.Client, 
 	appID, _ := s.settingService.GetSettingValue(ctx, SettingKeyAlipayAppID)
 	privateKey, _ := s.settingService.GetSettingValue(ctx, SettingKeyAlipayPrivateKey)
 	alipayPublicKey, _ := s.settingService.GetSettingValue(ctx, SettingKeyAlipayPublicKey)
-	isProduction := s.settingService.GetSettingValue(ctx, SettingKeyAlipayIsProduction) == "true"
+	isProductionStr, _ := s.settingService.GetSettingValue(ctx, SettingKeyAlipayIsProduction)
+	isProduction := isProductionStr == "true"
 
 	if appID == "" || privateKey == "" || alipayPublicKey == "" {
 		missing := make([]string, 0, 3)
@@ -897,14 +898,14 @@ func (s *PaymentService) createAlipayNativeOrder(ctx context.Context, order *Pay
 		return "", infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", "alipay notify_url is not configured")
 	}
 
-	var p = alipay.TradePrecreate{}
+	var p = alipay.TradePreCreate{}
 	p.NotifyURL = notifyURL
 	p.Subject = subject
 	p.OutTradeNo = order.OrderNo
 	p.TotalAmount = fmt.Sprintf("%.2f", float64(order.AmountFen)/100.0)
 	p.TimeExpire = order.ExpiredAt.Format("2006-01-02 15:04:05")
 
-	rsp, err := client.TradePrecreate(ctx, p)
+	rsp, err := client.TradePreCreate(ctx, p)
 	if err != nil {
 		return "", fmt.Errorf("alipay trade precreate: %w", err)
 	}
@@ -959,7 +960,13 @@ func (s *PaymentService) HandleAlipayNotify(ctx context.Context, req *http.Reque
 	// 处理业务逻辑（订阅或余额）
 	if order.OrderType == "subscription" {
 		// 分配订阅
-		err = s.subscriptionService.AssignOrExtendSubscription(ctx, order.UserID, order.GroupID, order.ValidityDays)
+		_, _, err = s.subscriptionService.AssignOrExtendSubscription(ctx, &AssignSubscriptionInput{
+			UserID:       order.UserID,
+			GroupID:      order.GroupID,
+			ValidityDays: order.ValidityDays,
+			AssignedBy:   order.UserID, // 用户自己购买
+			Notes:        fmt.Sprintf("支付宝订单: %s", order.OrderNo),
+		})
 		if err != nil {
 			log.Printf("[Payment] Failed to assign subscription for order %s: %v", order.OrderNo, err)
 			return fmt.Errorf("assign subscription: %w", err)
