@@ -585,6 +585,56 @@
           </div>
         </div>
 
+        <!-- Alipay Settings -->
+        <div class="card">
+          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+              支付宝支付设置
+            </h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              配置支付宝扫码支付
+            </p>
+          </div>
+          <div class="space-y-5 p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="font-medium text-gray-900 dark:text-white">启用支付宝支付</label>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  允许用户通过支付宝扫码支付
+                </p>
+              </div>
+              <Toggle v-model="form.alipay_enabled" />
+            </div>
+            <div v-if="form.alipay_enabled" class="space-y-4 border-t border-gray-100 pt-4 dark:border-dark-700">
+              <div>
+                <label for="alipay_app_id" class="input-label">应用 App ID</label>
+                <input id="alipay_app_id" v-model="form.alipay_app_id" type="text" class="input mt-1" placeholder="2021..." />
+              </div>
+              <div>
+                <label for="alipay_private_key" class="input-label">应用私钥 (Private Key)</label>
+                <textarea id="alipay_private_key" v-model="form.alipay_private_key" rows="4" class="input mt-1 font-mono text-xs" :placeholder="form.alipay_private_key_configured ? '已配置（留空保留当前值）' : 'MIIEvQIBADANBgkqhkiG9w0BAQEFAASC...'" />
+              </div>
+              <div>
+                <label for="alipay_public_key" class="input-label">支付宝公钥 (Alipay Public Key)</label>
+                <textarea id="alipay_public_key" v-model="form.alipay_public_key" rows="4" class="input mt-1 font-mono text-xs" :placeholder="form.alipay_public_key_configured ? '已配置（留空保留当前值）' : 'MIIBIjANBgkqhkiG9w0BAQEFAAOC...'" />
+              </div>
+              <div>
+                <label for="alipay_notify_url" class="input-label">支付回调通知 URL</label>
+                <input id="alipay_notify_url" v-model="form.alipay_notify_url" type="text" class="input mt-1" placeholder="https://example.com/api/v1/payment/alipay/notify" />
+              </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="font-medium text-gray-900 dark:text-white">生产环境</label>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    关闭则使用沙箱环境进行测试
+                  </p>
+                </div>
+                <Toggle v-model="form.alipay_is_production" />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Cloudflare Turnstile Settings -->
         <div class="card">
           <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
@@ -1374,7 +1424,16 @@ const form = reactive<SettingsForm>({
   wechat_pay_notify_url: '',
   payment_plans: '',
   recharge_min_amount: 0,
-  recharge_plans: ''
+  recharge_plans: '',
+  // Alipay
+  alipay_enabled: false,
+  alipay_app_id: '',
+  alipay_private_key: '',
+  alipay_private_key_configured: false,
+  alipay_public_key: '',
+  alipay_public_key_configured: false,
+  alipay_notify_url: '',
+  alipay_is_production: false
 })
 
 // LinuxDo OAuth redirect URL suggestion

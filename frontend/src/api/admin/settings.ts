@@ -86,6 +86,14 @@ export interface SystemSettings {
   // Recharge settings
   recharge_min_amount: number
   recharge_plans: string
+
+  // Alipay
+  alipay_enabled: boolean
+  alipay_app_id: string
+  alipay_private_key_configured: boolean
+  alipay_public_key_configured: boolean
+  alipay_notify_url: string
+  alipay_is_production: boolean
 }
 
 export interface UpdateSettingsRequest {
@@ -149,6 +157,14 @@ export interface UpdateSettingsRequest {
   // Recharge settings
   recharge_min_amount?: number
   recharge_plans?: string
+
+  // Alipay
+  alipay_enabled?: boolean
+  alipay_app_id?: string
+  alipay_private_key?: string
+  alipay_public_key?: string
+  alipay_notify_url?: string
+  alipay_is_production?: boolean
 }
 
 /**
