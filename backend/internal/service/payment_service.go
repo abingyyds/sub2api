@@ -22,6 +22,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/smartwalle/alipay/v3"
+
 	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
 )
@@ -39,8 +41,8 @@ var (
 type PaymentPlan struct {
 	Key           string   `json:"key"`
 	Name          string   `json:"name"`
-	Description   string   `json:"description,omitempty"`    // 套餐描述
-	Features      []string `json:"features,omitempty"`       // 特性列表
+	Description   string   `json:"description,omitempty"` // 套餐描述
+	Features      []string `json:"features,omitempty"`    // 特性列表
 	AmountFen     int      `json:"amount_fen"`
 	GroupID       int64    `json:"group_id"`
 	ValidityDays  int      `json:"validity_days"`
@@ -50,25 +52,26 @@ type PaymentPlan struct {
 
 // PaymentOrder 支付订单
 type PaymentOrder struct {
-	ID                   int64
-	OrderNo              string
-	UserID               int64
-	PlanKey              string
-	GroupID              int64
-	AmountFen            int
-	ValidityDays         int
-	OrderType            string  // "subscription" or "balance"
-	BalanceAmount        float64 // 充值金额（元），仅 balance 类型
-	PromoCode            string  // 使用的优惠码
-	DiscountAmount       int     // 优惠码折扣金额（分）
-	Status               string
-	PayMethod            string
-	WechatTransactionID  *string
-	CodeURL              *string
-	PaidAt               *time.Time
-	ExpiredAt            time.Time
-	CreatedAt            time.Time
-	UpdatedAt            time.Time
+	ID                  int64
+	OrderNo             string
+	UserID              int64
+	PlanKey             string
+	GroupID             int64
+	AmountFen           int
+	ValidityDays        int
+	OrderType           string  // "subscription" or "balance"
+	BalanceAmount       float64 // 充值金额（元），仅 balance 类型
+	PromoCode           string  // 使用的优惠码
+	DiscountAmount      int     // 优惠码折扣金额（分）
+	Status              string
+	PayMethod           string
+	WechatTransactionID *string
+	AlipayTradeNo       *string
+	CodeURL             *string
+	PaidAt              *time.Time
+	ExpiredAt           time.Time
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
 }
 
 type PaymentOrderRepository interface {
@@ -189,12 +192,12 @@ func (s *PaymentService) GetPlans(ctx context.Context) ([]PaymentPlan, error) {
 
 // RechargePlan 充值优惠套餐
 type RechargePlan struct {
-	Key           string `json:"key"`
-	Name          string `json:"name"`
-	Description   string `json:"description,omitempty"`
-	PayAmountFen  int    `json:"pay_amount_fen"`  // 实付金额（分）
+	Key           string  `json:"key"`
+	Name          string  `json:"name"`
+	Description   string  `json:"description,omitempty"`
+	PayAmountFen  int     `json:"pay_amount_fen"` // 实付金额（分）
 	BalanceAmount float64 `json:"balance_amount"` // 到账金额（美元）
-	Popular       bool   `json:"popular,omitempty"`
+	Popular       bool    `json:"popular,omitempty"`
 }
 
 // RechargeInfo 充值信息（含优惠套餐和最低金额）
@@ -273,7 +276,7 @@ func floatVal(f *float64) float64 {
 }
 
 // CreateOrder 创建支付订单
-func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey string, promoCode string) (*PaymentOrder, error) {
+func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey string, promoCode string, payMethod string) (*PaymentOrder, error) {
 	// 检查支付是否启用
 	enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyPaymentEnabled)
 	if enabled != "true" {
@@ -322,6 +325,17 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 		orderType = "subscription"
 	}
 
+	// 确定支付方式
+	if payMethod == "" {
+		payMethod = "wechat"
+	}
+	var payMethodStr string
+	if payMethod == "alipay" {
+		payMethodStr = PaymentMethodAlipayNative
+	} else {
+		payMethodStr = PaymentMethodWechatNative
+	}
+
 	// 创建订单记录
 	order := &PaymentOrder{
 		OrderNo:        orderNo,
@@ -329,7 +343,7 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 		PlanKey:        plan.Key,
 		AmountFen:      finalAmount,
 		Status:         PaymentOrderStatusPending,
-		PayMethod:      "wechat_native",
+		PayMethod:      payMethodStr,
 		OrderType:      orderType,
 		PromoCode:      promoCode,
 		DiscountAmount: discountFen,
@@ -345,10 +359,15 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 		order.ValidityDays = plan.ValidityDays
 	}
 
-	// 调用微信支付 Native 下单
-	codeURL, err := s.createWechatNativeOrder(ctx, order, plan.Name)
+	// 根据支付方式调用不同的下单接口
+	var codeURL string
+	if payMethod == "alipay" {
+		codeURL, err = s.createAlipayNativeOrder(ctx, order, plan.Name)
+	} else {
+		codeURL, err = s.createWechatNativeOrder(ctx, order, plan.Name)
+	}
 	if err != nil {
-		log.Printf("[Payment] Failed to create wechat native order: %v", err)
+		log.Printf("[Payment] Failed to create %s native order: %v", payMethod, err)
 		return nil, err
 	}
 	order.CodeURL = &codeURL
@@ -362,7 +381,7 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 }
 
 // CreateRechargeOrder 创建余额充值订单（支持自定义金额）
-func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, amountYuan float64, promoCode string) (*PaymentOrder, error) {
+func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, amountYuan float64, promoCode string, payMethod string) (*PaymentOrder, error) {
 	// 检查支付是否启用
 	enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyPaymentEnabled)
 	if enabled != "true" {
@@ -402,26 +421,43 @@ func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, 
 
 	orderNo := generateOrderNo()
 
+	// 确定支付方式
+	if payMethod == "" {
+		payMethod = "wechat"
+	}
+	var payMethodStr string
+	if payMethod == "alipay" {
+		payMethodStr = PaymentMethodAlipayNative
+	} else {
+		payMethodStr = PaymentMethodWechatNative
+	}
+
 	order := &PaymentOrder{
 		OrderNo:        orderNo,
 		UserID:         userID,
 		PlanKey:        "recharge_custom",
 		AmountFen:      finalAmount,
 		GroupID:        0,
-		ValidityDays:  0,
-		OrderType:     "balance",
-		BalanceAmount: amountYuan,
+		ValidityDays:   0,
+		OrderType:      "balance",
+		BalanceAmount:  amountYuan,
 		PromoCode:      promoCode,
 		DiscountAmount: discountFen,
-		Status:        PaymentOrderStatusPending,
-		PayMethod:     "wechat_native",
-		ExpiredAt:     time.Now().Add(30 * time.Minute),
+		Status:         PaymentOrderStatusPending,
+		PayMethod:      payMethodStr,
+		ExpiredAt:      time.Now().Add(30 * time.Minute),
 	}
 
 	description := fmt.Sprintf("余额充值 %.2f 元", amountYuan)
-	codeURL, err := s.createWechatNativeOrder(ctx, order, description)
+	var codeURL string
+	var err error
+	if payMethod == "alipay" {
+		codeURL, err = s.createAlipayNativeOrder(ctx, order, description)
+	} else {
+		codeURL, err = s.createWechatNativeOrder(ctx, order, description)
+	}
 	if err != nil {
-		log.Printf("[Payment] Failed to create wechat native order for recharge: %v", err)
+		log.Printf("[Payment] Failed to create %s native order for recharge: %v", payMethod, err)
 		return nil, err
 	}
 	order.CodeURL = &codeURL
@@ -465,8 +501,8 @@ func (s *PaymentService) HandleWechatNotify(ctx context.Context, body []byte, we
 
 	// 2. 解密通知内容
 	var notification struct {
-		EventType  string `json:"event_type"`
-		Resource   struct {
+		EventType string `json:"event_type"`
+		Resource  struct {
 			Algorithm      string `json:"algorithm"`
 			Ciphertext     string `json:"ciphertext"`
 			Nonce          string `json:"nonce"`
@@ -809,4 +845,149 @@ func generateNonce() string {
 	b := make([]byte, 16)
 	rand.Read(b)
 	return strings.ToUpper(fmt.Sprintf("%x", b))
+}
+
+// ===========================
+// Alipay API Integration
+// ===========================
+
+// initAlipayClient 初始化支付宝客户端
+func (s *PaymentService) initAlipayClient(ctx context.Context) (*alipay.Client, error) {
+	appID, _ := s.settingService.GetSettingValue(ctx, SettingKeyAlipayAppID)
+	privateKey, _ := s.settingService.GetSettingValue(ctx, SettingKeyAlipayPrivateKey)
+	alipayPublicKey, _ := s.settingService.GetSettingValue(ctx, SettingKeyAlipayPublicKey)
+	isProduction := s.settingService.GetSettingValue(ctx, SettingKeyAlipayIsProduction) == "true"
+
+	if appID == "" || privateKey == "" || alipayPublicKey == "" {
+		missing := make([]string, 0, 3)
+		if appID == "" {
+			missing = append(missing, "app_id")
+		}
+		if privateKey == "" {
+			missing = append(missing, "private_key")
+		}
+		if alipayPublicKey == "" {
+			missing = append(missing, "public_key")
+		}
+		return nil, infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", fmt.Sprintf("alipay configuration incomplete, missing: %s", strings.Join(missing, ", ")))
+	}
+
+	client, err := alipay.New(appID, privateKey, isProduction)
+	if err != nil {
+		return nil, fmt.Errorf("init alipay client: %w", err)
+	}
+
+	err = client.LoadAliPayPublicKey(alipayPublicKey)
+	if err != nil {
+		return nil, fmt.Errorf("load alipay public key: %w", err)
+	}
+
+	return client, nil
+}
+
+// createAlipayNativeOrder 调用支付宝当面付（扫码支付）API
+func (s *PaymentService) createAlipayNativeOrder(ctx context.Context, order *PaymentOrder, subject string) (string, error) {
+	client, err := s.initAlipayClient(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	notifyURL, _ := s.settingService.GetSettingValue(ctx, SettingKeyAlipayNotifyURL)
+	if notifyURL == "" {
+		return "", infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", "alipay notify_url is not configured")
+	}
+
+	var p = alipay.TradePrecreate{}
+	p.NotifyURL = notifyURL
+	p.Subject = subject
+	p.OutTradeNo = order.OrderNo
+	p.TotalAmount = fmt.Sprintf("%.2f", float64(order.AmountFen)/100.0)
+	p.TimeExpire = order.ExpiredAt.Format("2006-01-02 15:04:05")
+
+	rsp, err := client.TradePrecreate(ctx, p)
+	if err != nil {
+		return "", fmt.Errorf("alipay trade precreate: %w", err)
+	}
+
+	if rsp.IsFailure() {
+		return "", fmt.Errorf("alipay error: %s - %s", rsp.Content.Code, rsp.Content.Msg)
+	}
+
+	return rsp.Content.QRCode, nil
+}
+
+// HandleAlipayNotify 处理支付宝支付回调通知
+func (s *PaymentService) HandleAlipayNotify(ctx context.Context, req *http.Request) error {
+	client, err := s.initAlipayClient(ctx)
+	if err != nil {
+		return err
+	}
+
+	// SDK 自动验签
+	notification, err := client.GetTradeNotification(req)
+	if err != nil {
+		log.Printf("[Payment] AlipayNotify signature verification failed: %v", err)
+		return ErrPaymentSignature
+	}
+
+	// 检查交易状态
+	if notification.TradeStatus != "TRADE_SUCCESS" && notification.TradeStatus != "TRADE_FINISHED" {
+		return nil // 非成功状态，忽略
+	}
+
+	// 查询订单
+	order, err := s.orderRepo.GetByOrderNo(ctx, notification.OutTradeNo)
+	if err != nil {
+		return fmt.Errorf("get order: %w", err)
+	}
+
+	// 幂等检查：已支付的订单不再处理
+	if order.Status == PaymentOrderStatusPaid {
+		return nil
+	}
+
+	// 更新订单状态
+	paidAt := time.Now()
+	tradeNo := notification.TradeNo
+	err = s.orderRepo.UpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPaid, &tradeNo, &paidAt)
+	if err != nil {
+		return fmt.Errorf("update order status: %w", err)
+	}
+
+	log.Printf("[Payment] Order %s paid via Alipay, trade_no=%s", order.OrderNo, tradeNo)
+
+	// 处理业务逻辑（订阅或余额）
+	if order.OrderType == "subscription" {
+		// 分配订阅
+		err = s.subscriptionService.AssignOrExtendSubscription(ctx, order.UserID, order.GroupID, order.ValidityDays)
+		if err != nil {
+			log.Printf("[Payment] Failed to assign subscription for order %s: %v", order.OrderNo, err)
+			return fmt.Errorf("assign subscription: %w", err)
+		}
+		log.Printf("[Payment] Order %s paid successfully, subscription assigned for user %d, group %d, %d days",
+			order.OrderNo, order.UserID, order.GroupID, order.ValidityDays)
+	} else if order.OrderType == "balance" {
+		// 充值余额
+		err = s.userRepo.UpdateBalance(ctx, order.UserID, order.BalanceAmount)
+		if err != nil {
+			log.Printf("[Payment] Failed to update balance for order %s: %v", order.OrderNo, err)
+			return fmt.Errorf("update balance: %w", err)
+		}
+		// 清除余额缓存
+		if s.billingCache != nil {
+			s.billingCache.InvalidateUserBalance(ctx, order.UserID)
+		}
+		log.Printf("[Payment] Order %s paid successfully, balance recharged for user %d, amount=%.2f",
+			order.OrderNo, order.UserID, order.BalanceAmount)
+	}
+
+	// 记录优惠码使用（支付成功后才记录）
+	if order.PromoCode != "" && order.DiscountAmount > 0 && s.promoService != nil {
+		if err := s.promoService.ApplyPromoCode(ctx, order.UserID, order.PromoCode, order.OrderNo, float64(order.DiscountAmount)); err != nil {
+			log.Printf("[Payment] Failed to apply promo code for order %s: %v", order.OrderNo, err)
+			// 不阻断支付流程
+		}
+	}
+
+	return nil
 }

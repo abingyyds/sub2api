@@ -82,6 +82,16 @@ type SystemSettings struct {
 	PaymentPlans                  string // JSON
 	RechargeMinAmount             float64
 	RechargePlans                 string // JSON
+
+	// Alipay
+	AlipayEnabled              bool
+	AlipayAppID                string
+	AlipayPrivateKey           string
+	AlipayPrivateKeyConfigured bool
+	AlipayPublicKey            string
+	AlipayPublicKeyConfigured  bool
+	AlipayNotifyURL            string
+	AlipayIsProduction         bool
 }
 
 type PublicSettings struct {

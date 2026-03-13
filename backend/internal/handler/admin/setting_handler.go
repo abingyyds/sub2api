@@ -102,6 +102,12 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		PaymentPlans:                         settings.PaymentPlans,
 		RechargeMinAmount:                    settings.RechargeMinAmount,
 		RechargePlans:                        settings.RechargePlans,
+		AlipayEnabled:                        settings.AlipayEnabled,
+		AlipayAppID:                          settings.AlipayAppID,
+		AlipayPrivateKeyConfigured:           settings.AlipayPrivateKeyConfigured,
+		AlipayPublicKeyConfigured:            settings.AlipayPublicKeyConfigured,
+		AlipayNotifyURL:                      settings.AlipayNotifyURL,
+		AlipayIsProduction:                   settings.AlipayIsProduction,
 	})
 }
 
@@ -174,18 +180,26 @@ type UpdateSettingsRequest struct {
 	ReferralRewardAmount float64 `json:"referral_reward_amount"`
 
 	// Payment / WeChat Pay
-	PaymentEnabled       bool   `json:"payment_enabled"`
-	WechatPayAppID       string `json:"wechat_pay_appid"`
-	WechatPayMchID       string `json:"wechat_pay_mch_id"`
-	WechatPayAPIv3Key    string `json:"wechat_pay_apiv3_key"`
-	WechatPayMchSerialNo string `json:"wechat_pay_mch_serial_no"`
-	WechatPayPublicKeyID string `json:"wechat_pay_public_key_id"`
-	WechatPayPublicKey   string `json:"wechat_pay_public_key"`
-	WechatPayPrivateKey  string `json:"wechat_pay_private_key"`
-	WechatPayNotifyURL   string `json:"wechat_pay_notify_url"`
-	PaymentPlans         string `json:"payment_plans"`
+	PaymentEnabled       bool    `json:"payment_enabled"`
+	WechatPayAppID       string  `json:"wechat_pay_appid"`
+	WechatPayMchID       string  `json:"wechat_pay_mch_id"`
+	WechatPayAPIv3Key    string  `json:"wechat_pay_apiv3_key"`
+	WechatPayMchSerialNo string  `json:"wechat_pay_mch_serial_no"`
+	WechatPayPublicKeyID string  `json:"wechat_pay_public_key_id"`
+	WechatPayPublicKey   string  `json:"wechat_pay_public_key"`
+	WechatPayPrivateKey  string  `json:"wechat_pay_private_key"`
+	WechatPayNotifyURL   string  `json:"wechat_pay_notify_url"`
+	PaymentPlans         string  `json:"payment_plans"`
 	RechargeMinAmount    float64 `json:"recharge_min_amount"`
 	RechargePlans        string  `json:"recharge_plans"`
+
+	// Alipay
+	AlipayEnabled      bool   `json:"alipay_enabled"`
+	AlipayAppID        string `json:"alipay_app_id"`
+	AlipayPrivateKey   string `json:"alipay_private_key"`
+	AlipayPublicKey    string `json:"alipay_public_key"`
+	AlipayNotifyURL    string `json:"alipay_notify_url"`
+	AlipayIsProduction bool   `json:"alipay_is_production"`
 }
 
 // UpdateSettings 更新系统设置
@@ -378,6 +392,12 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		PaymentPlans:         req.PaymentPlans,
 		RechargeMinAmount:    req.RechargeMinAmount,
 		RechargePlans:        req.RechargePlans,
+		AlipayEnabled:        req.AlipayEnabled,
+		AlipayAppID:          req.AlipayAppID,
+		AlipayPrivateKey:     req.AlipayPrivateKey,
+		AlipayPublicKey:      req.AlipayPublicKey,
+		AlipayNotifyURL:      req.AlipayNotifyURL,
+		AlipayIsProduction:   req.AlipayIsProduction,
 	}
 
 	if err := h.settingService.UpdateSettings(c.Request.Context(), settings); err != nil {

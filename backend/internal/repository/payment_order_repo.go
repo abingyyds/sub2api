@@ -74,18 +74,31 @@ func (r *paymentOrderRepo) GetByOrderNo(ctx context.Context, orderNo string) (*s
 }
 
 func (r *paymentOrderRepo) UpdateStatus(ctx context.Context, orderNo string, status string, transactionID *string, paidAt *time.Time) error {
+	// 先查询订单以确定支付方式
+	order, err := r.client.PaymentOrder.Query().
+		Where(paymentorder.OrderNoEQ(orderNo)).
+		Only(ctx)
+	if err != nil {
+		return fmt.Errorf("get order for update: %w", err)
+	}
+
 	builder := r.client.PaymentOrder.Update().
 		Where(paymentorder.OrderNoEQ(orderNo)).
 		SetStatus(status)
 
 	if transactionID != nil {
-		builder.SetWechatTransactionID(*transactionID)
+		// 根据支付方式设置不同的交易号字段
+		if order.PayMethod == "alipay_native" {
+			builder.SetAlipayTradeNo(*transactionID)
+		} else {
+			builder.SetWechatTransactionID(*transactionID)
+		}
 	}
 	if paidAt != nil {
 		builder.SetPaidAt(*paidAt)
 	}
 
-	_, err := builder.Save(ctx)
+	_, err = builder.Save(ctx)
 	return err
 }
 
@@ -187,6 +200,7 @@ func toServicePaymentOrder(e *dbent.PaymentOrder) *service.PaymentOrder {
 		Status:              e.Status,
 		PayMethod:           e.PayMethod,
 		WechatTransactionID: e.WechatTransactionID,
+		AlipayTradeNo:       e.AlipayTradeNo,
 		CodeURL:             e.CodeURL,
 		PaidAt:              e.PaidAt,
 		ExpiredAt:           e.ExpiredAt,

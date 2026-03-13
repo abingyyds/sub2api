@@ -51,12 +51,14 @@ func (h *PaymentHandler) GetRechargeInfo(c *gin.Context) {
 type CreateOrderRequest struct {
 	PlanKey   string `json:"plan_key" binding:"required"`
 	PromoCode string `json:"promo_code"` // 优惠码
+	PayMethod string `json:"pay_method"` // "wechat" | "alipay"
 }
 
 // CreateRechargeRequest represents the request body for creating a recharge order
 type CreateRechargeRequest struct {
 	Amount    float64 `json:"amount" binding:"required,gt=0"`
 	PromoCode string  `json:"promo_code"` // 优惠码
+	PayMethod string  `json:"pay_method"` // "wechat" | "alipay"
 }
 
 // CreateOrder creates a new payment order
@@ -74,7 +76,13 @@ func (h *PaymentHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	order, err := h.paymentService.CreateOrder(c.Request.Context(), subject.UserID, req.PlanKey, req.PromoCode)
+	// 默认使用微信支付
+	payMethod := req.PayMethod
+	if payMethod == "" {
+		payMethod = "wechat"
+	}
+
+	order, err := h.paymentService.CreateOrder(c.Request.Context(), subject.UserID, req.PlanKey, req.PromoCode, payMethod)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
@@ -104,7 +112,13 @@ func (h *PaymentHandler) CreateRecharge(c *gin.Context) {
 		return
 	}
 
-	order, err := h.paymentService.CreateRechargeOrder(c.Request.Context(), subject.UserID, req.Amount, req.PromoCode)
+	// 默认使用微信支付
+	payMethod := req.PayMethod
+	if payMethod == "" {
+		payMethod = "wechat"
+	}
+
+	order, err := h.paymentService.CreateRechargeOrder(c.Request.Context(), subject.UserID, req.Amount, req.PromoCode, payMethod)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
@@ -233,4 +247,17 @@ func (h *PaymentHandler) WechatNotify(c *gin.Context) {
 		"code":    "SUCCESS",
 		"message": "OK",
 	})
+}
+
+// AlipayNotify handles Alipay callback notifications
+// POST /api/v1/payment/alipay/notify
+func (h *PaymentHandler) AlipayNotify(c *gin.Context) {
+	if err := h.paymentService.HandleAlipayNotify(c.Request.Context(), c.Request); err != nil {
+		log.Printf("[Payment] AlipayNotify error: %v", err)
+		c.String(http.StatusInternalServerError, "failure")
+		return
+	}
+
+	// 支付宝要求返回纯文本 "success"
+	c.String(http.StatusOK, "success")
 }

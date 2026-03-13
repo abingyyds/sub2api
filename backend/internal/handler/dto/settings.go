@@ -64,18 +64,26 @@ type SystemSettings struct {
 	ReferralRewardAmount float64 `json:"referral_reward_amount"`
 
 	// Payment / WeChat Pay
-	PaymentEnabled                bool   `json:"payment_enabled"`
-	WechatPayAppID                string `json:"wechat_pay_appid"`
-	WechatPayMchID                string `json:"wechat_pay_mch_id"`
-	WechatPayAPIv3KeyConfigured   bool   `json:"wechat_pay_apiv3_key_configured"`
-	WechatPayMchSerialNo          string `json:"wechat_pay_mch_serial_no"`
-	WechatPayPublicKeyID          string `json:"wechat_pay_public_key_id"`
-	WechatPayPublicKeyConfigured  bool   `json:"wechat_pay_public_key_configured"`
-	WechatPayPrivateKeyConfigured bool   `json:"wechat_pay_private_key_configured"`
-	WechatPayNotifyURL            string `json:"wechat_pay_notify_url"`
-	PaymentPlans                  string `json:"payment_plans"`
+	PaymentEnabled                bool    `json:"payment_enabled"`
+	WechatPayAppID                string  `json:"wechat_pay_appid"`
+	WechatPayMchID                string  `json:"wechat_pay_mch_id"`
+	WechatPayAPIv3KeyConfigured   bool    `json:"wechat_pay_apiv3_key_configured"`
+	WechatPayMchSerialNo          string  `json:"wechat_pay_mch_serial_no"`
+	WechatPayPublicKeyID          string  `json:"wechat_pay_public_key_id"`
+	WechatPayPublicKeyConfigured  bool    `json:"wechat_pay_public_key_configured"`
+	WechatPayPrivateKeyConfigured bool    `json:"wechat_pay_private_key_configured"`
+	WechatPayNotifyURL            string  `json:"wechat_pay_notify_url"`
+	PaymentPlans                  string  `json:"payment_plans"`
 	RechargeMinAmount             float64 `json:"recharge_min_amount"`
 	RechargePlans                 string  `json:"recharge_plans"`
+
+	// Alipay
+	AlipayEnabled              bool   `json:"alipay_enabled"`
+	AlipayAppID                string `json:"alipay_app_id"`
+	AlipayPrivateKeyConfigured bool   `json:"alipay_private_key_configured"`
+	AlipayPublicKeyConfigured  bool   `json:"alipay_public_key_configured"`
+	AlipayNotifyURL            string `json:"alipay_notify_url"`
+	AlipayIsProduction         bool   `json:"alipay_is_production"`
 }
 
 type PublicSettings struct {

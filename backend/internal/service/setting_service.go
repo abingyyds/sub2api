@@ -276,6 +276,18 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	updates[SettingKeyRechargeMinAmount] = fmt.Sprintf("%g", settings.RechargeMinAmount)
 	updates[SettingKeyRechargePlans] = settings.RechargePlans
 
+	// Alipay settings
+	updates[SettingKeyAlipayEnabled] = strconv.FormatBool(settings.AlipayEnabled)
+	updates[SettingKeyAlipayAppID] = settings.AlipayAppID
+	if settings.AlipayPrivateKey != "" {
+		updates[SettingKeyAlipayPrivateKey] = settings.AlipayPrivateKey
+	}
+	if settings.AlipayPublicKey != "" {
+		updates[SettingKeyAlipayPublicKey] = settings.AlipayPublicKey
+	}
+	updates[SettingKeyAlipayNotifyURL] = settings.AlipayNotifyURL
+	updates[SettingKeyAlipayIsProduction] = strconv.FormatBool(settings.AlipayIsProduction)
+
 	err := s.settingRepo.SetMultiple(ctx, updates)
 	if err == nil && s.onUpdate != nil {
 		s.onUpdate() // Invalidate cache after settings update
@@ -447,6 +459,10 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyOpsRealtimeMonitoringEnabled: "true",
 		SettingKeyOpsQueryModeDefault:          "auto",
 		SettingKeyOpsMetricsIntervalSeconds:    "60",
+
+		// Alipay defaults
+		SettingKeyAlipayEnabled:      "false",
+		SettingKeyAlipayIsProduction: "false",
 	}
 
 	return s.settingRepo.SetMultiple(ctx, defaults)
@@ -607,6 +623,16 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		result.RechargeMinAmount = v
 	}
 	result.RechargePlans = settings[SettingKeyRechargePlans]
+
+	// Alipay settings
+	result.AlipayEnabled = settings[SettingKeyAlipayEnabled] == "true"
+	result.AlipayAppID = settings[SettingKeyAlipayAppID]
+	result.AlipayPrivateKey = settings[SettingKeyAlipayPrivateKey]
+	result.AlipayPrivateKeyConfigured = settings[SettingKeyAlipayPrivateKey] != ""
+	result.AlipayPublicKey = settings[SettingKeyAlipayPublicKey]
+	result.AlipayPublicKeyConfigured = settings[SettingKeyAlipayPublicKey] != ""
+	result.AlipayNotifyURL = settings[SettingKeyAlipayNotifyURL]
+	result.AlipayIsProduction = settings[SettingKeyAlipayIsProduction] == "true"
 
 	return result
 }

@@ -241,3 +241,19 @@ const (
 	PaymentOrderStatusClosed   = "closed"
 	PaymentOrderStatusRefunded = "refunded"
 )
+
+// Payment method constants
+const (
+	PaymentMethodWechatNative = "wechat_native"
+	PaymentMethodAlipayNative = "alipay_native"
+)
+
+// Alipay settings keys
+const (
+	SettingKeyAlipayEnabled      = "alipay_enabled"
+	SettingKeyAlipayAppID        = "alipay_app_id"
+	SettingKeyAlipayPrivateKey   = "alipay_private_key"
+	SettingKeyAlipayPublicKey    = "alipay_public_key"
+	SettingKeyAlipayNotifyURL    = "alipay_notify_url"
+	SettingKeyAlipayIsProduction = "alipay_is_production"
+)

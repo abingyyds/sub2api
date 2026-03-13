@@ -1,5 +1,8 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-100 dark:from-dark-950 dark:via-dark-900 dark:to-dark-950">
+  <div class="relative min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-100 dark:from-dark-950 dark:via-dark-900 dark:to-dark-950">
+    <!-- Animated Background -->
+    <AnimatedBackground type="particles" :particle-count="30" color="#3b82f6" />
+
     <!-- Navigation -->
     <nav class="sticky top-0 z-50 border-b border-gray-200/50 bg-white/80 backdrop-blur-lg dark:border-dark-800/50 dark:bg-dark-900/80">
       <div class="mx-auto max-w-7xl px-6 py-4">
@@ -58,43 +61,54 @@
     </section>
 
     <!-- Hero Section with Brand Animation -->
-    <section class="px-6 py-20">
+    <section class="relative z-10 px-6 py-20">
       <div class="mx-auto max-w-7xl text-center">
         <!-- Animated Brand Title -->
-        <div class="mb-8">
-          <h1 class="mb-4 text-6xl font-bold text-gray-900 dark:text-white md:text-7xl lg:text-8xl">
-            <span class="inline-block">c</span><span
-              class="inline-block transition-opacity duration-500"
-              :class="{ 'opacity-30': animatedText === 'laude' }"
-            >{{ animatedText }}</span><span class="inline-block">Coder</span><span class="text-primary-600">.me</span>
-          </h1>
-          <p class="text-2xl font-semibold text-gray-700 dark:text-dark-200 mb-3">
-            新一代代码大师就是我
-          </p>
-          <p class="text-lg text-gray-600 dark:text-dark-300">
-            我就是 <span class="font-bold text-primary-600">claude</span> <span class="font-bold text-primary-600">coder</span> <span class="text-primary-600">=</span> <span class="font-bold text-primary-600">me</span>
-          </p>
-        </div>
+        <FadeIn :delay="100">
+          <div class="mb-8">
+            <h1 class="mb-4 text-6xl font-bold text-gray-900 dark:text-white md:text-7xl lg:text-8xl">
+              <span class="inline-block">c</span><span
+                class="inline-block transition-opacity duration-500"
+                :class="{ 'opacity-30': animatedText === 'laude' }"
+              >{{ animatedText }}</span><span class="inline-block">Coder</span><span class="text-primary-600">.me</span>
+            </h1>
+            <p class="text-2xl font-semibold text-gray-700 dark:text-dark-200 mb-3">
+              新一代代码大师就是我
+            </p>
+            <p class="text-lg text-gray-600 dark:text-dark-300">
+              我就是 <span class="font-bold text-primary-600">claude</span> <span class="font-bold text-primary-600">coder</span> <span class="text-primary-600">=</span> <span class="font-bold text-primary-600">me</span>
+            </p>
+          </div>
+        </FadeIn>
 
-        <div class="mb-4 text-sm font-medium text-primary-600 dark:text-primary-400">
-          Powered by Claude AI - 让 AI 成为你的编程伙伴
-        </div>
-        <h2 class="mb-6 text-4xl font-bold text-gray-900 dark:text-white md:text-5xl">
-          Claude 先进模型使用平台
-        </h2>
-        <p class="mb-8 text-xl text-gray-600 dark:text-dark-300">
-          支持 Opus 4.6、Opus 4.5、Sonnet 4.5、GPT-5.2-Codex 等先进 AI 模型
-        </p>
-        <div class="flex flex-col items-center gap-4">
-          <router-link
-            :to="isAuthenticated ? dashboardPath : '/login'"
-            class="inline-flex items-center gap-2 rounded-full bg-primary-600 px-8 py-4 text-lg font-medium text-white shadow-lg shadow-primary-500/30 transition-all hover:bg-primary-700 hover:shadow-xl"
-          >
-            进入控制台
-            <Icon name="arrowRight" size="md" />
-          </router-link>
-          <p class="text-sm text-gray-500 dark:text-dark-400">^ 新用户注册也点这里 ^</p>
-        </div>
+        <SlideIn direction="up" :delay="200">
+          <div class="mb-4 text-sm font-medium text-primary-600 dark:text-primary-400">
+            Powered by Claude AI - 让 AI 成为你的编程伙伴
+          </div>
+          <h2 class="mb-6 text-4xl font-bold text-gray-900 dark:text-white md:text-5xl">
+            Claude 先进模型使用平台
+          </h2>
+          <p class="mb-8 text-xl text-gray-600 dark:text-dark-300">
+            支持 Opus 4.6、Opus 4.5、Sonnet 4.5、GPT-5.2-Codex 等先进 AI 模型
+          </p>
+        </SlideIn>
+
+        <FadeIn :delay="400">
+          <div class="flex flex-col items-center gap-4">
+            <MagneticButton>
+              <ShimmerEffect>
+                <router-link
+                  :to="isAuthenticated ? dashboardPath : '/login'"
+                  class="inline-flex items-center gap-2 rounded-full bg-primary-600 px-8 py-4 text-lg font-medium text-white shadow-lg shadow-primary-500/30 transition-all hover:bg-primary-700 hover:shadow-xl"
+                >
+                  进入控制台
+                  <Icon name="arrowRight" size="md" />
+                </router-link>
+              </ShimmerEffect>
+            </MagneticButton>
+            <p class="text-sm text-gray-500 dark:text-dark-400">^ 新用户注册也点这里 ^</p>
+          </div>
+        </FadeIn>
       </div>
     </section>
 
@@ -110,153 +124,169 @@
 
 
     <!-- Pricing Section -->
-    <section id="pricing" class="px-6 py-20">
+    <section id="pricing" class="relative z-10 px-6 py-20">
       <div class="mx-auto max-w-7xl">
-        <h2 class="mb-12 text-center text-4xl font-bold text-gray-900 dark:text-white">套餐价格</h2>
+        <FadeIn :delay="100">
+          <h2 class="mb-12 text-center text-4xl font-bold text-gray-900 dark:text-white">套餐价格</h2>
+        </FadeIn>
 
-        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <!-- Pay As You Go -->
-          <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
-            <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">按量付费</h3>
-            <div class="mb-4 text-4xl font-bold text-primary-600">1:1</div>
-            <p class="mb-6 text-gray-600 dark:text-dark-300">1$ = 1RMB</p>
-            <ul class="mb-8 space-y-3">
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                Opus 4.5
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                Sonnet 4.5
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                GPT-5.2-Codex
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                用多少付多少
-              </li>
-            </ul>
-          </div>
+        <StaggerContainer :stagger-delay="150">
+          <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <!-- Pay As You Go -->
+            <GlowCard>
+              <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
+                <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">按量付费</h3>
+                <div class="mb-4 text-4xl font-bold text-primary-600">1:1</div>
+                <p class="mb-6 text-gray-600 dark:text-dark-300">1$ = 1RMB</p>
+                <ul class="mb-8 space-y-3">
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    Opus 4.5
+                  </li>
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    Sonnet 4.5
+                  </li>
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    GPT-5.2-Codex
+                  </li>
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    用多少付多少
+                  </li>
+                </ul>
+              </div>
+            </GlowCard>
 
-          <!-- Monthly Plans -->
-          <div class="rounded-2xl border-2 border-primary-500 bg-white p-8 shadow-xl dark:bg-dark-800">
-            <div class="mb-2 inline-block rounded-full bg-primary-100 px-3 py-1 text-xs font-medium text-primary-600 dark:bg-primary-900/30">推荐</div>
-            <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡</h3>
-            <div class="mb-4 text-4xl font-bold text-primary-600">¥289</div>
-            <ul class="mb-8 space-y-3">
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                每日 30 美金
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                无周限额
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                30 天有效期
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                支持叠加
-              </li>
-            </ul>
-          </div>
+            <!-- Monthly Plans -->
+            <GlowCard glow-color="rgb(59, 130, 246)" :glow-intensity="0.8">
+              <div class="rounded-2xl border-2 border-primary-500 bg-white p-8 shadow-xl dark:bg-dark-800">
+                <div class="mb-2 inline-block rounded-full bg-primary-100 px-3 py-1 text-xs font-medium text-primary-600 dark:bg-primary-900/30 animate-pulse-slow">推荐</div>
+                <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡</h3>
+                <div class="mb-4 text-4xl font-bold text-primary-600">¥289</div>
+                <ul class="mb-8 space-y-3">
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    每日 30 美金
+                  </li>
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    无周限额
+                  </li>
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    30 天有效期
+                  </li>
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    支持叠加
+                  </li>
+                </ul>
+              </div>
+            </GlowCard>
 
-          <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
-            <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡</h3>
-            <div class="mb-4 text-4xl font-bold text-primary-600">¥389</div>
-            <ul class="mb-8 space-y-3">
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                每日 40 美金
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                无周限额
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                30 天有效期
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                支持叠加
-              </li>
-            </ul>
-          </div>
+            <GlowCard>
+              <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
+                <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡</h3>
+                <div class="mb-4 text-4xl font-bold text-primary-600">¥389</div>
+                <ul class="mb-8 space-y-3">
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    每日 40 美金
+                  </li>
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    无周限额
+                  </li>
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    30 天有效期
+                  </li>
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    支持叠加
+                  </li>
+                </ul>
+              </div>
+            </GlowCard>
 
-          <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
-            <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡</h3>
-            <div class="mb-4 text-4xl font-bold text-primary-600">¥459</div>
-            <ul class="mb-8 space-y-3">
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                每日 50 美金
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                无周限额
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                30 天有效期
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                支持叠加
-              </li>
-            </ul>
-          </div>
+            <GlowCard>
+              <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
+                <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡</h3>
+                <div class="mb-4 text-4xl font-bold text-primary-600">¥459</div>
+                <ul class="mb-8 space-y-3">
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    每日 50 美金
+                  </li>
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    无周限额
+                  </li>
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    30 天有效期
+                  </li>
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    支持叠加
+                  </li>
+                </ul>
+              </div>
+            </GlowCard>
 
-          <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
-            <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡</h3>
-            <div class="mb-4 text-4xl font-bold text-primary-600">¥559</div>
-            <ul class="mb-8 space-y-3">
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                每日 60 美金
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                无周限额
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                30 天有效期
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                支持叠加
-              </li>
-            </ul>
-          </div>
+            <GlowCard>
+              <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
+                <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡</h3>
+                <div class="mb-4 text-4xl font-bold text-primary-600">¥559</div>
+                <ul class="mb-8 space-y-3">
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    每日 60 美金
+                  </li>
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    无周限额
+                  </li>
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    30 天有效期
+                  </li>
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    支持叠加
+                  </li>
+                </ul>
+              </div>
+            </GlowCard>
 
-          <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
-            <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡</h3>
-            <div class="mb-4 text-4xl font-bold text-primary-600">¥1180</div>
-            <ul class="mb-8 space-y-3">
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                每日 120 美金
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                无周限额
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                30 天有效期
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
-                <Icon name="check" size="sm" class="text-primary-600" />
-                支持叠加
-              </li>
-            </ul>
+            <GlowCard>
+              <div class="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-dark-700 dark:bg-dark-800">
+                <h3 class="mb-2 text-2xl font-bold text-gray-900 dark:text-white">月卡</h3>
+                <div class="mb-4 text-4xl font-bold text-primary-600">¥1180</div>
+                <ul class="mb-8 space-y-3">
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    每日 120 美金
+                  </li>
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    无周限额
+                  </li>
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    30 天有效期
+                  </li>
+                  <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-dark-300">
+                    <Icon name="check" size="sm" class="text-primary-600" />
+                    支持叠加
+                  </li>
+                </ul>
+              </div>
+            </GlowCard>
           </div>
-        </div>
+        </StaggerContainer>
 
         <p class="mt-8 text-center text-sm text-gray-600 dark:text-dark-400">
           月卡支持叠加使用 / 支持企业组团购买
@@ -397,6 +427,15 @@ import { authAPI } from '@/api/auth'
 import Icon from '@/components/icons/Icon.vue'
 import Logo from '@/components/Logo.vue'
 import type { Announcement } from '@/types'
+import {
+  FadeIn,
+  SlideIn,
+  StaggerContainer,
+  MagneticButton,
+  ShimmerEffect,
+  GlowCard,
+  AnimatedBackground
+} from '@/components/animations'
 
 const authStore = useAuthStore()
 const announcements = ref<Announcement[]>([])

@@ -1,99 +1,103 @@
 <template>
   <AuthLayout>
-    <div class="space-y-6">
-      <!-- Title -->
-      <div class="text-center">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-          {{ t('auth.createAccount') }}
-        </h2>
-        <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
-          {{ t('auth.signUpToStart', { siteName }) }}
-        </p>
-      </div>
+    <AnimatedBackground type="gradient-mesh" color="#8b5cf6" />
 
-      <!-- LinuxDo Connect OAuth 登录 -->
-      <LinuxDoOAuthSection v-if="linuxdoOAuthEnabled" :disabled="isLoading" />
-
-      <!-- Registration Disabled Message -->
-      <div
-        v-if="!registrationEnabled && settingsLoaded"
-        class="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/50 dark:bg-amber-900/20"
-      >
-        <div class="flex items-start gap-3">
-          <div class="flex-shrink-0">
-            <Icon name="exclamationCircle" size="md" class="text-amber-500" />
+    <FadeIn :delay="100">
+      <SlideIn direction="up" :delay="200">
+        <div class="space-y-6">
+          <!-- Title -->
+          <div class="text-center">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+              {{ t('auth.createAccount') }}
+            </h2>
+            <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
+              {{ t('auth.signUpToStart', { siteName }) }}
+            </p>
           </div>
-          <p class="text-sm text-amber-700 dark:text-amber-400">
-            {{ t('auth.registrationDisabled') }}
-          </p>
-        </div>
-      </div>
 
-      <!-- Registration Form -->
-      <form v-else @submit.prevent="handleRegister" class="space-y-5">
-        <!-- Email Input -->
-        <div>
-          <label for="email" class="input-label">
-            {{ t('auth.emailLabel') }}
-          </label>
-          <div class="relative">
-            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Icon name="mail" size="md" class="text-gray-400 dark:text-dark-500" />
+          <!-- LinuxDo Connect OAuth 登录 -->
+          <LinuxDoOAuthSection v-if="linuxdoOAuthEnabled" :disabled="isLoading" />
+
+          <!-- Registration Disabled Message -->
+          <div
+            v-if="!registrationEnabled && settingsLoaded"
+            class="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/50 dark:bg-amber-900/20"
+          >
+            <div class="flex items-start gap-3">
+              <div class="flex-shrink-0">
+                <Icon name="exclamationCircle" size="md" class="text-amber-500" />
+              </div>
+              <p class="text-sm text-amber-700 dark:text-amber-400">
+                {{ t('auth.registrationDisabled') }}
+              </p>
             </div>
-            <input
-              id="email"
-              v-model="formData.email"
-              type="email"
-              required
-              autofocus
-              autocomplete="email"
-              :disabled="isLoading"
-              class="input pl-11"
-              :class="{ 'input-error': errors.email }"
-              :placeholder="t('auth.emailPlaceholder')"
-            />
           </div>
-          <p v-if="errors.email" class="input-error-text">
-            {{ errors.email }}
-          </p>
-        </div>
 
-        <!-- Password Input -->
-        <div>
-          <label for="password" class="input-label">
-            {{ t('auth.passwordLabel') }}
-          </label>
-          <div class="relative">
-            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Icon name="lock" size="md" class="text-gray-400 dark:text-dark-500" />
+          <!-- Registration Form -->
+          <form v-else @submit.prevent="handleRegister" class="space-y-5">
+            <!-- Email Input -->
+            <div>
+              <label for="email" class="input-label">
+                {{ t('auth.emailLabel') }}
+              </label>
+              <div class="relative">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                  <Icon name="mail" size="md" class="text-gray-400 dark:text-dark-500" />
+                </div>
+                <input
+                  id="email"
+                  v-model="formData.email"
+                  type="email"
+                  required
+                  autofocus
+                  autocomplete="email"
+                  :disabled="isLoading"
+                  class="input pl-11 transition-all duration-300 focus:ring-2 focus:ring-primary-500"
+                  :class="{ 'input-error animate-shake': errors.email }"
+                  :placeholder="t('auth.emailPlaceholder')"
+                />
+              </div>
+              <p v-if="errors.email" class="input-error-text">
+                {{ errors.email }}
+              </p>
             </div>
-            <input
-              id="password"
-              v-model="formData.password"
-              :type="showPassword ? 'text' : 'password'"
-              required
-              autocomplete="new-password"
-              :disabled="isLoading"
-              class="input pl-11 pr-11"
-              :class="{ 'input-error': errors.password }"
-              :placeholder="t('auth.createPasswordPlaceholder')"
-            />
-            <button
-              type="button"
-              @click="showPassword = !showPassword"
-              class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-dark-300"
-            >
-              <Icon v-if="showPassword" name="eyeOff" size="md" />
-              <Icon v-else name="eye" size="md" />
-            </button>
-          </div>
-          <p v-if="errors.password" class="input-error-text">
-            {{ errors.password }}
-          </p>
-          <p v-else class="input-hint">
-            {{ t('auth.passwordHint') }}
-          </p>
-        </div>
+
+            <!-- Password Input -->
+            <div>
+              <label for="password" class="input-label">
+                {{ t('auth.passwordLabel') }}
+              </label>
+              <div class="relative">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                  <Icon name="lock" size="md" class="text-gray-400 dark:text-dark-500" />
+                </div>
+                <input
+                  id="password"
+                  v-model="formData.password"
+                  :type="showPassword ? 'text' : 'password'"
+                  required
+                  autocomplete="new-password"
+                  :disabled="isLoading"
+                  class="input pl-11 pr-11 transition-all duration-300 focus:ring-2 focus:ring-primary-500"
+                  :class="{ 'input-error animate-shake': errors.password }"
+                  :placeholder="t('auth.createPasswordPlaceholder')"
+                />
+                <button
+                  type="button"
+                  @click="showPassword = !showPassword"
+                  class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-dark-300"
+                >
+                  <Icon v-if="showPassword" name="eyeOff" size="md" />
+                  <Icon v-else name="eye" size="md" />
+                </button>
+              </div>
+              <p v-if="errors.password" class="input-error-text">
+                {{ errors.password }}
+              </p>
+              <p v-else class="input-hint">
+                {{ t('auth.passwordHint') }}
+              </p>
+            </div>
 
         <!-- Turnstile Widget -->
         <div v-if="turnstileEnabled && turnstileSiteKey">
@@ -146,42 +150,46 @@
         </transition>
 
         <!-- Submit Button -->
-        <button
-          type="submit"
-          :disabled="isLoading || (turnstileEnabled && !turnstileToken) || !agreedToTerms"
-          class="btn btn-primary w-full"
-        >
-          <svg
-            v-if="isLoading"
-            class="-ml-1 mr-2 h-4 w-4 animate-spin text-white"
-            fill="none"
-            viewBox="0 0 24 24"
+        <MagneticButton>
+          <button
+            type="submit"
+            :disabled="isLoading || (turnstileEnabled && !turnstileToken) || !agreedToTerms"
+            class="btn btn-primary w-full transition-all duration-300"
           >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            ></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
-          <Icon v-else name="userPlus" size="md" class="mr-2" />
-          {{
-            isLoading
-              ? t('auth.processing')
-              : emailVerifyEnabled
-                ? t('auth.continue')
-                : t('auth.createAccount')
-          }}
-        </button>
+            <svg
+              v-if="isLoading"
+              class="-ml-1 mr-2 h-4 w-4 animate-spin text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            <Icon v-else name="userPlus" size="md" class="mr-2" />
+            {{
+              isLoading
+                ? t('auth.processing')
+                : emailVerifyEnabled
+                  ? t('auth.continue')
+                  : t('auth.createAccount')
+            }}
+          </button>
+        </MagneticButton>
       </form>
     </div>
+  </SlideIn>
+</FadeIn>
 
     <!-- Footer -->
     <template #footer>
@@ -208,6 +216,12 @@ import Icon from '@/components/icons/Icon.vue'
 import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import { getPublicSettings } from '@/api/auth'
+import {
+  FadeIn,
+  SlideIn,
+  MagneticButton,
+  AnimatedBackground
+} from '@/components/animations'
 
 const { t } = useI18n()
 

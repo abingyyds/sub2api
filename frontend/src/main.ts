@@ -1,9 +1,11 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { MotionPlugin } from '@vueuse/motion'
 import App from './App.vue'
 import router from './router'
 import i18n from './i18n'
 import './style.css'
+import './styles/animations.css'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -22,6 +24,7 @@ if (appStore.siteName && appStore.siteName !== 'Sub2API') {
 
 app.use(router)
 app.use(i18n)
+app.use(MotionPlugin)
 
 // 等待路由器完成初始导航后再挂载，避免竞态条件导致的空白渲染
 router.isReady().then(() => {

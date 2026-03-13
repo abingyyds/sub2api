@@ -1,6 +1,6 @@
 module github.com/Wei-Shaw/sub2api
 
-go 1.25.5
+go 1.22.5
 
 require (
 	entgo.io/ent v0.14.5
@@ -13,6 +13,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/redis/go-redis/v9 v9.17.2
 	github.com/shirou/gopsutil/v4 v4.25.6
+	github.com/smartwalle/alipay/v3 v3.2.23
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.40.0

@@ -9,62 +9,66 @@
       </div>
 
       <!-- Empty State -->
-      <div v-else-if="subscriptions.length === 0" class="card p-12 text-center">
-        <div
-          class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-dark-700"
-        >
-          <Icon name="creditCard" size="xl" class="text-gray-400" />
+      <FadeIn v-else-if="subscriptions.length === 0">
+        <div class="card p-12 text-center">
+          <div
+            class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-dark-700"
+          >
+            <Icon name="creditCard" size="xl" class="text-gray-400" />
+          </div>
+          <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+            {{ t('userSubscriptions.noActiveSubscriptions') }}
+          </h3>
+          <p class="text-gray-500 dark:text-dark-400">
+            {{ t('userSubscriptions.noActiveSubscriptionsDesc') }}
+          </p>
         </div>
-        <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-          {{ t('userSubscriptions.noActiveSubscriptions') }}
-        </h3>
-        <p class="text-gray-500 dark:text-dark-400">
-          {{ t('userSubscriptions.noActiveSubscriptionsDesc') }}
-        </p>
-      </div>
+      </FadeIn>
 
       <!-- Subscriptions Grid -->
-      <div v-else class="grid gap-6 lg:grid-cols-2">
-        <div
-          v-for="subscription in subscriptions"
-          :key="subscription.id"
-          class="card overflow-hidden"
-        >
-          <!-- Header -->
-          <div
-            class="flex items-center justify-between border-b border-gray-100 p-4 dark:border-dark-700"
+      <StaggerContainer v-else :stagger-delay="150">
+        <div class="grid gap-6 lg:grid-cols-2">
+          <GlowCard
+            v-for="subscription in subscriptions"
+            :key="subscription.id"
+            glow-color="rgb(168, 85, 247)"
           >
-            <div class="flex items-center gap-3">
+            <div class="card overflow-hidden">
+              <!-- Header -->
               <div
-                class="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 dark:bg-purple-900/30"
+                class="flex items-center justify-between border-b border-gray-100 p-4 dark:border-dark-700"
               >
-                <Icon name="creditCard" size="md" class="text-purple-600 dark:text-purple-400" />
+                <div class="flex items-center gap-3">
+                  <div
+                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 dark:bg-purple-900/30"
+                  >
+                    <Icon name="creditCard" size="md" class="text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div>
+                    <h3 class="font-semibold text-gray-900 dark:text-white">
+                      {{ subscription.group?.name || `Group #${subscription.group_id}` }}
+                    </h3>
+                    <p class="text-xs text-gray-500 dark:text-dark-400">
+                      {{ subscription.group?.description || '' }}
+                    </p>
+                  </div>
+                </div>
+                <span
+                  :class="[
+                    'badge',
+                    subscription.status === 'active'
+                      ? 'badge-success animate-pulse-slow'
+                      : subscription.status === 'expired'
+                        ? 'badge-warning'
+                        : 'badge-danger'
+                  ]"
+                >
+                  {{ t(`userSubscriptions.status.${subscription.status}`) }}
+                </span>
               </div>
-              <div>
-                <h3 class="font-semibold text-gray-900 dark:text-white">
-                  {{ subscription.group?.name || `Group #${subscription.group_id}` }}
-                </h3>
-                <p class="text-xs text-gray-500 dark:text-dark-400">
-                  {{ subscription.group?.description || '' }}
-                </p>
-              </div>
-            </div>
-            <span
-              :class="[
-                'badge',
-                subscription.status === 'active'
-                  ? 'badge-success'
-                  : subscription.status === 'expired'
-                    ? 'badge-warning'
-                    : 'badge-danger'
-              ]"
-            >
-              {{ t(`userSubscriptions.status.${subscription.status}`) }}
-            </span>
-          </div>
 
-          <!-- Usage Progress -->
-          <div class="space-y-4 p-4">
+              <!-- Usage Progress -->
+              <div class="space-y-4 p-4">
             <!-- Expiration Info -->
             <div v-if="subscription.expires_at" class="flex items-center justify-between text-sm">
               <span class="text-gray-500 dark:text-dark-400">{{
@@ -229,7 +233,9 @@
             </div>
           </div>
         </div>
+      </GlowCard>
       </div>
+    </StaggerContainer>
     </div>
   </AppLayout>
 </template>
@@ -243,6 +249,7 @@ import type { UserSubscription } from '@/types'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { formatDateOnly } from '@/utils/format'
+import { FadeIn, StaggerContainer, GlowCard } from '@/components/animations'
 
 const { t } = useI18n()
 const appStore = useAppStore()
