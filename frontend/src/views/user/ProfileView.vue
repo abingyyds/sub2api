@@ -1,22 +1,42 @@
 <template>
   <AppLayout>
-    <div class="mx-auto max-w-4xl space-y-6">
-      <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-        <StatCard :title="t('profile.accountBalance')" :value="formatCurrency(user?.balance || 0)" :icon="WalletIcon" icon-variant="success" />
-        <StatCard :title="t('profile.concurrencyLimit')" :value="user?.concurrency || 0" :icon="BoltIcon" icon-variant="warning" />
-        <StatCard :title="t('profile.memberSince')" :value="formatDate(user?.created_at || '', { year: 'numeric', month: 'long' })" :icon="CalendarIcon" icon-variant="primary" />
+    <FadeIn>
+      <div class="mx-auto max-w-4xl space-y-6">
+        <StaggerContainer :stagger-delay="100">
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            <GlowCard glow-color="rgb(34, 197, 94)">
+              <StatCard :title="t('profile.accountBalance')" :value="formatCurrency(user?.balance || 0)" :icon="WalletIcon" icon-variant="success" />
+            </GlowCard>
+            <GlowCard glow-color="rgb(245, 158, 11)">
+              <StatCard :title="t('profile.concurrencyLimit')" :value="user?.concurrency || 0" :icon="BoltIcon" icon-variant="warning" />
+            </GlowCard>
+            <GlowCard glow-color="rgb(59, 130, 246)">
+              <StatCard :title="t('profile.memberSince')" :value="formatDate(user?.created_at || '', { year: 'numeric', month: 'long' })" :icon="CalendarIcon" icon-variant="primary" />
+            </GlowCard>
+          </div>
+        </StaggerContainer>
+        <SlideIn direction="up" :delay="300">
+          <ProfileInfoCard :user="user" />
+        </SlideIn>
+        <SlideIn direction="up" :delay="400">
+          <div v-if="contactInfo" class="card border-primary-200 bg-primary-50 dark:bg-primary-900/20 p-6">
+            <div class="flex items-center gap-4">
+              <div class="p-3 bg-primary-100 rounded-xl text-primary-600"><Icon name="chat" size="lg" /></div>
+              <div><h3 class="font-semibold text-primary-800 dark:text-primary-200">{{ t('common.contactSupport') }}</h3><p class="text-sm font-medium">{{ contactInfo }}</p></div>
+            </div>
+          </div>
+        </SlideIn>
+        <SlideIn direction="up" :delay="500">
+          <ProfileEditForm :initial-username="user?.username || ''" />
+        </SlideIn>
+        <SlideIn direction="up" :delay="600">
+          <ProfilePasswordForm />
+        </SlideIn>
+        <SlideIn direction="up" :delay="700">
+          <ProfileTotpCard />
+        </SlideIn>
       </div>
-      <ProfileInfoCard :user="user" />
-      <div v-if="contactInfo" class="card border-primary-200 bg-primary-50 dark:bg-primary-900/20 p-6">
-        <div class="flex items-center gap-4">
-          <div class="p-3 bg-primary-100 rounded-xl text-primary-600"><Icon name="chat" size="lg" /></div>
-          <div><h3 class="font-semibold text-primary-800 dark:text-primary-200">{{ t('common.contactSupport') }}</h3><p class="text-sm font-medium">{{ contactInfo }}</p></div>
-        </div>
-      </div>
-      <ProfileEditForm :initial-username="user?.username || ''" />
-      <ProfilePasswordForm />
-      <ProfileTotpCard />
-    </div>
+    </FadeIn>
   </AppLayout>
 </template>
 
@@ -30,6 +50,7 @@ import ProfileEditForm from '@/components/user/profile/ProfileEditForm.vue'
 import ProfilePasswordForm from '@/components/user/profile/ProfilePasswordForm.vue'
 import ProfileTotpCard from '@/components/user/profile/ProfileTotpCard.vue'
 import { Icon } from '@/components/icons'
+import { FadeIn, SlideIn, StaggerContainer, GlowCard } from '@/components/animations'
 
 const { t } = useI18n(); const authStore = useAuthStore(); const user = computed(() => authStore.user)
 const contactInfo = ref('')

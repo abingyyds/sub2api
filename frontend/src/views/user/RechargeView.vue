@@ -1,93 +1,103 @@
 <template>
   <AppLayout>
-    <div class="mx-auto max-w-2xl space-y-8">
-      <!-- Title -->
-      <div class="text-center">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ t('recharge.title') }}</h1>
-        <p class="mt-2 text-gray-500 dark:text-dark-400">{{ t('recharge.subtitle') }}</p>
+    <FadeIn>
+      <div class="mx-auto max-w-2xl space-y-8">
+        <!-- Title -->
+        <SlideIn direction="up" :delay="100">
+          <div class="text-center">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ t('recharge.title') }}</h1>
+            <p class="mt-2 text-gray-500 dark:text-dark-400">{{ t('recharge.subtitle') }}</p>
+          </div>
+        </SlideIn>
+
+        <SlideIn direction="up" :delay="200">
+          <GlowCard glow-color="rgb(59, 130, 246)">
+            <div class="card p-6 space-y-6">
+              <!-- Quick Select Amounts -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-3">
+                  {{ t('recharge.quickSelect') }}
+                </label>
+                <div class="grid grid-cols-3 gap-3">
+                  <button
+                    v-for="preset in presets"
+                    :key="preset"
+                    class="rounded-lg border-2 px-4 py-3 text-center font-medium transition-all hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20"
+                    :class="selectedAmount === preset
+                      ? 'border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400'
+                      : 'border-gray-200 text-gray-700 dark:border-dark-600 dark:text-dark-300'"
+                    @click="selectPreset(preset)"
+                  >
+                    ¥{{ preset }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Custom Input -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-2">
+                  {{ t('recharge.customAmount') }}
+                </label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-dark-400 font-medium">¥</span>
+                  <input
+                    v-model="customInput"
+                    type="number"
+                    min="1"
+                    step="1"
+                    :placeholder="t('recharge.inputPlaceholder')"
+                    class="w-full rounded-lg border border-gray-300 bg-white py-3 pl-8 pr-4 text-lg font-medium text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-dark-600 dark:bg-dark-800 dark:text-white dark:placeholder-dark-500 transition-all duration-300"
+                    @input="onCustomInput"
+                  />
+                </div>
+              </div>
+
+              <!-- Amount Summary -->
+              <div v-if="finalAmount > 0" class="rounded-lg bg-gray-50 dark:bg-dark-800 p-4">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-600 dark:text-dark-400">{{ t('recharge.rechargeAmount') }}</span>
+                  <span class="text-lg font-bold text-primary-600">¥{{ finalAmount.toFixed(2) }}</span>
+                </div>
+                <div class="mt-1 flex items-center justify-between">
+                  <span class="text-sm text-gray-600 dark:text-dark-400">{{ t('recharge.payAmount') }}</span>
+                  <span class="text-2xl font-bold text-gray-900 dark:text-white">¥{{ finalAmount.toFixed(2) }}</span>
+                </div>
+              </div>
+
+              <!-- Payment Method -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-3">
+                  {{ t('recharge.paymentMethod') }}
+                </label>
+                <div class="flex items-center gap-3 rounded-lg border-2 border-primary-500 bg-primary-50 dark:bg-primary-900/20 p-3">
+                  <svg class="h-6 w-6 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9.5 4C5.36 4 2 6.69 2 10c0 1.89 1.08 3.56 2.78 4.66L4 17l2.5-1.5C7.55 15.82 8.5 16 9.5 16c.34 0 .68-.02 1-.06A5.95 5.95 0 0110 14c0-3.31 2.69-6 6-6 .34 0 .68.03 1 .08C16.32 5.68 13.17 4 9.5 4zM7 9a1 1 0 110 2 1 1 0 010-2zm5 0a1 1 0 110 2 1 1 0 010-2zm4 3c-2.76 0-5 1.79-5 4s2.24 4 5 4c.71 0 1.39-.11 2-.31L20 21l-.5-1.8C20.45 18.22 21 17.16 21 16c0-2.21-2.24-4-5-4zm-1.5 2.5a.75.75 0 110 1.5.75.75 0 010-1.5zm3 0a.75.75 0 110 1.5.75.75 0 010-1.5z"/>
+                  </svg>
+                  <span class="font-medium text-gray-900 dark:text-white">{{ t('recharge.wechatPay') }}</span>
+                </div>
+              </div>
+
+              <!-- Submit Button -->
+              <MagneticButton>
+                <button
+                  class="w-full rounded-lg bg-primary-600 py-3 text-base font-medium text-white transition-all duration-300 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  :disabled="finalAmount <= 0 || creatingOrder"
+                  @click="handleRecharge"
+                >
+                  <span v-if="creatingOrder" class="flex items-center justify-center gap-2">
+                    <div class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    {{ t('recharge.creating') }}
+                  </span>
+                  <span v-else>
+                    {{ finalAmount > 0 ? t('recharge.payNow', { amount: finalAmount.toFixed(2) }) : t('recharge.enterAmount') }}
+                  </span>
+                </button>
+              </MagneticButton>
+            </div>
+          </GlowCard>
+        </SlideIn>
       </div>
-
-      <div class="card p-6 space-y-6">
-        <!-- Quick Select Amounts -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-3">
-            {{ t('recharge.quickSelect') }}
-          </label>
-          <div class="grid grid-cols-3 gap-3">
-            <button
-              v-for="preset in presets"
-              :key="preset"
-              class="rounded-lg border-2 px-4 py-3 text-center font-medium transition-all hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20"
-              :class="selectedAmount === preset
-                ? 'border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400'
-                : 'border-gray-200 text-gray-700 dark:border-dark-600 dark:text-dark-300'"
-              @click="selectPreset(preset)"
-            >
-              ¥{{ preset }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Custom Input -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-2">
-            {{ t('recharge.customAmount') }}
-          </label>
-          <div class="relative">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-dark-400 font-medium">¥</span>
-            <input
-              v-model="customInput"
-              type="number"
-              min="1"
-              step="1"
-              :placeholder="t('recharge.inputPlaceholder')"
-              class="w-full rounded-lg border border-gray-300 bg-white py-3 pl-8 pr-4 text-lg font-medium text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-dark-600 dark:bg-dark-800 dark:text-white dark:placeholder-dark-500"
-              @input="onCustomInput"
-            />
-          </div>
-        </div>
-
-        <!-- Amount Summary -->
-        <div v-if="finalAmount > 0" class="rounded-lg bg-gray-50 dark:bg-dark-800 p-4">
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-gray-600 dark:text-dark-400">{{ t('recharge.rechargeAmount') }}</span>
-            <span class="text-lg font-bold text-primary-600">¥{{ finalAmount.toFixed(2) }}</span>
-          </div>
-          <div class="mt-1 flex items-center justify-between">
-            <span class="text-sm text-gray-600 dark:text-dark-400">{{ t('recharge.payAmount') }}</span>
-            <span class="text-2xl font-bold text-gray-900 dark:text-white">¥{{ finalAmount.toFixed(2) }}</span>
-          </div>
-        </div>
-
-        <!-- Payment Method -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-3">
-            {{ t('recharge.paymentMethod') }}
-          </label>
-          <div class="flex items-center gap-3 rounded-lg border-2 border-primary-500 bg-primary-50 dark:bg-primary-900/20 p-3">
-            <svg class="h-6 w-6 text-green-600" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M9.5 4C5.36 4 2 6.69 2 10c0 1.89 1.08 3.56 2.78 4.66L4 17l2.5-1.5C7.55 15.82 8.5 16 9.5 16c.34 0 .68-.02 1-.06A5.95 5.95 0 0110 14c0-3.31 2.69-6 6-6 .34 0 .68.03 1 .08C16.32 5.68 13.17 4 9.5 4zM7 9a1 1 0 110 2 1 1 0 010-2zm5 0a1 1 0 110 2 1 1 0 010-2zm4 3c-2.76 0-5 1.79-5 4s2.24 4 5 4c.71 0 1.39-.11 2-.31L20 21l-.5-1.8C20.45 18.22 21 17.16 21 16c0-2.21-2.24-4-5-4zm-1.5 2.5a.75.75 0 110 1.5.75.75 0 010-1.5zm3 0a.75.75 0 110 1.5.75.75 0 010-1.5z"/>
-            </svg>
-            <span class="font-medium text-gray-900 dark:text-white">{{ t('recharge.wechatPay') }}</span>
-          </div>
-        </div>
-
-        <!-- Submit Button -->
-        <button
-          class="w-full rounded-lg bg-primary-600 py-3 text-base font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          :disabled="finalAmount <= 0 || creatingOrder"
-          @click="handleRecharge"
-        >
-          <span v-if="creatingOrder" class="flex items-center justify-center gap-2">
-            <div class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-            {{ t('recharge.creating') }}
-          </span>
-          <span v-else>
-            {{ finalAmount > 0 ? t('recharge.payNow', { amount: finalAmount.toFixed(2) }) : t('recharge.enterAmount') }}
-          </span>
-        </button>
-      </div>
-    </div>
+    </FadeIn>
 
     <!-- Payment QR Code Modal -->
     <Teleport to="body">
@@ -157,6 +167,7 @@
 import { ref, computed, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { FadeIn, SlideIn, GlowCard, MagneticButton } from '@/components/animations'
 import QRCode from 'qrcode'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { paymentAPI } from '@/api/payment'
