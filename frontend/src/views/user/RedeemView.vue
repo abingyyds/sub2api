@@ -188,10 +188,10 @@
               <div class="flex-1">
                 <h3 class="text-sm font-semibold text-primary-800 dark:text-primary-300">
                   {{ t('redeem.aboutCodes') }}
-              </h3>
-              <ul
-                class="mt-2 list-inside list-disc space-y-1 text-sm text-primary-700 dark:text-primary-400"
-              >
+                </h3>
+                <ul
+                  class="mt-2 list-inside list-disc space-y-1 text-sm text-primary-700 dark:text-primary-400"
+                >
                 <li>{{ t('redeem.codeRule1') }}</li>
                 <li>{{ t('redeem.codeRule2') }}</li>
                 <li>
@@ -341,6 +341,7 @@
             </p>
           </div>
         </div>
+      </div>
       </SlideIn>
     </div>
   </FadeIn>
