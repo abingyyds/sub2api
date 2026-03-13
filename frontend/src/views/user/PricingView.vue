@@ -224,11 +224,32 @@
           </div>
 
           <!-- Payment Method -->
-          <div class="flex items-center gap-3 rounded-lg border-2 border-primary-500 bg-primary-50 dark:bg-primary-900/20 p-3">
-            <svg class="h-6 w-6 text-green-600" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M9.5 4C5.36 4 2 6.69 2 10c0 1.89 1.08 3.56 2.78 4.66L4 17l2.5-1.5C7.55 15.82 8.5 16 9.5 16c.34 0 .68-.02 1-.06A5.95 5.95 0 0110 14c0-3.31 2.69-6 6-6 .34 0 .68.03 1 .08C16.32 5.68 13.17 4 9.5 4zM7 9a1 1 0 110 2 1 1 0 010-2zm5 0a1 1 0 110 2 1 1 0 010-2zm4 3c-2.76 0-5 1.79-5 4s2.24 4 5 4c.71 0 1.39-.11 2-.31L20 21l-.5-1.8C20.45 18.22 21 17.16 21 16c0-2.21-2.24-4-5-4zm-1.5 2.5a.75.75 0 110 1.5.75.75 0 010-1.5zm3 0a.75.75 0 110 1.5.75.75 0 010-1.5z"/>
-            </svg>
-            <span class="font-medium text-gray-900 dark:text-white">{{ t('recharge.wechatPay') }}</span>
+          <div class="space-y-2">
+            <!-- WeChat Pay -->
+            <div
+              class="flex items-center gap-3 rounded-lg border-2 p-3 cursor-pointer transition-all"
+              :class="selectedPayMethod === 'wechat' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-200 dark:border-dark-600 hover:border-primary-300'"
+              @click="selectedPayMethod = 'wechat'"
+            >
+              <input type="radio" :checked="selectedPayMethod === 'wechat'" class="h-4 w-4 text-primary-600" />
+              <svg class="h-6 w-6 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9.5 4C5.36 4 2 6.69 2 10c0 1.89 1.08 3.56 2.78 4.66L4 17l2.5-1.5C7.55 15.82 8.5 16 9.5 16c.34 0 .68-.02 1-.06A5.95 5.95 0 0110 14c0-3.31 2.69-6 6-6 .34 0 .68.03 1 .08C16.32 5.68 13.17 4 9.5 4zM7 9a1 1 0 110 2 1 1 0 010-2zm5 0a1 1 0 110 2 1 1 0 010-2zm4 3c-2.76 0-5 1.79-5 4s2.24 4 5 4c.71 0 1.39-.11 2-.31L20 21l-.5-1.8C20.45 18.22 21 17.16 21 16c0-2.21-2.24-4-5-4zm-1.5 2.5a.75.75 0 110 1.5.75.75 0 010-1.5zm3 0a.75.75 0 110 1.5.75.75 0 010-1.5z"/>
+              </svg>
+              <span class="font-medium text-gray-900 dark:text-white">{{ t('recharge.wechatPay') }}</span>
+            </div>
+
+            <!-- Alipay -->
+            <div
+              class="flex items-center gap-3 rounded-lg border-2 p-3 cursor-pointer transition-all"
+              :class="selectedPayMethod === 'alipay' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-200 dark:border-dark-600 hover:border-primary-300'"
+              @click="selectedPayMethod = 'alipay'"
+            >
+              <input type="radio" :checked="selectedPayMethod === 'alipay'" class="h-4 w-4 text-primary-600" />
+              <svg class="h-6 w-6 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M5.5 2A3.5 3.5 0 002 5.5v13A3.5 3.5 0 005.5 22h13a3.5 3.5 0 003.5-3.5V16c-1.3.7-3.1 1.4-5.6 1.4-3.4 0-6.2-1.3-8.4-2.8.5-.3 1.1-.7 1.7-1.2 1.9 1.2 4.2 2.3 6.7 2.3 1.8 0 3.1-.5 4.1-1V5.5A3.5 3.5 0 0018.5 2h-13zM12 6c3.3 0 6 2.7 6 6 0 .8-.2 1.6-.5 2.3-1 .5-2.4.9-4 .9-2.5 0-4.8-1.1-6.7-2.3-.3-.2-.6-.4-.8-.6-.3-.6-.5-1.3-.5-2C6 8.7 8.7 6 12 6z"/>
+              </svg>
+              <span class="font-medium text-gray-900 dark:text-white">支付宝</span>
+            </div>
           </div>
 
           <!-- Submit -->
@@ -343,6 +364,7 @@ const plans = ref<PaymentPlan[]>([])
 const rechargePlans = ref<RechargePlan[]>([])
 const rechargeMinAmount = ref(0)
 const creatingOrder = ref(false)
+const selectedPayMethod = ref<'wechat' | 'alipay'>('wechat')
 const showPaymentModal = ref(false)
 const qrLoading = ref(false)
 const qrCanvas = ref<HTMLCanvasElement | null>(null)
@@ -671,7 +693,7 @@ async function handleBuy(plan: PaymentPlan) {
   paymentOrderType.value = 'subscription'
   creatingOrder.value = true
   try {
-    const order = await paymentAPI.createOrder(plan.key, code || undefined)
+    const order = await paymentAPI.createOrder(plan.key, code || undefined, selectedPayMethod.value)
     await showQRModal(order)
   } catch (err: any) {
     const msg = err?.message || err?.response?.data?.message || t('pricing.payment.createFailed')
@@ -696,7 +718,7 @@ async function handleRechargePreset(rp: RechargePlan) {
   creatingOrder.value = true
   try {
     const payYuan = rp.pay_amount_fen / 100
-    const order = await paymentAPI.createRechargeOrder(payYuan, code || undefined)
+    const order = await paymentAPI.createRechargeOrder(payYuan, code || undefined, selectedPayMethod.value)
     await showQRModal(order)
   } catch (err: any) {
     const msg = err?.message || err?.response?.data?.message || t('recharge.payment.createFailed')
@@ -722,7 +744,7 @@ async function handleCustomRecharge() {
   paymentOrderType.value = 'recharge'
   creatingOrder.value = true
   try {
-    const order = await paymentAPI.createRechargeOrder(customFinalAmount.value, code || undefined)
+    const order = await paymentAPI.createRechargeOrder(customFinalAmount.value, code || undefined, selectedPayMethod.value)
     await showQRModal(order)
   } catch (err: any) {
     const msg = err?.message || err?.response?.data?.message || t('recharge.payment.createFailed')
