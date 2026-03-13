@@ -911,10 +911,10 @@ func (s *PaymentService) createAlipayNativeOrder(ctx context.Context, order *Pay
 	}
 
 	if rsp.IsFailure() {
-		return "", fmt.Errorf("alipay error: %s - %s", rsp.Response.Code, rsp.Response.Msg)
+		return "", fmt.Errorf("alipay error: %s - %s", rsp.Code, rsp.Msg)
 	}
 
-	return rsp.Response.QRCode, nil
+	return rsp.QRCode, nil
 }
 
 // HandleAlipayNotify 处理支付宝支付回调通知
