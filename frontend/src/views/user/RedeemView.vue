@@ -341,7 +341,7 @@
             </p>
           </div>
         </div>
-      </div>
+        </div>
       </SlideIn>
     </div>
   </FadeIn>
