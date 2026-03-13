@@ -60,6 +60,9 @@ COPY backend/ ./
 # Copy frontend dist from previous stage (must be after backend copy to avoid being overwritten)
 COPY --from=frontend-builder /app/backend/internal/web/dist ./internal/web/dist
 
+# Ensure go.mod is up to date before generating code
+RUN go mod tidy
+
 # Generate ent ORM code and Wire DI
 RUN go generate ./ent && \
     go generate ./cmd/server
