@@ -3,7 +3,7 @@ FROM golang:1.25.5-alpine
 WORKDIR /app
 
 # 安装必要的工具
-RUN apk add --no-cache git
+RUN apk add --no-cache git postgresql-client
 
 # 安装 goose
 RUN go install github.com/pressly/goose/v3/cmd/goose@latest
