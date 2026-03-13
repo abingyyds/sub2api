@@ -1351,6 +1351,8 @@ type SettingsForm = SystemSettings & {
   wechat_pay_apiv3_key: string
   wechat_pay_public_key: string
   wechat_pay_private_key: string
+  alipay_private_key: string
+  alipay_public_key: string
 }
 
 const form = reactive<SettingsForm>({
