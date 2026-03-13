@@ -272,8 +272,8 @@
               @click="selectedPayMethod = 'alipay'"
             >
               <input type="radio" :checked="selectedPayMethod === 'alipay'" class="h-5 w-5 text-primary-600" />
-              <svg class="h-8 w-8 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+              <svg class="h-8 w-8 text-blue-500" viewBox="0 0 1024 1024" fill="currentColor">
+                <path d="M1024 701.9v162.8c0 88.4-71.7 160.1-160.1 160.1H160.1C71.7 1024.8 0 953.1 0 864.7V159.9C0 71.5 71.7-0.2 160.1-0.2h703.8c88.4 0 160.1 71.7 160.1 160.1v390.7c-65.9-50.6-181.4-130.4-320-130.4-210.3 0-348.8 122.6-348.8 235.4 0 112.8 97.7 194.5 236.7 194.5 152.5 0 278.1-77.3 342.1-139.1zM736 511.5H288v-64h448v64z m0-128H288v-64h448v64z m0-128H288v-64h448v64z"/>
               </svg>
               <span class="font-medium text-gray-900 dark:text-white">支付宝</span>
             </div>
