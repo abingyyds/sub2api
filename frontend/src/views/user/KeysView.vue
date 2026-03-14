@@ -1,24 +1,32 @@
 <template>
   <AppLayout>
-    <TablePageLayout>
-      <template #actions>
-        <div class="flex justify-end gap-3">
-        <button
-          @click="loadApiKeys"
-          :disabled="loading"
-          class="btn btn-secondary"
-          :title="t('common.refresh')"
-        >
-          <Icon name="refresh" size="md" :class="loading ? 'animate-spin' : ''" />
-        </button>
-        <button @click="showCreateModal = true" class="btn btn-primary" data-tour="keys-create-btn">
-          <Icon name="plus" size="md" class="mr-2" />
-          {{ t('keys.createKey') }}
-        </button>
-      </div>
-      </template>
+    <FadeIn>
+      <TablePageLayout>
+        <template #actions>
+          <SlideIn direction="left" :delay="100">
+            <div class="flex justify-end gap-3">
+              <MagneticButton>
+                <button
+                  @click="loadApiKeys"
+                  :disabled="loading"
+                  class="btn btn-secondary"
+                  :title="t('common.refresh')"
+                >
+                  <Icon name="refresh" size="md" :class="loading ? 'animate-spin' : ''" />
+                </button>
+              </MagneticButton>
+              <MagneticButton>
+                <button @click="showCreateModal = true" class="btn btn-primary" data-tour="keys-create-btn">
+                  <Icon name="plus" size="md" class="mr-2" />
+                  {{ t('keys.createKey') }}
+                </button>
+              </MagneticButton>
+            </div>
+          </SlideIn>
+        </template>
 
-      <template #table>
+        <template #table>
+          <SlideIn direction="up" :delay="200">
         <DataTable :columns="columns" :data="apiKeys" :loading="loading">
           <template #cell-key="{ value, row }">
             <div class="flex items-center gap-2">
@@ -182,6 +190,7 @@
             />
           </template>
         </DataTable>
+      </SlideIn>
       </template>
 
       <template #pagination>
@@ -195,6 +204,7 @@
         />
       </template>
     </TablePageLayout>
+  </FadeIn>
 
     <!-- Create/Edit Modal -->
     <BaseDialog
@@ -508,6 +518,7 @@ import TablePageLayout from '@/components/layout/TablePageLayout.vue'
 	import UseKeyModal from '@/components/keys/UseKeyModal.vue'
 	import GroupBadge from '@/components/common/GroupBadge.vue'
 	import GroupOptionItem from '@/components/common/GroupOptionItem.vue'
+	import { FadeIn, SlideIn, MagneticButton } from '@/components/animations'
 	import type { ApiKey, Group, PublicSettings, SubscriptionType, GroupPlatform } from '@/types'
 import type { Column } from '@/components/common/types'
 import type { BatchApiKeyUsageStats } from '@/api/usage'

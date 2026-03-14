@@ -1,29 +1,36 @@
 <template>
   <AppLayout>
-    <div class="mx-auto max-w-6xl space-y-8">
-      <!-- Title -->
-      <div class="text-center">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ t('modelPlaza.title') }}</h1>
-        <p class="mt-2 text-gray-500 dark:text-dark-400">{{ t('modelPlaza.subtitle') }}</p>
-      </div>
+    <FadeIn>
+      <div class="mx-auto max-w-6xl space-y-8">
+        <!-- Title -->
+        <SlideIn direction="up" :delay="100">
+          <div class="text-center">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ t('modelPlaza.title') }}</h1>
+            <p class="mt-2 text-gray-500 dark:text-dark-400">{{ t('modelPlaza.subtitle') }}</p>
+          </div>
+        </SlideIn>
 
-      <!-- Loading -->
-      <div v-if="loading" class="flex justify-center py-12">
-        <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
-      </div>
+        <!-- Loading -->
+        <div v-if="loading" class="flex justify-center py-12">
+          <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
+        </div>
 
-      <!-- Empty State -->
-      <div v-else-if="!groupModels.length" class="py-12 text-center text-gray-500 dark:text-dark-400">
-        {{ t('modelPlaza.empty') }}
-      </div>
+        <!-- Empty State -->
+        <div v-else-if="!groupModels.length" class="py-12 text-center text-gray-500 dark:text-dark-400">
+          {{ t('modelPlaza.empty') }}
+        </div>
 
-      <!-- Group Cards -->
-      <div v-else class="grid gap-6 md:grid-cols-2">
-        <div
-          v-for="item in groupModels"
-          :key="item.group.id"
-          class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-dark-700 dark:bg-dark-800"
-        >
+        <!-- Group Cards -->
+        <StaggerContainer v-else :stagger-delay="100" :delay="200">
+          <div class="grid gap-6 md:grid-cols-2">
+            <GlowCard
+              v-for="item in groupModels"
+              :key="item.group.id"
+              glow-color="rgb(139, 92, 246)"
+            >
+              <div
+                class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-dark-700 dark:bg-dark-800"
+              >
           <!-- Group Header -->
           <div class="mb-4 flex items-center justify-between">
             <div>
@@ -75,8 +82,11 @@
             {{ t('modelPlaza.allModels') }}
           </div>
         </div>
-      </div>
+      </GlowCard>
     </div>
+  </StaggerContainer>
+</div>
+</FadeIn>
   </AppLayout>
 </template>
 
@@ -86,6 +96,7 @@ import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { getModelPlaza, type GroupModels } from '@/api/model-plaza'
 import { useClipboard } from '@/composables/useClipboard'
+import { FadeIn, SlideIn, StaggerContainer, GlowCard } from '@/components/animations'
 
 const { t } = useI18n()
 const { copyToClipboard } = useClipboard()
