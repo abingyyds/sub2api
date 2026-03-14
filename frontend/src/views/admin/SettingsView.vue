@@ -1628,7 +1628,13 @@ async function saveSettings() {
       wechat_pay_notify_url: form.wechat_pay_notify_url,
       payment_plans: form.payment_plans,
       recharge_min_amount: form.recharge_min_amount,
-      recharge_plans: serializeRechargePlans(rechargePlansList.value)
+      recharge_plans: serializeRechargePlans(rechargePlansList.value),
+      alipay_enabled: form.alipay_enabled,
+      alipay_app_id: form.alipay_app_id,
+      alipay_private_key: form.alipay_private_key || undefined,
+      alipay_public_key: form.alipay_public_key || undefined,
+      alipay_notify_url: form.alipay_notify_url,
+      alipay_is_production: form.alipay_is_production
     }
     const updated = await adminAPI.settings.updateSettings(payload)
     Object.assign(form, updated)
@@ -1638,6 +1644,8 @@ async function saveSettings() {
     form.wechat_pay_apiv3_key = ''
     form.wechat_pay_public_key = ''
     form.wechat_pay_private_key = ''
+    form.alipay_private_key = ''
+    form.alipay_public_key = ''
     // Re-parse recharge plans from updated response
     rechargePlansList.value = parseRechargePlans(form.recharge_plans)
     // Refresh cached public settings so sidebar/header update immediately

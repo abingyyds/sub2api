@@ -471,6 +471,12 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		PaymentPlans:                         updatedSettings.PaymentPlans,
 		RechargeMinAmount:                    updatedSettings.RechargeMinAmount,
 		RechargePlans:                        updatedSettings.RechargePlans,
+		AlipayEnabled:                        updatedSettings.AlipayEnabled,
+		AlipayAppID:                          updatedSettings.AlipayAppID,
+		AlipayPrivateKeyConfigured:           updatedSettings.AlipayPrivateKeyConfigured,
+		AlipayPublicKeyConfigured:            updatedSettings.AlipayPublicKeyConfigured,
+		AlipayNotifyURL:                      updatedSettings.AlipayNotifyURL,
+		AlipayIsProduction:                   updatedSettings.AlipayIsProduction,
 	})
 }
 
