@@ -1,6 +1,8 @@
 package admin
 
 import (
+	"log/slog"
+
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
 	"github.com/Wei-Shaw/sub2api/internal/service"
@@ -27,6 +29,7 @@ func (h *PaymentOrderHandler) List(c *gin.Context) {
 	params := pagination.PaginationParams{Page: page, PageSize: pageSize}
 	orders, pag, err := h.paymentService.ListAllOrders(c.Request.Context(), params, status, orderType)
 	if err != nil {
+		slog.Error("[AdminOrders] ListAllOrders failed", "error", err)
 		response.ErrorFrom(c, err)
 		return
 	}
