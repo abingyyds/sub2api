@@ -47,6 +47,15 @@ func (h *PaymentHandler) GetRechargeInfo(c *gin.Context) {
 	response.Success(c, info)
 }
 
+// GetPayMethods returns currently enabled payment methods
+// GET /api/v1/payment/methods
+func (h *PaymentHandler) GetPayMethods(c *gin.Context) {
+	methods := h.paymentService.GetAvailablePayMethods(c.Request.Context())
+	response.Success(c, gin.H{
+		"methods": methods,
+	})
+}
+
 // CreateOrderRequest represents the request body for creating a payment order
 type CreateOrderRequest struct {
 	PlanKey   string `json:"plan_key" binding:"required"`

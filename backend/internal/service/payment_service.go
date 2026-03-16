@@ -209,6 +209,28 @@ type RechargeInfo struct {
 	Plans     []RechargePlan `json:"plans"`
 }
 
+// GetAvailablePayMethods 返回当前已启用的支付方式列表
+func (s *PaymentService) GetAvailablePayMethods(ctx context.Context) []string {
+	methods := make([]string, 0, 4)
+
+	// 微信支付：只要 payment_enabled 即可
+	if enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyPaymentEnabled); enabled == "true" {
+		methods = append(methods, "wechat")
+	}
+
+	// 支付宝
+	if enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyAlipayEnabled); enabled == "true" {
+		methods = append(methods, "alipay")
+	}
+
+	// 易支付
+	if enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayEnabled); enabled == "true" {
+		methods = append(methods, "epay_alipay", "epay_wxpay")
+	}
+
+	return methods
+}
+
 // GetRechargeInfo 获取充值信息
 func (s *PaymentService) GetRechargeInfo(ctx context.Context) (*RechargeInfo, error) {
 	info := &RechargeInfo{

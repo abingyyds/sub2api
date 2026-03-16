@@ -23,6 +23,8 @@ func RegisterUserRoutes(
 		payment.GET("/plans", h.Payment.GetPlans)
 		// 公开接口：获取充值信息（无需认证）
 		payment.GET("/recharge-info", h.Payment.GetRechargeInfo)
+		// 公开接口：获取可用支付方式（无需认证）
+		payment.GET("/methods", h.Payment.GetPayMethods)
 	}
 
 	authenticated := v1.Group("")
