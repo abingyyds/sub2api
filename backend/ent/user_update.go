@@ -11,11 +11,16 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Wei-Shaw/sub2api/ent/admininvitecode"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/organization"
+	"github.com/Wei-Shaw/sub2api/ent/orgmember"
+	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/promocodeusage"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
+	"github.com/Wei-Shaw/sub2api/ent/referral"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
@@ -281,6 +286,47 @@ func (_u *UserUpdate) ClearDiscoverySource() *UserUpdate {
 	return _u
 }
 
+// SetInitialBalance sets the "initial_balance" field.
+func (_u *UserUpdate) SetInitialBalance(v float64) *UserUpdate {
+	_u.mutation.ResetInitialBalance()
+	_u.mutation.SetInitialBalance(v)
+	return _u
+}
+
+// SetNillableInitialBalance sets the "initial_balance" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableInitialBalance(v *float64) *UserUpdate {
+	if v != nil {
+		_u.SetInitialBalance(*v)
+	}
+	return _u
+}
+
+// AddInitialBalance adds value to the "initial_balance" field.
+func (_u *UserUpdate) AddInitialBalance(v float64) *UserUpdate {
+	_u.mutation.AddInitialBalance(v)
+	return _u
+}
+
+// SetInitialBalanceExpiresAt sets the "initial_balance_expires_at" field.
+func (_u *UserUpdate) SetInitialBalanceExpiresAt(v time.Time) *UserUpdate {
+	_u.mutation.SetInitialBalanceExpiresAt(v)
+	return _u
+}
+
+// SetNillableInitialBalanceExpiresAt sets the "initial_balance_expires_at" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableInitialBalanceExpiresAt(v *time.Time) *UserUpdate {
+	if v != nil {
+		_u.SetInitialBalanceExpiresAt(*v)
+	}
+	return _u
+}
+
+// ClearInitialBalanceExpiresAt clears the value of the "initial_balance_expires_at" field.
+func (_u *UserUpdate) ClearInitialBalanceExpiresAt() *UserUpdate {
+	_u.mutation.ClearInitialBalanceExpiresAt()
+	return _u
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *UserUpdate) AddAPIKeyIDs(ids ...int64) *UserUpdate {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -399,6 +445,96 @@ func (_u *UserUpdate) AddPromoCodeUsages(v ...*PromoCodeUsage) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.AddPromoCodeUsageIDs(ids...)
+}
+
+// AddReferralsAsInviterIDs adds the "referrals_as_inviter" edge to the Referral entity by IDs.
+func (_u *UserUpdate) AddReferralsAsInviterIDs(ids ...int64) *UserUpdate {
+	_u.mutation.AddReferralsAsInviterIDs(ids...)
+	return _u
+}
+
+// AddReferralsAsInviter adds the "referrals_as_inviter" edges to the Referral entity.
+func (_u *UserUpdate) AddReferralsAsInviter(v ...*Referral) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddReferralsAsInviterIDs(ids...)
+}
+
+// AddReferralsAsInviteeIDs adds the "referrals_as_invitee" edge to the Referral entity by IDs.
+func (_u *UserUpdate) AddReferralsAsInviteeIDs(ids ...int64) *UserUpdate {
+	_u.mutation.AddReferralsAsInviteeIDs(ids...)
+	return _u
+}
+
+// AddReferralsAsInvitee adds the "referrals_as_invitee" edges to the Referral entity.
+func (_u *UserUpdate) AddReferralsAsInvitee(v ...*Referral) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddReferralsAsInviteeIDs(ids...)
+}
+
+// AddOwnedOrganizationIDs adds the "owned_organizations" edge to the Organization entity by IDs.
+func (_u *UserUpdate) AddOwnedOrganizationIDs(ids ...int64) *UserUpdate {
+	_u.mutation.AddOwnedOrganizationIDs(ids...)
+	return _u
+}
+
+// AddOwnedOrganizations adds the "owned_organizations" edges to the Organization entity.
+func (_u *UserUpdate) AddOwnedOrganizations(v ...*Organization) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOwnedOrganizationIDs(ids...)
+}
+
+// AddOrgMembershipIDs adds the "org_memberships" edge to the OrgMember entity by IDs.
+func (_u *UserUpdate) AddOrgMembershipIDs(ids ...int64) *UserUpdate {
+	_u.mutation.AddOrgMembershipIDs(ids...)
+	return _u
+}
+
+// AddOrgMemberships adds the "org_memberships" edges to the OrgMember entity.
+func (_u *UserUpdate) AddOrgMemberships(v ...*OrgMember) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOrgMembershipIDs(ids...)
+}
+
+// AddAdminInviteCodeIDs adds the "admin_invite_codes" edge to the AdminInviteCode entity by IDs.
+func (_u *UserUpdate) AddAdminInviteCodeIDs(ids ...int64) *UserUpdate {
+	_u.mutation.AddAdminInviteCodeIDs(ids...)
+	return _u
+}
+
+// AddAdminInviteCodes adds the "admin_invite_codes" edges to the AdminInviteCode entity.
+func (_u *UserUpdate) AddAdminInviteCodes(v ...*AdminInviteCode) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAdminInviteCodeIDs(ids...)
+}
+
+// AddPaymentOrderIDs adds the "payment_orders" edge to the PaymentOrder entity by IDs.
+func (_u *UserUpdate) AddPaymentOrderIDs(ids ...int64) *UserUpdate {
+	_u.mutation.AddPaymentOrderIDs(ids...)
+	return _u
+}
+
+// AddPaymentOrders adds the "payment_orders" edges to the PaymentOrder entity.
+func (_u *UserUpdate) AddPaymentOrders(v ...*PaymentOrder) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPaymentOrderIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -574,6 +710,132 @@ func (_u *UserUpdate) RemovePromoCodeUsages(v ...*PromoCodeUsage) *UserUpdate {
 	return _u.RemovePromoCodeUsageIDs(ids...)
 }
 
+// ClearReferralsAsInviter clears all "referrals_as_inviter" edges to the Referral entity.
+func (_u *UserUpdate) ClearReferralsAsInviter() *UserUpdate {
+	_u.mutation.ClearReferralsAsInviter()
+	return _u
+}
+
+// RemoveReferralsAsInviterIDs removes the "referrals_as_inviter" edge to Referral entities by IDs.
+func (_u *UserUpdate) RemoveReferralsAsInviterIDs(ids ...int64) *UserUpdate {
+	_u.mutation.RemoveReferralsAsInviterIDs(ids...)
+	return _u
+}
+
+// RemoveReferralsAsInviter removes "referrals_as_inviter" edges to Referral entities.
+func (_u *UserUpdate) RemoveReferralsAsInviter(v ...*Referral) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveReferralsAsInviterIDs(ids...)
+}
+
+// ClearReferralsAsInvitee clears all "referrals_as_invitee" edges to the Referral entity.
+func (_u *UserUpdate) ClearReferralsAsInvitee() *UserUpdate {
+	_u.mutation.ClearReferralsAsInvitee()
+	return _u
+}
+
+// RemoveReferralsAsInviteeIDs removes the "referrals_as_invitee" edge to Referral entities by IDs.
+func (_u *UserUpdate) RemoveReferralsAsInviteeIDs(ids ...int64) *UserUpdate {
+	_u.mutation.RemoveReferralsAsInviteeIDs(ids...)
+	return _u
+}
+
+// RemoveReferralsAsInvitee removes "referrals_as_invitee" edges to Referral entities.
+func (_u *UserUpdate) RemoveReferralsAsInvitee(v ...*Referral) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveReferralsAsInviteeIDs(ids...)
+}
+
+// ClearOwnedOrganizations clears all "owned_organizations" edges to the Organization entity.
+func (_u *UserUpdate) ClearOwnedOrganizations() *UserUpdate {
+	_u.mutation.ClearOwnedOrganizations()
+	return _u
+}
+
+// RemoveOwnedOrganizationIDs removes the "owned_organizations" edge to Organization entities by IDs.
+func (_u *UserUpdate) RemoveOwnedOrganizationIDs(ids ...int64) *UserUpdate {
+	_u.mutation.RemoveOwnedOrganizationIDs(ids...)
+	return _u
+}
+
+// RemoveOwnedOrganizations removes "owned_organizations" edges to Organization entities.
+func (_u *UserUpdate) RemoveOwnedOrganizations(v ...*Organization) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOwnedOrganizationIDs(ids...)
+}
+
+// ClearOrgMemberships clears all "org_memberships" edges to the OrgMember entity.
+func (_u *UserUpdate) ClearOrgMemberships() *UserUpdate {
+	_u.mutation.ClearOrgMemberships()
+	return _u
+}
+
+// RemoveOrgMembershipIDs removes the "org_memberships" edge to OrgMember entities by IDs.
+func (_u *UserUpdate) RemoveOrgMembershipIDs(ids ...int64) *UserUpdate {
+	_u.mutation.RemoveOrgMembershipIDs(ids...)
+	return _u
+}
+
+// RemoveOrgMemberships removes "org_memberships" edges to OrgMember entities.
+func (_u *UserUpdate) RemoveOrgMemberships(v ...*OrgMember) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOrgMembershipIDs(ids...)
+}
+
+// ClearAdminInviteCodes clears all "admin_invite_codes" edges to the AdminInviteCode entity.
+func (_u *UserUpdate) ClearAdminInviteCodes() *UserUpdate {
+	_u.mutation.ClearAdminInviteCodes()
+	return _u
+}
+
+// RemoveAdminInviteCodeIDs removes the "admin_invite_codes" edge to AdminInviteCode entities by IDs.
+func (_u *UserUpdate) RemoveAdminInviteCodeIDs(ids ...int64) *UserUpdate {
+	_u.mutation.RemoveAdminInviteCodeIDs(ids...)
+	return _u
+}
+
+// RemoveAdminInviteCodes removes "admin_invite_codes" edges to AdminInviteCode entities.
+func (_u *UserUpdate) RemoveAdminInviteCodes(v ...*AdminInviteCode) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAdminInviteCodeIDs(ids...)
+}
+
+// ClearPaymentOrders clears all "payment_orders" edges to the PaymentOrder entity.
+func (_u *UserUpdate) ClearPaymentOrders() *UserUpdate {
+	_u.mutation.ClearPaymentOrders()
+	return _u
+}
+
+// RemovePaymentOrderIDs removes the "payment_orders" edge to PaymentOrder entities by IDs.
+func (_u *UserUpdate) RemovePaymentOrderIDs(ids ...int64) *UserUpdate {
+	_u.mutation.RemovePaymentOrderIDs(ids...)
+	return _u
+}
+
+// RemovePaymentOrders removes "payment_orders" edges to PaymentOrder entities.
+func (_u *UserUpdate) RemovePaymentOrders(v ...*PaymentOrder) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePaymentOrderIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *UserUpdate) Save(ctx context.Context) (int, error) {
 	if err := _u.defaults(); err != nil {
@@ -641,6 +903,16 @@ func (_u *UserUpdate) check() error {
 	if v, ok := _u.mutation.Username(); ok {
 		if err := user.UsernameValidator(v); err != nil {
 			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "User.username": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.InviteCode(); ok {
+		if err := user.InviteCodeValidator(v); err != nil {
+			return &ValidationError{Name: "invite_code", err: fmt.Errorf(`ent: validator failed for field "User.invite_code": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.DiscoverySource(); ok {
+		if err := user.DiscoverySourceValidator(v); err != nil {
+			return &ValidationError{Name: "discovery_source", err: fmt.Errorf(`ent: validator failed for field "User.discovery_source": %w`, err)}
 		}
 	}
 	return nil
@@ -723,6 +995,18 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.DiscoverySourceCleared() {
 		_spec.ClearField(user.FieldDiscoverySource, field.TypeString)
+	}
+	if value, ok := _u.mutation.InitialBalance(); ok {
+		_spec.SetField(user.FieldInitialBalance, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedInitialBalance(); ok {
+		_spec.AddField(user.FieldInitialBalance, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.InitialBalanceExpiresAt(); ok {
+		_spec.SetField(user.FieldInitialBalanceExpiresAt, field.TypeTime, value)
+	}
+	if _u.mutation.InitialBalanceExpiresAtCleared() {
+		_spec.ClearField(user.FieldInitialBalanceExpiresAt, field.TypeTime)
 	}
 	if _u.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1089,6 +1373,276 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(promocodeusage.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ReferralsAsInviterCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReferralsAsInviterTable,
+			Columns: []string{user.ReferralsAsInviterColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedReferralsAsInviterIDs(); len(nodes) > 0 && !_u.mutation.ReferralsAsInviterCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReferralsAsInviterTable,
+			Columns: []string{user.ReferralsAsInviterColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ReferralsAsInviterIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReferralsAsInviterTable,
+			Columns: []string{user.ReferralsAsInviterColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ReferralsAsInviteeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReferralsAsInviteeTable,
+			Columns: []string{user.ReferralsAsInviteeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedReferralsAsInviteeIDs(); len(nodes) > 0 && !_u.mutation.ReferralsAsInviteeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReferralsAsInviteeTable,
+			Columns: []string{user.ReferralsAsInviteeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ReferralsAsInviteeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReferralsAsInviteeTable,
+			Columns: []string{user.ReferralsAsInviteeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OwnedOrganizationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedOrganizationsTable,
+			Columns: []string{user.OwnedOrganizationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOwnedOrganizationsIDs(); len(nodes) > 0 && !_u.mutation.OwnedOrganizationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedOrganizationsTable,
+			Columns: []string{user.OwnedOrganizationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OwnedOrganizationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedOrganizationsTable,
+			Columns: []string{user.OwnedOrganizationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OrgMembershipsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OrgMembershipsTable,
+			Columns: []string{user.OrgMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgmember.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOrgMembershipsIDs(); len(nodes) > 0 && !_u.mutation.OrgMembershipsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OrgMembershipsTable,
+			Columns: []string{user.OrgMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgmember.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OrgMembershipsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OrgMembershipsTable,
+			Columns: []string{user.OrgMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgmember.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AdminInviteCodesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AdminInviteCodesTable,
+			Columns: []string{user.AdminInviteCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(admininvitecode.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAdminInviteCodesIDs(); len(nodes) > 0 && !_u.mutation.AdminInviteCodesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AdminInviteCodesTable,
+			Columns: []string{user.AdminInviteCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(admininvitecode.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AdminInviteCodesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AdminInviteCodesTable,
+			Columns: []string{user.AdminInviteCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(admininvitecode.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PaymentOrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PaymentOrdersTable,
+			Columns: []string{user.PaymentOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentorder.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPaymentOrdersIDs(); len(nodes) > 0 && !_u.mutation.PaymentOrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PaymentOrdersTable,
+			Columns: []string{user.PaymentOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentorder.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PaymentOrdersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PaymentOrdersTable,
+			Columns: []string{user.PaymentOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentorder.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -1362,6 +1916,47 @@ func (_u *UserUpdateOne) ClearDiscoverySource() *UserUpdateOne {
 	return _u
 }
 
+// SetInitialBalance sets the "initial_balance" field.
+func (_u *UserUpdateOne) SetInitialBalance(v float64) *UserUpdateOne {
+	_u.mutation.ResetInitialBalance()
+	_u.mutation.SetInitialBalance(v)
+	return _u
+}
+
+// SetNillableInitialBalance sets the "initial_balance" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableInitialBalance(v *float64) *UserUpdateOne {
+	if v != nil {
+		_u.SetInitialBalance(*v)
+	}
+	return _u
+}
+
+// AddInitialBalance adds value to the "initial_balance" field.
+func (_u *UserUpdateOne) AddInitialBalance(v float64) *UserUpdateOne {
+	_u.mutation.AddInitialBalance(v)
+	return _u
+}
+
+// SetInitialBalanceExpiresAt sets the "initial_balance_expires_at" field.
+func (_u *UserUpdateOne) SetInitialBalanceExpiresAt(v time.Time) *UserUpdateOne {
+	_u.mutation.SetInitialBalanceExpiresAt(v)
+	return _u
+}
+
+// SetNillableInitialBalanceExpiresAt sets the "initial_balance_expires_at" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableInitialBalanceExpiresAt(v *time.Time) *UserUpdateOne {
+	if v != nil {
+		_u.SetInitialBalanceExpiresAt(*v)
+	}
+	return _u
+}
+
+// ClearInitialBalanceExpiresAt clears the value of the "initial_balance_expires_at" field.
+func (_u *UserUpdateOne) ClearInitialBalanceExpiresAt() *UserUpdateOne {
+	_u.mutation.ClearInitialBalanceExpiresAt()
+	return _u
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *UserUpdateOne) AddAPIKeyIDs(ids ...int64) *UserUpdateOne {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -1480,6 +2075,96 @@ func (_u *UserUpdateOne) AddPromoCodeUsages(v ...*PromoCodeUsage) *UserUpdateOne
 		ids[i] = v[i].ID
 	}
 	return _u.AddPromoCodeUsageIDs(ids...)
+}
+
+// AddReferralsAsInviterIDs adds the "referrals_as_inviter" edge to the Referral entity by IDs.
+func (_u *UserUpdateOne) AddReferralsAsInviterIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.AddReferralsAsInviterIDs(ids...)
+	return _u
+}
+
+// AddReferralsAsInviter adds the "referrals_as_inviter" edges to the Referral entity.
+func (_u *UserUpdateOne) AddReferralsAsInviter(v ...*Referral) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddReferralsAsInviterIDs(ids...)
+}
+
+// AddReferralsAsInviteeIDs adds the "referrals_as_invitee" edge to the Referral entity by IDs.
+func (_u *UserUpdateOne) AddReferralsAsInviteeIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.AddReferralsAsInviteeIDs(ids...)
+	return _u
+}
+
+// AddReferralsAsInvitee adds the "referrals_as_invitee" edges to the Referral entity.
+func (_u *UserUpdateOne) AddReferralsAsInvitee(v ...*Referral) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddReferralsAsInviteeIDs(ids...)
+}
+
+// AddOwnedOrganizationIDs adds the "owned_organizations" edge to the Organization entity by IDs.
+func (_u *UserUpdateOne) AddOwnedOrganizationIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.AddOwnedOrganizationIDs(ids...)
+	return _u
+}
+
+// AddOwnedOrganizations adds the "owned_organizations" edges to the Organization entity.
+func (_u *UserUpdateOne) AddOwnedOrganizations(v ...*Organization) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOwnedOrganizationIDs(ids...)
+}
+
+// AddOrgMembershipIDs adds the "org_memberships" edge to the OrgMember entity by IDs.
+func (_u *UserUpdateOne) AddOrgMembershipIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.AddOrgMembershipIDs(ids...)
+	return _u
+}
+
+// AddOrgMemberships adds the "org_memberships" edges to the OrgMember entity.
+func (_u *UserUpdateOne) AddOrgMemberships(v ...*OrgMember) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOrgMembershipIDs(ids...)
+}
+
+// AddAdminInviteCodeIDs adds the "admin_invite_codes" edge to the AdminInviteCode entity by IDs.
+func (_u *UserUpdateOne) AddAdminInviteCodeIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.AddAdminInviteCodeIDs(ids...)
+	return _u
+}
+
+// AddAdminInviteCodes adds the "admin_invite_codes" edges to the AdminInviteCode entity.
+func (_u *UserUpdateOne) AddAdminInviteCodes(v ...*AdminInviteCode) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAdminInviteCodeIDs(ids...)
+}
+
+// AddPaymentOrderIDs adds the "payment_orders" edge to the PaymentOrder entity by IDs.
+func (_u *UserUpdateOne) AddPaymentOrderIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.AddPaymentOrderIDs(ids...)
+	return _u
+}
+
+// AddPaymentOrders adds the "payment_orders" edges to the PaymentOrder entity.
+func (_u *UserUpdateOne) AddPaymentOrders(v ...*PaymentOrder) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddPaymentOrderIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -1655,6 +2340,132 @@ func (_u *UserUpdateOne) RemovePromoCodeUsages(v ...*PromoCodeUsage) *UserUpdate
 	return _u.RemovePromoCodeUsageIDs(ids...)
 }
 
+// ClearReferralsAsInviter clears all "referrals_as_inviter" edges to the Referral entity.
+func (_u *UserUpdateOne) ClearReferralsAsInviter() *UserUpdateOne {
+	_u.mutation.ClearReferralsAsInviter()
+	return _u
+}
+
+// RemoveReferralsAsInviterIDs removes the "referrals_as_inviter" edge to Referral entities by IDs.
+func (_u *UserUpdateOne) RemoveReferralsAsInviterIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.RemoveReferralsAsInviterIDs(ids...)
+	return _u
+}
+
+// RemoveReferralsAsInviter removes "referrals_as_inviter" edges to Referral entities.
+func (_u *UserUpdateOne) RemoveReferralsAsInviter(v ...*Referral) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveReferralsAsInviterIDs(ids...)
+}
+
+// ClearReferralsAsInvitee clears all "referrals_as_invitee" edges to the Referral entity.
+func (_u *UserUpdateOne) ClearReferralsAsInvitee() *UserUpdateOne {
+	_u.mutation.ClearReferralsAsInvitee()
+	return _u
+}
+
+// RemoveReferralsAsInviteeIDs removes the "referrals_as_invitee" edge to Referral entities by IDs.
+func (_u *UserUpdateOne) RemoveReferralsAsInviteeIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.RemoveReferralsAsInviteeIDs(ids...)
+	return _u
+}
+
+// RemoveReferralsAsInvitee removes "referrals_as_invitee" edges to Referral entities.
+func (_u *UserUpdateOne) RemoveReferralsAsInvitee(v ...*Referral) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveReferralsAsInviteeIDs(ids...)
+}
+
+// ClearOwnedOrganizations clears all "owned_organizations" edges to the Organization entity.
+func (_u *UserUpdateOne) ClearOwnedOrganizations() *UserUpdateOne {
+	_u.mutation.ClearOwnedOrganizations()
+	return _u
+}
+
+// RemoveOwnedOrganizationIDs removes the "owned_organizations" edge to Organization entities by IDs.
+func (_u *UserUpdateOne) RemoveOwnedOrganizationIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.RemoveOwnedOrganizationIDs(ids...)
+	return _u
+}
+
+// RemoveOwnedOrganizations removes "owned_organizations" edges to Organization entities.
+func (_u *UserUpdateOne) RemoveOwnedOrganizations(v ...*Organization) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOwnedOrganizationIDs(ids...)
+}
+
+// ClearOrgMemberships clears all "org_memberships" edges to the OrgMember entity.
+func (_u *UserUpdateOne) ClearOrgMemberships() *UserUpdateOne {
+	_u.mutation.ClearOrgMemberships()
+	return _u
+}
+
+// RemoveOrgMembershipIDs removes the "org_memberships" edge to OrgMember entities by IDs.
+func (_u *UserUpdateOne) RemoveOrgMembershipIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.RemoveOrgMembershipIDs(ids...)
+	return _u
+}
+
+// RemoveOrgMemberships removes "org_memberships" edges to OrgMember entities.
+func (_u *UserUpdateOne) RemoveOrgMemberships(v ...*OrgMember) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOrgMembershipIDs(ids...)
+}
+
+// ClearAdminInviteCodes clears all "admin_invite_codes" edges to the AdminInviteCode entity.
+func (_u *UserUpdateOne) ClearAdminInviteCodes() *UserUpdateOne {
+	_u.mutation.ClearAdminInviteCodes()
+	return _u
+}
+
+// RemoveAdminInviteCodeIDs removes the "admin_invite_codes" edge to AdminInviteCode entities by IDs.
+func (_u *UserUpdateOne) RemoveAdminInviteCodeIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.RemoveAdminInviteCodeIDs(ids...)
+	return _u
+}
+
+// RemoveAdminInviteCodes removes "admin_invite_codes" edges to AdminInviteCode entities.
+func (_u *UserUpdateOne) RemoveAdminInviteCodes(v ...*AdminInviteCode) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAdminInviteCodeIDs(ids...)
+}
+
+// ClearPaymentOrders clears all "payment_orders" edges to the PaymentOrder entity.
+func (_u *UserUpdateOne) ClearPaymentOrders() *UserUpdateOne {
+	_u.mutation.ClearPaymentOrders()
+	return _u
+}
+
+// RemovePaymentOrderIDs removes the "payment_orders" edge to PaymentOrder entities by IDs.
+func (_u *UserUpdateOne) RemovePaymentOrderIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.RemovePaymentOrderIDs(ids...)
+	return _u
+}
+
+// RemovePaymentOrders removes "payment_orders" edges to PaymentOrder entities.
+func (_u *UserUpdateOne) RemovePaymentOrders(v ...*PaymentOrder) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemovePaymentOrderIDs(ids...)
+}
+
 // Where appends a list predicates to the UserUpdate builder.
 func (_u *UserUpdateOne) Where(ps ...predicate.User) *UserUpdateOne {
 	_u.mutation.Where(ps...)
@@ -1735,6 +2546,16 @@ func (_u *UserUpdateOne) check() error {
 	if v, ok := _u.mutation.Username(); ok {
 		if err := user.UsernameValidator(v); err != nil {
 			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "User.username": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.InviteCode(); ok {
+		if err := user.InviteCodeValidator(v); err != nil {
+			return &ValidationError{Name: "invite_code", err: fmt.Errorf(`ent: validator failed for field "User.invite_code": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.DiscoverySource(); ok {
+		if err := user.DiscoverySourceValidator(v); err != nil {
+			return &ValidationError{Name: "discovery_source", err: fmt.Errorf(`ent: validator failed for field "User.discovery_source": %w`, err)}
 		}
 	}
 	return nil
@@ -1834,6 +2655,18 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if _u.mutation.DiscoverySourceCleared() {
 		_spec.ClearField(user.FieldDiscoverySource, field.TypeString)
+	}
+	if value, ok := _u.mutation.InitialBalance(); ok {
+		_spec.SetField(user.FieldInitialBalance, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedInitialBalance(); ok {
+		_spec.AddField(user.FieldInitialBalance, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.InitialBalanceExpiresAt(); ok {
+		_spec.SetField(user.FieldInitialBalanceExpiresAt, field.TypeTime, value)
+	}
+	if _u.mutation.InitialBalanceExpiresAtCleared() {
+		_spec.ClearField(user.FieldInitialBalanceExpiresAt, field.TypeTime)
 	}
 	if _u.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -2200,6 +3033,276 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(promocodeusage.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ReferralsAsInviterCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReferralsAsInviterTable,
+			Columns: []string{user.ReferralsAsInviterColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedReferralsAsInviterIDs(); len(nodes) > 0 && !_u.mutation.ReferralsAsInviterCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReferralsAsInviterTable,
+			Columns: []string{user.ReferralsAsInviterColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ReferralsAsInviterIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReferralsAsInviterTable,
+			Columns: []string{user.ReferralsAsInviterColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ReferralsAsInviteeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReferralsAsInviteeTable,
+			Columns: []string{user.ReferralsAsInviteeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedReferralsAsInviteeIDs(); len(nodes) > 0 && !_u.mutation.ReferralsAsInviteeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReferralsAsInviteeTable,
+			Columns: []string{user.ReferralsAsInviteeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ReferralsAsInviteeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReferralsAsInviteeTable,
+			Columns: []string{user.ReferralsAsInviteeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(referral.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OwnedOrganizationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedOrganizationsTable,
+			Columns: []string{user.OwnedOrganizationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOwnedOrganizationsIDs(); len(nodes) > 0 && !_u.mutation.OwnedOrganizationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedOrganizationsTable,
+			Columns: []string{user.OwnedOrganizationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OwnedOrganizationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnedOrganizationsTable,
+			Columns: []string{user.OwnedOrganizationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OrgMembershipsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OrgMembershipsTable,
+			Columns: []string{user.OrgMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgmember.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOrgMembershipsIDs(); len(nodes) > 0 && !_u.mutation.OrgMembershipsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OrgMembershipsTable,
+			Columns: []string{user.OrgMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgmember.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OrgMembershipsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OrgMembershipsTable,
+			Columns: []string{user.OrgMembershipsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgmember.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AdminInviteCodesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AdminInviteCodesTable,
+			Columns: []string{user.AdminInviteCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(admininvitecode.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAdminInviteCodesIDs(); len(nodes) > 0 && !_u.mutation.AdminInviteCodesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AdminInviteCodesTable,
+			Columns: []string{user.AdminInviteCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(admininvitecode.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AdminInviteCodesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AdminInviteCodesTable,
+			Columns: []string{user.AdminInviteCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(admininvitecode.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.PaymentOrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PaymentOrdersTable,
+			Columns: []string{user.PaymentOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentorder.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedPaymentOrdersIDs(); len(nodes) > 0 && !_u.mutation.PaymentOrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PaymentOrdersTable,
+			Columns: []string{user.PaymentOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentorder.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.PaymentOrdersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PaymentOrdersTable,
+			Columns: []string{user.PaymentOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(paymentorder.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

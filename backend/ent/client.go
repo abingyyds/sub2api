@@ -17,12 +17,20 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/Wei-Shaw/sub2api/ent/account"
 	"github.com/Wei-Shaw/sub2api/ent/accountgroup"
+	"github.com/Wei-Shaw/sub2api/ent/admininvitecode"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/organization"
+	"github.com/Wei-Shaw/sub2api/ent/orgauditlog"
+	"github.com/Wei-Shaw/sub2api/ent/orgmember"
+	"github.com/Wei-Shaw/sub2api/ent/orgproject"
+	"github.com/Wei-Shaw/sub2api/ent/orgsubscription"
+	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/promocode"
 	"github.com/Wei-Shaw/sub2api/ent/promocodeusage"
 	"github.com/Wei-Shaw/sub2api/ent/proxy"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
+	"github.com/Wei-Shaw/sub2api/ent/referral"
 	"github.com/Wei-Shaw/sub2api/ent/setting"
 	"github.com/Wei-Shaw/sub2api/ent/usagecleanuptask"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
@@ -46,8 +54,22 @@ type Client struct {
 	Account *AccountClient
 	// AccountGroup is the client for interacting with the AccountGroup builders.
 	AccountGroup *AccountGroupClient
+	// AdminInviteCode is the client for interacting with the AdminInviteCode builders.
+	AdminInviteCode *AdminInviteCodeClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
+	// OrgAuditLog is the client for interacting with the OrgAuditLog builders.
+	OrgAuditLog *OrgAuditLogClient
+	// OrgMember is the client for interacting with the OrgMember builders.
+	OrgMember *OrgMemberClient
+	// OrgProject is the client for interacting with the OrgProject builders.
+	OrgProject *OrgProjectClient
+	// OrgSubscription is the client for interacting with the OrgSubscription builders.
+	OrgSubscription *OrgSubscriptionClient
+	// Organization is the client for interacting with the Organization builders.
+	Organization *OrganizationClient
+	// PaymentOrder is the client for interacting with the PaymentOrder builders.
+	PaymentOrder *PaymentOrderClient
 	// PromoCode is the client for interacting with the PromoCode builders.
 	PromoCode *PromoCodeClient
 	// PromoCodeUsage is the client for interacting with the PromoCodeUsage builders.
@@ -56,6 +78,8 @@ type Client struct {
 	Proxy *ProxyClient
 	// RedeemCode is the client for interacting with the RedeemCode builders.
 	RedeemCode *RedeemCodeClient
+	// Referral is the client for interacting with the Referral builders.
+	Referral *ReferralClient
 	// Setting is the client for interacting with the Setting builders.
 	Setting *SettingClient
 	// UsageCleanupTask is the client for interacting with the UsageCleanupTask builders.
@@ -86,11 +110,19 @@ func (c *Client) init() {
 	c.APIKey = NewAPIKeyClient(c.config)
 	c.Account = NewAccountClient(c.config)
 	c.AccountGroup = NewAccountGroupClient(c.config)
+	c.AdminInviteCode = NewAdminInviteCodeClient(c.config)
 	c.Group = NewGroupClient(c.config)
+	c.OrgAuditLog = NewOrgAuditLogClient(c.config)
+	c.OrgMember = NewOrgMemberClient(c.config)
+	c.OrgProject = NewOrgProjectClient(c.config)
+	c.OrgSubscription = NewOrgSubscriptionClient(c.config)
+	c.Organization = NewOrganizationClient(c.config)
+	c.PaymentOrder = NewPaymentOrderClient(c.config)
 	c.PromoCode = NewPromoCodeClient(c.config)
 	c.PromoCodeUsage = NewPromoCodeUsageClient(c.config)
 	c.Proxy = NewProxyClient(c.config)
 	c.RedeemCode = NewRedeemCodeClient(c.config)
+	c.Referral = NewReferralClient(c.config)
 	c.Setting = NewSettingClient(c.config)
 	c.UsageCleanupTask = NewUsageCleanupTaskClient(c.config)
 	c.UsageLog = NewUsageLogClient(c.config)
@@ -194,11 +226,19 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		APIKey:                  NewAPIKeyClient(cfg),
 		Account:                 NewAccountClient(cfg),
 		AccountGroup:            NewAccountGroupClient(cfg),
+		AdminInviteCode:         NewAdminInviteCodeClient(cfg),
 		Group:                   NewGroupClient(cfg),
+		OrgAuditLog:             NewOrgAuditLogClient(cfg),
+		OrgMember:               NewOrgMemberClient(cfg),
+		OrgProject:              NewOrgProjectClient(cfg),
+		OrgSubscription:         NewOrgSubscriptionClient(cfg),
+		Organization:            NewOrganizationClient(cfg),
+		PaymentOrder:            NewPaymentOrderClient(cfg),
 		PromoCode:               NewPromoCodeClient(cfg),
 		PromoCodeUsage:          NewPromoCodeUsageClient(cfg),
 		Proxy:                   NewProxyClient(cfg),
 		RedeemCode:              NewRedeemCodeClient(cfg),
+		Referral:                NewReferralClient(cfg),
 		Setting:                 NewSettingClient(cfg),
 		UsageCleanupTask:        NewUsageCleanupTaskClient(cfg),
 		UsageLog:                NewUsageLogClient(cfg),
@@ -229,11 +269,19 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		APIKey:                  NewAPIKeyClient(cfg),
 		Account:                 NewAccountClient(cfg),
 		AccountGroup:            NewAccountGroupClient(cfg),
+		AdminInviteCode:         NewAdminInviteCodeClient(cfg),
 		Group:                   NewGroupClient(cfg),
+		OrgAuditLog:             NewOrgAuditLogClient(cfg),
+		OrgMember:               NewOrgMemberClient(cfg),
+		OrgProject:              NewOrgProjectClient(cfg),
+		OrgSubscription:         NewOrgSubscriptionClient(cfg),
+		Organization:            NewOrganizationClient(cfg),
+		PaymentOrder:            NewPaymentOrderClient(cfg),
 		PromoCode:               NewPromoCodeClient(cfg),
 		PromoCodeUsage:          NewPromoCodeUsageClient(cfg),
 		Proxy:                   NewProxyClient(cfg),
 		RedeemCode:              NewRedeemCodeClient(cfg),
+		Referral:                NewReferralClient(cfg),
 		Setting:                 NewSettingClient(cfg),
 		UsageCleanupTask:        NewUsageCleanupTaskClient(cfg),
 		UsageLog:                NewUsageLogClient(cfg),
@@ -271,10 +319,11 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.APIKey, c.Account, c.AccountGroup, c.Group, c.PromoCode, c.PromoCodeUsage,
-		c.Proxy, c.RedeemCode, c.Setting, c.UsageCleanupTask, c.UsageLog, c.User,
-		c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
-		c.UserSubscription,
+		c.APIKey, c.Account, c.AccountGroup, c.AdminInviteCode, c.Group, c.OrgAuditLog,
+		c.OrgMember, c.OrgProject, c.OrgSubscription, c.Organization, c.PaymentOrder,
+		c.PromoCode, c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.Referral, c.Setting,
+		c.UsageCleanupTask, c.UsageLog, c.User, c.UserAllowedGroup,
+		c.UserAttributeDefinition, c.UserAttributeValue, c.UserSubscription,
 	} {
 		n.Use(hooks...)
 	}
@@ -284,10 +333,11 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.APIKey, c.Account, c.AccountGroup, c.Group, c.PromoCode, c.PromoCodeUsage,
-		c.Proxy, c.RedeemCode, c.Setting, c.UsageCleanupTask, c.UsageLog, c.User,
-		c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
-		c.UserSubscription,
+		c.APIKey, c.Account, c.AccountGroup, c.AdminInviteCode, c.Group, c.OrgAuditLog,
+		c.OrgMember, c.OrgProject, c.OrgSubscription, c.Organization, c.PaymentOrder,
+		c.PromoCode, c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.Referral, c.Setting,
+		c.UsageCleanupTask, c.UsageLog, c.User, c.UserAllowedGroup,
+		c.UserAttributeDefinition, c.UserAttributeValue, c.UserSubscription,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -302,8 +352,22 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Account.mutate(ctx, m)
 	case *AccountGroupMutation:
 		return c.AccountGroup.mutate(ctx, m)
+	case *AdminInviteCodeMutation:
+		return c.AdminInviteCode.mutate(ctx, m)
 	case *GroupMutation:
 		return c.Group.mutate(ctx, m)
+	case *OrgAuditLogMutation:
+		return c.OrgAuditLog.mutate(ctx, m)
+	case *OrgMemberMutation:
+		return c.OrgMember.mutate(ctx, m)
+	case *OrgProjectMutation:
+		return c.OrgProject.mutate(ctx, m)
+	case *OrgSubscriptionMutation:
+		return c.OrgSubscription.mutate(ctx, m)
+	case *OrganizationMutation:
+		return c.Organization.mutate(ctx, m)
+	case *PaymentOrderMutation:
+		return c.PaymentOrder.mutate(ctx, m)
 	case *PromoCodeMutation:
 		return c.PromoCode.mutate(ctx, m)
 	case *PromoCodeUsageMutation:
@@ -312,6 +376,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Proxy.mutate(ctx, m)
 	case *RedeemCodeMutation:
 		return c.RedeemCode.mutate(ctx, m)
+	case *ReferralMutation:
+		return c.Referral.mutate(ctx, m)
 	case *SettingMutation:
 		return c.Setting.mutate(ctx, m)
 	case *UsageCleanupTaskMutation:
@@ -466,6 +532,38 @@ func (c *APIKeyClient) QueryGroup(_m *APIKey) *GroupQuery {
 			sqlgraph.From(apikey.Table, apikey.FieldID, id),
 			sqlgraph.To(group.Table, group.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, apikey.GroupTable, apikey.GroupColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryOrganization queries the organization edge of a APIKey.
+func (c *APIKeyClient) QueryOrganization(_m *APIKey) *OrganizationQuery {
+	query := (&OrganizationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(apikey.Table, apikey.FieldID, id),
+			sqlgraph.To(organization.Table, organization.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, apikey.OrganizationTable, apikey.OrganizationColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryOrgProject queries the org_project edge of a APIKey.
+func (c *APIKeyClient) QueryOrgProject(_m *APIKey) *OrgProjectQuery {
+	query := (&OrgProjectClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(apikey.Table, apikey.FieldID, id),
+			sqlgraph.To(orgproject.Table, orgproject.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, apikey.OrgProjectTable, apikey.OrgProjectColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -831,6 +929,155 @@ func (c *AccountGroupClient) mutate(ctx context.Context, m *AccountGroupMutation
 	}
 }
 
+// AdminInviteCodeClient is a client for the AdminInviteCode schema.
+type AdminInviteCodeClient struct {
+	config
+}
+
+// NewAdminInviteCodeClient returns a client for the AdminInviteCode from the given config.
+func NewAdminInviteCodeClient(c config) *AdminInviteCodeClient {
+	return &AdminInviteCodeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `admininvitecode.Hooks(f(g(h())))`.
+func (c *AdminInviteCodeClient) Use(hooks ...Hook) {
+	c.hooks.AdminInviteCode = append(c.hooks.AdminInviteCode, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `admininvitecode.Intercept(f(g(h())))`.
+func (c *AdminInviteCodeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AdminInviteCode = append(c.inters.AdminInviteCode, interceptors...)
+}
+
+// Create returns a builder for creating a AdminInviteCode entity.
+func (c *AdminInviteCodeClient) Create() *AdminInviteCodeCreate {
+	mutation := newAdminInviteCodeMutation(c.config, OpCreate)
+	return &AdminInviteCodeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AdminInviteCode entities.
+func (c *AdminInviteCodeClient) CreateBulk(builders ...*AdminInviteCodeCreate) *AdminInviteCodeCreateBulk {
+	return &AdminInviteCodeCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AdminInviteCodeClient) MapCreateBulk(slice any, setFunc func(*AdminInviteCodeCreate, int)) *AdminInviteCodeCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AdminInviteCodeCreateBulk{err: fmt.Errorf("calling to AdminInviteCodeClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AdminInviteCodeCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AdminInviteCodeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AdminInviteCode.
+func (c *AdminInviteCodeClient) Update() *AdminInviteCodeUpdate {
+	mutation := newAdminInviteCodeMutation(c.config, OpUpdate)
+	return &AdminInviteCodeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AdminInviteCodeClient) UpdateOne(_m *AdminInviteCode) *AdminInviteCodeUpdateOne {
+	mutation := newAdminInviteCodeMutation(c.config, OpUpdateOne, withAdminInviteCode(_m))
+	return &AdminInviteCodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AdminInviteCodeClient) UpdateOneID(id int64) *AdminInviteCodeUpdateOne {
+	mutation := newAdminInviteCodeMutation(c.config, OpUpdateOne, withAdminInviteCodeID(id))
+	return &AdminInviteCodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AdminInviteCode.
+func (c *AdminInviteCodeClient) Delete() *AdminInviteCodeDelete {
+	mutation := newAdminInviteCodeMutation(c.config, OpDelete)
+	return &AdminInviteCodeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AdminInviteCodeClient) DeleteOne(_m *AdminInviteCode) *AdminInviteCodeDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AdminInviteCodeClient) DeleteOneID(id int64) *AdminInviteCodeDeleteOne {
+	builder := c.Delete().Where(admininvitecode.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AdminInviteCodeDeleteOne{builder}
+}
+
+// Query returns a query builder for AdminInviteCode.
+func (c *AdminInviteCodeClient) Query() *AdminInviteCodeQuery {
+	return &AdminInviteCodeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAdminInviteCode},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AdminInviteCode entity by its id.
+func (c *AdminInviteCodeClient) Get(ctx context.Context, id int64) (*AdminInviteCode, error) {
+	return c.Query().Where(admininvitecode.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AdminInviteCodeClient) GetX(ctx context.Context, id int64) *AdminInviteCode {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryCreator queries the creator edge of a AdminInviteCode.
+func (c *AdminInviteCodeClient) QueryCreator(_m *AdminInviteCode) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(admininvitecode.Table, admininvitecode.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, admininvitecode.CreatorTable, admininvitecode.CreatorColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AdminInviteCodeClient) Hooks() []Hook {
+	return c.hooks.AdminInviteCode
+}
+
+// Interceptors returns the client interceptors.
+func (c *AdminInviteCodeClient) Interceptors() []Interceptor {
+	return c.inters.AdminInviteCode
+}
+
+func (c *AdminInviteCodeClient) mutate(ctx context.Context, m *AdminInviteCodeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AdminInviteCodeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AdminInviteCodeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AdminInviteCodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AdminInviteCodeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AdminInviteCode mutation op: %q", m.Op())
+	}
+}
+
 // GroupClient is a client for the Group schema.
 type GroupClient struct {
 	config
@@ -987,6 +1234,38 @@ func (c *GroupClient) QuerySubscriptions(_m *Group) *UserSubscriptionQuery {
 	return query
 }
 
+// QueryOrgSubscriptions queries the org_subscriptions edge of a Group.
+func (c *GroupClient) QueryOrgSubscriptions(_m *Group) *OrgSubscriptionQuery {
+	query := (&OrgSubscriptionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, id),
+			sqlgraph.To(orgsubscription.Table, orgsubscription.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.OrgSubscriptionsTable, group.OrgSubscriptionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryOrgProjects queries the org_projects edge of a Group.
+func (c *GroupClient) QueryOrgProjects(_m *Group) *OrgProjectQuery {
+	query := (&OrgProjectClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, id),
+			sqlgraph.To(orgproject.Table, orgproject.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.OrgProjectsTable, group.OrgProjectsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryUsageLogs queries the usage_logs edge of a Group.
 func (c *GroupClient) QueryUsageLogs(_m *Group) *UsageLogQuery {
 	query := (&UsageLogClient{config: c.config}).Query()
@@ -1091,6 +1370,1036 @@ func (c *GroupClient) mutate(ctx context.Context, m *GroupMutation) (Value, erro
 		return (&GroupDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Group mutation op: %q", m.Op())
+	}
+}
+
+// OrgAuditLogClient is a client for the OrgAuditLog schema.
+type OrgAuditLogClient struct {
+	config
+}
+
+// NewOrgAuditLogClient returns a client for the OrgAuditLog from the given config.
+func NewOrgAuditLogClient(c config) *OrgAuditLogClient {
+	return &OrgAuditLogClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `orgauditlog.Hooks(f(g(h())))`.
+func (c *OrgAuditLogClient) Use(hooks ...Hook) {
+	c.hooks.OrgAuditLog = append(c.hooks.OrgAuditLog, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `orgauditlog.Intercept(f(g(h())))`.
+func (c *OrgAuditLogClient) Intercept(interceptors ...Interceptor) {
+	c.inters.OrgAuditLog = append(c.inters.OrgAuditLog, interceptors...)
+}
+
+// Create returns a builder for creating a OrgAuditLog entity.
+func (c *OrgAuditLogClient) Create() *OrgAuditLogCreate {
+	mutation := newOrgAuditLogMutation(c.config, OpCreate)
+	return &OrgAuditLogCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of OrgAuditLog entities.
+func (c *OrgAuditLogClient) CreateBulk(builders ...*OrgAuditLogCreate) *OrgAuditLogCreateBulk {
+	return &OrgAuditLogCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *OrgAuditLogClient) MapCreateBulk(slice any, setFunc func(*OrgAuditLogCreate, int)) *OrgAuditLogCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &OrgAuditLogCreateBulk{err: fmt.Errorf("calling to OrgAuditLogClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*OrgAuditLogCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &OrgAuditLogCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for OrgAuditLog.
+func (c *OrgAuditLogClient) Update() *OrgAuditLogUpdate {
+	mutation := newOrgAuditLogMutation(c.config, OpUpdate)
+	return &OrgAuditLogUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *OrgAuditLogClient) UpdateOne(_m *OrgAuditLog) *OrgAuditLogUpdateOne {
+	mutation := newOrgAuditLogMutation(c.config, OpUpdateOne, withOrgAuditLog(_m))
+	return &OrgAuditLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *OrgAuditLogClient) UpdateOneID(id int64) *OrgAuditLogUpdateOne {
+	mutation := newOrgAuditLogMutation(c.config, OpUpdateOne, withOrgAuditLogID(id))
+	return &OrgAuditLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for OrgAuditLog.
+func (c *OrgAuditLogClient) Delete() *OrgAuditLogDelete {
+	mutation := newOrgAuditLogMutation(c.config, OpDelete)
+	return &OrgAuditLogDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *OrgAuditLogClient) DeleteOne(_m *OrgAuditLog) *OrgAuditLogDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *OrgAuditLogClient) DeleteOneID(id int64) *OrgAuditLogDeleteOne {
+	builder := c.Delete().Where(orgauditlog.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &OrgAuditLogDeleteOne{builder}
+}
+
+// Query returns a query builder for OrgAuditLog.
+func (c *OrgAuditLogClient) Query() *OrgAuditLogQuery {
+	return &OrgAuditLogQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeOrgAuditLog},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a OrgAuditLog entity by its id.
+func (c *OrgAuditLogClient) Get(ctx context.Context, id int64) (*OrgAuditLog, error) {
+	return c.Query().Where(orgauditlog.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *OrgAuditLogClient) GetX(ctx context.Context, id int64) *OrgAuditLog {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *OrgAuditLogClient) Hooks() []Hook {
+	return c.hooks.OrgAuditLog
+}
+
+// Interceptors returns the client interceptors.
+func (c *OrgAuditLogClient) Interceptors() []Interceptor {
+	return c.inters.OrgAuditLog
+}
+
+func (c *OrgAuditLogClient) mutate(ctx context.Context, m *OrgAuditLogMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&OrgAuditLogCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&OrgAuditLogUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&OrgAuditLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&OrgAuditLogDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown OrgAuditLog mutation op: %q", m.Op())
+	}
+}
+
+// OrgMemberClient is a client for the OrgMember schema.
+type OrgMemberClient struct {
+	config
+}
+
+// NewOrgMemberClient returns a client for the OrgMember from the given config.
+func NewOrgMemberClient(c config) *OrgMemberClient {
+	return &OrgMemberClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `orgmember.Hooks(f(g(h())))`.
+func (c *OrgMemberClient) Use(hooks ...Hook) {
+	c.hooks.OrgMember = append(c.hooks.OrgMember, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `orgmember.Intercept(f(g(h())))`.
+func (c *OrgMemberClient) Intercept(interceptors ...Interceptor) {
+	c.inters.OrgMember = append(c.inters.OrgMember, interceptors...)
+}
+
+// Create returns a builder for creating a OrgMember entity.
+func (c *OrgMemberClient) Create() *OrgMemberCreate {
+	mutation := newOrgMemberMutation(c.config, OpCreate)
+	return &OrgMemberCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of OrgMember entities.
+func (c *OrgMemberClient) CreateBulk(builders ...*OrgMemberCreate) *OrgMemberCreateBulk {
+	return &OrgMemberCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *OrgMemberClient) MapCreateBulk(slice any, setFunc func(*OrgMemberCreate, int)) *OrgMemberCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &OrgMemberCreateBulk{err: fmt.Errorf("calling to OrgMemberClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*OrgMemberCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &OrgMemberCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for OrgMember.
+func (c *OrgMemberClient) Update() *OrgMemberUpdate {
+	mutation := newOrgMemberMutation(c.config, OpUpdate)
+	return &OrgMemberUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *OrgMemberClient) UpdateOne(_m *OrgMember) *OrgMemberUpdateOne {
+	mutation := newOrgMemberMutation(c.config, OpUpdateOne, withOrgMember(_m))
+	return &OrgMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *OrgMemberClient) UpdateOneID(id int64) *OrgMemberUpdateOne {
+	mutation := newOrgMemberMutation(c.config, OpUpdateOne, withOrgMemberID(id))
+	return &OrgMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for OrgMember.
+func (c *OrgMemberClient) Delete() *OrgMemberDelete {
+	mutation := newOrgMemberMutation(c.config, OpDelete)
+	return &OrgMemberDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *OrgMemberClient) DeleteOne(_m *OrgMember) *OrgMemberDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *OrgMemberClient) DeleteOneID(id int64) *OrgMemberDeleteOne {
+	builder := c.Delete().Where(orgmember.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &OrgMemberDeleteOne{builder}
+}
+
+// Query returns a query builder for OrgMember.
+func (c *OrgMemberClient) Query() *OrgMemberQuery {
+	return &OrgMemberQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeOrgMember},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a OrgMember entity by its id.
+func (c *OrgMemberClient) Get(ctx context.Context, id int64) (*OrgMember, error) {
+	return c.Query().Where(orgmember.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *OrgMemberClient) GetX(ctx context.Context, id int64) *OrgMember {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOrganization queries the organization edge of a OrgMember.
+func (c *OrgMemberClient) QueryOrganization(_m *OrgMember) *OrganizationQuery {
+	query := (&OrganizationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(orgmember.Table, orgmember.FieldID, id),
+			sqlgraph.To(organization.Table, organization.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, orgmember.OrganizationTable, orgmember.OrganizationColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUser queries the user edge of a OrgMember.
+func (c *OrgMemberClient) QueryUser(_m *OrgMember) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(orgmember.Table, orgmember.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, orgmember.UserTable, orgmember.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *OrgMemberClient) Hooks() []Hook {
+	hooks := c.hooks.OrgMember
+	return append(hooks[:len(hooks):len(hooks)], orgmember.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *OrgMemberClient) Interceptors() []Interceptor {
+	inters := c.inters.OrgMember
+	return append(inters[:len(inters):len(inters)], orgmember.Interceptors[:]...)
+}
+
+func (c *OrgMemberClient) mutate(ctx context.Context, m *OrgMemberMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&OrgMemberCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&OrgMemberUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&OrgMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&OrgMemberDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown OrgMember mutation op: %q", m.Op())
+	}
+}
+
+// OrgProjectClient is a client for the OrgProject schema.
+type OrgProjectClient struct {
+	config
+}
+
+// NewOrgProjectClient returns a client for the OrgProject from the given config.
+func NewOrgProjectClient(c config) *OrgProjectClient {
+	return &OrgProjectClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `orgproject.Hooks(f(g(h())))`.
+func (c *OrgProjectClient) Use(hooks ...Hook) {
+	c.hooks.OrgProject = append(c.hooks.OrgProject, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `orgproject.Intercept(f(g(h())))`.
+func (c *OrgProjectClient) Intercept(interceptors ...Interceptor) {
+	c.inters.OrgProject = append(c.inters.OrgProject, interceptors...)
+}
+
+// Create returns a builder for creating a OrgProject entity.
+func (c *OrgProjectClient) Create() *OrgProjectCreate {
+	mutation := newOrgProjectMutation(c.config, OpCreate)
+	return &OrgProjectCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of OrgProject entities.
+func (c *OrgProjectClient) CreateBulk(builders ...*OrgProjectCreate) *OrgProjectCreateBulk {
+	return &OrgProjectCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *OrgProjectClient) MapCreateBulk(slice any, setFunc func(*OrgProjectCreate, int)) *OrgProjectCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &OrgProjectCreateBulk{err: fmt.Errorf("calling to OrgProjectClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*OrgProjectCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &OrgProjectCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for OrgProject.
+func (c *OrgProjectClient) Update() *OrgProjectUpdate {
+	mutation := newOrgProjectMutation(c.config, OpUpdate)
+	return &OrgProjectUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *OrgProjectClient) UpdateOne(_m *OrgProject) *OrgProjectUpdateOne {
+	mutation := newOrgProjectMutation(c.config, OpUpdateOne, withOrgProject(_m))
+	return &OrgProjectUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *OrgProjectClient) UpdateOneID(id int64) *OrgProjectUpdateOne {
+	mutation := newOrgProjectMutation(c.config, OpUpdateOne, withOrgProjectID(id))
+	return &OrgProjectUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for OrgProject.
+func (c *OrgProjectClient) Delete() *OrgProjectDelete {
+	mutation := newOrgProjectMutation(c.config, OpDelete)
+	return &OrgProjectDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *OrgProjectClient) DeleteOne(_m *OrgProject) *OrgProjectDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *OrgProjectClient) DeleteOneID(id int64) *OrgProjectDeleteOne {
+	builder := c.Delete().Where(orgproject.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &OrgProjectDeleteOne{builder}
+}
+
+// Query returns a query builder for OrgProject.
+func (c *OrgProjectClient) Query() *OrgProjectQuery {
+	return &OrgProjectQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeOrgProject},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a OrgProject entity by its id.
+func (c *OrgProjectClient) Get(ctx context.Context, id int64) (*OrgProject, error) {
+	return c.Query().Where(orgproject.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *OrgProjectClient) GetX(ctx context.Context, id int64) *OrgProject {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOrganization queries the organization edge of a OrgProject.
+func (c *OrgProjectClient) QueryOrganization(_m *OrgProject) *OrganizationQuery {
+	query := (&OrganizationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(orgproject.Table, orgproject.FieldID, id),
+			sqlgraph.To(organization.Table, organization.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, orgproject.OrganizationTable, orgproject.OrganizationColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryGroup queries the group edge of a OrgProject.
+func (c *OrgProjectClient) QueryGroup(_m *OrgProject) *GroupQuery {
+	query := (&GroupClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(orgproject.Table, orgproject.FieldID, id),
+			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, orgproject.GroupTable, orgproject.GroupColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAPIKeys queries the api_keys edge of a OrgProject.
+func (c *OrgProjectClient) QueryAPIKeys(_m *OrgProject) *APIKeyQuery {
+	query := (&APIKeyClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(orgproject.Table, orgproject.FieldID, id),
+			sqlgraph.To(apikey.Table, apikey.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, orgproject.APIKeysTable, orgproject.APIKeysColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *OrgProjectClient) Hooks() []Hook {
+	hooks := c.hooks.OrgProject
+	return append(hooks[:len(hooks):len(hooks)], orgproject.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *OrgProjectClient) Interceptors() []Interceptor {
+	inters := c.inters.OrgProject
+	return append(inters[:len(inters):len(inters)], orgproject.Interceptors[:]...)
+}
+
+func (c *OrgProjectClient) mutate(ctx context.Context, m *OrgProjectMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&OrgProjectCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&OrgProjectUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&OrgProjectUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&OrgProjectDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown OrgProject mutation op: %q", m.Op())
+	}
+}
+
+// OrgSubscriptionClient is a client for the OrgSubscription schema.
+type OrgSubscriptionClient struct {
+	config
+}
+
+// NewOrgSubscriptionClient returns a client for the OrgSubscription from the given config.
+func NewOrgSubscriptionClient(c config) *OrgSubscriptionClient {
+	return &OrgSubscriptionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `orgsubscription.Hooks(f(g(h())))`.
+func (c *OrgSubscriptionClient) Use(hooks ...Hook) {
+	c.hooks.OrgSubscription = append(c.hooks.OrgSubscription, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `orgsubscription.Intercept(f(g(h())))`.
+func (c *OrgSubscriptionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.OrgSubscription = append(c.inters.OrgSubscription, interceptors...)
+}
+
+// Create returns a builder for creating a OrgSubscription entity.
+func (c *OrgSubscriptionClient) Create() *OrgSubscriptionCreate {
+	mutation := newOrgSubscriptionMutation(c.config, OpCreate)
+	return &OrgSubscriptionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of OrgSubscription entities.
+func (c *OrgSubscriptionClient) CreateBulk(builders ...*OrgSubscriptionCreate) *OrgSubscriptionCreateBulk {
+	return &OrgSubscriptionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *OrgSubscriptionClient) MapCreateBulk(slice any, setFunc func(*OrgSubscriptionCreate, int)) *OrgSubscriptionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &OrgSubscriptionCreateBulk{err: fmt.Errorf("calling to OrgSubscriptionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*OrgSubscriptionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &OrgSubscriptionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for OrgSubscription.
+func (c *OrgSubscriptionClient) Update() *OrgSubscriptionUpdate {
+	mutation := newOrgSubscriptionMutation(c.config, OpUpdate)
+	return &OrgSubscriptionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *OrgSubscriptionClient) UpdateOne(_m *OrgSubscription) *OrgSubscriptionUpdateOne {
+	mutation := newOrgSubscriptionMutation(c.config, OpUpdateOne, withOrgSubscription(_m))
+	return &OrgSubscriptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *OrgSubscriptionClient) UpdateOneID(id int64) *OrgSubscriptionUpdateOne {
+	mutation := newOrgSubscriptionMutation(c.config, OpUpdateOne, withOrgSubscriptionID(id))
+	return &OrgSubscriptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for OrgSubscription.
+func (c *OrgSubscriptionClient) Delete() *OrgSubscriptionDelete {
+	mutation := newOrgSubscriptionMutation(c.config, OpDelete)
+	return &OrgSubscriptionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *OrgSubscriptionClient) DeleteOne(_m *OrgSubscription) *OrgSubscriptionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *OrgSubscriptionClient) DeleteOneID(id int64) *OrgSubscriptionDeleteOne {
+	builder := c.Delete().Where(orgsubscription.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &OrgSubscriptionDeleteOne{builder}
+}
+
+// Query returns a query builder for OrgSubscription.
+func (c *OrgSubscriptionClient) Query() *OrgSubscriptionQuery {
+	return &OrgSubscriptionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeOrgSubscription},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a OrgSubscription entity by its id.
+func (c *OrgSubscriptionClient) Get(ctx context.Context, id int64) (*OrgSubscription, error) {
+	return c.Query().Where(orgsubscription.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *OrgSubscriptionClient) GetX(ctx context.Context, id int64) *OrgSubscription {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOrganization queries the organization edge of a OrgSubscription.
+func (c *OrgSubscriptionClient) QueryOrganization(_m *OrgSubscription) *OrganizationQuery {
+	query := (&OrganizationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(orgsubscription.Table, orgsubscription.FieldID, id),
+			sqlgraph.To(organization.Table, organization.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, orgsubscription.OrganizationTable, orgsubscription.OrganizationColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryGroup queries the group edge of a OrgSubscription.
+func (c *OrgSubscriptionClient) QueryGroup(_m *OrgSubscription) *GroupQuery {
+	query := (&GroupClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(orgsubscription.Table, orgsubscription.FieldID, id),
+			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, orgsubscription.GroupTable, orgsubscription.GroupColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *OrgSubscriptionClient) Hooks() []Hook {
+	hooks := c.hooks.OrgSubscription
+	return append(hooks[:len(hooks):len(hooks)], orgsubscription.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *OrgSubscriptionClient) Interceptors() []Interceptor {
+	inters := c.inters.OrgSubscription
+	return append(inters[:len(inters):len(inters)], orgsubscription.Interceptors[:]...)
+}
+
+func (c *OrgSubscriptionClient) mutate(ctx context.Context, m *OrgSubscriptionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&OrgSubscriptionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&OrgSubscriptionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&OrgSubscriptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&OrgSubscriptionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown OrgSubscription mutation op: %q", m.Op())
+	}
+}
+
+// OrganizationClient is a client for the Organization schema.
+type OrganizationClient struct {
+	config
+}
+
+// NewOrganizationClient returns a client for the Organization from the given config.
+func NewOrganizationClient(c config) *OrganizationClient {
+	return &OrganizationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `organization.Hooks(f(g(h())))`.
+func (c *OrganizationClient) Use(hooks ...Hook) {
+	c.hooks.Organization = append(c.hooks.Organization, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `organization.Intercept(f(g(h())))`.
+func (c *OrganizationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Organization = append(c.inters.Organization, interceptors...)
+}
+
+// Create returns a builder for creating a Organization entity.
+func (c *OrganizationClient) Create() *OrganizationCreate {
+	mutation := newOrganizationMutation(c.config, OpCreate)
+	return &OrganizationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Organization entities.
+func (c *OrganizationClient) CreateBulk(builders ...*OrganizationCreate) *OrganizationCreateBulk {
+	return &OrganizationCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *OrganizationClient) MapCreateBulk(slice any, setFunc func(*OrganizationCreate, int)) *OrganizationCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &OrganizationCreateBulk{err: fmt.Errorf("calling to OrganizationClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*OrganizationCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &OrganizationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Organization.
+func (c *OrganizationClient) Update() *OrganizationUpdate {
+	mutation := newOrganizationMutation(c.config, OpUpdate)
+	return &OrganizationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *OrganizationClient) UpdateOne(_m *Organization) *OrganizationUpdateOne {
+	mutation := newOrganizationMutation(c.config, OpUpdateOne, withOrganization(_m))
+	return &OrganizationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *OrganizationClient) UpdateOneID(id int64) *OrganizationUpdateOne {
+	mutation := newOrganizationMutation(c.config, OpUpdateOne, withOrganizationID(id))
+	return &OrganizationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Organization.
+func (c *OrganizationClient) Delete() *OrganizationDelete {
+	mutation := newOrganizationMutation(c.config, OpDelete)
+	return &OrganizationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *OrganizationClient) DeleteOne(_m *Organization) *OrganizationDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *OrganizationClient) DeleteOneID(id int64) *OrganizationDeleteOne {
+	builder := c.Delete().Where(organization.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &OrganizationDeleteOne{builder}
+}
+
+// Query returns a query builder for Organization.
+func (c *OrganizationClient) Query() *OrganizationQuery {
+	return &OrganizationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeOrganization},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Organization entity by its id.
+func (c *OrganizationClient) Get(ctx context.Context, id int64) (*Organization, error) {
+	return c.Query().Where(organization.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *OrganizationClient) GetX(ctx context.Context, id int64) *Organization {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOwner queries the owner edge of a Organization.
+func (c *OrganizationClient) QueryOwner(_m *Organization) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, organization.OwnerTable, organization.OwnerColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMembers queries the members edge of a Organization.
+func (c *OrganizationClient) QueryMembers(_m *Organization) *OrgMemberQuery {
+	query := (&OrgMemberClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, id),
+			sqlgraph.To(orgmember.Table, orgmember.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, organization.MembersTable, organization.MembersColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySubscriptions queries the subscriptions edge of a Organization.
+func (c *OrganizationClient) QuerySubscriptions(_m *Organization) *OrgSubscriptionQuery {
+	query := (&OrgSubscriptionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, id),
+			sqlgraph.To(orgsubscription.Table, orgsubscription.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, organization.SubscriptionsTable, organization.SubscriptionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAPIKeys queries the api_keys edge of a Organization.
+func (c *OrganizationClient) QueryAPIKeys(_m *Organization) *APIKeyQuery {
+	query := (&APIKeyClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, id),
+			sqlgraph.To(apikey.Table, apikey.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, organization.APIKeysTable, organization.APIKeysColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryProjects queries the projects edge of a Organization.
+func (c *OrganizationClient) QueryProjects(_m *Organization) *OrgProjectQuery {
+	query := (&OrgProjectClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, id),
+			sqlgraph.To(orgproject.Table, orgproject.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, organization.ProjectsTable, organization.ProjectsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAuditLogs queries the audit_logs edge of a Organization.
+func (c *OrganizationClient) QueryAuditLogs(_m *Organization) *OrgAuditLogQuery {
+	query := (&OrgAuditLogClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, id),
+			sqlgraph.To(orgauditlog.Table, orgauditlog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, organization.AuditLogsTable, organization.AuditLogsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *OrganizationClient) Hooks() []Hook {
+	hooks := c.hooks.Organization
+	return append(hooks[:len(hooks):len(hooks)], organization.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *OrganizationClient) Interceptors() []Interceptor {
+	inters := c.inters.Organization
+	return append(inters[:len(inters):len(inters)], organization.Interceptors[:]...)
+}
+
+func (c *OrganizationClient) mutate(ctx context.Context, m *OrganizationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&OrganizationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&OrganizationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&OrganizationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&OrganizationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Organization mutation op: %q", m.Op())
+	}
+}
+
+// PaymentOrderClient is a client for the PaymentOrder schema.
+type PaymentOrderClient struct {
+	config
+}
+
+// NewPaymentOrderClient returns a client for the PaymentOrder from the given config.
+func NewPaymentOrderClient(c config) *PaymentOrderClient {
+	return &PaymentOrderClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `paymentorder.Hooks(f(g(h())))`.
+func (c *PaymentOrderClient) Use(hooks ...Hook) {
+	c.hooks.PaymentOrder = append(c.hooks.PaymentOrder, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `paymentorder.Intercept(f(g(h())))`.
+func (c *PaymentOrderClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PaymentOrder = append(c.inters.PaymentOrder, interceptors...)
+}
+
+// Create returns a builder for creating a PaymentOrder entity.
+func (c *PaymentOrderClient) Create() *PaymentOrderCreate {
+	mutation := newPaymentOrderMutation(c.config, OpCreate)
+	return &PaymentOrderCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PaymentOrder entities.
+func (c *PaymentOrderClient) CreateBulk(builders ...*PaymentOrderCreate) *PaymentOrderCreateBulk {
+	return &PaymentOrderCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PaymentOrderClient) MapCreateBulk(slice any, setFunc func(*PaymentOrderCreate, int)) *PaymentOrderCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PaymentOrderCreateBulk{err: fmt.Errorf("calling to PaymentOrderClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PaymentOrderCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PaymentOrderCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PaymentOrder.
+func (c *PaymentOrderClient) Update() *PaymentOrderUpdate {
+	mutation := newPaymentOrderMutation(c.config, OpUpdate)
+	return &PaymentOrderUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PaymentOrderClient) UpdateOne(_m *PaymentOrder) *PaymentOrderUpdateOne {
+	mutation := newPaymentOrderMutation(c.config, OpUpdateOne, withPaymentOrder(_m))
+	return &PaymentOrderUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PaymentOrderClient) UpdateOneID(id int64) *PaymentOrderUpdateOne {
+	mutation := newPaymentOrderMutation(c.config, OpUpdateOne, withPaymentOrderID(id))
+	return &PaymentOrderUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PaymentOrder.
+func (c *PaymentOrderClient) Delete() *PaymentOrderDelete {
+	mutation := newPaymentOrderMutation(c.config, OpDelete)
+	return &PaymentOrderDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PaymentOrderClient) DeleteOne(_m *PaymentOrder) *PaymentOrderDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PaymentOrderClient) DeleteOneID(id int64) *PaymentOrderDeleteOne {
+	builder := c.Delete().Where(paymentorder.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PaymentOrderDeleteOne{builder}
+}
+
+// Query returns a query builder for PaymentOrder.
+func (c *PaymentOrderClient) Query() *PaymentOrderQuery {
+	return &PaymentOrderQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePaymentOrder},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PaymentOrder entity by its id.
+func (c *PaymentOrderClient) Get(ctx context.Context, id int64) (*PaymentOrder, error) {
+	return c.Query().Where(paymentorder.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PaymentOrderClient) GetX(ctx context.Context, id int64) *PaymentOrder {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a PaymentOrder.
+func (c *PaymentOrderClient) QueryUser(_m *PaymentOrder) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, paymentorder.UserTable, paymentorder.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PaymentOrderClient) Hooks() []Hook {
+	return c.hooks.PaymentOrder
+}
+
+// Interceptors returns the client interceptors.
+func (c *PaymentOrderClient) Interceptors() []Interceptor {
+	return c.inters.PaymentOrder
+}
+
+func (c *PaymentOrderClient) mutate(ctx context.Context, m *PaymentOrderMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PaymentOrderCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PaymentOrderUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PaymentOrderUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PaymentOrderDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PaymentOrder mutation op: %q", m.Op())
 	}
 }
 
@@ -1721,6 +3030,171 @@ func (c *RedeemCodeClient) mutate(ctx context.Context, m *RedeemCodeMutation) (V
 		return (&RedeemCodeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown RedeemCode mutation op: %q", m.Op())
+	}
+}
+
+// ReferralClient is a client for the Referral schema.
+type ReferralClient struct {
+	config
+}
+
+// NewReferralClient returns a client for the Referral from the given config.
+func NewReferralClient(c config) *ReferralClient {
+	return &ReferralClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `referral.Hooks(f(g(h())))`.
+func (c *ReferralClient) Use(hooks ...Hook) {
+	c.hooks.Referral = append(c.hooks.Referral, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `referral.Intercept(f(g(h())))`.
+func (c *ReferralClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Referral = append(c.inters.Referral, interceptors...)
+}
+
+// Create returns a builder for creating a Referral entity.
+func (c *ReferralClient) Create() *ReferralCreate {
+	mutation := newReferralMutation(c.config, OpCreate)
+	return &ReferralCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Referral entities.
+func (c *ReferralClient) CreateBulk(builders ...*ReferralCreate) *ReferralCreateBulk {
+	return &ReferralCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ReferralClient) MapCreateBulk(slice any, setFunc func(*ReferralCreate, int)) *ReferralCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ReferralCreateBulk{err: fmt.Errorf("calling to ReferralClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ReferralCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ReferralCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Referral.
+func (c *ReferralClient) Update() *ReferralUpdate {
+	mutation := newReferralMutation(c.config, OpUpdate)
+	return &ReferralUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ReferralClient) UpdateOne(_m *Referral) *ReferralUpdateOne {
+	mutation := newReferralMutation(c.config, OpUpdateOne, withReferral(_m))
+	return &ReferralUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ReferralClient) UpdateOneID(id int64) *ReferralUpdateOne {
+	mutation := newReferralMutation(c.config, OpUpdateOne, withReferralID(id))
+	return &ReferralUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Referral.
+func (c *ReferralClient) Delete() *ReferralDelete {
+	mutation := newReferralMutation(c.config, OpDelete)
+	return &ReferralDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ReferralClient) DeleteOne(_m *Referral) *ReferralDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ReferralClient) DeleteOneID(id int64) *ReferralDeleteOne {
+	builder := c.Delete().Where(referral.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ReferralDeleteOne{builder}
+}
+
+// Query returns a query builder for Referral.
+func (c *ReferralClient) Query() *ReferralQuery {
+	return &ReferralQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeReferral},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Referral entity by its id.
+func (c *ReferralClient) Get(ctx context.Context, id int64) (*Referral, error) {
+	return c.Query().Where(referral.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ReferralClient) GetX(ctx context.Context, id int64) *Referral {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryInviter queries the inviter edge of a Referral.
+func (c *ReferralClient) QueryInviter(_m *Referral) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(referral.Table, referral.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, referral.InviterTable, referral.InviterColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryInvitee queries the invitee edge of a Referral.
+func (c *ReferralClient) QueryInvitee(_m *Referral) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(referral.Table, referral.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, referral.InviteeTable, referral.InviteeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ReferralClient) Hooks() []Hook {
+	return c.hooks.Referral
+}
+
+// Interceptors returns the client interceptors.
+func (c *ReferralClient) Interceptors() []Interceptor {
+	return c.inters.Referral
+}
+
+func (c *ReferralClient) mutate(ctx context.Context, m *ReferralMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ReferralCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ReferralUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ReferralUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ReferralDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Referral mutation op: %q", m.Op())
 	}
 }
 
@@ -2439,6 +3913,102 @@ func (c *UserClient) QueryPromoCodeUsages(_m *User) *PromoCodeUsageQuery {
 	return query
 }
 
+// QueryReferralsAsInviter queries the referrals_as_inviter edge of a User.
+func (c *UserClient) QueryReferralsAsInviter(_m *User) *ReferralQuery {
+	query := (&ReferralClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(referral.Table, referral.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ReferralsAsInviterTable, user.ReferralsAsInviterColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryReferralsAsInvitee queries the referrals_as_invitee edge of a User.
+func (c *UserClient) QueryReferralsAsInvitee(_m *User) *ReferralQuery {
+	query := (&ReferralClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(referral.Table, referral.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ReferralsAsInviteeTable, user.ReferralsAsInviteeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryOwnedOrganizations queries the owned_organizations edge of a User.
+func (c *UserClient) QueryOwnedOrganizations(_m *User) *OrganizationQuery {
+	query := (&OrganizationClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(organization.Table, organization.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.OwnedOrganizationsTable, user.OwnedOrganizationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryOrgMemberships queries the org_memberships edge of a User.
+func (c *UserClient) QueryOrgMemberships(_m *User) *OrgMemberQuery {
+	query := (&OrgMemberClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(orgmember.Table, orgmember.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.OrgMembershipsTable, user.OrgMembershipsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAdminInviteCodes queries the admin_invite_codes edge of a User.
+func (c *UserClient) QueryAdminInviteCodes(_m *User) *AdminInviteCodeQuery {
+	query := (&AdminInviteCodeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(admininvitecode.Table, admininvitecode.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AdminInviteCodesTable, user.AdminInviteCodesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPaymentOrders queries the payment_orders edge of a User.
+func (c *UserClient) QueryPaymentOrders(_m *User) *PaymentOrderQuery {
+	query := (&PaymentOrderClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(paymentorder.Table, paymentorder.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.PaymentOrdersTable, user.PaymentOrdersColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryUserAllowedGroups queries the user_allowed_groups edge of a User.
 func (c *UserClient) QueryUserAllowedGroups(_m *User) *UserAllowedGroupQuery {
 	query := (&UserAllowedGroupClient{config: c.config}).Query()
@@ -3116,14 +4686,18 @@ func (c *UserSubscriptionClient) mutate(ctx context.Context, m *UserSubscription
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		APIKey, Account, AccountGroup, Group, PromoCode, PromoCodeUsage, Proxy,
-		RedeemCode, Setting, UsageCleanupTask, UsageLog, User, UserAllowedGroup,
-		UserAttributeDefinition, UserAttributeValue, UserSubscription []ent.Hook
+		APIKey, Account, AccountGroup, AdminInviteCode, Group, OrgAuditLog, OrgMember,
+		OrgProject, OrgSubscription, Organization, PaymentOrder, PromoCode,
+		PromoCodeUsage, Proxy, RedeemCode, Referral, Setting, UsageCleanupTask,
+		UsageLog, User, UserAllowedGroup, UserAttributeDefinition, UserAttributeValue,
+		UserSubscription []ent.Hook
 	}
 	inters struct {
-		APIKey, Account, AccountGroup, Group, PromoCode, PromoCodeUsage, Proxy,
-		RedeemCode, Setting, UsageCleanupTask, UsageLog, User, UserAllowedGroup,
-		UserAttributeDefinition, UserAttributeValue, UserSubscription []ent.Interceptor
+		APIKey, Account, AccountGroup, AdminInviteCode, Group, OrgAuditLog, OrgMember,
+		OrgProject, OrgSubscription, Organization, PaymentOrder, PromoCode,
+		PromoCodeUsage, Proxy, RedeemCode, Referral, Setting, UsageCleanupTask,
+		UsageLog, User, UserAllowedGroup, UserAttributeDefinition, UserAttributeValue,
+		UserSubscription []ent.Interceptor
 	}
 )
 

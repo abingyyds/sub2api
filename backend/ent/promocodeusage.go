@@ -23,8 +23,10 @@ type PromoCodeUsage struct {
 	PromoCodeID int64 `json:"promo_code_id,omitempty"`
 	// 使用用户ID
 	UserID int64 `json:"user_id,omitempty"`
-	// 实际赠送金额
-	BonusAmount float64 `json:"bonus_amount,omitempty"`
+	// 实际折扣金额(分)
+	DiscountAmount float64 `json:"discount_amount,omitempty"`
+	// 关联订单号
+	OrderNo string `json:"order_no,omitempty"`
 	// 使用时间
 	UsedAt time.Time `json:"used_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -71,10 +73,12 @@ func (*PromoCodeUsage) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case promocodeusage.FieldBonusAmount:
+		case promocodeusage.FieldDiscountAmount:
 			values[i] = new(sql.NullFloat64)
 		case promocodeusage.FieldID, promocodeusage.FieldPromoCodeID, promocodeusage.FieldUserID:
 			values[i] = new(sql.NullInt64)
+		case promocodeusage.FieldOrderNo:
+			values[i] = new(sql.NullString)
 		case promocodeusage.FieldUsedAt:
 			values[i] = new(sql.NullTime)
 		default:
@@ -110,11 +114,17 @@ func (_m *PromoCodeUsage) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.UserID = value.Int64
 			}
-		case promocodeusage.FieldBonusAmount:
+		case promocodeusage.FieldDiscountAmount:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
-				return fmt.Errorf("unexpected type %T for field bonus_amount", values[i])
+				return fmt.Errorf("unexpected type %T for field discount_amount", values[i])
 			} else if value.Valid {
-				_m.BonusAmount = value.Float64
+				_m.DiscountAmount = value.Float64
+			}
+		case promocodeusage.FieldOrderNo:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field order_no", values[i])
+			} else if value.Valid {
+				_m.OrderNo = value.String
 			}
 		case promocodeusage.FieldUsedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -174,8 +184,11 @@ func (_m *PromoCodeUsage) String() string {
 	builder.WriteString("user_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.UserID))
 	builder.WriteString(", ")
-	builder.WriteString("bonus_amount=")
-	builder.WriteString(fmt.Sprintf("%v", _m.BonusAmount))
+	builder.WriteString("discount_amount=")
+	builder.WriteString(fmt.Sprintf("%v", _m.DiscountAmount))
+	builder.WriteString(", ")
+	builder.WriteString("order_no=")
+	builder.WriteString(_m.OrderNo)
 	builder.WriteString(", ")
 	builder.WriteString("used_at=")
 	builder.WriteString(_m.UsedAt.Format(time.ANSIC))

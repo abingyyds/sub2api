@@ -57,12 +57,22 @@ const (
 	FieldModelRouting = "model_routing"
 	// FieldModelRoutingEnabled holds the string denoting the model_routing_enabled field in the database.
 	FieldModelRoutingEnabled = "model_routing_enabled"
+	// FieldPriceFen holds the string denoting the price_fen field in the database.
+	FieldPriceFen = "price_fen"
+	// FieldListed holds the string denoting the listed field in the database.
+	FieldListed = "listed"
+	// FieldPlanFeatures holds the string denoting the plan_features field in the database.
+	FieldPlanFeatures = "plan_features"
 	// EdgeAPIKeys holds the string denoting the api_keys edge name in mutations.
 	EdgeAPIKeys = "api_keys"
 	// EdgeRedeemCodes holds the string denoting the redeem_codes edge name in mutations.
 	EdgeRedeemCodes = "redeem_codes"
 	// EdgeSubscriptions holds the string denoting the subscriptions edge name in mutations.
 	EdgeSubscriptions = "subscriptions"
+	// EdgeOrgSubscriptions holds the string denoting the org_subscriptions edge name in mutations.
+	EdgeOrgSubscriptions = "org_subscriptions"
+	// EdgeOrgProjects holds the string denoting the org_projects edge name in mutations.
+	EdgeOrgProjects = "org_projects"
 	// EdgeUsageLogs holds the string denoting the usage_logs edge name in mutations.
 	EdgeUsageLogs = "usage_logs"
 	// EdgeAccounts holds the string denoting the accounts edge name in mutations.
@@ -96,6 +106,20 @@ const (
 	SubscriptionsInverseTable = "user_subscriptions"
 	// SubscriptionsColumn is the table column denoting the subscriptions relation/edge.
 	SubscriptionsColumn = "group_id"
+	// OrgSubscriptionsTable is the table that holds the org_subscriptions relation/edge.
+	OrgSubscriptionsTable = "org_subscriptions"
+	// OrgSubscriptionsInverseTable is the table name for the OrgSubscription entity.
+	// It exists in this package in order to avoid circular dependency with the "orgsubscription" package.
+	OrgSubscriptionsInverseTable = "org_subscriptions"
+	// OrgSubscriptionsColumn is the table column denoting the org_subscriptions relation/edge.
+	OrgSubscriptionsColumn = "group_id"
+	// OrgProjectsTable is the table that holds the org_projects relation/edge.
+	OrgProjectsTable = "org_projects"
+	// OrgProjectsInverseTable is the table name for the OrgProject entity.
+	// It exists in this package in order to avoid circular dependency with the "orgproject" package.
+	OrgProjectsInverseTable = "org_projects"
+	// OrgProjectsColumn is the table column denoting the org_projects relation/edge.
+	OrgProjectsColumn = "group_id"
 	// UsageLogsTable is the table that holds the usage_logs relation/edge.
 	UsageLogsTable = "usage_logs"
 	// UsageLogsInverseTable is the table name for the UsageLog entity.
@@ -153,6 +177,9 @@ var Columns = []string{
 	FieldFallbackGroupID,
 	FieldModelRouting,
 	FieldModelRoutingEnabled,
+	FieldPriceFen,
+	FieldListed,
+	FieldPlanFeatures,
 }
 
 var (
@@ -212,6 +239,10 @@ var (
 	DefaultClaudeCodeOnly bool
 	// DefaultModelRoutingEnabled holds the default value on creation for the "model_routing_enabled" field.
 	DefaultModelRoutingEnabled bool
+	// DefaultPriceFen holds the default value on creation for the "price_fen" field.
+	DefaultPriceFen int
+	// DefaultListed holds the default value on creation for the "listed" field.
+	DefaultListed bool
 )
 
 // OrderOption defines the ordering options for the Group queries.
@@ -322,6 +353,16 @@ func ByModelRoutingEnabled(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldModelRoutingEnabled, opts...).ToFunc()
 }
 
+// ByPriceFen orders the results by the price_fen field.
+func ByPriceFen(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPriceFen, opts...).ToFunc()
+}
+
+// ByListed orders the results by the listed field.
+func ByListed(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldListed, opts...).ToFunc()
+}
+
 // ByAPIKeysCount orders the results by api_keys count.
 func ByAPIKeysCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -361,6 +402,34 @@ func BySubscriptionsCount(opts ...sql.OrderTermOption) OrderOption {
 func BySubscriptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newSubscriptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByOrgSubscriptionsCount orders the results by org_subscriptions count.
+func ByOrgSubscriptionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newOrgSubscriptionsStep(), opts...)
+	}
+}
+
+// ByOrgSubscriptions orders the results by org_subscriptions terms.
+func ByOrgSubscriptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newOrgSubscriptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByOrgProjectsCount orders the results by org_projects count.
+func ByOrgProjectsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newOrgProjectsStep(), opts...)
+	}
+}
+
+// ByOrgProjects orders the results by org_projects terms.
+func ByOrgProjects(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newOrgProjectsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -452,6 +521,20 @@ func newSubscriptionsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(SubscriptionsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, SubscriptionsTable, SubscriptionsColumn),
+	)
+}
+func newOrgSubscriptionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(OrgSubscriptionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, OrgSubscriptionsTable, OrgSubscriptionsColumn),
+	)
+}
+func newOrgProjectsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(OrgProjectsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, OrgProjectsTable, OrgProjectsColumn),
 	)
 }
 func newUsageLogsStep() *sqlgraph.Step {

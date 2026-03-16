@@ -95,6 +95,16 @@ func Status(v string) predicate.APIKey {
 	return predicate.APIKey(sql.FieldEQ(FieldStatus, v))
 }
 
+// OrgID applies equality check predicate on the "org_id" field. It's identical to OrgIDEQ.
+func OrgID(v int64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldEQ(FieldOrgID, v))
+}
+
+// OrgProjectID applies equality check predicate on the "org_project_id" field. It's identical to OrgProjectIDEQ.
+func OrgProjectID(v int64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldEQ(FieldOrgProjectID, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.APIKey {
 	return predicate.APIKey(sql.FieldEQ(FieldCreatedAt, v))
@@ -490,6 +500,66 @@ func IPBlacklistNotNil() predicate.APIKey {
 	return predicate.APIKey(sql.FieldNotNull(FieldIPBlacklist))
 }
 
+// OrgIDEQ applies the EQ predicate on the "org_id" field.
+func OrgIDEQ(v int64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldEQ(FieldOrgID, v))
+}
+
+// OrgIDNEQ applies the NEQ predicate on the "org_id" field.
+func OrgIDNEQ(v int64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldNEQ(FieldOrgID, v))
+}
+
+// OrgIDIn applies the In predicate on the "org_id" field.
+func OrgIDIn(vs ...int64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldIn(FieldOrgID, vs...))
+}
+
+// OrgIDNotIn applies the NotIn predicate on the "org_id" field.
+func OrgIDNotIn(vs ...int64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldNotIn(FieldOrgID, vs...))
+}
+
+// OrgIDIsNil applies the IsNil predicate on the "org_id" field.
+func OrgIDIsNil() predicate.APIKey {
+	return predicate.APIKey(sql.FieldIsNull(FieldOrgID))
+}
+
+// OrgIDNotNil applies the NotNil predicate on the "org_id" field.
+func OrgIDNotNil() predicate.APIKey {
+	return predicate.APIKey(sql.FieldNotNull(FieldOrgID))
+}
+
+// OrgProjectIDEQ applies the EQ predicate on the "org_project_id" field.
+func OrgProjectIDEQ(v int64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldEQ(FieldOrgProjectID, v))
+}
+
+// OrgProjectIDNEQ applies the NEQ predicate on the "org_project_id" field.
+func OrgProjectIDNEQ(v int64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldNEQ(FieldOrgProjectID, v))
+}
+
+// OrgProjectIDIn applies the In predicate on the "org_project_id" field.
+func OrgProjectIDIn(vs ...int64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldIn(FieldOrgProjectID, vs...))
+}
+
+// OrgProjectIDNotIn applies the NotIn predicate on the "org_project_id" field.
+func OrgProjectIDNotIn(vs ...int64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldNotIn(FieldOrgProjectID, vs...))
+}
+
+// OrgProjectIDIsNil applies the IsNil predicate on the "org_project_id" field.
+func OrgProjectIDIsNil() predicate.APIKey {
+	return predicate.APIKey(sql.FieldIsNull(FieldOrgProjectID))
+}
+
+// OrgProjectIDNotNil applies the NotNil predicate on the "org_project_id" field.
+func OrgProjectIDNotNil() predicate.APIKey {
+	return predicate.APIKey(sql.FieldNotNull(FieldOrgProjectID))
+}
+
 // HasUser applies the HasEdge predicate on the "user" edge.
 func HasUser() predicate.APIKey {
 	return predicate.APIKey(func(s *sql.Selector) {
@@ -528,6 +598,52 @@ func HasGroup() predicate.APIKey {
 func HasGroupWith(preds ...predicate.Group) predicate.APIKey {
 	return predicate.APIKey(func(s *sql.Selector) {
 		step := newGroupStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasOrganization applies the HasEdge predicate on the "organization" edge.
+func HasOrganization() predicate.APIKey {
+	return predicate.APIKey(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, OrganizationTable, OrganizationColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasOrganizationWith applies the HasEdge predicate on the "organization" edge with a given conditions (other predicates).
+func HasOrganizationWith(preds ...predicate.Organization) predicate.APIKey {
+	return predicate.APIKey(func(s *sql.Selector) {
+		step := newOrganizationStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasOrgProject applies the HasEdge predicate on the "org_project" edge.
+func HasOrgProject() predicate.APIKey {
+	return predicate.APIKey(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, OrgProjectTable, OrgProjectColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasOrgProjectWith applies the HasEdge predicate on the "org_project" edge with a given conditions (other predicates).
+func HasOrgProjectWith(preds ...predicate.OrgProject) predicate.APIKey {
+	return predicate.APIKey(func(s *sql.Selector) {
+		step := newOrgProjectStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

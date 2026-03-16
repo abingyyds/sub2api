@@ -36,9 +36,23 @@ func (_c *PromoCodeUsageCreate) SetUserID(v int64) *PromoCodeUsageCreate {
 	return _c
 }
 
-// SetBonusAmount sets the "bonus_amount" field.
-func (_c *PromoCodeUsageCreate) SetBonusAmount(v float64) *PromoCodeUsageCreate {
-	_c.mutation.SetBonusAmount(v)
+// SetDiscountAmount sets the "discount_amount" field.
+func (_c *PromoCodeUsageCreate) SetDiscountAmount(v float64) *PromoCodeUsageCreate {
+	_c.mutation.SetDiscountAmount(v)
+	return _c
+}
+
+// SetOrderNo sets the "order_no" field.
+func (_c *PromoCodeUsageCreate) SetOrderNo(v string) *PromoCodeUsageCreate {
+	_c.mutation.SetOrderNo(v)
+	return _c
+}
+
+// SetNillableOrderNo sets the "order_no" field if the given value is not nil.
+func (_c *PromoCodeUsageCreate) SetNillableOrderNo(v *string) *PromoCodeUsageCreate {
+	if v != nil {
+		_c.SetOrderNo(*v)
+	}
 	return _c
 }
 
@@ -101,6 +115,10 @@ func (_c *PromoCodeUsageCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *PromoCodeUsageCreate) defaults() {
+	if _, ok := _c.mutation.OrderNo(); !ok {
+		v := promocodeusage.DefaultOrderNo
+		_c.mutation.SetOrderNo(v)
+	}
 	if _, ok := _c.mutation.UsedAt(); !ok {
 		v := promocodeusage.DefaultUsedAt()
 		_c.mutation.SetUsedAt(v)
@@ -115,8 +133,13 @@ func (_c *PromoCodeUsageCreate) check() error {
 	if _, ok := _c.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "PromoCodeUsage.user_id"`)}
 	}
-	if _, ok := _c.mutation.BonusAmount(); !ok {
-		return &ValidationError{Name: "bonus_amount", err: errors.New(`ent: missing required field "PromoCodeUsage.bonus_amount"`)}
+	if _, ok := _c.mutation.DiscountAmount(); !ok {
+		return &ValidationError{Name: "discount_amount", err: errors.New(`ent: missing required field "PromoCodeUsage.discount_amount"`)}
+	}
+	if v, ok := _c.mutation.OrderNo(); ok {
+		if err := promocodeusage.OrderNoValidator(v); err != nil {
+			return &ValidationError{Name: "order_no", err: fmt.Errorf(`ent: validator failed for field "PromoCodeUsage.order_no": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.UsedAt(); !ok {
 		return &ValidationError{Name: "used_at", err: errors.New(`ent: missing required field "PromoCodeUsage.used_at"`)}
@@ -154,9 +177,13 @@ func (_c *PromoCodeUsageCreate) createSpec() (*PromoCodeUsage, *sqlgraph.CreateS
 		_spec = sqlgraph.NewCreateSpec(promocodeusage.Table, sqlgraph.NewFieldSpec(promocodeusage.FieldID, field.TypeInt64))
 	)
 	_spec.OnConflict = _c.conflict
-	if value, ok := _c.mutation.BonusAmount(); ok {
-		_spec.SetField(promocodeusage.FieldBonusAmount, field.TypeFloat64, value)
-		_node.BonusAmount = value
+	if value, ok := _c.mutation.DiscountAmount(); ok {
+		_spec.SetField(promocodeusage.FieldDiscountAmount, field.TypeFloat64, value)
+		_node.DiscountAmount = value
+	}
+	if value, ok := _c.mutation.OrderNo(); ok {
+		_spec.SetField(promocodeusage.FieldOrderNo, field.TypeString, value)
+		_node.OrderNo = value
 	}
 	if value, ok := _c.mutation.UsedAt(); ok {
 		_spec.SetField(promocodeusage.FieldUsedAt, field.TypeTime, value)
@@ -272,21 +299,39 @@ func (u *PromoCodeUsageUpsert) UpdateUserID() *PromoCodeUsageUpsert {
 	return u
 }
 
-// SetBonusAmount sets the "bonus_amount" field.
-func (u *PromoCodeUsageUpsert) SetBonusAmount(v float64) *PromoCodeUsageUpsert {
-	u.Set(promocodeusage.FieldBonusAmount, v)
+// SetDiscountAmount sets the "discount_amount" field.
+func (u *PromoCodeUsageUpsert) SetDiscountAmount(v float64) *PromoCodeUsageUpsert {
+	u.Set(promocodeusage.FieldDiscountAmount, v)
 	return u
 }
 
-// UpdateBonusAmount sets the "bonus_amount" field to the value that was provided on create.
-func (u *PromoCodeUsageUpsert) UpdateBonusAmount() *PromoCodeUsageUpsert {
-	u.SetExcluded(promocodeusage.FieldBonusAmount)
+// UpdateDiscountAmount sets the "discount_amount" field to the value that was provided on create.
+func (u *PromoCodeUsageUpsert) UpdateDiscountAmount() *PromoCodeUsageUpsert {
+	u.SetExcluded(promocodeusage.FieldDiscountAmount)
 	return u
 }
 
-// AddBonusAmount adds v to the "bonus_amount" field.
-func (u *PromoCodeUsageUpsert) AddBonusAmount(v float64) *PromoCodeUsageUpsert {
-	u.Add(promocodeusage.FieldBonusAmount, v)
+// AddDiscountAmount adds v to the "discount_amount" field.
+func (u *PromoCodeUsageUpsert) AddDiscountAmount(v float64) *PromoCodeUsageUpsert {
+	u.Add(promocodeusage.FieldDiscountAmount, v)
+	return u
+}
+
+// SetOrderNo sets the "order_no" field.
+func (u *PromoCodeUsageUpsert) SetOrderNo(v string) *PromoCodeUsageUpsert {
+	u.Set(promocodeusage.FieldOrderNo, v)
+	return u
+}
+
+// UpdateOrderNo sets the "order_no" field to the value that was provided on create.
+func (u *PromoCodeUsageUpsert) UpdateOrderNo() *PromoCodeUsageUpsert {
+	u.SetExcluded(promocodeusage.FieldOrderNo)
+	return u
+}
+
+// ClearOrderNo clears the value of the "order_no" field.
+func (u *PromoCodeUsageUpsert) ClearOrderNo() *PromoCodeUsageUpsert {
+	u.SetNull(promocodeusage.FieldOrderNo)
 	return u
 }
 
@@ -370,24 +415,45 @@ func (u *PromoCodeUsageUpsertOne) UpdateUserID() *PromoCodeUsageUpsertOne {
 	})
 }
 
-// SetBonusAmount sets the "bonus_amount" field.
-func (u *PromoCodeUsageUpsertOne) SetBonusAmount(v float64) *PromoCodeUsageUpsertOne {
+// SetDiscountAmount sets the "discount_amount" field.
+func (u *PromoCodeUsageUpsertOne) SetDiscountAmount(v float64) *PromoCodeUsageUpsertOne {
 	return u.Update(func(s *PromoCodeUsageUpsert) {
-		s.SetBonusAmount(v)
+		s.SetDiscountAmount(v)
 	})
 }
 
-// AddBonusAmount adds v to the "bonus_amount" field.
-func (u *PromoCodeUsageUpsertOne) AddBonusAmount(v float64) *PromoCodeUsageUpsertOne {
+// AddDiscountAmount adds v to the "discount_amount" field.
+func (u *PromoCodeUsageUpsertOne) AddDiscountAmount(v float64) *PromoCodeUsageUpsertOne {
 	return u.Update(func(s *PromoCodeUsageUpsert) {
-		s.AddBonusAmount(v)
+		s.AddDiscountAmount(v)
 	})
 }
 
-// UpdateBonusAmount sets the "bonus_amount" field to the value that was provided on create.
-func (u *PromoCodeUsageUpsertOne) UpdateBonusAmount() *PromoCodeUsageUpsertOne {
+// UpdateDiscountAmount sets the "discount_amount" field to the value that was provided on create.
+func (u *PromoCodeUsageUpsertOne) UpdateDiscountAmount() *PromoCodeUsageUpsertOne {
 	return u.Update(func(s *PromoCodeUsageUpsert) {
-		s.UpdateBonusAmount()
+		s.UpdateDiscountAmount()
+	})
+}
+
+// SetOrderNo sets the "order_no" field.
+func (u *PromoCodeUsageUpsertOne) SetOrderNo(v string) *PromoCodeUsageUpsertOne {
+	return u.Update(func(s *PromoCodeUsageUpsert) {
+		s.SetOrderNo(v)
+	})
+}
+
+// UpdateOrderNo sets the "order_no" field to the value that was provided on create.
+func (u *PromoCodeUsageUpsertOne) UpdateOrderNo() *PromoCodeUsageUpsertOne {
+	return u.Update(func(s *PromoCodeUsageUpsert) {
+		s.UpdateOrderNo()
+	})
+}
+
+// ClearOrderNo clears the value of the "order_no" field.
+func (u *PromoCodeUsageUpsertOne) ClearOrderNo() *PromoCodeUsageUpsertOne {
+	return u.Update(func(s *PromoCodeUsageUpsert) {
+		s.ClearOrderNo()
 	})
 }
 
@@ -637,24 +703,45 @@ func (u *PromoCodeUsageUpsertBulk) UpdateUserID() *PromoCodeUsageUpsertBulk {
 	})
 }
 
-// SetBonusAmount sets the "bonus_amount" field.
-func (u *PromoCodeUsageUpsertBulk) SetBonusAmount(v float64) *PromoCodeUsageUpsertBulk {
+// SetDiscountAmount sets the "discount_amount" field.
+func (u *PromoCodeUsageUpsertBulk) SetDiscountAmount(v float64) *PromoCodeUsageUpsertBulk {
 	return u.Update(func(s *PromoCodeUsageUpsert) {
-		s.SetBonusAmount(v)
+		s.SetDiscountAmount(v)
 	})
 }
 
-// AddBonusAmount adds v to the "bonus_amount" field.
-func (u *PromoCodeUsageUpsertBulk) AddBonusAmount(v float64) *PromoCodeUsageUpsertBulk {
+// AddDiscountAmount adds v to the "discount_amount" field.
+func (u *PromoCodeUsageUpsertBulk) AddDiscountAmount(v float64) *PromoCodeUsageUpsertBulk {
 	return u.Update(func(s *PromoCodeUsageUpsert) {
-		s.AddBonusAmount(v)
+		s.AddDiscountAmount(v)
 	})
 }
 
-// UpdateBonusAmount sets the "bonus_amount" field to the value that was provided on create.
-func (u *PromoCodeUsageUpsertBulk) UpdateBonusAmount() *PromoCodeUsageUpsertBulk {
+// UpdateDiscountAmount sets the "discount_amount" field to the value that was provided on create.
+func (u *PromoCodeUsageUpsertBulk) UpdateDiscountAmount() *PromoCodeUsageUpsertBulk {
 	return u.Update(func(s *PromoCodeUsageUpsert) {
-		s.UpdateBonusAmount()
+		s.UpdateDiscountAmount()
+	})
+}
+
+// SetOrderNo sets the "order_no" field.
+func (u *PromoCodeUsageUpsertBulk) SetOrderNo(v string) *PromoCodeUsageUpsertBulk {
+	return u.Update(func(s *PromoCodeUsageUpsert) {
+		s.SetOrderNo(v)
+	})
+}
+
+// UpdateOrderNo sets the "order_no" field to the value that was provided on create.
+func (u *PromoCodeUsageUpsertBulk) UpdateOrderNo() *PromoCodeUsageUpsertBulk {
+	return u.Update(func(s *PromoCodeUsageUpsert) {
+		s.UpdateOrderNo()
+	})
+}
+
+// ClearOrderNo clears the value of the "order_no" field.
+func (u *PromoCodeUsageUpsertBulk) ClearOrderNo() *PromoCodeUsageUpsertBulk {
+	return u.Update(func(s *PromoCodeUsageUpsert) {
+		s.ClearOrderNo()
 	})
 }
 

@@ -85,6 +85,34 @@ func (_c *UsageLogCreate) SetNillableSubscriptionID(v *int64) *UsageLogCreate {
 	return _c
 }
 
+// SetOrgID sets the "org_id" field.
+func (_c *UsageLogCreate) SetOrgID(v int64) *UsageLogCreate {
+	_c.mutation.SetOrgID(v)
+	return _c
+}
+
+// SetNillableOrgID sets the "org_id" field if the given value is not nil.
+func (_c *UsageLogCreate) SetNillableOrgID(v *int64) *UsageLogCreate {
+	if v != nil {
+		_c.SetOrgID(*v)
+	}
+	return _c
+}
+
+// SetOrgMemberID sets the "org_member_id" field.
+func (_c *UsageLogCreate) SetOrgMemberID(v int64) *UsageLogCreate {
+	_c.mutation.SetOrgMemberID(v)
+	return _c
+}
+
+// SetNillableOrgMemberID sets the "org_member_id" field if the given value is not nil.
+func (_c *UsageLogCreate) SetNillableOrgMemberID(v *int64) *UsageLogCreate {
+	if v != nil {
+		_c.SetOrgMemberID(*v)
+	}
+	return _c
+}
+
 // SetInputTokens sets the "input_tokens" field.
 func (_c *UsageLogCreate) SetInputTokens(v int) *UsageLogCreate {
 	_c.mutation.SetInputTokens(v)
@@ -674,6 +702,14 @@ func (_c *UsageLogCreate) createSpec() (*UsageLog, *sqlgraph.CreateSpec) {
 		_spec.SetField(usagelog.FieldModel, field.TypeString, value)
 		_node.Model = value
 	}
+	if value, ok := _c.mutation.OrgID(); ok {
+		_spec.SetField(usagelog.FieldOrgID, field.TypeInt64, value)
+		_node.OrgID = &value
+	}
+	if value, ok := _c.mutation.OrgMemberID(); ok {
+		_spec.SetField(usagelog.FieldOrgMemberID, field.TypeInt64, value)
+		_node.OrgMemberID = &value
+	}
 	if value, ok := _c.mutation.InputTokens(); ok {
 		_spec.SetField(usagelog.FieldInputTokens, field.TypeInt, value)
 		_node.InputTokens = value
@@ -996,6 +1032,54 @@ func (u *UsageLogUpsert) UpdateSubscriptionID() *UsageLogUpsert {
 // ClearSubscriptionID clears the value of the "subscription_id" field.
 func (u *UsageLogUpsert) ClearSubscriptionID() *UsageLogUpsert {
 	u.SetNull(usagelog.FieldSubscriptionID)
+	return u
+}
+
+// SetOrgID sets the "org_id" field.
+func (u *UsageLogUpsert) SetOrgID(v int64) *UsageLogUpsert {
+	u.Set(usagelog.FieldOrgID, v)
+	return u
+}
+
+// UpdateOrgID sets the "org_id" field to the value that was provided on create.
+func (u *UsageLogUpsert) UpdateOrgID() *UsageLogUpsert {
+	u.SetExcluded(usagelog.FieldOrgID)
+	return u
+}
+
+// AddOrgID adds v to the "org_id" field.
+func (u *UsageLogUpsert) AddOrgID(v int64) *UsageLogUpsert {
+	u.Add(usagelog.FieldOrgID, v)
+	return u
+}
+
+// ClearOrgID clears the value of the "org_id" field.
+func (u *UsageLogUpsert) ClearOrgID() *UsageLogUpsert {
+	u.SetNull(usagelog.FieldOrgID)
+	return u
+}
+
+// SetOrgMemberID sets the "org_member_id" field.
+func (u *UsageLogUpsert) SetOrgMemberID(v int64) *UsageLogUpsert {
+	u.Set(usagelog.FieldOrgMemberID, v)
+	return u
+}
+
+// UpdateOrgMemberID sets the "org_member_id" field to the value that was provided on create.
+func (u *UsageLogUpsert) UpdateOrgMemberID() *UsageLogUpsert {
+	u.SetExcluded(usagelog.FieldOrgMemberID)
+	return u
+}
+
+// AddOrgMemberID adds v to the "org_member_id" field.
+func (u *UsageLogUpsert) AddOrgMemberID(v int64) *UsageLogUpsert {
+	u.Add(usagelog.FieldOrgMemberID, v)
+	return u
+}
+
+// ClearOrgMemberID clears the value of the "org_member_id" field.
+func (u *UsageLogUpsert) ClearOrgMemberID() *UsageLogUpsert {
+	u.SetNull(usagelog.FieldOrgMemberID)
 	return u
 }
 
@@ -1561,6 +1645,62 @@ func (u *UsageLogUpsertOne) UpdateSubscriptionID() *UsageLogUpsertOne {
 func (u *UsageLogUpsertOne) ClearSubscriptionID() *UsageLogUpsertOne {
 	return u.Update(func(s *UsageLogUpsert) {
 		s.ClearSubscriptionID()
+	})
+}
+
+// SetOrgID sets the "org_id" field.
+func (u *UsageLogUpsertOne) SetOrgID(v int64) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetOrgID(v)
+	})
+}
+
+// AddOrgID adds v to the "org_id" field.
+func (u *UsageLogUpsertOne) AddOrgID(v int64) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.AddOrgID(v)
+	})
+}
+
+// UpdateOrgID sets the "org_id" field to the value that was provided on create.
+func (u *UsageLogUpsertOne) UpdateOrgID() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateOrgID()
+	})
+}
+
+// ClearOrgID clears the value of the "org_id" field.
+func (u *UsageLogUpsertOne) ClearOrgID() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.ClearOrgID()
+	})
+}
+
+// SetOrgMemberID sets the "org_member_id" field.
+func (u *UsageLogUpsertOne) SetOrgMemberID(v int64) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetOrgMemberID(v)
+	})
+}
+
+// AddOrgMemberID adds v to the "org_member_id" field.
+func (u *UsageLogUpsertOne) AddOrgMemberID(v int64) *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.AddOrgMemberID(v)
+	})
+}
+
+// UpdateOrgMemberID sets the "org_member_id" field to the value that was provided on create.
+func (u *UsageLogUpsertOne) UpdateOrgMemberID() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateOrgMemberID()
+	})
+}
+
+// ClearOrgMemberID clears the value of the "org_member_id" field.
+func (u *UsageLogUpsertOne) ClearOrgMemberID() *UsageLogUpsertOne {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.ClearOrgMemberID()
 	})
 }
 
@@ -2360,6 +2500,62 @@ func (u *UsageLogUpsertBulk) UpdateSubscriptionID() *UsageLogUpsertBulk {
 func (u *UsageLogUpsertBulk) ClearSubscriptionID() *UsageLogUpsertBulk {
 	return u.Update(func(s *UsageLogUpsert) {
 		s.ClearSubscriptionID()
+	})
+}
+
+// SetOrgID sets the "org_id" field.
+func (u *UsageLogUpsertBulk) SetOrgID(v int64) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetOrgID(v)
+	})
+}
+
+// AddOrgID adds v to the "org_id" field.
+func (u *UsageLogUpsertBulk) AddOrgID(v int64) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.AddOrgID(v)
+	})
+}
+
+// UpdateOrgID sets the "org_id" field to the value that was provided on create.
+func (u *UsageLogUpsertBulk) UpdateOrgID() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateOrgID()
+	})
+}
+
+// ClearOrgID clears the value of the "org_id" field.
+func (u *UsageLogUpsertBulk) ClearOrgID() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.ClearOrgID()
+	})
+}
+
+// SetOrgMemberID sets the "org_member_id" field.
+func (u *UsageLogUpsertBulk) SetOrgMemberID(v int64) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.SetOrgMemberID(v)
+	})
+}
+
+// AddOrgMemberID adds v to the "org_member_id" field.
+func (u *UsageLogUpsertBulk) AddOrgMemberID(v int64) *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.AddOrgMemberID(v)
+	})
+}
+
+// UpdateOrgMemberID sets the "org_member_id" field to the value that was provided on create.
+func (u *UsageLogUpsertBulk) UpdateOrgMemberID() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.UpdateOrgMemberID()
+	})
+}
+
+// ClearOrgMemberID clears the value of the "org_member_id" field.
+func (u *UsageLogUpsertBulk) ClearOrgMemberID() *UsageLogUpsertBulk {
+	return u.Update(func(s *UsageLogUpsert) {
+		s.ClearOrgMemberID()
 	})
 }
 

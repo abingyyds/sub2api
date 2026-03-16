@@ -142,6 +142,60 @@ func (_u *UsageLogUpdate) ClearSubscriptionID() *UsageLogUpdate {
 	return _u
 }
 
+// SetOrgID sets the "org_id" field.
+func (_u *UsageLogUpdate) SetOrgID(v int64) *UsageLogUpdate {
+	_u.mutation.ResetOrgID()
+	_u.mutation.SetOrgID(v)
+	return _u
+}
+
+// SetNillableOrgID sets the "org_id" field if the given value is not nil.
+func (_u *UsageLogUpdate) SetNillableOrgID(v *int64) *UsageLogUpdate {
+	if v != nil {
+		_u.SetOrgID(*v)
+	}
+	return _u
+}
+
+// AddOrgID adds value to the "org_id" field.
+func (_u *UsageLogUpdate) AddOrgID(v int64) *UsageLogUpdate {
+	_u.mutation.AddOrgID(v)
+	return _u
+}
+
+// ClearOrgID clears the value of the "org_id" field.
+func (_u *UsageLogUpdate) ClearOrgID() *UsageLogUpdate {
+	_u.mutation.ClearOrgID()
+	return _u
+}
+
+// SetOrgMemberID sets the "org_member_id" field.
+func (_u *UsageLogUpdate) SetOrgMemberID(v int64) *UsageLogUpdate {
+	_u.mutation.ResetOrgMemberID()
+	_u.mutation.SetOrgMemberID(v)
+	return _u
+}
+
+// SetNillableOrgMemberID sets the "org_member_id" field if the given value is not nil.
+func (_u *UsageLogUpdate) SetNillableOrgMemberID(v *int64) *UsageLogUpdate {
+	if v != nil {
+		_u.SetOrgMemberID(*v)
+	}
+	return _u
+}
+
+// AddOrgMemberID adds value to the "org_member_id" field.
+func (_u *UsageLogUpdate) AddOrgMemberID(v int64) *UsageLogUpdate {
+	_u.mutation.AddOrgMemberID(v)
+	return _u
+}
+
+// ClearOrgMemberID clears the value of the "org_member_id" field.
+func (_u *UsageLogUpdate) ClearOrgMemberID() *UsageLogUpdate {
+	_u.mutation.ClearOrgMemberID()
+	return _u
+}
+
 // SetInputTokens sets the "input_tokens" field.
 func (_u *UsageLogUpdate) SetInputTokens(v int) *UsageLogUpdate {
 	_u.mutation.ResetInputTokens()
@@ -756,6 +810,24 @@ func (_u *UsageLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Model(); ok {
 		_spec.SetField(usagelog.FieldModel, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.OrgID(); ok {
+		_spec.SetField(usagelog.FieldOrgID, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedOrgID(); ok {
+		_spec.AddField(usagelog.FieldOrgID, field.TypeInt64, value)
+	}
+	if _u.mutation.OrgIDCleared() {
+		_spec.ClearField(usagelog.FieldOrgID, field.TypeInt64)
+	}
+	if value, ok := _u.mutation.OrgMemberID(); ok {
+		_spec.SetField(usagelog.FieldOrgMemberID, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedOrgMemberID(); ok {
+		_spec.AddField(usagelog.FieldOrgMemberID, field.TypeInt64, value)
+	}
+	if _u.mutation.OrgMemberIDCleared() {
+		_spec.ClearField(usagelog.FieldOrgMemberID, field.TypeInt64)
+	}
 	if value, ok := _u.mutation.InputTokens(); ok {
 		_spec.SetField(usagelog.FieldInputTokens, field.TypeInt, value)
 	}
@@ -1166,6 +1238,60 @@ func (_u *UsageLogUpdateOne) SetNillableSubscriptionID(v *int64) *UsageLogUpdate
 // ClearSubscriptionID clears the value of the "subscription_id" field.
 func (_u *UsageLogUpdateOne) ClearSubscriptionID() *UsageLogUpdateOne {
 	_u.mutation.ClearSubscriptionID()
+	return _u
+}
+
+// SetOrgID sets the "org_id" field.
+func (_u *UsageLogUpdateOne) SetOrgID(v int64) *UsageLogUpdateOne {
+	_u.mutation.ResetOrgID()
+	_u.mutation.SetOrgID(v)
+	return _u
+}
+
+// SetNillableOrgID sets the "org_id" field if the given value is not nil.
+func (_u *UsageLogUpdateOne) SetNillableOrgID(v *int64) *UsageLogUpdateOne {
+	if v != nil {
+		_u.SetOrgID(*v)
+	}
+	return _u
+}
+
+// AddOrgID adds value to the "org_id" field.
+func (_u *UsageLogUpdateOne) AddOrgID(v int64) *UsageLogUpdateOne {
+	_u.mutation.AddOrgID(v)
+	return _u
+}
+
+// ClearOrgID clears the value of the "org_id" field.
+func (_u *UsageLogUpdateOne) ClearOrgID() *UsageLogUpdateOne {
+	_u.mutation.ClearOrgID()
+	return _u
+}
+
+// SetOrgMemberID sets the "org_member_id" field.
+func (_u *UsageLogUpdateOne) SetOrgMemberID(v int64) *UsageLogUpdateOne {
+	_u.mutation.ResetOrgMemberID()
+	_u.mutation.SetOrgMemberID(v)
+	return _u
+}
+
+// SetNillableOrgMemberID sets the "org_member_id" field if the given value is not nil.
+func (_u *UsageLogUpdateOne) SetNillableOrgMemberID(v *int64) *UsageLogUpdateOne {
+	if v != nil {
+		_u.SetOrgMemberID(*v)
+	}
+	return _u
+}
+
+// AddOrgMemberID adds value to the "org_member_id" field.
+func (_u *UsageLogUpdateOne) AddOrgMemberID(v int64) *UsageLogUpdateOne {
+	_u.mutation.AddOrgMemberID(v)
+	return _u
+}
+
+// ClearOrgMemberID clears the value of the "org_member_id" field.
+func (_u *UsageLogUpdateOne) ClearOrgMemberID() *UsageLogUpdateOne {
+	_u.mutation.ClearOrgMemberID()
 	return _u
 }
 
@@ -1812,6 +1938,24 @@ func (_u *UsageLogUpdateOne) sqlSave(ctx context.Context) (_node *UsageLog, err 
 	}
 	if value, ok := _u.mutation.Model(); ok {
 		_spec.SetField(usagelog.FieldModel, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.OrgID(); ok {
+		_spec.SetField(usagelog.FieldOrgID, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedOrgID(); ok {
+		_spec.AddField(usagelog.FieldOrgID, field.TypeInt64, value)
+	}
+	if _u.mutation.OrgIDCleared() {
+		_spec.ClearField(usagelog.FieldOrgID, field.TypeInt64)
+	}
+	if value, ok := _u.mutation.OrgMemberID(); ok {
+		_spec.SetField(usagelog.FieldOrgMemberID, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedOrgMemberID(); ok {
+		_spec.AddField(usagelog.FieldOrgMemberID, field.TypeInt64, value)
+	}
+	if _u.mutation.OrgMemberIDCleared() {
+		_spec.ClearField(usagelog.FieldOrgMemberID, field.TypeInt64)
 	}
 	if value, ok := _u.mutation.InputTokens(); ok {
 		_spec.SetField(usagelog.FieldInputTokens, field.TypeInt, value)

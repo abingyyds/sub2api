@@ -16,8 +16,12 @@ const (
 	FieldID = "id"
 	// FieldCode holds the string denoting the code field in the database.
 	FieldCode = "code"
-	// FieldBonusAmount holds the string denoting the bonus_amount field in the database.
-	FieldBonusAmount = "bonus_amount"
+	// FieldDiscountAmount holds the string denoting the discount_amount field in the database.
+	FieldDiscountAmount = "discount_amount"
+	// FieldDiscountType holds the string denoting the discount_type field in the database.
+	FieldDiscountType = "discount_type"
+	// FieldMinOrderAmount holds the string denoting the min_order_amount field in the database.
+	FieldMinOrderAmount = "min_order_amount"
 	// FieldMaxUses holds the string denoting the max_uses field in the database.
 	FieldMaxUses = "max_uses"
 	// FieldUsedCount holds the string denoting the used_count field in the database.
@@ -49,7 +53,9 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldCode,
-	FieldBonusAmount,
+	FieldDiscountAmount,
+	FieldDiscountType,
+	FieldMinOrderAmount,
 	FieldMaxUses,
 	FieldUsedCount,
 	FieldStatus,
@@ -72,8 +78,14 @@ func ValidColumn(column string) bool {
 var (
 	// CodeValidator is a validator for the "code" field. It is called by the builders before save.
 	CodeValidator func(string) error
-	// DefaultBonusAmount holds the default value on creation for the "bonus_amount" field.
-	DefaultBonusAmount float64
+	// DefaultDiscountAmount holds the default value on creation for the "discount_amount" field.
+	DefaultDiscountAmount float64
+	// DefaultDiscountType holds the default value on creation for the "discount_type" field.
+	DefaultDiscountType string
+	// DiscountTypeValidator is a validator for the "discount_type" field. It is called by the builders before save.
+	DiscountTypeValidator func(string) error
+	// DefaultMinOrderAmount holds the default value on creation for the "min_order_amount" field.
+	DefaultMinOrderAmount int
 	// DefaultMaxUses holds the default value on creation for the "max_uses" field.
 	DefaultMaxUses int
 	// DefaultUsedCount holds the default value on creation for the "used_count" field.
@@ -103,9 +115,19 @@ func ByCode(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCode, opts...).ToFunc()
 }
 
-// ByBonusAmount orders the results by the bonus_amount field.
-func ByBonusAmount(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldBonusAmount, opts...).ToFunc()
+// ByDiscountAmount orders the results by the discount_amount field.
+func ByDiscountAmount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDiscountAmount, opts...).ToFunc()
+}
+
+// ByDiscountType orders the results by the discount_type field.
+func ByDiscountType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDiscountType, opts...).ToFunc()
+}
+
+// ByMinOrderAmount orders the results by the min_order_amount field.
+func ByMinOrderAmount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMinOrderAmount, opts...).ToFunc()
 }
 
 // ByMaxUses orders the results by the max_uses field.

@@ -29,16 +29,44 @@ func (_c *PromoCodeCreate) SetCode(v string) *PromoCodeCreate {
 	return _c
 }
 
-// SetBonusAmount sets the "bonus_amount" field.
-func (_c *PromoCodeCreate) SetBonusAmount(v float64) *PromoCodeCreate {
-	_c.mutation.SetBonusAmount(v)
+// SetDiscountAmount sets the "discount_amount" field.
+func (_c *PromoCodeCreate) SetDiscountAmount(v float64) *PromoCodeCreate {
+	_c.mutation.SetDiscountAmount(v)
 	return _c
 }
 
-// SetNillableBonusAmount sets the "bonus_amount" field if the given value is not nil.
-func (_c *PromoCodeCreate) SetNillableBonusAmount(v *float64) *PromoCodeCreate {
+// SetNillableDiscountAmount sets the "discount_amount" field if the given value is not nil.
+func (_c *PromoCodeCreate) SetNillableDiscountAmount(v *float64) *PromoCodeCreate {
 	if v != nil {
-		_c.SetBonusAmount(*v)
+		_c.SetDiscountAmount(*v)
+	}
+	return _c
+}
+
+// SetDiscountType sets the "discount_type" field.
+func (_c *PromoCodeCreate) SetDiscountType(v string) *PromoCodeCreate {
+	_c.mutation.SetDiscountType(v)
+	return _c
+}
+
+// SetNillableDiscountType sets the "discount_type" field if the given value is not nil.
+func (_c *PromoCodeCreate) SetNillableDiscountType(v *string) *PromoCodeCreate {
+	if v != nil {
+		_c.SetDiscountType(*v)
+	}
+	return _c
+}
+
+// SetMinOrderAmount sets the "min_order_amount" field.
+func (_c *PromoCodeCreate) SetMinOrderAmount(v int) *PromoCodeCreate {
+	_c.mutation.SetMinOrderAmount(v)
+	return _c
+}
+
+// SetNillableMinOrderAmount sets the "min_order_amount" field if the given value is not nil.
+func (_c *PromoCodeCreate) SetNillableMinOrderAmount(v *int) *PromoCodeCreate {
+	if v != nil {
+		_c.SetMinOrderAmount(*v)
 	}
 	return _c
 }
@@ -191,9 +219,17 @@ func (_c *PromoCodeCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *PromoCodeCreate) defaults() {
-	if _, ok := _c.mutation.BonusAmount(); !ok {
-		v := promocode.DefaultBonusAmount
-		_c.mutation.SetBonusAmount(v)
+	if _, ok := _c.mutation.DiscountAmount(); !ok {
+		v := promocode.DefaultDiscountAmount
+		_c.mutation.SetDiscountAmount(v)
+	}
+	if _, ok := _c.mutation.DiscountType(); !ok {
+		v := promocode.DefaultDiscountType
+		_c.mutation.SetDiscountType(v)
+	}
+	if _, ok := _c.mutation.MinOrderAmount(); !ok {
+		v := promocode.DefaultMinOrderAmount
+		_c.mutation.SetMinOrderAmount(v)
 	}
 	if _, ok := _c.mutation.MaxUses(); !ok {
 		v := promocode.DefaultMaxUses
@@ -227,8 +263,19 @@ func (_c *PromoCodeCreate) check() error {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "PromoCode.code": %w`, err)}
 		}
 	}
-	if _, ok := _c.mutation.BonusAmount(); !ok {
-		return &ValidationError{Name: "bonus_amount", err: errors.New(`ent: missing required field "PromoCode.bonus_amount"`)}
+	if _, ok := _c.mutation.DiscountAmount(); !ok {
+		return &ValidationError{Name: "discount_amount", err: errors.New(`ent: missing required field "PromoCode.discount_amount"`)}
+	}
+	if _, ok := _c.mutation.DiscountType(); !ok {
+		return &ValidationError{Name: "discount_type", err: errors.New(`ent: missing required field "PromoCode.discount_type"`)}
+	}
+	if v, ok := _c.mutation.DiscountType(); ok {
+		if err := promocode.DiscountTypeValidator(v); err != nil {
+			return &ValidationError{Name: "discount_type", err: fmt.Errorf(`ent: validator failed for field "PromoCode.discount_type": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.MinOrderAmount(); !ok {
+		return &ValidationError{Name: "min_order_amount", err: errors.New(`ent: missing required field "PromoCode.min_order_amount"`)}
 	}
 	if _, ok := _c.mutation.MaxUses(); !ok {
 		return &ValidationError{Name: "max_uses", err: errors.New(`ent: missing required field "PromoCode.max_uses"`)}
@@ -281,9 +328,17 @@ func (_c *PromoCodeCreate) createSpec() (*PromoCode, *sqlgraph.CreateSpec) {
 		_spec.SetField(promocode.FieldCode, field.TypeString, value)
 		_node.Code = value
 	}
-	if value, ok := _c.mutation.BonusAmount(); ok {
-		_spec.SetField(promocode.FieldBonusAmount, field.TypeFloat64, value)
-		_node.BonusAmount = value
+	if value, ok := _c.mutation.DiscountAmount(); ok {
+		_spec.SetField(promocode.FieldDiscountAmount, field.TypeFloat64, value)
+		_node.DiscountAmount = value
+	}
+	if value, ok := _c.mutation.DiscountType(); ok {
+		_spec.SetField(promocode.FieldDiscountType, field.TypeString, value)
+		_node.DiscountType = value
+	}
+	if value, ok := _c.mutation.MinOrderAmount(); ok {
+		_spec.SetField(promocode.FieldMinOrderAmount, field.TypeInt, value)
+		_node.MinOrderAmount = value
 	}
 	if value, ok := _c.mutation.MaxUses(); ok {
 		_spec.SetField(promocode.FieldMaxUses, field.TypeInt, value)
@@ -393,21 +448,51 @@ func (u *PromoCodeUpsert) UpdateCode() *PromoCodeUpsert {
 	return u
 }
 
-// SetBonusAmount sets the "bonus_amount" field.
-func (u *PromoCodeUpsert) SetBonusAmount(v float64) *PromoCodeUpsert {
-	u.Set(promocode.FieldBonusAmount, v)
+// SetDiscountAmount sets the "discount_amount" field.
+func (u *PromoCodeUpsert) SetDiscountAmount(v float64) *PromoCodeUpsert {
+	u.Set(promocode.FieldDiscountAmount, v)
 	return u
 }
 
-// UpdateBonusAmount sets the "bonus_amount" field to the value that was provided on create.
-func (u *PromoCodeUpsert) UpdateBonusAmount() *PromoCodeUpsert {
-	u.SetExcluded(promocode.FieldBonusAmount)
+// UpdateDiscountAmount sets the "discount_amount" field to the value that was provided on create.
+func (u *PromoCodeUpsert) UpdateDiscountAmount() *PromoCodeUpsert {
+	u.SetExcluded(promocode.FieldDiscountAmount)
 	return u
 }
 
-// AddBonusAmount adds v to the "bonus_amount" field.
-func (u *PromoCodeUpsert) AddBonusAmount(v float64) *PromoCodeUpsert {
-	u.Add(promocode.FieldBonusAmount, v)
+// AddDiscountAmount adds v to the "discount_amount" field.
+func (u *PromoCodeUpsert) AddDiscountAmount(v float64) *PromoCodeUpsert {
+	u.Add(promocode.FieldDiscountAmount, v)
+	return u
+}
+
+// SetDiscountType sets the "discount_type" field.
+func (u *PromoCodeUpsert) SetDiscountType(v string) *PromoCodeUpsert {
+	u.Set(promocode.FieldDiscountType, v)
+	return u
+}
+
+// UpdateDiscountType sets the "discount_type" field to the value that was provided on create.
+func (u *PromoCodeUpsert) UpdateDiscountType() *PromoCodeUpsert {
+	u.SetExcluded(promocode.FieldDiscountType)
+	return u
+}
+
+// SetMinOrderAmount sets the "min_order_amount" field.
+func (u *PromoCodeUpsert) SetMinOrderAmount(v int) *PromoCodeUpsert {
+	u.Set(promocode.FieldMinOrderAmount, v)
+	return u
+}
+
+// UpdateMinOrderAmount sets the "min_order_amount" field to the value that was provided on create.
+func (u *PromoCodeUpsert) UpdateMinOrderAmount() *PromoCodeUpsert {
+	u.SetExcluded(promocode.FieldMinOrderAmount)
+	return u
+}
+
+// AddMinOrderAmount adds v to the "min_order_amount" field.
+func (u *PromoCodeUpsert) AddMinOrderAmount(v int) *PromoCodeUpsert {
+	u.Add(promocode.FieldMinOrderAmount, v)
 	return u
 }
 
@@ -566,24 +651,59 @@ func (u *PromoCodeUpsertOne) UpdateCode() *PromoCodeUpsertOne {
 	})
 }
 
-// SetBonusAmount sets the "bonus_amount" field.
-func (u *PromoCodeUpsertOne) SetBonusAmount(v float64) *PromoCodeUpsertOne {
+// SetDiscountAmount sets the "discount_amount" field.
+func (u *PromoCodeUpsertOne) SetDiscountAmount(v float64) *PromoCodeUpsertOne {
 	return u.Update(func(s *PromoCodeUpsert) {
-		s.SetBonusAmount(v)
+		s.SetDiscountAmount(v)
 	})
 }
 
-// AddBonusAmount adds v to the "bonus_amount" field.
-func (u *PromoCodeUpsertOne) AddBonusAmount(v float64) *PromoCodeUpsertOne {
+// AddDiscountAmount adds v to the "discount_amount" field.
+func (u *PromoCodeUpsertOne) AddDiscountAmount(v float64) *PromoCodeUpsertOne {
 	return u.Update(func(s *PromoCodeUpsert) {
-		s.AddBonusAmount(v)
+		s.AddDiscountAmount(v)
 	})
 }
 
-// UpdateBonusAmount sets the "bonus_amount" field to the value that was provided on create.
-func (u *PromoCodeUpsertOne) UpdateBonusAmount() *PromoCodeUpsertOne {
+// UpdateDiscountAmount sets the "discount_amount" field to the value that was provided on create.
+func (u *PromoCodeUpsertOne) UpdateDiscountAmount() *PromoCodeUpsertOne {
 	return u.Update(func(s *PromoCodeUpsert) {
-		s.UpdateBonusAmount()
+		s.UpdateDiscountAmount()
+	})
+}
+
+// SetDiscountType sets the "discount_type" field.
+func (u *PromoCodeUpsertOne) SetDiscountType(v string) *PromoCodeUpsertOne {
+	return u.Update(func(s *PromoCodeUpsert) {
+		s.SetDiscountType(v)
+	})
+}
+
+// UpdateDiscountType sets the "discount_type" field to the value that was provided on create.
+func (u *PromoCodeUpsertOne) UpdateDiscountType() *PromoCodeUpsertOne {
+	return u.Update(func(s *PromoCodeUpsert) {
+		s.UpdateDiscountType()
+	})
+}
+
+// SetMinOrderAmount sets the "min_order_amount" field.
+func (u *PromoCodeUpsertOne) SetMinOrderAmount(v int) *PromoCodeUpsertOne {
+	return u.Update(func(s *PromoCodeUpsert) {
+		s.SetMinOrderAmount(v)
+	})
+}
+
+// AddMinOrderAmount adds v to the "min_order_amount" field.
+func (u *PromoCodeUpsertOne) AddMinOrderAmount(v int) *PromoCodeUpsertOne {
+	return u.Update(func(s *PromoCodeUpsert) {
+		s.AddMinOrderAmount(v)
+	})
+}
+
+// UpdateMinOrderAmount sets the "min_order_amount" field to the value that was provided on create.
+func (u *PromoCodeUpsertOne) UpdateMinOrderAmount() *PromoCodeUpsertOne {
+	return u.Update(func(s *PromoCodeUpsert) {
+		s.UpdateMinOrderAmount()
 	})
 }
 
@@ -924,24 +1044,59 @@ func (u *PromoCodeUpsertBulk) UpdateCode() *PromoCodeUpsertBulk {
 	})
 }
 
-// SetBonusAmount sets the "bonus_amount" field.
-func (u *PromoCodeUpsertBulk) SetBonusAmount(v float64) *PromoCodeUpsertBulk {
+// SetDiscountAmount sets the "discount_amount" field.
+func (u *PromoCodeUpsertBulk) SetDiscountAmount(v float64) *PromoCodeUpsertBulk {
 	return u.Update(func(s *PromoCodeUpsert) {
-		s.SetBonusAmount(v)
+		s.SetDiscountAmount(v)
 	})
 }
 
-// AddBonusAmount adds v to the "bonus_amount" field.
-func (u *PromoCodeUpsertBulk) AddBonusAmount(v float64) *PromoCodeUpsertBulk {
+// AddDiscountAmount adds v to the "discount_amount" field.
+func (u *PromoCodeUpsertBulk) AddDiscountAmount(v float64) *PromoCodeUpsertBulk {
 	return u.Update(func(s *PromoCodeUpsert) {
-		s.AddBonusAmount(v)
+		s.AddDiscountAmount(v)
 	})
 }
 
-// UpdateBonusAmount sets the "bonus_amount" field to the value that was provided on create.
-func (u *PromoCodeUpsertBulk) UpdateBonusAmount() *PromoCodeUpsertBulk {
+// UpdateDiscountAmount sets the "discount_amount" field to the value that was provided on create.
+func (u *PromoCodeUpsertBulk) UpdateDiscountAmount() *PromoCodeUpsertBulk {
 	return u.Update(func(s *PromoCodeUpsert) {
-		s.UpdateBonusAmount()
+		s.UpdateDiscountAmount()
+	})
+}
+
+// SetDiscountType sets the "discount_type" field.
+func (u *PromoCodeUpsertBulk) SetDiscountType(v string) *PromoCodeUpsertBulk {
+	return u.Update(func(s *PromoCodeUpsert) {
+		s.SetDiscountType(v)
+	})
+}
+
+// UpdateDiscountType sets the "discount_type" field to the value that was provided on create.
+func (u *PromoCodeUpsertBulk) UpdateDiscountType() *PromoCodeUpsertBulk {
+	return u.Update(func(s *PromoCodeUpsert) {
+		s.UpdateDiscountType()
+	})
+}
+
+// SetMinOrderAmount sets the "min_order_amount" field.
+func (u *PromoCodeUpsertBulk) SetMinOrderAmount(v int) *PromoCodeUpsertBulk {
+	return u.Update(func(s *PromoCodeUpsert) {
+		s.SetMinOrderAmount(v)
+	})
+}
+
+// AddMinOrderAmount adds v to the "min_order_amount" field.
+func (u *PromoCodeUpsertBulk) AddMinOrderAmount(v int) *PromoCodeUpsertBulk {
+	return u.Update(func(s *PromoCodeUpsert) {
+		s.AddMinOrderAmount(v)
+	})
+}
+
+// UpdateMinOrderAmount sets the "min_order_amount" field to the value that was provided on create.
+func (u *PromoCodeUpsertBulk) UpdateMinOrderAmount() *PromoCodeUpsertBulk {
+	return u.Update(func(s *PromoCodeUpsert) {
+		s.UpdateMinOrderAmount()
 	})
 }
 

@@ -10,10 +10,13 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/Wei-Shaw/sub2api/ent/account"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/orgproject"
+	"github.com/Wei-Shaw/sub2api/ent/orgsubscription"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
@@ -421,6 +424,59 @@ func (_u *GroupUpdate) SetNillableModelRoutingEnabled(v *bool) *GroupUpdate {
 	return _u
 }
 
+// SetPriceFen sets the "price_fen" field.
+func (_u *GroupUpdate) SetPriceFen(v int) *GroupUpdate {
+	_u.mutation.ResetPriceFen()
+	_u.mutation.SetPriceFen(v)
+	return _u
+}
+
+// SetNillablePriceFen sets the "price_fen" field if the given value is not nil.
+func (_u *GroupUpdate) SetNillablePriceFen(v *int) *GroupUpdate {
+	if v != nil {
+		_u.SetPriceFen(*v)
+	}
+	return _u
+}
+
+// AddPriceFen adds value to the "price_fen" field.
+func (_u *GroupUpdate) AddPriceFen(v int) *GroupUpdate {
+	_u.mutation.AddPriceFen(v)
+	return _u
+}
+
+// SetListed sets the "listed" field.
+func (_u *GroupUpdate) SetListed(v bool) *GroupUpdate {
+	_u.mutation.SetListed(v)
+	return _u
+}
+
+// SetNillableListed sets the "listed" field if the given value is not nil.
+func (_u *GroupUpdate) SetNillableListed(v *bool) *GroupUpdate {
+	if v != nil {
+		_u.SetListed(*v)
+	}
+	return _u
+}
+
+// SetPlanFeatures sets the "plan_features" field.
+func (_u *GroupUpdate) SetPlanFeatures(v []string) *GroupUpdate {
+	_u.mutation.SetPlanFeatures(v)
+	return _u
+}
+
+// AppendPlanFeatures appends value to the "plan_features" field.
+func (_u *GroupUpdate) AppendPlanFeatures(v []string) *GroupUpdate {
+	_u.mutation.AppendPlanFeatures(v)
+	return _u
+}
+
+// ClearPlanFeatures clears the value of the "plan_features" field.
+func (_u *GroupUpdate) ClearPlanFeatures() *GroupUpdate {
+	_u.mutation.ClearPlanFeatures()
+	return _u
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *GroupUpdate) AddAPIKeyIDs(ids ...int64) *GroupUpdate {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -464,6 +520,36 @@ func (_u *GroupUpdate) AddSubscriptions(v ...*UserSubscription) *GroupUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.AddSubscriptionIDs(ids...)
+}
+
+// AddOrgSubscriptionIDs adds the "org_subscriptions" edge to the OrgSubscription entity by IDs.
+func (_u *GroupUpdate) AddOrgSubscriptionIDs(ids ...int64) *GroupUpdate {
+	_u.mutation.AddOrgSubscriptionIDs(ids...)
+	return _u
+}
+
+// AddOrgSubscriptions adds the "org_subscriptions" edges to the OrgSubscription entity.
+func (_u *GroupUpdate) AddOrgSubscriptions(v ...*OrgSubscription) *GroupUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOrgSubscriptionIDs(ids...)
+}
+
+// AddOrgProjectIDs adds the "org_projects" edge to the OrgProject entity by IDs.
+func (_u *GroupUpdate) AddOrgProjectIDs(ids ...int64) *GroupUpdate {
+	_u.mutation.AddOrgProjectIDs(ids...)
+	return _u
+}
+
+// AddOrgProjects adds the "org_projects" edges to the OrgProject entity.
+func (_u *GroupUpdate) AddOrgProjects(v ...*OrgProject) *GroupUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOrgProjectIDs(ids...)
 }
 
 // AddUsageLogIDs adds the "usage_logs" edge to the UsageLog entity by IDs.
@@ -577,6 +663,48 @@ func (_u *GroupUpdate) RemoveSubscriptions(v ...*UserSubscription) *GroupUpdate 
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveSubscriptionIDs(ids...)
+}
+
+// ClearOrgSubscriptions clears all "org_subscriptions" edges to the OrgSubscription entity.
+func (_u *GroupUpdate) ClearOrgSubscriptions() *GroupUpdate {
+	_u.mutation.ClearOrgSubscriptions()
+	return _u
+}
+
+// RemoveOrgSubscriptionIDs removes the "org_subscriptions" edge to OrgSubscription entities by IDs.
+func (_u *GroupUpdate) RemoveOrgSubscriptionIDs(ids ...int64) *GroupUpdate {
+	_u.mutation.RemoveOrgSubscriptionIDs(ids...)
+	return _u
+}
+
+// RemoveOrgSubscriptions removes "org_subscriptions" edges to OrgSubscription entities.
+func (_u *GroupUpdate) RemoveOrgSubscriptions(v ...*OrgSubscription) *GroupUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOrgSubscriptionIDs(ids...)
+}
+
+// ClearOrgProjects clears all "org_projects" edges to the OrgProject entity.
+func (_u *GroupUpdate) ClearOrgProjects() *GroupUpdate {
+	_u.mutation.ClearOrgProjects()
+	return _u
+}
+
+// RemoveOrgProjectIDs removes the "org_projects" edge to OrgProject entities by IDs.
+func (_u *GroupUpdate) RemoveOrgProjectIDs(ids ...int64) *GroupUpdate {
+	_u.mutation.RemoveOrgProjectIDs(ids...)
+	return _u
+}
+
+// RemoveOrgProjects removes "org_projects" edges to OrgProject entities.
+func (_u *GroupUpdate) RemoveOrgProjects(v ...*OrgProject) *GroupUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOrgProjectIDs(ids...)
 }
 
 // ClearUsageLogs clears all "usage_logs" edges to the UsageLog entity.
@@ -838,6 +966,26 @@ func (_u *GroupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.ModelRoutingEnabled(); ok {
 		_spec.SetField(group.FieldModelRoutingEnabled, field.TypeBool, value)
 	}
+	if value, ok := _u.mutation.PriceFen(); ok {
+		_spec.SetField(group.FieldPriceFen, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedPriceFen(); ok {
+		_spec.AddField(group.FieldPriceFen, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.Listed(); ok {
+		_spec.SetField(group.FieldListed, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.PlanFeatures(); ok {
+		_spec.SetField(group.FieldPlanFeatures, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedPlanFeatures(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, group.FieldPlanFeatures, value)
+		})
+	}
+	if _u.mutation.PlanFeaturesCleared() {
+		_spec.ClearField(group.FieldPlanFeatures, field.TypeJSON)
+	}
 	if _u.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -966,6 +1114,96 @@ func (_u *GroupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OrgSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OrgSubscriptionsTable,
+			Columns: []string{group.OrgSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgsubscription.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOrgSubscriptionsIDs(); len(nodes) > 0 && !_u.mutation.OrgSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OrgSubscriptionsTable,
+			Columns: []string{group.OrgSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgsubscription.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OrgSubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OrgSubscriptionsTable,
+			Columns: []string{group.OrgSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgsubscription.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OrgProjectsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OrgProjectsTable,
+			Columns: []string{group.OrgProjectsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgproject.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOrgProjectsIDs(); len(nodes) > 0 && !_u.mutation.OrgProjectsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OrgProjectsTable,
+			Columns: []string{group.OrgProjectsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgproject.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OrgProjectsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OrgProjectsTable,
+			Columns: []string{group.OrgProjectsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgproject.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -1539,6 +1777,59 @@ func (_u *GroupUpdateOne) SetNillableModelRoutingEnabled(v *bool) *GroupUpdateOn
 	return _u
 }
 
+// SetPriceFen sets the "price_fen" field.
+func (_u *GroupUpdateOne) SetPriceFen(v int) *GroupUpdateOne {
+	_u.mutation.ResetPriceFen()
+	_u.mutation.SetPriceFen(v)
+	return _u
+}
+
+// SetNillablePriceFen sets the "price_fen" field if the given value is not nil.
+func (_u *GroupUpdateOne) SetNillablePriceFen(v *int) *GroupUpdateOne {
+	if v != nil {
+		_u.SetPriceFen(*v)
+	}
+	return _u
+}
+
+// AddPriceFen adds value to the "price_fen" field.
+func (_u *GroupUpdateOne) AddPriceFen(v int) *GroupUpdateOne {
+	_u.mutation.AddPriceFen(v)
+	return _u
+}
+
+// SetListed sets the "listed" field.
+func (_u *GroupUpdateOne) SetListed(v bool) *GroupUpdateOne {
+	_u.mutation.SetListed(v)
+	return _u
+}
+
+// SetNillableListed sets the "listed" field if the given value is not nil.
+func (_u *GroupUpdateOne) SetNillableListed(v *bool) *GroupUpdateOne {
+	if v != nil {
+		_u.SetListed(*v)
+	}
+	return _u
+}
+
+// SetPlanFeatures sets the "plan_features" field.
+func (_u *GroupUpdateOne) SetPlanFeatures(v []string) *GroupUpdateOne {
+	_u.mutation.SetPlanFeatures(v)
+	return _u
+}
+
+// AppendPlanFeatures appends value to the "plan_features" field.
+func (_u *GroupUpdateOne) AppendPlanFeatures(v []string) *GroupUpdateOne {
+	_u.mutation.AppendPlanFeatures(v)
+	return _u
+}
+
+// ClearPlanFeatures clears the value of the "plan_features" field.
+func (_u *GroupUpdateOne) ClearPlanFeatures() *GroupUpdateOne {
+	_u.mutation.ClearPlanFeatures()
+	return _u
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *GroupUpdateOne) AddAPIKeyIDs(ids ...int64) *GroupUpdateOne {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -1582,6 +1873,36 @@ func (_u *GroupUpdateOne) AddSubscriptions(v ...*UserSubscription) *GroupUpdateO
 		ids[i] = v[i].ID
 	}
 	return _u.AddSubscriptionIDs(ids...)
+}
+
+// AddOrgSubscriptionIDs adds the "org_subscriptions" edge to the OrgSubscription entity by IDs.
+func (_u *GroupUpdateOne) AddOrgSubscriptionIDs(ids ...int64) *GroupUpdateOne {
+	_u.mutation.AddOrgSubscriptionIDs(ids...)
+	return _u
+}
+
+// AddOrgSubscriptions adds the "org_subscriptions" edges to the OrgSubscription entity.
+func (_u *GroupUpdateOne) AddOrgSubscriptions(v ...*OrgSubscription) *GroupUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOrgSubscriptionIDs(ids...)
+}
+
+// AddOrgProjectIDs adds the "org_projects" edge to the OrgProject entity by IDs.
+func (_u *GroupUpdateOne) AddOrgProjectIDs(ids ...int64) *GroupUpdateOne {
+	_u.mutation.AddOrgProjectIDs(ids...)
+	return _u
+}
+
+// AddOrgProjects adds the "org_projects" edges to the OrgProject entity.
+func (_u *GroupUpdateOne) AddOrgProjects(v ...*OrgProject) *GroupUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOrgProjectIDs(ids...)
 }
 
 // AddUsageLogIDs adds the "usage_logs" edge to the UsageLog entity by IDs.
@@ -1695,6 +2016,48 @@ func (_u *GroupUpdateOne) RemoveSubscriptions(v ...*UserSubscription) *GroupUpda
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveSubscriptionIDs(ids...)
+}
+
+// ClearOrgSubscriptions clears all "org_subscriptions" edges to the OrgSubscription entity.
+func (_u *GroupUpdateOne) ClearOrgSubscriptions() *GroupUpdateOne {
+	_u.mutation.ClearOrgSubscriptions()
+	return _u
+}
+
+// RemoveOrgSubscriptionIDs removes the "org_subscriptions" edge to OrgSubscription entities by IDs.
+func (_u *GroupUpdateOne) RemoveOrgSubscriptionIDs(ids ...int64) *GroupUpdateOne {
+	_u.mutation.RemoveOrgSubscriptionIDs(ids...)
+	return _u
+}
+
+// RemoveOrgSubscriptions removes "org_subscriptions" edges to OrgSubscription entities.
+func (_u *GroupUpdateOne) RemoveOrgSubscriptions(v ...*OrgSubscription) *GroupUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOrgSubscriptionIDs(ids...)
+}
+
+// ClearOrgProjects clears all "org_projects" edges to the OrgProject entity.
+func (_u *GroupUpdateOne) ClearOrgProjects() *GroupUpdateOne {
+	_u.mutation.ClearOrgProjects()
+	return _u
+}
+
+// RemoveOrgProjectIDs removes the "org_projects" edge to OrgProject entities by IDs.
+func (_u *GroupUpdateOne) RemoveOrgProjectIDs(ids ...int64) *GroupUpdateOne {
+	_u.mutation.RemoveOrgProjectIDs(ids...)
+	return _u
+}
+
+// RemoveOrgProjects removes "org_projects" edges to OrgProject entities.
+func (_u *GroupUpdateOne) RemoveOrgProjects(v ...*OrgProject) *GroupUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOrgProjectIDs(ids...)
 }
 
 // ClearUsageLogs clears all "usage_logs" edges to the UsageLog entity.
@@ -1986,6 +2349,26 @@ func (_u *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error)
 	if value, ok := _u.mutation.ModelRoutingEnabled(); ok {
 		_spec.SetField(group.FieldModelRoutingEnabled, field.TypeBool, value)
 	}
+	if value, ok := _u.mutation.PriceFen(); ok {
+		_spec.SetField(group.FieldPriceFen, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedPriceFen(); ok {
+		_spec.AddField(group.FieldPriceFen, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.Listed(); ok {
+		_spec.SetField(group.FieldListed, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.PlanFeatures(); ok {
+		_spec.SetField(group.FieldPlanFeatures, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedPlanFeatures(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, group.FieldPlanFeatures, value)
+		})
+	}
+	if _u.mutation.PlanFeaturesCleared() {
+		_spec.ClearField(group.FieldPlanFeatures, field.TypeJSON)
+	}
 	if _u.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -2114,6 +2497,96 @@ func (_u *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error)
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OrgSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OrgSubscriptionsTable,
+			Columns: []string{group.OrgSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgsubscription.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOrgSubscriptionsIDs(); len(nodes) > 0 && !_u.mutation.OrgSubscriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OrgSubscriptionsTable,
+			Columns: []string{group.OrgSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgsubscription.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OrgSubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OrgSubscriptionsTable,
+			Columns: []string{group.OrgSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgsubscription.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OrgProjectsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OrgProjectsTable,
+			Columns: []string{group.OrgProjectsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgproject.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOrgProjectsIDs(); len(nodes) > 0 && !_u.mutation.OrgProjectsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OrgProjectsTable,
+			Columns: []string{group.OrgProjectsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgproject.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OrgProjectsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OrgProjectsTable,
+			Columns: []string{group.OrgProjectsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgproject.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

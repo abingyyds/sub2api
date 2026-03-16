@@ -14,6 +14,8 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/organization"
+	"github.com/Wei-Shaw/sub2api/ent/orgproject"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
@@ -170,6 +172,46 @@ func (_u *APIKeyUpdate) ClearIPBlacklist() *APIKeyUpdate {
 	return _u
 }
 
+// SetOrgID sets the "org_id" field.
+func (_u *APIKeyUpdate) SetOrgID(v int64) *APIKeyUpdate {
+	_u.mutation.SetOrgID(v)
+	return _u
+}
+
+// SetNillableOrgID sets the "org_id" field if the given value is not nil.
+func (_u *APIKeyUpdate) SetNillableOrgID(v *int64) *APIKeyUpdate {
+	if v != nil {
+		_u.SetOrgID(*v)
+	}
+	return _u
+}
+
+// ClearOrgID clears the value of the "org_id" field.
+func (_u *APIKeyUpdate) ClearOrgID() *APIKeyUpdate {
+	_u.mutation.ClearOrgID()
+	return _u
+}
+
+// SetOrgProjectID sets the "org_project_id" field.
+func (_u *APIKeyUpdate) SetOrgProjectID(v int64) *APIKeyUpdate {
+	_u.mutation.SetOrgProjectID(v)
+	return _u
+}
+
+// SetNillableOrgProjectID sets the "org_project_id" field if the given value is not nil.
+func (_u *APIKeyUpdate) SetNillableOrgProjectID(v *int64) *APIKeyUpdate {
+	if v != nil {
+		_u.SetOrgProjectID(*v)
+	}
+	return _u
+}
+
+// ClearOrgProjectID clears the value of the "org_project_id" field.
+func (_u *APIKeyUpdate) ClearOrgProjectID() *APIKeyUpdate {
+	_u.mutation.ClearOrgProjectID()
+	return _u
+}
+
 // SetUser sets the "user" edge to the User entity.
 func (_u *APIKeyUpdate) SetUser(v *User) *APIKeyUpdate {
 	return _u.SetUserID(v.ID)
@@ -178,6 +220,30 @@ func (_u *APIKeyUpdate) SetUser(v *User) *APIKeyUpdate {
 // SetGroup sets the "group" edge to the Group entity.
 func (_u *APIKeyUpdate) SetGroup(v *Group) *APIKeyUpdate {
 	return _u.SetGroupID(v.ID)
+}
+
+// SetOrganizationID sets the "organization" edge to the Organization entity by ID.
+func (_u *APIKeyUpdate) SetOrganizationID(id int64) *APIKeyUpdate {
+	_u.mutation.SetOrganizationID(id)
+	return _u
+}
+
+// SetNillableOrganizationID sets the "organization" edge to the Organization entity by ID if the given value is not nil.
+func (_u *APIKeyUpdate) SetNillableOrganizationID(id *int64) *APIKeyUpdate {
+	if id != nil {
+		_u = _u.SetOrganizationID(*id)
+	}
+	return _u
+}
+
+// SetOrganization sets the "organization" edge to the Organization entity.
+func (_u *APIKeyUpdate) SetOrganization(v *Organization) *APIKeyUpdate {
+	return _u.SetOrganizationID(v.ID)
+}
+
+// SetOrgProject sets the "org_project" edge to the OrgProject entity.
+func (_u *APIKeyUpdate) SetOrgProject(v *OrgProject) *APIKeyUpdate {
+	return _u.SetOrgProjectID(v.ID)
 }
 
 // AddUsageLogIDs adds the "usage_logs" edge to the UsageLog entity by IDs.
@@ -209,6 +275,18 @@ func (_u *APIKeyUpdate) ClearUser() *APIKeyUpdate {
 // ClearGroup clears the "group" edge to the Group entity.
 func (_u *APIKeyUpdate) ClearGroup() *APIKeyUpdate {
 	_u.mutation.ClearGroup()
+	return _u
+}
+
+// ClearOrganization clears the "organization" edge to the Organization entity.
+func (_u *APIKeyUpdate) ClearOrganization() *APIKeyUpdate {
+	_u.mutation.ClearOrganization()
+	return _u
+}
+
+// ClearOrgProject clears the "org_project" edge to the OrgProject entity.
+func (_u *APIKeyUpdate) ClearOrgProject() *APIKeyUpdate {
+	_u.mutation.ClearOrgProject()
 	return _u
 }
 
@@ -401,6 +479,64 @@ func (_u *APIKeyUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OrganizationCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   apikey.OrganizationTable,
+			Columns: []string{apikey.OrganizationColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OrganizationIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   apikey.OrganizationTable,
+			Columns: []string{apikey.OrganizationColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OrgProjectCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   apikey.OrgProjectTable,
+			Columns: []string{apikey.OrgProjectColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgproject.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OrgProjectIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   apikey.OrgProjectTable,
+			Columns: []string{apikey.OrgProjectColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgproject.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -611,6 +747,46 @@ func (_u *APIKeyUpdateOne) ClearIPBlacklist() *APIKeyUpdateOne {
 	return _u
 }
 
+// SetOrgID sets the "org_id" field.
+func (_u *APIKeyUpdateOne) SetOrgID(v int64) *APIKeyUpdateOne {
+	_u.mutation.SetOrgID(v)
+	return _u
+}
+
+// SetNillableOrgID sets the "org_id" field if the given value is not nil.
+func (_u *APIKeyUpdateOne) SetNillableOrgID(v *int64) *APIKeyUpdateOne {
+	if v != nil {
+		_u.SetOrgID(*v)
+	}
+	return _u
+}
+
+// ClearOrgID clears the value of the "org_id" field.
+func (_u *APIKeyUpdateOne) ClearOrgID() *APIKeyUpdateOne {
+	_u.mutation.ClearOrgID()
+	return _u
+}
+
+// SetOrgProjectID sets the "org_project_id" field.
+func (_u *APIKeyUpdateOne) SetOrgProjectID(v int64) *APIKeyUpdateOne {
+	_u.mutation.SetOrgProjectID(v)
+	return _u
+}
+
+// SetNillableOrgProjectID sets the "org_project_id" field if the given value is not nil.
+func (_u *APIKeyUpdateOne) SetNillableOrgProjectID(v *int64) *APIKeyUpdateOne {
+	if v != nil {
+		_u.SetOrgProjectID(*v)
+	}
+	return _u
+}
+
+// ClearOrgProjectID clears the value of the "org_project_id" field.
+func (_u *APIKeyUpdateOne) ClearOrgProjectID() *APIKeyUpdateOne {
+	_u.mutation.ClearOrgProjectID()
+	return _u
+}
+
 // SetUser sets the "user" edge to the User entity.
 func (_u *APIKeyUpdateOne) SetUser(v *User) *APIKeyUpdateOne {
 	return _u.SetUserID(v.ID)
@@ -619,6 +795,30 @@ func (_u *APIKeyUpdateOne) SetUser(v *User) *APIKeyUpdateOne {
 // SetGroup sets the "group" edge to the Group entity.
 func (_u *APIKeyUpdateOne) SetGroup(v *Group) *APIKeyUpdateOne {
 	return _u.SetGroupID(v.ID)
+}
+
+// SetOrganizationID sets the "organization" edge to the Organization entity by ID.
+func (_u *APIKeyUpdateOne) SetOrganizationID(id int64) *APIKeyUpdateOne {
+	_u.mutation.SetOrganizationID(id)
+	return _u
+}
+
+// SetNillableOrganizationID sets the "organization" edge to the Organization entity by ID if the given value is not nil.
+func (_u *APIKeyUpdateOne) SetNillableOrganizationID(id *int64) *APIKeyUpdateOne {
+	if id != nil {
+		_u = _u.SetOrganizationID(*id)
+	}
+	return _u
+}
+
+// SetOrganization sets the "organization" edge to the Organization entity.
+func (_u *APIKeyUpdateOne) SetOrganization(v *Organization) *APIKeyUpdateOne {
+	return _u.SetOrganizationID(v.ID)
+}
+
+// SetOrgProject sets the "org_project" edge to the OrgProject entity.
+func (_u *APIKeyUpdateOne) SetOrgProject(v *OrgProject) *APIKeyUpdateOne {
+	return _u.SetOrgProjectID(v.ID)
 }
 
 // AddUsageLogIDs adds the "usage_logs" edge to the UsageLog entity by IDs.
@@ -650,6 +850,18 @@ func (_u *APIKeyUpdateOne) ClearUser() *APIKeyUpdateOne {
 // ClearGroup clears the "group" edge to the Group entity.
 func (_u *APIKeyUpdateOne) ClearGroup() *APIKeyUpdateOne {
 	_u.mutation.ClearGroup()
+	return _u
+}
+
+// ClearOrganization clears the "organization" edge to the Organization entity.
+func (_u *APIKeyUpdateOne) ClearOrganization() *APIKeyUpdateOne {
+	_u.mutation.ClearOrganization()
+	return _u
+}
+
+// ClearOrgProject clears the "org_project" edge to the OrgProject entity.
+func (_u *APIKeyUpdateOne) ClearOrgProject() *APIKeyUpdateOne {
+	_u.mutation.ClearOrgProject()
 	return _u
 }
 
@@ -872,6 +1084,64 @@ func (_u *APIKeyUpdateOne) sqlSave(ctx context.Context) (_node *APIKey, err erro
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OrganizationCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   apikey.OrganizationTable,
+			Columns: []string{apikey.OrganizationColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OrganizationIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   apikey.OrganizationTable,
+			Columns: []string{apikey.OrganizationColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OrgProjectCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   apikey.OrgProjectTable,
+			Columns: []string{apikey.OrgProjectColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgproject.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OrgProjectIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   apikey.OrgProjectTable,
+			Columns: []string{apikey.OrgProjectColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgproject.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

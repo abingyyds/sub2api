@@ -65,9 +65,14 @@ func UserID(v int64) predicate.PromoCodeUsage {
 	return predicate.PromoCodeUsage(sql.FieldEQ(FieldUserID, v))
 }
 
-// BonusAmount applies equality check predicate on the "bonus_amount" field. It's identical to BonusAmountEQ.
-func BonusAmount(v float64) predicate.PromoCodeUsage {
-	return predicate.PromoCodeUsage(sql.FieldEQ(FieldBonusAmount, v))
+// DiscountAmount applies equality check predicate on the "discount_amount" field. It's identical to DiscountAmountEQ.
+func DiscountAmount(v float64) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldEQ(FieldDiscountAmount, v))
+}
+
+// OrderNo applies equality check predicate on the "order_no" field. It's identical to OrderNoEQ.
+func OrderNo(v string) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldEQ(FieldOrderNo, v))
 }
 
 // UsedAt applies equality check predicate on the "used_at" field. It's identical to UsedAtEQ.
@@ -115,44 +120,119 @@ func UserIDNotIn(vs ...int64) predicate.PromoCodeUsage {
 	return predicate.PromoCodeUsage(sql.FieldNotIn(FieldUserID, vs...))
 }
 
-// BonusAmountEQ applies the EQ predicate on the "bonus_amount" field.
-func BonusAmountEQ(v float64) predicate.PromoCodeUsage {
-	return predicate.PromoCodeUsage(sql.FieldEQ(FieldBonusAmount, v))
+// DiscountAmountEQ applies the EQ predicate on the "discount_amount" field.
+func DiscountAmountEQ(v float64) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldEQ(FieldDiscountAmount, v))
 }
 
-// BonusAmountNEQ applies the NEQ predicate on the "bonus_amount" field.
-func BonusAmountNEQ(v float64) predicate.PromoCodeUsage {
-	return predicate.PromoCodeUsage(sql.FieldNEQ(FieldBonusAmount, v))
+// DiscountAmountNEQ applies the NEQ predicate on the "discount_amount" field.
+func DiscountAmountNEQ(v float64) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldNEQ(FieldDiscountAmount, v))
 }
 
-// BonusAmountIn applies the In predicate on the "bonus_amount" field.
-func BonusAmountIn(vs ...float64) predicate.PromoCodeUsage {
-	return predicate.PromoCodeUsage(sql.FieldIn(FieldBonusAmount, vs...))
+// DiscountAmountIn applies the In predicate on the "discount_amount" field.
+func DiscountAmountIn(vs ...float64) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldIn(FieldDiscountAmount, vs...))
 }
 
-// BonusAmountNotIn applies the NotIn predicate on the "bonus_amount" field.
-func BonusAmountNotIn(vs ...float64) predicate.PromoCodeUsage {
-	return predicate.PromoCodeUsage(sql.FieldNotIn(FieldBonusAmount, vs...))
+// DiscountAmountNotIn applies the NotIn predicate on the "discount_amount" field.
+func DiscountAmountNotIn(vs ...float64) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldNotIn(FieldDiscountAmount, vs...))
 }
 
-// BonusAmountGT applies the GT predicate on the "bonus_amount" field.
-func BonusAmountGT(v float64) predicate.PromoCodeUsage {
-	return predicate.PromoCodeUsage(sql.FieldGT(FieldBonusAmount, v))
+// DiscountAmountGT applies the GT predicate on the "discount_amount" field.
+func DiscountAmountGT(v float64) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldGT(FieldDiscountAmount, v))
 }
 
-// BonusAmountGTE applies the GTE predicate on the "bonus_amount" field.
-func BonusAmountGTE(v float64) predicate.PromoCodeUsage {
-	return predicate.PromoCodeUsage(sql.FieldGTE(FieldBonusAmount, v))
+// DiscountAmountGTE applies the GTE predicate on the "discount_amount" field.
+func DiscountAmountGTE(v float64) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldGTE(FieldDiscountAmount, v))
 }
 
-// BonusAmountLT applies the LT predicate on the "bonus_amount" field.
-func BonusAmountLT(v float64) predicate.PromoCodeUsage {
-	return predicate.PromoCodeUsage(sql.FieldLT(FieldBonusAmount, v))
+// DiscountAmountLT applies the LT predicate on the "discount_amount" field.
+func DiscountAmountLT(v float64) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldLT(FieldDiscountAmount, v))
 }
 
-// BonusAmountLTE applies the LTE predicate on the "bonus_amount" field.
-func BonusAmountLTE(v float64) predicate.PromoCodeUsage {
-	return predicate.PromoCodeUsage(sql.FieldLTE(FieldBonusAmount, v))
+// DiscountAmountLTE applies the LTE predicate on the "discount_amount" field.
+func DiscountAmountLTE(v float64) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldLTE(FieldDiscountAmount, v))
+}
+
+// OrderNoEQ applies the EQ predicate on the "order_no" field.
+func OrderNoEQ(v string) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldEQ(FieldOrderNo, v))
+}
+
+// OrderNoNEQ applies the NEQ predicate on the "order_no" field.
+func OrderNoNEQ(v string) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldNEQ(FieldOrderNo, v))
+}
+
+// OrderNoIn applies the In predicate on the "order_no" field.
+func OrderNoIn(vs ...string) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldIn(FieldOrderNo, vs...))
+}
+
+// OrderNoNotIn applies the NotIn predicate on the "order_no" field.
+func OrderNoNotIn(vs ...string) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldNotIn(FieldOrderNo, vs...))
+}
+
+// OrderNoGT applies the GT predicate on the "order_no" field.
+func OrderNoGT(v string) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldGT(FieldOrderNo, v))
+}
+
+// OrderNoGTE applies the GTE predicate on the "order_no" field.
+func OrderNoGTE(v string) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldGTE(FieldOrderNo, v))
+}
+
+// OrderNoLT applies the LT predicate on the "order_no" field.
+func OrderNoLT(v string) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldLT(FieldOrderNo, v))
+}
+
+// OrderNoLTE applies the LTE predicate on the "order_no" field.
+func OrderNoLTE(v string) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldLTE(FieldOrderNo, v))
+}
+
+// OrderNoContains applies the Contains predicate on the "order_no" field.
+func OrderNoContains(v string) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldContains(FieldOrderNo, v))
+}
+
+// OrderNoHasPrefix applies the HasPrefix predicate on the "order_no" field.
+func OrderNoHasPrefix(v string) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldHasPrefix(FieldOrderNo, v))
+}
+
+// OrderNoHasSuffix applies the HasSuffix predicate on the "order_no" field.
+func OrderNoHasSuffix(v string) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldHasSuffix(FieldOrderNo, v))
+}
+
+// OrderNoIsNil applies the IsNil predicate on the "order_no" field.
+func OrderNoIsNil() predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldIsNull(FieldOrderNo))
+}
+
+// OrderNoNotNil applies the NotNil predicate on the "order_no" field.
+func OrderNoNotNil() predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldNotNull(FieldOrderNo))
+}
+
+// OrderNoEqualFold applies the EqualFold predicate on the "order_no" field.
+func OrderNoEqualFold(v string) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldEqualFold(FieldOrderNo, v))
+}
+
+// OrderNoContainsFold applies the ContainsFold predicate on the "order_no" field.
+func OrderNoContainsFold(v string) predicate.PromoCodeUsage {
+	return predicate.PromoCodeUsage(sql.FieldContainsFold(FieldOrderNo, v))
 }
 
 // UsedAtEQ applies the EQ predicate on the "used_at" field.

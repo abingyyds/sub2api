@@ -18,8 +18,10 @@ const (
 	FieldPromoCodeID = "promo_code_id"
 	// FieldUserID holds the string denoting the user_id field in the database.
 	FieldUserID = "user_id"
-	// FieldBonusAmount holds the string denoting the bonus_amount field in the database.
-	FieldBonusAmount = "bonus_amount"
+	// FieldDiscountAmount holds the string denoting the discount_amount field in the database.
+	FieldDiscountAmount = "discount_amount"
+	// FieldOrderNo holds the string denoting the order_no field in the database.
+	FieldOrderNo = "order_no"
 	// FieldUsedAt holds the string denoting the used_at field in the database.
 	FieldUsedAt = "used_at"
 	// EdgePromoCode holds the string denoting the promo_code edge name in mutations.
@@ -49,7 +51,8 @@ var Columns = []string{
 	FieldID,
 	FieldPromoCodeID,
 	FieldUserID,
-	FieldBonusAmount,
+	FieldDiscountAmount,
+	FieldOrderNo,
 	FieldUsedAt,
 }
 
@@ -64,6 +67,10 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultOrderNo holds the default value on creation for the "order_no" field.
+	DefaultOrderNo string
+	// OrderNoValidator is a validator for the "order_no" field. It is called by the builders before save.
+	OrderNoValidator func(string) error
 	// DefaultUsedAt holds the default value on creation for the "used_at" field.
 	DefaultUsedAt func() time.Time
 )
@@ -86,9 +93,14 @@ func ByUserID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUserID, opts...).ToFunc()
 }
 
-// ByBonusAmount orders the results by the bonus_amount field.
-func ByBonusAmount(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldBonusAmount, opts...).ToFunc()
+// ByDiscountAmount orders the results by the discount_amount field.
+func ByDiscountAmount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDiscountAmount, opts...).ToFunc()
+}
+
+// ByOrderNo orders the results by the order_no field.
+func ByOrderNo(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOrderNo, opts...).ToFunc()
 }
 
 // ByUsedAt orders the results by the used_at field.

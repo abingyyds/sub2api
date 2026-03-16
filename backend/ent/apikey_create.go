@@ -13,6 +13,8 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/organization"
+	"github.com/Wei-Shaw/sub2api/ent/orgproject"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 )
@@ -125,6 +127,34 @@ func (_c *APIKeyCreate) SetIPBlacklist(v []string) *APIKeyCreate {
 	return _c
 }
 
+// SetOrgID sets the "org_id" field.
+func (_c *APIKeyCreate) SetOrgID(v int64) *APIKeyCreate {
+	_c.mutation.SetOrgID(v)
+	return _c
+}
+
+// SetNillableOrgID sets the "org_id" field if the given value is not nil.
+func (_c *APIKeyCreate) SetNillableOrgID(v *int64) *APIKeyCreate {
+	if v != nil {
+		_c.SetOrgID(*v)
+	}
+	return _c
+}
+
+// SetOrgProjectID sets the "org_project_id" field.
+func (_c *APIKeyCreate) SetOrgProjectID(v int64) *APIKeyCreate {
+	_c.mutation.SetOrgProjectID(v)
+	return _c
+}
+
+// SetNillableOrgProjectID sets the "org_project_id" field if the given value is not nil.
+func (_c *APIKeyCreate) SetNillableOrgProjectID(v *int64) *APIKeyCreate {
+	if v != nil {
+		_c.SetOrgProjectID(*v)
+	}
+	return _c
+}
+
 // SetUser sets the "user" edge to the User entity.
 func (_c *APIKeyCreate) SetUser(v *User) *APIKeyCreate {
 	return _c.SetUserID(v.ID)
@@ -133,6 +163,30 @@ func (_c *APIKeyCreate) SetUser(v *User) *APIKeyCreate {
 // SetGroup sets the "group" edge to the Group entity.
 func (_c *APIKeyCreate) SetGroup(v *Group) *APIKeyCreate {
 	return _c.SetGroupID(v.ID)
+}
+
+// SetOrganizationID sets the "organization" edge to the Organization entity by ID.
+func (_c *APIKeyCreate) SetOrganizationID(id int64) *APIKeyCreate {
+	_c.mutation.SetOrganizationID(id)
+	return _c
+}
+
+// SetNillableOrganizationID sets the "organization" edge to the Organization entity by ID if the given value is not nil.
+func (_c *APIKeyCreate) SetNillableOrganizationID(id *int64) *APIKeyCreate {
+	if id != nil {
+		_c = _c.SetOrganizationID(*id)
+	}
+	return _c
+}
+
+// SetOrganization sets the "organization" edge to the Organization entity.
+func (_c *APIKeyCreate) SetOrganization(v *Organization) *APIKeyCreate {
+	return _c.SetOrganizationID(v.ID)
+}
+
+// SetOrgProject sets the "org_project" edge to the OrgProject entity.
+func (_c *APIKeyCreate) SetOrgProject(v *OrgProject) *APIKeyCreate {
+	return _c.SetOrgProjectID(v.ID)
 }
 
 // AddUsageLogIDs adds the "usage_logs" edge to the UsageLog entity by IDs.
@@ -339,6 +393,40 @@ func (_c *APIKeyCreate) createSpec() (*APIKey, *sqlgraph.CreateSpec) {
 		_node.GroupID = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := _c.mutation.OrganizationIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   apikey.OrganizationTable,
+			Columns: []string{apikey.OrganizationColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.OrgID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.OrgProjectIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   apikey.OrgProjectTable,
+			Columns: []string{apikey.OrgProjectColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgproject.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.OrgProjectID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	if nodes := _c.mutation.UsageLogsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -539,6 +627,42 @@ func (u *APIKeyUpsert) ClearIPBlacklist() *APIKeyUpsert {
 	return u
 }
 
+// SetOrgID sets the "org_id" field.
+func (u *APIKeyUpsert) SetOrgID(v int64) *APIKeyUpsert {
+	u.Set(apikey.FieldOrgID, v)
+	return u
+}
+
+// UpdateOrgID sets the "org_id" field to the value that was provided on create.
+func (u *APIKeyUpsert) UpdateOrgID() *APIKeyUpsert {
+	u.SetExcluded(apikey.FieldOrgID)
+	return u
+}
+
+// ClearOrgID clears the value of the "org_id" field.
+func (u *APIKeyUpsert) ClearOrgID() *APIKeyUpsert {
+	u.SetNull(apikey.FieldOrgID)
+	return u
+}
+
+// SetOrgProjectID sets the "org_project_id" field.
+func (u *APIKeyUpsert) SetOrgProjectID(v int64) *APIKeyUpsert {
+	u.Set(apikey.FieldOrgProjectID, v)
+	return u
+}
+
+// UpdateOrgProjectID sets the "org_project_id" field to the value that was provided on create.
+func (u *APIKeyUpsert) UpdateOrgProjectID() *APIKeyUpsert {
+	u.SetExcluded(apikey.FieldOrgProjectID)
+	return u
+}
+
+// ClearOrgProjectID clears the value of the "org_project_id" field.
+func (u *APIKeyUpsert) ClearOrgProjectID() *APIKeyUpsert {
+	u.SetNull(apikey.FieldOrgProjectID)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -735,6 +859,48 @@ func (u *APIKeyUpsertOne) UpdateIPBlacklist() *APIKeyUpsertOne {
 func (u *APIKeyUpsertOne) ClearIPBlacklist() *APIKeyUpsertOne {
 	return u.Update(func(s *APIKeyUpsert) {
 		s.ClearIPBlacklist()
+	})
+}
+
+// SetOrgID sets the "org_id" field.
+func (u *APIKeyUpsertOne) SetOrgID(v int64) *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.SetOrgID(v)
+	})
+}
+
+// UpdateOrgID sets the "org_id" field to the value that was provided on create.
+func (u *APIKeyUpsertOne) UpdateOrgID() *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.UpdateOrgID()
+	})
+}
+
+// ClearOrgID clears the value of the "org_id" field.
+func (u *APIKeyUpsertOne) ClearOrgID() *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.ClearOrgID()
+	})
+}
+
+// SetOrgProjectID sets the "org_project_id" field.
+func (u *APIKeyUpsertOne) SetOrgProjectID(v int64) *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.SetOrgProjectID(v)
+	})
+}
+
+// UpdateOrgProjectID sets the "org_project_id" field to the value that was provided on create.
+func (u *APIKeyUpsertOne) UpdateOrgProjectID() *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.UpdateOrgProjectID()
+	})
+}
+
+// ClearOrgProjectID clears the value of the "org_project_id" field.
+func (u *APIKeyUpsertOne) ClearOrgProjectID() *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.ClearOrgProjectID()
 	})
 }
 
@@ -1100,6 +1266,48 @@ func (u *APIKeyUpsertBulk) UpdateIPBlacklist() *APIKeyUpsertBulk {
 func (u *APIKeyUpsertBulk) ClearIPBlacklist() *APIKeyUpsertBulk {
 	return u.Update(func(s *APIKeyUpsert) {
 		s.ClearIPBlacklist()
+	})
+}
+
+// SetOrgID sets the "org_id" field.
+func (u *APIKeyUpsertBulk) SetOrgID(v int64) *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.SetOrgID(v)
+	})
+}
+
+// UpdateOrgID sets the "org_id" field to the value that was provided on create.
+func (u *APIKeyUpsertBulk) UpdateOrgID() *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.UpdateOrgID()
+	})
+}
+
+// ClearOrgID clears the value of the "org_id" field.
+func (u *APIKeyUpsertBulk) ClearOrgID() *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.ClearOrgID()
+	})
+}
+
+// SetOrgProjectID sets the "org_project_id" field.
+func (u *APIKeyUpsertBulk) SetOrgProjectID(v int64) *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.SetOrgProjectID(v)
+	})
+}
+
+// UpdateOrgProjectID sets the "org_project_id" field to the value that was provided on create.
+func (u *APIKeyUpsertBulk) UpdateOrgProjectID() *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.UpdateOrgProjectID()
+	})
+}
+
+// ClearOrgProjectID clears the value of the "org_project_id" field.
+func (u *APIKeyUpsertBulk) ClearOrgProjectID() *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.ClearOrgProjectID()
 	})
 }
 

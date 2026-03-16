@@ -20,8 +20,22 @@ type Tx struct {
 	Account *AccountClient
 	// AccountGroup is the client for interacting with the AccountGroup builders.
 	AccountGroup *AccountGroupClient
+	// AdminInviteCode is the client for interacting with the AdminInviteCode builders.
+	AdminInviteCode *AdminInviteCodeClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
+	// OrgAuditLog is the client for interacting with the OrgAuditLog builders.
+	OrgAuditLog *OrgAuditLogClient
+	// OrgMember is the client for interacting with the OrgMember builders.
+	OrgMember *OrgMemberClient
+	// OrgProject is the client for interacting with the OrgProject builders.
+	OrgProject *OrgProjectClient
+	// OrgSubscription is the client for interacting with the OrgSubscription builders.
+	OrgSubscription *OrgSubscriptionClient
+	// Organization is the client for interacting with the Organization builders.
+	Organization *OrganizationClient
+	// PaymentOrder is the client for interacting with the PaymentOrder builders.
+	PaymentOrder *PaymentOrderClient
 	// PromoCode is the client for interacting with the PromoCode builders.
 	PromoCode *PromoCodeClient
 	// PromoCodeUsage is the client for interacting with the PromoCodeUsage builders.
@@ -30,6 +44,8 @@ type Tx struct {
 	Proxy *ProxyClient
 	// RedeemCode is the client for interacting with the RedeemCode builders.
 	RedeemCode *RedeemCodeClient
+	// Referral is the client for interacting with the Referral builders.
+	Referral *ReferralClient
 	// Setting is the client for interacting with the Setting builders.
 	Setting *SettingClient
 	// UsageCleanupTask is the client for interacting with the UsageCleanupTask builders.
@@ -180,11 +196,19 @@ func (tx *Tx) init() {
 	tx.APIKey = NewAPIKeyClient(tx.config)
 	tx.Account = NewAccountClient(tx.config)
 	tx.AccountGroup = NewAccountGroupClient(tx.config)
+	tx.AdminInviteCode = NewAdminInviteCodeClient(tx.config)
 	tx.Group = NewGroupClient(tx.config)
+	tx.OrgAuditLog = NewOrgAuditLogClient(tx.config)
+	tx.OrgMember = NewOrgMemberClient(tx.config)
+	tx.OrgProject = NewOrgProjectClient(tx.config)
+	tx.OrgSubscription = NewOrgSubscriptionClient(tx.config)
+	tx.Organization = NewOrganizationClient(tx.config)
+	tx.PaymentOrder = NewPaymentOrderClient(tx.config)
 	tx.PromoCode = NewPromoCodeClient(tx.config)
 	tx.PromoCodeUsage = NewPromoCodeUsageClient(tx.config)
 	tx.Proxy = NewProxyClient(tx.config)
 	tx.RedeemCode = NewRedeemCodeClient(tx.config)
+	tx.Referral = NewReferralClient(tx.config)
 	tx.Setting = NewSettingClient(tx.config)
 	tx.UsageCleanupTask = NewUsageCleanupTaskClient(tx.config)
 	tx.UsageLog = NewUsageLogClient(tx.config)

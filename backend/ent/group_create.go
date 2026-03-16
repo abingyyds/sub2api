@@ -14,6 +14,8 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/account"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/orgproject"
+	"github.com/Wei-Shaw/sub2api/ent/orgsubscription"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
@@ -306,6 +308,40 @@ func (_c *GroupCreate) SetNillableModelRoutingEnabled(v *bool) *GroupCreate {
 	return _c
 }
 
+// SetPriceFen sets the "price_fen" field.
+func (_c *GroupCreate) SetPriceFen(v int) *GroupCreate {
+	_c.mutation.SetPriceFen(v)
+	return _c
+}
+
+// SetNillablePriceFen sets the "price_fen" field if the given value is not nil.
+func (_c *GroupCreate) SetNillablePriceFen(v *int) *GroupCreate {
+	if v != nil {
+		_c.SetPriceFen(*v)
+	}
+	return _c
+}
+
+// SetListed sets the "listed" field.
+func (_c *GroupCreate) SetListed(v bool) *GroupCreate {
+	_c.mutation.SetListed(v)
+	return _c
+}
+
+// SetNillableListed sets the "listed" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableListed(v *bool) *GroupCreate {
+	if v != nil {
+		_c.SetListed(*v)
+	}
+	return _c
+}
+
+// SetPlanFeatures sets the "plan_features" field.
+func (_c *GroupCreate) SetPlanFeatures(v []string) *GroupCreate {
+	_c.mutation.SetPlanFeatures(v)
+	return _c
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_c *GroupCreate) AddAPIKeyIDs(ids ...int64) *GroupCreate {
 	_c.mutation.AddAPIKeyIDs(ids...)
@@ -349,6 +385,36 @@ func (_c *GroupCreate) AddSubscriptions(v ...*UserSubscription) *GroupCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddSubscriptionIDs(ids...)
+}
+
+// AddOrgSubscriptionIDs adds the "org_subscriptions" edge to the OrgSubscription entity by IDs.
+func (_c *GroupCreate) AddOrgSubscriptionIDs(ids ...int64) *GroupCreate {
+	_c.mutation.AddOrgSubscriptionIDs(ids...)
+	return _c
+}
+
+// AddOrgSubscriptions adds the "org_subscriptions" edges to the OrgSubscription entity.
+func (_c *GroupCreate) AddOrgSubscriptions(v ...*OrgSubscription) *GroupCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddOrgSubscriptionIDs(ids...)
+}
+
+// AddOrgProjectIDs adds the "org_projects" edge to the OrgProject entity by IDs.
+func (_c *GroupCreate) AddOrgProjectIDs(ids ...int64) *GroupCreate {
+	_c.mutation.AddOrgProjectIDs(ids...)
+	return _c
+}
+
+// AddOrgProjects adds the "org_projects" edges to the OrgProject entity.
+func (_c *GroupCreate) AddOrgProjects(v ...*OrgProject) *GroupCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddOrgProjectIDs(ids...)
 }
 
 // AddUsageLogIDs adds the "usage_logs" edge to the UsageLog entity by IDs.
@@ -479,6 +545,14 @@ func (_c *GroupCreate) defaults() error {
 		v := group.DefaultModelRoutingEnabled
 		_c.mutation.SetModelRoutingEnabled(v)
 	}
+	if _, ok := _c.mutation.PriceFen(); !ok {
+		v := group.DefaultPriceFen
+		_c.mutation.SetPriceFen(v)
+	}
+	if _, ok := _c.mutation.Listed(); !ok {
+		v := group.DefaultListed
+		_c.mutation.SetListed(v)
+	}
 	return nil
 }
 
@@ -536,6 +610,12 @@ func (_c *GroupCreate) check() error {
 	}
 	if _, ok := _c.mutation.ModelRoutingEnabled(); !ok {
 		return &ValidationError{Name: "model_routing_enabled", err: errors.New(`ent: missing required field "Group.model_routing_enabled"`)}
+	}
+	if _, ok := _c.mutation.PriceFen(); !ok {
+		return &ValidationError{Name: "price_fen", err: errors.New(`ent: missing required field "Group.price_fen"`)}
+	}
+	if _, ok := _c.mutation.Listed(); !ok {
+		return &ValidationError{Name: "listed", err: errors.New(`ent: missing required field "Group.listed"`)}
 	}
 	return nil
 }
@@ -648,6 +728,18 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 		_spec.SetField(group.FieldModelRoutingEnabled, field.TypeBool, value)
 		_node.ModelRoutingEnabled = value
 	}
+	if value, ok := _c.mutation.PriceFen(); ok {
+		_spec.SetField(group.FieldPriceFen, field.TypeInt, value)
+		_node.PriceFen = value
+	}
+	if value, ok := _c.mutation.Listed(); ok {
+		_spec.SetField(group.FieldListed, field.TypeBool, value)
+		_node.Listed = value
+	}
+	if value, ok := _c.mutation.PlanFeatures(); ok {
+		_spec.SetField(group.FieldPlanFeatures, field.TypeJSON, value)
+		_node.PlanFeatures = value
+	}
 	if nodes := _c.mutation.APIKeysIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -689,6 +781,38 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usersubscription.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.OrgSubscriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OrgSubscriptionsTable,
+			Columns: []string{group.OrgSubscriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgsubscription.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.OrgProjectsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.OrgProjectsTable,
+			Columns: []string{group.OrgProjectsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orgproject.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -1158,6 +1282,54 @@ func (u *GroupUpsert) UpdateModelRoutingEnabled() *GroupUpsert {
 	return u
 }
 
+// SetPriceFen sets the "price_fen" field.
+func (u *GroupUpsert) SetPriceFen(v int) *GroupUpsert {
+	u.Set(group.FieldPriceFen, v)
+	return u
+}
+
+// UpdatePriceFen sets the "price_fen" field to the value that was provided on create.
+func (u *GroupUpsert) UpdatePriceFen() *GroupUpsert {
+	u.SetExcluded(group.FieldPriceFen)
+	return u
+}
+
+// AddPriceFen adds v to the "price_fen" field.
+func (u *GroupUpsert) AddPriceFen(v int) *GroupUpsert {
+	u.Add(group.FieldPriceFen, v)
+	return u
+}
+
+// SetListed sets the "listed" field.
+func (u *GroupUpsert) SetListed(v bool) *GroupUpsert {
+	u.Set(group.FieldListed, v)
+	return u
+}
+
+// UpdateListed sets the "listed" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateListed() *GroupUpsert {
+	u.SetExcluded(group.FieldListed)
+	return u
+}
+
+// SetPlanFeatures sets the "plan_features" field.
+func (u *GroupUpsert) SetPlanFeatures(v []string) *GroupUpsert {
+	u.Set(group.FieldPlanFeatures, v)
+	return u
+}
+
+// UpdatePlanFeatures sets the "plan_features" field to the value that was provided on create.
+func (u *GroupUpsert) UpdatePlanFeatures() *GroupUpsert {
+	u.SetExcluded(group.FieldPlanFeatures)
+	return u
+}
+
+// ClearPlanFeatures clears the value of the "plan_features" field.
+func (u *GroupUpsert) ClearPlanFeatures() *GroupUpsert {
+	u.SetNull(group.FieldPlanFeatures)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -1613,6 +1785,62 @@ func (u *GroupUpsertOne) SetModelRoutingEnabled(v bool) *GroupUpsertOne {
 func (u *GroupUpsertOne) UpdateModelRoutingEnabled() *GroupUpsertOne {
 	return u.Update(func(s *GroupUpsert) {
 		s.UpdateModelRoutingEnabled()
+	})
+}
+
+// SetPriceFen sets the "price_fen" field.
+func (u *GroupUpsertOne) SetPriceFen(v int) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetPriceFen(v)
+	})
+}
+
+// AddPriceFen adds v to the "price_fen" field.
+func (u *GroupUpsertOne) AddPriceFen(v int) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.AddPriceFen(v)
+	})
+}
+
+// UpdatePriceFen sets the "price_fen" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdatePriceFen() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdatePriceFen()
+	})
+}
+
+// SetListed sets the "listed" field.
+func (u *GroupUpsertOne) SetListed(v bool) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetListed(v)
+	})
+}
+
+// UpdateListed sets the "listed" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateListed() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateListed()
+	})
+}
+
+// SetPlanFeatures sets the "plan_features" field.
+func (u *GroupUpsertOne) SetPlanFeatures(v []string) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetPlanFeatures(v)
+	})
+}
+
+// UpdatePlanFeatures sets the "plan_features" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdatePlanFeatures() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdatePlanFeatures()
+	})
+}
+
+// ClearPlanFeatures clears the value of the "plan_features" field.
+func (u *GroupUpsertOne) ClearPlanFeatures() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.ClearPlanFeatures()
 	})
 }
 
@@ -2237,6 +2465,62 @@ func (u *GroupUpsertBulk) SetModelRoutingEnabled(v bool) *GroupUpsertBulk {
 func (u *GroupUpsertBulk) UpdateModelRoutingEnabled() *GroupUpsertBulk {
 	return u.Update(func(s *GroupUpsert) {
 		s.UpdateModelRoutingEnabled()
+	})
+}
+
+// SetPriceFen sets the "price_fen" field.
+func (u *GroupUpsertBulk) SetPriceFen(v int) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetPriceFen(v)
+	})
+}
+
+// AddPriceFen adds v to the "price_fen" field.
+func (u *GroupUpsertBulk) AddPriceFen(v int) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.AddPriceFen(v)
+	})
+}
+
+// UpdatePriceFen sets the "price_fen" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdatePriceFen() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdatePriceFen()
+	})
+}
+
+// SetListed sets the "listed" field.
+func (u *GroupUpsertBulk) SetListed(v bool) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetListed(v)
+	})
+}
+
+// UpdateListed sets the "listed" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateListed() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateListed()
+	})
+}
+
+// SetPlanFeatures sets the "plan_features" field.
+func (u *GroupUpsertBulk) SetPlanFeatures(v []string) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetPlanFeatures(v)
+	})
+}
+
+// UpdatePlanFeatures sets the "plan_features" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdatePlanFeatures() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdatePlanFeatures()
+	})
+}
+
+// ClearPlanFeatures clears the value of the "plan_features" field.
+func (u *GroupUpsertBulk) ClearPlanFeatures() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.ClearPlanFeatures()
 	})
 }
 

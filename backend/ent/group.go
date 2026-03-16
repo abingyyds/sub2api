@@ -60,6 +60,12 @@ type Group struct {
 	ModelRouting map[string][]int64 `json:"model_routing,omitempty"`
 	// 是否启用模型路由配置
 	ModelRoutingEnabled bool `json:"model_routing_enabled,omitempty"`
+	// 套餐价格（分），大于0时自动显示为可购买套餐
+	PriceFen int `json:"price_fen,omitempty"`
+	// 是否上架到购买页面展示
+	Listed bool `json:"listed,omitempty"`
+	// 套餐自定义特性列表，上架时展示在购买页面
+	PlanFeatures []string `json:"plan_features,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the GroupQuery when eager-loading is set.
 	Edges        GroupEdges `json:"edges"`
@@ -74,6 +80,10 @@ type GroupEdges struct {
 	RedeemCodes []*RedeemCode `json:"redeem_codes,omitempty"`
 	// Subscriptions holds the value of the subscriptions edge.
 	Subscriptions []*UserSubscription `json:"subscriptions,omitempty"`
+	// OrgSubscriptions holds the value of the org_subscriptions edge.
+	OrgSubscriptions []*OrgSubscription `json:"org_subscriptions,omitempty"`
+	// OrgProjects holds the value of the org_projects edge.
+	OrgProjects []*OrgProject `json:"org_projects,omitempty"`
 	// UsageLogs holds the value of the usage_logs edge.
 	UsageLogs []*UsageLog `json:"usage_logs,omitempty"`
 	// Accounts holds the value of the accounts edge.
@@ -86,7 +96,7 @@ type GroupEdges struct {
 	UserAllowedGroups []*UserAllowedGroup `json:"user_allowed_groups,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [8]bool
+	loadedTypes [10]bool
 }
 
 // APIKeysOrErr returns the APIKeys value or an error if the edge
@@ -116,10 +126,28 @@ func (e GroupEdges) SubscriptionsOrErr() ([]*UserSubscription, error) {
 	return nil, &NotLoadedError{edge: "subscriptions"}
 }
 
+// OrgSubscriptionsOrErr returns the OrgSubscriptions value or an error if the edge
+// was not loaded in eager-loading.
+func (e GroupEdges) OrgSubscriptionsOrErr() ([]*OrgSubscription, error) {
+	if e.loadedTypes[3] {
+		return e.OrgSubscriptions, nil
+	}
+	return nil, &NotLoadedError{edge: "org_subscriptions"}
+}
+
+// OrgProjectsOrErr returns the OrgProjects value or an error if the edge
+// was not loaded in eager-loading.
+func (e GroupEdges) OrgProjectsOrErr() ([]*OrgProject, error) {
+	if e.loadedTypes[4] {
+		return e.OrgProjects, nil
+	}
+	return nil, &NotLoadedError{edge: "org_projects"}
+}
+
 // UsageLogsOrErr returns the UsageLogs value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) UsageLogsOrErr() ([]*UsageLog, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[5] {
 		return e.UsageLogs, nil
 	}
 	return nil, &NotLoadedError{edge: "usage_logs"}
@@ -128,7 +156,7 @@ func (e GroupEdges) UsageLogsOrErr() ([]*UsageLog, error) {
 // AccountsOrErr returns the Accounts value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) AccountsOrErr() ([]*Account, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[6] {
 		return e.Accounts, nil
 	}
 	return nil, &NotLoadedError{edge: "accounts"}
@@ -137,7 +165,7 @@ func (e GroupEdges) AccountsOrErr() ([]*Account, error) {
 // AllowedUsersOrErr returns the AllowedUsers value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) AllowedUsersOrErr() ([]*User, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[7] {
 		return e.AllowedUsers, nil
 	}
 	return nil, &NotLoadedError{edge: "allowed_users"}
@@ -146,7 +174,7 @@ func (e GroupEdges) AllowedUsersOrErr() ([]*User, error) {
 // AccountGroupsOrErr returns the AccountGroups value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) AccountGroupsOrErr() ([]*AccountGroup, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[8] {
 		return e.AccountGroups, nil
 	}
 	return nil, &NotLoadedError{edge: "account_groups"}
@@ -155,7 +183,7 @@ func (e GroupEdges) AccountGroupsOrErr() ([]*AccountGroup, error) {
 // UserAllowedGroupsOrErr returns the UserAllowedGroups value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) UserAllowedGroupsOrErr() ([]*UserAllowedGroup, error) {
-	if e.loadedTypes[7] {
+	if e.loadedTypes[9] {
 		return e.UserAllowedGroups, nil
 	}
 	return nil, &NotLoadedError{edge: "user_allowed_groups"}
@@ -166,13 +194,13 @@ func (*Group) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case group.FieldModelRouting:
+		case group.FieldModelRouting, group.FieldPlanFeatures:
 			values[i] = new([]byte)
-		case group.FieldIsExclusive, group.FieldClaudeCodeOnly, group.FieldModelRoutingEnabled:
+		case group.FieldIsExclusive, group.FieldClaudeCodeOnly, group.FieldModelRoutingEnabled, group.FieldListed:
 			values[i] = new(sql.NullBool)
 		case group.FieldRateMultiplier, group.FieldDailyLimitUsd, group.FieldWeeklyLimitUsd, group.FieldMonthlyLimitUsd, group.FieldImagePrice1k, group.FieldImagePrice2k, group.FieldImagePrice4k:
 			values[i] = new(sql.NullFloat64)
-		case group.FieldID, group.FieldDefaultValidityDays, group.FieldFallbackGroupID:
+		case group.FieldID, group.FieldDefaultValidityDays, group.FieldFallbackGroupID, group.FieldPriceFen:
 			values[i] = new(sql.NullInt64)
 		case group.FieldName, group.FieldDescription, group.FieldStatus, group.FieldPlatform, group.FieldSubscriptionType:
 			values[i] = new(sql.NullString)
@@ -336,6 +364,26 @@ func (_m *Group) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.ModelRoutingEnabled = value.Bool
 			}
+		case group.FieldPriceFen:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field price_fen", values[i])
+			} else if value.Valid {
+				_m.PriceFen = int(value.Int64)
+			}
+		case group.FieldListed:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field listed", values[i])
+			} else if value.Valid {
+				_m.Listed = value.Bool
+			}
+		case group.FieldPlanFeatures:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field plan_features", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.PlanFeatures); err != nil {
+					return fmt.Errorf("unmarshal field plan_features: %w", err)
+				}
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -362,6 +410,16 @@ func (_m *Group) QueryRedeemCodes() *RedeemCodeQuery {
 // QuerySubscriptions queries the "subscriptions" edge of the Group entity.
 func (_m *Group) QuerySubscriptions() *UserSubscriptionQuery {
 	return NewGroupClient(_m.config).QuerySubscriptions(_m)
+}
+
+// QueryOrgSubscriptions queries the "org_subscriptions" edge of the Group entity.
+func (_m *Group) QueryOrgSubscriptions() *OrgSubscriptionQuery {
+	return NewGroupClient(_m.config).QueryOrgSubscriptions(_m)
+}
+
+// QueryOrgProjects queries the "org_projects" edge of the Group entity.
+func (_m *Group) QueryOrgProjects() *OrgProjectQuery {
+	return NewGroupClient(_m.config).QueryOrgProjects(_m)
 }
 
 // QueryUsageLogs queries the "usage_logs" edge of the Group entity.
@@ -492,6 +550,15 @@ func (_m *Group) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("model_routing_enabled=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ModelRoutingEnabled))
+	builder.WriteString(", ")
+	builder.WriteString("price_fen=")
+	builder.WriteString(fmt.Sprintf("%v", _m.PriceFen))
+	builder.WriteString(", ")
+	builder.WriteString("listed=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Listed))
+	builder.WriteString(", ")
+	builder.WriteString("plan_features=")
+	builder.WriteString(fmt.Sprintf("%v", _m.PlanFeatures))
 	builder.WriteByte(')')
 	return builder.String()
 }

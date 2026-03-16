@@ -17,6 +17,8 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/accountgroup"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
+	"github.com/Wei-Shaw/sub2api/ent/orgproject"
+	"github.com/Wei-Shaw/sub2api/ent/orgsubscription"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
@@ -35,6 +37,8 @@ type GroupQuery struct {
 	withAPIKeys           *APIKeyQuery
 	withRedeemCodes       *RedeemCodeQuery
 	withSubscriptions     *UserSubscriptionQuery
+	withOrgSubscriptions  *OrgSubscriptionQuery
+	withOrgProjects       *OrgProjectQuery
 	withUsageLogs         *UsageLogQuery
 	withAccounts          *AccountQuery
 	withAllowedUsers      *UserQuery
@@ -136,6 +140,50 @@ func (_q *GroupQuery) QuerySubscriptions() *UserSubscriptionQuery {
 			sqlgraph.From(group.Table, group.FieldID, selector),
 			sqlgraph.To(usersubscription.Table, usersubscription.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, group.SubscriptionsTable, group.SubscriptionsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryOrgSubscriptions chains the current query on the "org_subscriptions" edge.
+func (_q *GroupQuery) QueryOrgSubscriptions() *OrgSubscriptionQuery {
+	query := (&OrgSubscriptionClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, selector),
+			sqlgraph.To(orgsubscription.Table, orgsubscription.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.OrgSubscriptionsTable, group.OrgSubscriptionsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryOrgProjects chains the current query on the "org_projects" edge.
+func (_q *GroupQuery) QueryOrgProjects() *OrgProjectQuery {
+	query := (&OrgProjectClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, selector),
+			sqlgraph.To(orgproject.Table, orgproject.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.OrgProjectsTable, group.OrgProjectsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -448,6 +496,8 @@ func (_q *GroupQuery) Clone() *GroupQuery {
 		withAPIKeys:           _q.withAPIKeys.Clone(),
 		withRedeemCodes:       _q.withRedeemCodes.Clone(),
 		withSubscriptions:     _q.withSubscriptions.Clone(),
+		withOrgSubscriptions:  _q.withOrgSubscriptions.Clone(),
+		withOrgProjects:       _q.withOrgProjects.Clone(),
 		withUsageLogs:         _q.withUsageLogs.Clone(),
 		withAccounts:          _q.withAccounts.Clone(),
 		withAllowedUsers:      _q.withAllowedUsers.Clone(),
@@ -489,6 +539,28 @@ func (_q *GroupQuery) WithSubscriptions(opts ...func(*UserSubscriptionQuery)) *G
 		opt(query)
 	}
 	_q.withSubscriptions = query
+	return _q
+}
+
+// WithOrgSubscriptions tells the query-builder to eager-load the nodes that are connected to
+// the "org_subscriptions" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *GroupQuery) WithOrgSubscriptions(opts ...func(*OrgSubscriptionQuery)) *GroupQuery {
+	query := (&OrgSubscriptionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withOrgSubscriptions = query
+	return _q
+}
+
+// WithOrgProjects tells the query-builder to eager-load the nodes that are connected to
+// the "org_projects" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *GroupQuery) WithOrgProjects(opts ...func(*OrgProjectQuery)) *GroupQuery {
+	query := (&OrgProjectClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withOrgProjects = query
 	return _q
 }
 
@@ -625,10 +697,12 @@ func (_q *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 	var (
 		nodes       = []*Group{}
 		_spec       = _q.querySpec()
-		loadedTypes = [8]bool{
+		loadedTypes = [10]bool{
 			_q.withAPIKeys != nil,
 			_q.withRedeemCodes != nil,
 			_q.withSubscriptions != nil,
+			_q.withOrgSubscriptions != nil,
+			_q.withOrgProjects != nil,
 			_q.withUsageLogs != nil,
 			_q.withAccounts != nil,
 			_q.withAllowedUsers != nil,
@@ -675,6 +749,20 @@ func (_q *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 		if err := _q.loadSubscriptions(ctx, query, nodes,
 			func(n *Group) { n.Edges.Subscriptions = []*UserSubscription{} },
 			func(n *Group, e *UserSubscription) { n.Edges.Subscriptions = append(n.Edges.Subscriptions, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withOrgSubscriptions; query != nil {
+		if err := _q.loadOrgSubscriptions(ctx, query, nodes,
+			func(n *Group) { n.Edges.OrgSubscriptions = []*OrgSubscription{} },
+			func(n *Group, e *OrgSubscription) { n.Edges.OrgSubscriptions = append(n.Edges.OrgSubscriptions, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withOrgProjects; query != nil {
+		if err := _q.loadOrgProjects(ctx, query, nodes,
+			func(n *Group) { n.Edges.OrgProjects = []*OrgProject{} },
+			func(n *Group, e *OrgProject) { n.Edges.OrgProjects = append(n.Edges.OrgProjects, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -807,6 +895,69 @@ func (_q *GroupQuery) loadSubscriptions(ctx context.Context, query *UserSubscrip
 		node, ok := nodeids[fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "group_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *GroupQuery) loadOrgSubscriptions(ctx context.Context, query *OrgSubscriptionQuery, nodes []*Group, init func(*Group), assign func(*Group, *OrgSubscription)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*Group)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(orgsubscription.FieldGroupID)
+	}
+	query.Where(predicate.OrgSubscription(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(group.OrgSubscriptionsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.GroupID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "group_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *GroupQuery) loadOrgProjects(ctx context.Context, query *OrgProjectQuery, nodes []*Group, init func(*Group), assign func(*Group, *OrgProject)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*Group)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(orgproject.FieldGroupID)
+	}
+	query.Where(predicate.OrgProject(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(group.OrgProjectsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.GroupID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "group_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "group_id" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

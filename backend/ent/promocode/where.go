@@ -60,9 +60,19 @@ func Code(v string) predicate.PromoCode {
 	return predicate.PromoCode(sql.FieldEQ(FieldCode, v))
 }
 
-// BonusAmount applies equality check predicate on the "bonus_amount" field. It's identical to BonusAmountEQ.
-func BonusAmount(v float64) predicate.PromoCode {
-	return predicate.PromoCode(sql.FieldEQ(FieldBonusAmount, v))
+// DiscountAmount applies equality check predicate on the "discount_amount" field. It's identical to DiscountAmountEQ.
+func DiscountAmount(v float64) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldEQ(FieldDiscountAmount, v))
+}
+
+// DiscountType applies equality check predicate on the "discount_type" field. It's identical to DiscountTypeEQ.
+func DiscountType(v string) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldEQ(FieldDiscountType, v))
+}
+
+// MinOrderAmount applies equality check predicate on the "min_order_amount" field. It's identical to MinOrderAmountEQ.
+func MinOrderAmount(v int) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldEQ(FieldMinOrderAmount, v))
 }
 
 // MaxUses applies equality check predicate on the "max_uses" field. It's identical to MaxUsesEQ.
@@ -165,44 +175,149 @@ func CodeContainsFold(v string) predicate.PromoCode {
 	return predicate.PromoCode(sql.FieldContainsFold(FieldCode, v))
 }
 
-// BonusAmountEQ applies the EQ predicate on the "bonus_amount" field.
-func BonusAmountEQ(v float64) predicate.PromoCode {
-	return predicate.PromoCode(sql.FieldEQ(FieldBonusAmount, v))
+// DiscountAmountEQ applies the EQ predicate on the "discount_amount" field.
+func DiscountAmountEQ(v float64) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldEQ(FieldDiscountAmount, v))
 }
 
-// BonusAmountNEQ applies the NEQ predicate on the "bonus_amount" field.
-func BonusAmountNEQ(v float64) predicate.PromoCode {
-	return predicate.PromoCode(sql.FieldNEQ(FieldBonusAmount, v))
+// DiscountAmountNEQ applies the NEQ predicate on the "discount_amount" field.
+func DiscountAmountNEQ(v float64) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldNEQ(FieldDiscountAmount, v))
 }
 
-// BonusAmountIn applies the In predicate on the "bonus_amount" field.
-func BonusAmountIn(vs ...float64) predicate.PromoCode {
-	return predicate.PromoCode(sql.FieldIn(FieldBonusAmount, vs...))
+// DiscountAmountIn applies the In predicate on the "discount_amount" field.
+func DiscountAmountIn(vs ...float64) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldIn(FieldDiscountAmount, vs...))
 }
 
-// BonusAmountNotIn applies the NotIn predicate on the "bonus_amount" field.
-func BonusAmountNotIn(vs ...float64) predicate.PromoCode {
-	return predicate.PromoCode(sql.FieldNotIn(FieldBonusAmount, vs...))
+// DiscountAmountNotIn applies the NotIn predicate on the "discount_amount" field.
+func DiscountAmountNotIn(vs ...float64) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldNotIn(FieldDiscountAmount, vs...))
 }
 
-// BonusAmountGT applies the GT predicate on the "bonus_amount" field.
-func BonusAmountGT(v float64) predicate.PromoCode {
-	return predicate.PromoCode(sql.FieldGT(FieldBonusAmount, v))
+// DiscountAmountGT applies the GT predicate on the "discount_amount" field.
+func DiscountAmountGT(v float64) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldGT(FieldDiscountAmount, v))
 }
 
-// BonusAmountGTE applies the GTE predicate on the "bonus_amount" field.
-func BonusAmountGTE(v float64) predicate.PromoCode {
-	return predicate.PromoCode(sql.FieldGTE(FieldBonusAmount, v))
+// DiscountAmountGTE applies the GTE predicate on the "discount_amount" field.
+func DiscountAmountGTE(v float64) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldGTE(FieldDiscountAmount, v))
 }
 
-// BonusAmountLT applies the LT predicate on the "bonus_amount" field.
-func BonusAmountLT(v float64) predicate.PromoCode {
-	return predicate.PromoCode(sql.FieldLT(FieldBonusAmount, v))
+// DiscountAmountLT applies the LT predicate on the "discount_amount" field.
+func DiscountAmountLT(v float64) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldLT(FieldDiscountAmount, v))
 }
 
-// BonusAmountLTE applies the LTE predicate on the "bonus_amount" field.
-func BonusAmountLTE(v float64) predicate.PromoCode {
-	return predicate.PromoCode(sql.FieldLTE(FieldBonusAmount, v))
+// DiscountAmountLTE applies the LTE predicate on the "discount_amount" field.
+func DiscountAmountLTE(v float64) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldLTE(FieldDiscountAmount, v))
+}
+
+// DiscountTypeEQ applies the EQ predicate on the "discount_type" field.
+func DiscountTypeEQ(v string) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldEQ(FieldDiscountType, v))
+}
+
+// DiscountTypeNEQ applies the NEQ predicate on the "discount_type" field.
+func DiscountTypeNEQ(v string) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldNEQ(FieldDiscountType, v))
+}
+
+// DiscountTypeIn applies the In predicate on the "discount_type" field.
+func DiscountTypeIn(vs ...string) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldIn(FieldDiscountType, vs...))
+}
+
+// DiscountTypeNotIn applies the NotIn predicate on the "discount_type" field.
+func DiscountTypeNotIn(vs ...string) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldNotIn(FieldDiscountType, vs...))
+}
+
+// DiscountTypeGT applies the GT predicate on the "discount_type" field.
+func DiscountTypeGT(v string) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldGT(FieldDiscountType, v))
+}
+
+// DiscountTypeGTE applies the GTE predicate on the "discount_type" field.
+func DiscountTypeGTE(v string) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldGTE(FieldDiscountType, v))
+}
+
+// DiscountTypeLT applies the LT predicate on the "discount_type" field.
+func DiscountTypeLT(v string) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldLT(FieldDiscountType, v))
+}
+
+// DiscountTypeLTE applies the LTE predicate on the "discount_type" field.
+func DiscountTypeLTE(v string) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldLTE(FieldDiscountType, v))
+}
+
+// DiscountTypeContains applies the Contains predicate on the "discount_type" field.
+func DiscountTypeContains(v string) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldContains(FieldDiscountType, v))
+}
+
+// DiscountTypeHasPrefix applies the HasPrefix predicate on the "discount_type" field.
+func DiscountTypeHasPrefix(v string) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldHasPrefix(FieldDiscountType, v))
+}
+
+// DiscountTypeHasSuffix applies the HasSuffix predicate on the "discount_type" field.
+func DiscountTypeHasSuffix(v string) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldHasSuffix(FieldDiscountType, v))
+}
+
+// DiscountTypeEqualFold applies the EqualFold predicate on the "discount_type" field.
+func DiscountTypeEqualFold(v string) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldEqualFold(FieldDiscountType, v))
+}
+
+// DiscountTypeContainsFold applies the ContainsFold predicate on the "discount_type" field.
+func DiscountTypeContainsFold(v string) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldContainsFold(FieldDiscountType, v))
+}
+
+// MinOrderAmountEQ applies the EQ predicate on the "min_order_amount" field.
+func MinOrderAmountEQ(v int) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldEQ(FieldMinOrderAmount, v))
+}
+
+// MinOrderAmountNEQ applies the NEQ predicate on the "min_order_amount" field.
+func MinOrderAmountNEQ(v int) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldNEQ(FieldMinOrderAmount, v))
+}
+
+// MinOrderAmountIn applies the In predicate on the "min_order_amount" field.
+func MinOrderAmountIn(vs ...int) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldIn(FieldMinOrderAmount, vs...))
+}
+
+// MinOrderAmountNotIn applies the NotIn predicate on the "min_order_amount" field.
+func MinOrderAmountNotIn(vs ...int) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldNotIn(FieldMinOrderAmount, vs...))
+}
+
+// MinOrderAmountGT applies the GT predicate on the "min_order_amount" field.
+func MinOrderAmountGT(v int) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldGT(FieldMinOrderAmount, v))
+}
+
+// MinOrderAmountGTE applies the GTE predicate on the "min_order_amount" field.
+func MinOrderAmountGTE(v int) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldGTE(FieldMinOrderAmount, v))
+}
+
+// MinOrderAmountLT applies the LT predicate on the "min_order_amount" field.
+func MinOrderAmountLT(v int) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldLT(FieldMinOrderAmount, v))
+}
+
+// MinOrderAmountLTE applies the LTE predicate on the "min_order_amount" field.
+func MinOrderAmountLTE(v int) predicate.PromoCode {
+	return predicate.PromoCode(sql.FieldLTE(FieldMinOrderAmount, v))
 }
 
 // MaxUsesEQ applies the EQ predicate on the "max_uses" field.

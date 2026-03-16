@@ -58,24 +58,44 @@ func (_u *PromoCodeUsageUpdate) SetNillableUserID(v *int64) *PromoCodeUsageUpdat
 	return _u
 }
 
-// SetBonusAmount sets the "bonus_amount" field.
-func (_u *PromoCodeUsageUpdate) SetBonusAmount(v float64) *PromoCodeUsageUpdate {
-	_u.mutation.ResetBonusAmount()
-	_u.mutation.SetBonusAmount(v)
+// SetDiscountAmount sets the "discount_amount" field.
+func (_u *PromoCodeUsageUpdate) SetDiscountAmount(v float64) *PromoCodeUsageUpdate {
+	_u.mutation.ResetDiscountAmount()
+	_u.mutation.SetDiscountAmount(v)
 	return _u
 }
 
-// SetNillableBonusAmount sets the "bonus_amount" field if the given value is not nil.
-func (_u *PromoCodeUsageUpdate) SetNillableBonusAmount(v *float64) *PromoCodeUsageUpdate {
+// SetNillableDiscountAmount sets the "discount_amount" field if the given value is not nil.
+func (_u *PromoCodeUsageUpdate) SetNillableDiscountAmount(v *float64) *PromoCodeUsageUpdate {
 	if v != nil {
-		_u.SetBonusAmount(*v)
+		_u.SetDiscountAmount(*v)
 	}
 	return _u
 }
 
-// AddBonusAmount adds value to the "bonus_amount" field.
-func (_u *PromoCodeUsageUpdate) AddBonusAmount(v float64) *PromoCodeUsageUpdate {
-	_u.mutation.AddBonusAmount(v)
+// AddDiscountAmount adds value to the "discount_amount" field.
+func (_u *PromoCodeUsageUpdate) AddDiscountAmount(v float64) *PromoCodeUsageUpdate {
+	_u.mutation.AddDiscountAmount(v)
+	return _u
+}
+
+// SetOrderNo sets the "order_no" field.
+func (_u *PromoCodeUsageUpdate) SetOrderNo(v string) *PromoCodeUsageUpdate {
+	_u.mutation.SetOrderNo(v)
+	return _u
+}
+
+// SetNillableOrderNo sets the "order_no" field if the given value is not nil.
+func (_u *PromoCodeUsageUpdate) SetNillableOrderNo(v *string) *PromoCodeUsageUpdate {
+	if v != nil {
+		_u.SetOrderNo(*v)
+	}
+	return _u
+}
+
+// ClearOrderNo clears the value of the "order_no" field.
+func (_u *PromoCodeUsageUpdate) ClearOrderNo() *PromoCodeUsageUpdate {
+	_u.mutation.ClearOrderNo()
 	return _u
 }
 
@@ -149,6 +169,11 @@ func (_u *PromoCodeUsageUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *PromoCodeUsageUpdate) check() error {
+	if v, ok := _u.mutation.OrderNo(); ok {
+		if err := promocodeusage.OrderNoValidator(v); err != nil {
+			return &ValidationError{Name: "order_no", err: fmt.Errorf(`ent: validator failed for field "PromoCodeUsage.order_no": %w`, err)}
+		}
+	}
 	if _u.mutation.PromoCodeCleared() && len(_u.mutation.PromoCodeIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "PromoCodeUsage.promo_code"`)
 	}
@@ -170,11 +195,17 @@ func (_u *PromoCodeUsageUpdate) sqlSave(ctx context.Context) (_node int, err err
 			}
 		}
 	}
-	if value, ok := _u.mutation.BonusAmount(); ok {
-		_spec.SetField(promocodeusage.FieldBonusAmount, field.TypeFloat64, value)
+	if value, ok := _u.mutation.DiscountAmount(); ok {
+		_spec.SetField(promocodeusage.FieldDiscountAmount, field.TypeFloat64, value)
 	}
-	if value, ok := _u.mutation.AddedBonusAmount(); ok {
-		_spec.AddField(promocodeusage.FieldBonusAmount, field.TypeFloat64, value)
+	if value, ok := _u.mutation.AddedDiscountAmount(); ok {
+		_spec.AddField(promocodeusage.FieldDiscountAmount, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.OrderNo(); ok {
+		_spec.SetField(promocodeusage.FieldOrderNo, field.TypeString, value)
+	}
+	if _u.mutation.OrderNoCleared() {
+		_spec.ClearField(promocodeusage.FieldOrderNo, field.TypeString)
 	}
 	if value, ok := _u.mutation.UsedAt(); ok {
 		_spec.SetField(promocodeusage.FieldUsedAt, field.TypeTime, value)
@@ -285,24 +316,44 @@ func (_u *PromoCodeUsageUpdateOne) SetNillableUserID(v *int64) *PromoCodeUsageUp
 	return _u
 }
 
-// SetBonusAmount sets the "bonus_amount" field.
-func (_u *PromoCodeUsageUpdateOne) SetBonusAmount(v float64) *PromoCodeUsageUpdateOne {
-	_u.mutation.ResetBonusAmount()
-	_u.mutation.SetBonusAmount(v)
+// SetDiscountAmount sets the "discount_amount" field.
+func (_u *PromoCodeUsageUpdateOne) SetDiscountAmount(v float64) *PromoCodeUsageUpdateOne {
+	_u.mutation.ResetDiscountAmount()
+	_u.mutation.SetDiscountAmount(v)
 	return _u
 }
 
-// SetNillableBonusAmount sets the "bonus_amount" field if the given value is not nil.
-func (_u *PromoCodeUsageUpdateOne) SetNillableBonusAmount(v *float64) *PromoCodeUsageUpdateOne {
+// SetNillableDiscountAmount sets the "discount_amount" field if the given value is not nil.
+func (_u *PromoCodeUsageUpdateOne) SetNillableDiscountAmount(v *float64) *PromoCodeUsageUpdateOne {
 	if v != nil {
-		_u.SetBonusAmount(*v)
+		_u.SetDiscountAmount(*v)
 	}
 	return _u
 }
 
-// AddBonusAmount adds value to the "bonus_amount" field.
-func (_u *PromoCodeUsageUpdateOne) AddBonusAmount(v float64) *PromoCodeUsageUpdateOne {
-	_u.mutation.AddBonusAmount(v)
+// AddDiscountAmount adds value to the "discount_amount" field.
+func (_u *PromoCodeUsageUpdateOne) AddDiscountAmount(v float64) *PromoCodeUsageUpdateOne {
+	_u.mutation.AddDiscountAmount(v)
+	return _u
+}
+
+// SetOrderNo sets the "order_no" field.
+func (_u *PromoCodeUsageUpdateOne) SetOrderNo(v string) *PromoCodeUsageUpdateOne {
+	_u.mutation.SetOrderNo(v)
+	return _u
+}
+
+// SetNillableOrderNo sets the "order_no" field if the given value is not nil.
+func (_u *PromoCodeUsageUpdateOne) SetNillableOrderNo(v *string) *PromoCodeUsageUpdateOne {
+	if v != nil {
+		_u.SetOrderNo(*v)
+	}
+	return _u
+}
+
+// ClearOrderNo clears the value of the "order_no" field.
+func (_u *PromoCodeUsageUpdateOne) ClearOrderNo() *PromoCodeUsageUpdateOne {
+	_u.mutation.ClearOrderNo()
 	return _u
 }
 
@@ -389,6 +440,11 @@ func (_u *PromoCodeUsageUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *PromoCodeUsageUpdateOne) check() error {
+	if v, ok := _u.mutation.OrderNo(); ok {
+		if err := promocodeusage.OrderNoValidator(v); err != nil {
+			return &ValidationError{Name: "order_no", err: fmt.Errorf(`ent: validator failed for field "PromoCodeUsage.order_no": %w`, err)}
+		}
+	}
 	if _u.mutation.PromoCodeCleared() && len(_u.mutation.PromoCodeIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "PromoCodeUsage.promo_code"`)
 	}
@@ -427,11 +483,17 @@ func (_u *PromoCodeUsageUpdateOne) sqlSave(ctx context.Context) (_node *PromoCod
 			}
 		}
 	}
-	if value, ok := _u.mutation.BonusAmount(); ok {
-		_spec.SetField(promocodeusage.FieldBonusAmount, field.TypeFloat64, value)
+	if value, ok := _u.mutation.DiscountAmount(); ok {
+		_spec.SetField(promocodeusage.FieldDiscountAmount, field.TypeFloat64, value)
 	}
-	if value, ok := _u.mutation.AddedBonusAmount(); ok {
-		_spec.AddField(promocodeusage.FieldBonusAmount, field.TypeFloat64, value)
+	if value, ok := _u.mutation.AddedDiscountAmount(); ok {
+		_spec.AddField(promocodeusage.FieldDiscountAmount, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.OrderNo(); ok {
+		_spec.SetField(promocodeusage.FieldOrderNo, field.TypeString, value)
+	}
+	if _u.mutation.OrderNoCleared() {
+		_spec.ClearField(promocodeusage.FieldOrderNo, field.TypeString)
 	}
 	if value, ok := _u.mutation.UsedAt(); ok {
 		_spec.SetField(promocodeusage.FieldUsedAt, field.TypeTime, value)

@@ -155,6 +155,16 @@ func ModelRoutingEnabled(v bool) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldModelRoutingEnabled, v))
 }
 
+// PriceFen applies equality check predicate on the "price_fen" field. It's identical to PriceFenEQ.
+func PriceFen(v int) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldPriceFen, v))
+}
+
+// Listed applies equality check predicate on the "listed" field. It's identical to ListedEQ.
+func Listed(v bool) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldListed, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldCreatedAt, v))
@@ -1090,6 +1100,66 @@ func ModelRoutingEnabledNEQ(v bool) predicate.Group {
 	return predicate.Group(sql.FieldNEQ(FieldModelRoutingEnabled, v))
 }
 
+// PriceFenEQ applies the EQ predicate on the "price_fen" field.
+func PriceFenEQ(v int) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldPriceFen, v))
+}
+
+// PriceFenNEQ applies the NEQ predicate on the "price_fen" field.
+func PriceFenNEQ(v int) predicate.Group {
+	return predicate.Group(sql.FieldNEQ(FieldPriceFen, v))
+}
+
+// PriceFenIn applies the In predicate on the "price_fen" field.
+func PriceFenIn(vs ...int) predicate.Group {
+	return predicate.Group(sql.FieldIn(FieldPriceFen, vs...))
+}
+
+// PriceFenNotIn applies the NotIn predicate on the "price_fen" field.
+func PriceFenNotIn(vs ...int) predicate.Group {
+	return predicate.Group(sql.FieldNotIn(FieldPriceFen, vs...))
+}
+
+// PriceFenGT applies the GT predicate on the "price_fen" field.
+func PriceFenGT(v int) predicate.Group {
+	return predicate.Group(sql.FieldGT(FieldPriceFen, v))
+}
+
+// PriceFenGTE applies the GTE predicate on the "price_fen" field.
+func PriceFenGTE(v int) predicate.Group {
+	return predicate.Group(sql.FieldGTE(FieldPriceFen, v))
+}
+
+// PriceFenLT applies the LT predicate on the "price_fen" field.
+func PriceFenLT(v int) predicate.Group {
+	return predicate.Group(sql.FieldLT(FieldPriceFen, v))
+}
+
+// PriceFenLTE applies the LTE predicate on the "price_fen" field.
+func PriceFenLTE(v int) predicate.Group {
+	return predicate.Group(sql.FieldLTE(FieldPriceFen, v))
+}
+
+// ListedEQ applies the EQ predicate on the "listed" field.
+func ListedEQ(v bool) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldListed, v))
+}
+
+// ListedNEQ applies the NEQ predicate on the "listed" field.
+func ListedNEQ(v bool) predicate.Group {
+	return predicate.Group(sql.FieldNEQ(FieldListed, v))
+}
+
+// PlanFeaturesIsNil applies the IsNil predicate on the "plan_features" field.
+func PlanFeaturesIsNil() predicate.Group {
+	return predicate.Group(sql.FieldIsNull(FieldPlanFeatures))
+}
+
+// PlanFeaturesNotNil applies the NotNil predicate on the "plan_features" field.
+func PlanFeaturesNotNil() predicate.Group {
+	return predicate.Group(sql.FieldNotNull(FieldPlanFeatures))
+}
+
 // HasAPIKeys applies the HasEdge predicate on the "api_keys" edge.
 func HasAPIKeys() predicate.Group {
 	return predicate.Group(func(s *sql.Selector) {
@@ -1151,6 +1221,52 @@ func HasSubscriptions() predicate.Group {
 func HasSubscriptionsWith(preds ...predicate.UserSubscription) predicate.Group {
 	return predicate.Group(func(s *sql.Selector) {
 		step := newSubscriptionsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasOrgSubscriptions applies the HasEdge predicate on the "org_subscriptions" edge.
+func HasOrgSubscriptions() predicate.Group {
+	return predicate.Group(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, OrgSubscriptionsTable, OrgSubscriptionsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasOrgSubscriptionsWith applies the HasEdge predicate on the "org_subscriptions" edge with a given conditions (other predicates).
+func HasOrgSubscriptionsWith(preds ...predicate.OrgSubscription) predicate.Group {
+	return predicate.Group(func(s *sql.Selector) {
+		step := newOrgSubscriptionsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasOrgProjects applies the HasEdge predicate on the "org_projects" edge.
+func HasOrgProjects() predicate.Group {
+	return predicate.Group(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, OrgProjectsTable, OrgProjectsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasOrgProjectsWith applies the HasEdge predicate on the "org_projects" edge with a given conditions (other predicates).
+func HasOrgProjectsWith(preds ...predicate.OrgProject) predicate.Group {
+	return predicate.Group(func(s *sql.Selector) {
+		step := newOrgProjectsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

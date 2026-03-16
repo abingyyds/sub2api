@@ -90,6 +90,16 @@ func SubscriptionID(v int64) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldEQ(FieldSubscriptionID, v))
 }
 
+// OrgID applies equality check predicate on the "org_id" field. It's identical to OrgIDEQ.
+func OrgID(v int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldOrgID, v))
+}
+
+// OrgMemberID applies equality check predicate on the "org_member_id" field. It's identical to OrgMemberIDEQ.
+func OrgMemberID(v int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldOrgMemberID, v))
+}
+
 // InputTokens applies equality check predicate on the "input_tokens" field. It's identical to InputTokensEQ.
 func InputTokens(v int) predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldEQ(FieldInputTokens, v))
@@ -453,6 +463,106 @@ func SubscriptionIDIsNil() predicate.UsageLog {
 // SubscriptionIDNotNil applies the NotNil predicate on the "subscription_id" field.
 func SubscriptionIDNotNil() predicate.UsageLog {
 	return predicate.UsageLog(sql.FieldNotNull(FieldSubscriptionID))
+}
+
+// OrgIDEQ applies the EQ predicate on the "org_id" field.
+func OrgIDEQ(v int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldOrgID, v))
+}
+
+// OrgIDNEQ applies the NEQ predicate on the "org_id" field.
+func OrgIDNEQ(v int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNEQ(FieldOrgID, v))
+}
+
+// OrgIDIn applies the In predicate on the "org_id" field.
+func OrgIDIn(vs ...int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIn(FieldOrgID, vs...))
+}
+
+// OrgIDNotIn applies the NotIn predicate on the "org_id" field.
+func OrgIDNotIn(vs ...int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotIn(FieldOrgID, vs...))
+}
+
+// OrgIDGT applies the GT predicate on the "org_id" field.
+func OrgIDGT(v int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldGT(FieldOrgID, v))
+}
+
+// OrgIDGTE applies the GTE predicate on the "org_id" field.
+func OrgIDGTE(v int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldGTE(FieldOrgID, v))
+}
+
+// OrgIDLT applies the LT predicate on the "org_id" field.
+func OrgIDLT(v int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldLT(FieldOrgID, v))
+}
+
+// OrgIDLTE applies the LTE predicate on the "org_id" field.
+func OrgIDLTE(v int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldLTE(FieldOrgID, v))
+}
+
+// OrgIDIsNil applies the IsNil predicate on the "org_id" field.
+func OrgIDIsNil() predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIsNull(FieldOrgID))
+}
+
+// OrgIDNotNil applies the NotNil predicate on the "org_id" field.
+func OrgIDNotNil() predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotNull(FieldOrgID))
+}
+
+// OrgMemberIDEQ applies the EQ predicate on the "org_member_id" field.
+func OrgMemberIDEQ(v int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldEQ(FieldOrgMemberID, v))
+}
+
+// OrgMemberIDNEQ applies the NEQ predicate on the "org_member_id" field.
+func OrgMemberIDNEQ(v int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNEQ(FieldOrgMemberID, v))
+}
+
+// OrgMemberIDIn applies the In predicate on the "org_member_id" field.
+func OrgMemberIDIn(vs ...int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIn(FieldOrgMemberID, vs...))
+}
+
+// OrgMemberIDNotIn applies the NotIn predicate on the "org_member_id" field.
+func OrgMemberIDNotIn(vs ...int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotIn(FieldOrgMemberID, vs...))
+}
+
+// OrgMemberIDGT applies the GT predicate on the "org_member_id" field.
+func OrgMemberIDGT(v int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldGT(FieldOrgMemberID, v))
+}
+
+// OrgMemberIDGTE applies the GTE predicate on the "org_member_id" field.
+func OrgMemberIDGTE(v int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldGTE(FieldOrgMemberID, v))
+}
+
+// OrgMemberIDLT applies the LT predicate on the "org_member_id" field.
+func OrgMemberIDLT(v int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldLT(FieldOrgMemberID, v))
+}
+
+// OrgMemberIDLTE applies the LTE predicate on the "org_member_id" field.
+func OrgMemberIDLTE(v int64) predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldLTE(FieldOrgMemberID, v))
+}
+
+// OrgMemberIDIsNil applies the IsNil predicate on the "org_member_id" field.
+func OrgMemberIDIsNil() predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldIsNull(FieldOrgMemberID))
+}
+
+// OrgMemberIDNotNil applies the NotNil predicate on the "org_member_id" field.
+func OrgMemberIDNotNil() predicate.UsageLog {
+	return predicate.UsageLog(sql.FieldNotNull(FieldOrgMemberID))
 }
 
 // InputTokensEQ applies the EQ predicate on the "input_tokens" field.

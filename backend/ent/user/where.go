@@ -125,6 +125,26 @@ func TotpEnabledAt(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldTotpEnabledAt, v))
 }
 
+// InviteCode applies equality check predicate on the "invite_code" field. It's identical to InviteCodeEQ.
+func InviteCode(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldInviteCode, v))
+}
+
+// DiscoverySource applies equality check predicate on the "discovery_source" field. It's identical to DiscoverySourceEQ.
+func DiscoverySource(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldDiscoverySource, v))
+}
+
+// InitialBalance applies equality check predicate on the "initial_balance" field. It's identical to InitialBalanceEQ.
+func InitialBalance(v float64) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldInitialBalance, v))
+}
+
+// InitialBalanceExpiresAt applies equality check predicate on the "initial_balance_expires_at" field. It's identical to InitialBalanceExpiresAtEQ.
+func InitialBalanceExpiresAt(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldInitialBalanceExpiresAt, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldCreatedAt, v))
@@ -860,6 +880,246 @@ func TotpEnabledAtNotNil() predicate.User {
 	return predicate.User(sql.FieldNotNull(FieldTotpEnabledAt))
 }
 
+// InviteCodeEQ applies the EQ predicate on the "invite_code" field.
+func InviteCodeEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldInviteCode, v))
+}
+
+// InviteCodeNEQ applies the NEQ predicate on the "invite_code" field.
+func InviteCodeNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldInviteCode, v))
+}
+
+// InviteCodeIn applies the In predicate on the "invite_code" field.
+func InviteCodeIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldInviteCode, vs...))
+}
+
+// InviteCodeNotIn applies the NotIn predicate on the "invite_code" field.
+func InviteCodeNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldInviteCode, vs...))
+}
+
+// InviteCodeGT applies the GT predicate on the "invite_code" field.
+func InviteCodeGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldInviteCode, v))
+}
+
+// InviteCodeGTE applies the GTE predicate on the "invite_code" field.
+func InviteCodeGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldInviteCode, v))
+}
+
+// InviteCodeLT applies the LT predicate on the "invite_code" field.
+func InviteCodeLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldInviteCode, v))
+}
+
+// InviteCodeLTE applies the LTE predicate on the "invite_code" field.
+func InviteCodeLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldInviteCode, v))
+}
+
+// InviteCodeContains applies the Contains predicate on the "invite_code" field.
+func InviteCodeContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldInviteCode, v))
+}
+
+// InviteCodeHasPrefix applies the HasPrefix predicate on the "invite_code" field.
+func InviteCodeHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldInviteCode, v))
+}
+
+// InviteCodeHasSuffix applies the HasSuffix predicate on the "invite_code" field.
+func InviteCodeHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldInviteCode, v))
+}
+
+// InviteCodeIsNil applies the IsNil predicate on the "invite_code" field.
+func InviteCodeIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldInviteCode))
+}
+
+// InviteCodeNotNil applies the NotNil predicate on the "invite_code" field.
+func InviteCodeNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldInviteCode))
+}
+
+// InviteCodeEqualFold applies the EqualFold predicate on the "invite_code" field.
+func InviteCodeEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldInviteCode, v))
+}
+
+// InviteCodeContainsFold applies the ContainsFold predicate on the "invite_code" field.
+func InviteCodeContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldInviteCode, v))
+}
+
+// DiscoverySourceEQ applies the EQ predicate on the "discovery_source" field.
+func DiscoverySourceEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldDiscoverySource, v))
+}
+
+// DiscoverySourceNEQ applies the NEQ predicate on the "discovery_source" field.
+func DiscoverySourceNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldDiscoverySource, v))
+}
+
+// DiscoverySourceIn applies the In predicate on the "discovery_source" field.
+func DiscoverySourceIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldDiscoverySource, vs...))
+}
+
+// DiscoverySourceNotIn applies the NotIn predicate on the "discovery_source" field.
+func DiscoverySourceNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldDiscoverySource, vs...))
+}
+
+// DiscoverySourceGT applies the GT predicate on the "discovery_source" field.
+func DiscoverySourceGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldDiscoverySource, v))
+}
+
+// DiscoverySourceGTE applies the GTE predicate on the "discovery_source" field.
+func DiscoverySourceGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldDiscoverySource, v))
+}
+
+// DiscoverySourceLT applies the LT predicate on the "discovery_source" field.
+func DiscoverySourceLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldDiscoverySource, v))
+}
+
+// DiscoverySourceLTE applies the LTE predicate on the "discovery_source" field.
+func DiscoverySourceLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldDiscoverySource, v))
+}
+
+// DiscoverySourceContains applies the Contains predicate on the "discovery_source" field.
+func DiscoverySourceContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldDiscoverySource, v))
+}
+
+// DiscoverySourceHasPrefix applies the HasPrefix predicate on the "discovery_source" field.
+func DiscoverySourceHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldDiscoverySource, v))
+}
+
+// DiscoverySourceHasSuffix applies the HasSuffix predicate on the "discovery_source" field.
+func DiscoverySourceHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldDiscoverySource, v))
+}
+
+// DiscoverySourceIsNil applies the IsNil predicate on the "discovery_source" field.
+func DiscoverySourceIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldDiscoverySource))
+}
+
+// DiscoverySourceNotNil applies the NotNil predicate on the "discovery_source" field.
+func DiscoverySourceNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldDiscoverySource))
+}
+
+// DiscoverySourceEqualFold applies the EqualFold predicate on the "discovery_source" field.
+func DiscoverySourceEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldDiscoverySource, v))
+}
+
+// DiscoverySourceContainsFold applies the ContainsFold predicate on the "discovery_source" field.
+func DiscoverySourceContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldDiscoverySource, v))
+}
+
+// InitialBalanceEQ applies the EQ predicate on the "initial_balance" field.
+func InitialBalanceEQ(v float64) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldInitialBalance, v))
+}
+
+// InitialBalanceNEQ applies the NEQ predicate on the "initial_balance" field.
+func InitialBalanceNEQ(v float64) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldInitialBalance, v))
+}
+
+// InitialBalanceIn applies the In predicate on the "initial_balance" field.
+func InitialBalanceIn(vs ...float64) predicate.User {
+	return predicate.User(sql.FieldIn(FieldInitialBalance, vs...))
+}
+
+// InitialBalanceNotIn applies the NotIn predicate on the "initial_balance" field.
+func InitialBalanceNotIn(vs ...float64) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldInitialBalance, vs...))
+}
+
+// InitialBalanceGT applies the GT predicate on the "initial_balance" field.
+func InitialBalanceGT(v float64) predicate.User {
+	return predicate.User(sql.FieldGT(FieldInitialBalance, v))
+}
+
+// InitialBalanceGTE applies the GTE predicate on the "initial_balance" field.
+func InitialBalanceGTE(v float64) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldInitialBalance, v))
+}
+
+// InitialBalanceLT applies the LT predicate on the "initial_balance" field.
+func InitialBalanceLT(v float64) predicate.User {
+	return predicate.User(sql.FieldLT(FieldInitialBalance, v))
+}
+
+// InitialBalanceLTE applies the LTE predicate on the "initial_balance" field.
+func InitialBalanceLTE(v float64) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldInitialBalance, v))
+}
+
+// InitialBalanceExpiresAtEQ applies the EQ predicate on the "initial_balance_expires_at" field.
+func InitialBalanceExpiresAtEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldInitialBalanceExpiresAt, v))
+}
+
+// InitialBalanceExpiresAtNEQ applies the NEQ predicate on the "initial_balance_expires_at" field.
+func InitialBalanceExpiresAtNEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldInitialBalanceExpiresAt, v))
+}
+
+// InitialBalanceExpiresAtIn applies the In predicate on the "initial_balance_expires_at" field.
+func InitialBalanceExpiresAtIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldIn(FieldInitialBalanceExpiresAt, vs...))
+}
+
+// InitialBalanceExpiresAtNotIn applies the NotIn predicate on the "initial_balance_expires_at" field.
+func InitialBalanceExpiresAtNotIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldInitialBalanceExpiresAt, vs...))
+}
+
+// InitialBalanceExpiresAtGT applies the GT predicate on the "initial_balance_expires_at" field.
+func InitialBalanceExpiresAtGT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGT(FieldInitialBalanceExpiresAt, v))
+}
+
+// InitialBalanceExpiresAtGTE applies the GTE predicate on the "initial_balance_expires_at" field.
+func InitialBalanceExpiresAtGTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldInitialBalanceExpiresAt, v))
+}
+
+// InitialBalanceExpiresAtLT applies the LT predicate on the "initial_balance_expires_at" field.
+func InitialBalanceExpiresAtLT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLT(FieldInitialBalanceExpiresAt, v))
+}
+
+// InitialBalanceExpiresAtLTE applies the LTE predicate on the "initial_balance_expires_at" field.
+func InitialBalanceExpiresAtLTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldInitialBalanceExpiresAt, v))
+}
+
+// InitialBalanceExpiresAtIsNil applies the IsNil predicate on the "initial_balance_expires_at" field.
+func InitialBalanceExpiresAtIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldInitialBalanceExpiresAt))
+}
+
+// InitialBalanceExpiresAtNotNil applies the NotNil predicate on the "initial_balance_expires_at" field.
+func InitialBalanceExpiresAtNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldInitialBalanceExpiresAt))
+}
+
 // HasAPIKeys applies the HasEdge predicate on the "api_keys" edge.
 func HasAPIKeys() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
@@ -1044,6 +1304,144 @@ func HasPromoCodeUsagesWith(preds ...predicate.PromoCodeUsage) predicate.User {
 	})
 }
 
+// HasReferralsAsInviter applies the HasEdge predicate on the "referrals_as_inviter" edge.
+func HasReferralsAsInviter() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ReferralsAsInviterTable, ReferralsAsInviterColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasReferralsAsInviterWith applies the HasEdge predicate on the "referrals_as_inviter" edge with a given conditions (other predicates).
+func HasReferralsAsInviterWith(preds ...predicate.Referral) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newReferralsAsInviterStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasReferralsAsInvitee applies the HasEdge predicate on the "referrals_as_invitee" edge.
+func HasReferralsAsInvitee() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ReferralsAsInviteeTable, ReferralsAsInviteeColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasReferralsAsInviteeWith applies the HasEdge predicate on the "referrals_as_invitee" edge with a given conditions (other predicates).
+func HasReferralsAsInviteeWith(preds ...predicate.Referral) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newReferralsAsInviteeStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasOwnedOrganizations applies the HasEdge predicate on the "owned_organizations" edge.
+func HasOwnedOrganizations() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, OwnedOrganizationsTable, OwnedOrganizationsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasOwnedOrganizationsWith applies the HasEdge predicate on the "owned_organizations" edge with a given conditions (other predicates).
+func HasOwnedOrganizationsWith(preds ...predicate.Organization) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newOwnedOrganizationsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasOrgMemberships applies the HasEdge predicate on the "org_memberships" edge.
+func HasOrgMemberships() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, OrgMembershipsTable, OrgMembershipsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasOrgMembershipsWith applies the HasEdge predicate on the "org_memberships" edge with a given conditions (other predicates).
+func HasOrgMembershipsWith(preds ...predicate.OrgMember) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newOrgMembershipsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAdminInviteCodes applies the HasEdge predicate on the "admin_invite_codes" edge.
+func HasAdminInviteCodes() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AdminInviteCodesTable, AdminInviteCodesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAdminInviteCodesWith applies the HasEdge predicate on the "admin_invite_codes" edge with a given conditions (other predicates).
+func HasAdminInviteCodesWith(preds ...predicate.AdminInviteCode) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newAdminInviteCodesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPaymentOrders applies the HasEdge predicate on the "payment_orders" edge.
+func HasPaymentOrders() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PaymentOrdersTable, PaymentOrdersColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPaymentOrdersWith applies the HasEdge predicate on the "payment_orders" edge with a given conditions (other predicates).
+func HasPaymentOrdersWith(preds ...predicate.PaymentOrder) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newPaymentOrdersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasUserAllowedGroups applies the HasEdge predicate on the "user_allowed_groups" edge.
 func HasUserAllowedGroups() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
@@ -1070,21 +1468,6 @@ func HasUserAllowedGroupsWith(preds ...predicate.UserAllowedGroup) predicate.Use
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(sql.AndPredicates(predicates...))
-}
-
-// InviteCodeEQ applies the EQ predicate on the "invite_code" field.
-func InviteCodeEQ(v string) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldInviteCode, v))
-}
-
-// DiscoverySourceEQ applies the EQ predicate on the "discovery_source" field.
-func DiscoverySourceEQ(v string) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldDiscoverySource, v))
-}
-
-// DiscoverySourceIsNil applies the IsNil predicate on the "discovery_source" field.
-func DiscoverySourceIsNil() predicate.User {
-	return predicate.User(sql.FieldIsNull(FieldDiscoverySource))
 }
 
 // Or groups predicates with the OR operator between them.

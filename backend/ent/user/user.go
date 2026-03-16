@@ -47,6 +47,10 @@ const (
 	FieldInviteCode = "invite_code"
 	// FieldDiscoverySource holds the string denoting the discovery_source field in the database.
 	FieldDiscoverySource = "discovery_source"
+	// FieldInitialBalance holds the string denoting the initial_balance field in the database.
+	FieldInitialBalance = "initial_balance"
+	// FieldInitialBalanceExpiresAt holds the string denoting the initial_balance_expires_at field in the database.
+	FieldInitialBalanceExpiresAt = "initial_balance_expires_at"
 	// EdgeAPIKeys holds the string denoting the api_keys edge name in mutations.
 	EdgeAPIKeys = "api_keys"
 	// EdgeRedeemCodes holds the string denoting the redeem_codes edge name in mutations.
@@ -63,6 +67,18 @@ const (
 	EdgeAttributeValues = "attribute_values"
 	// EdgePromoCodeUsages holds the string denoting the promo_code_usages edge name in mutations.
 	EdgePromoCodeUsages = "promo_code_usages"
+	// EdgeReferralsAsInviter holds the string denoting the referrals_as_inviter edge name in mutations.
+	EdgeReferralsAsInviter = "referrals_as_inviter"
+	// EdgeReferralsAsInvitee holds the string denoting the referrals_as_invitee edge name in mutations.
+	EdgeReferralsAsInvitee = "referrals_as_invitee"
+	// EdgeOwnedOrganizations holds the string denoting the owned_organizations edge name in mutations.
+	EdgeOwnedOrganizations = "owned_organizations"
+	// EdgeOrgMemberships holds the string denoting the org_memberships edge name in mutations.
+	EdgeOrgMemberships = "org_memberships"
+	// EdgeAdminInviteCodes holds the string denoting the admin_invite_codes edge name in mutations.
+	EdgeAdminInviteCodes = "admin_invite_codes"
+	// EdgePaymentOrders holds the string denoting the payment_orders edge name in mutations.
+	EdgePaymentOrders = "payment_orders"
 	// EdgeUserAllowedGroups holds the string denoting the user_allowed_groups edge name in mutations.
 	EdgeUserAllowedGroups = "user_allowed_groups"
 	// Table holds the table name of the user in the database.
@@ -121,6 +137,48 @@ const (
 	PromoCodeUsagesInverseTable = "promo_code_usages"
 	// PromoCodeUsagesColumn is the table column denoting the promo_code_usages relation/edge.
 	PromoCodeUsagesColumn = "user_id"
+	// ReferralsAsInviterTable is the table that holds the referrals_as_inviter relation/edge.
+	ReferralsAsInviterTable = "referrals"
+	// ReferralsAsInviterInverseTable is the table name for the Referral entity.
+	// It exists in this package in order to avoid circular dependency with the "referral" package.
+	ReferralsAsInviterInverseTable = "referrals"
+	// ReferralsAsInviterColumn is the table column denoting the referrals_as_inviter relation/edge.
+	ReferralsAsInviterColumn = "inviter_id"
+	// ReferralsAsInviteeTable is the table that holds the referrals_as_invitee relation/edge.
+	ReferralsAsInviteeTable = "referrals"
+	// ReferralsAsInviteeInverseTable is the table name for the Referral entity.
+	// It exists in this package in order to avoid circular dependency with the "referral" package.
+	ReferralsAsInviteeInverseTable = "referrals"
+	// ReferralsAsInviteeColumn is the table column denoting the referrals_as_invitee relation/edge.
+	ReferralsAsInviteeColumn = "invitee_id"
+	// OwnedOrganizationsTable is the table that holds the owned_organizations relation/edge.
+	OwnedOrganizationsTable = "organizations"
+	// OwnedOrganizationsInverseTable is the table name for the Organization entity.
+	// It exists in this package in order to avoid circular dependency with the "organization" package.
+	OwnedOrganizationsInverseTable = "organizations"
+	// OwnedOrganizationsColumn is the table column denoting the owned_organizations relation/edge.
+	OwnedOrganizationsColumn = "owner_user_id"
+	// OrgMembershipsTable is the table that holds the org_memberships relation/edge.
+	OrgMembershipsTable = "org_members"
+	// OrgMembershipsInverseTable is the table name for the OrgMember entity.
+	// It exists in this package in order to avoid circular dependency with the "orgmember" package.
+	OrgMembershipsInverseTable = "org_members"
+	// OrgMembershipsColumn is the table column denoting the org_memberships relation/edge.
+	OrgMembershipsColumn = "user_id"
+	// AdminInviteCodesTable is the table that holds the admin_invite_codes relation/edge.
+	AdminInviteCodesTable = "admin_invite_codes"
+	// AdminInviteCodesInverseTable is the table name for the AdminInviteCode entity.
+	// It exists in this package in order to avoid circular dependency with the "admininvitecode" package.
+	AdminInviteCodesInverseTable = "admin_invite_codes"
+	// AdminInviteCodesColumn is the table column denoting the admin_invite_codes relation/edge.
+	AdminInviteCodesColumn = "created_by"
+	// PaymentOrdersTable is the table that holds the payment_orders relation/edge.
+	PaymentOrdersTable = "payment_orders"
+	// PaymentOrdersInverseTable is the table name for the PaymentOrder entity.
+	// It exists in this package in order to avoid circular dependency with the "paymentorder" package.
+	PaymentOrdersInverseTable = "payment_orders"
+	// PaymentOrdersColumn is the table column denoting the payment_orders relation/edge.
+	PaymentOrdersColumn = "user_id"
 	// UserAllowedGroupsTable is the table that holds the user_allowed_groups relation/edge.
 	UserAllowedGroupsTable = "user_allowed_groups"
 	// UserAllowedGroupsInverseTable is the table name for the UserAllowedGroup entity.
@@ -149,6 +207,8 @@ var Columns = []string{
 	FieldTotpEnabledAt,
 	FieldInviteCode,
 	FieldDiscoverySource,
+	FieldInitialBalance,
+	FieldInitialBalanceExpiresAt,
 }
 
 var (
@@ -205,6 +265,12 @@ var (
 	DefaultNotes string
 	// DefaultTotpEnabled holds the default value on creation for the "totp_enabled" field.
 	DefaultTotpEnabled bool
+	// InviteCodeValidator is a validator for the "invite_code" field. It is called by the builders before save.
+	InviteCodeValidator func(string) error
+	// DiscoverySourceValidator is a validator for the "discovery_source" field. It is called by the builders before save.
+	DiscoverySourceValidator func(string) error
+	// DefaultInitialBalance holds the default value on creation for the "initial_balance" field.
+	DefaultInitialBalance float64
 )
 
 // OrderOption defines the ordering options for the User queries.
@@ -283,6 +349,26 @@ func ByTotpEnabled(opts ...sql.OrderTermOption) OrderOption {
 // ByTotpEnabledAt orders the results by the totp_enabled_at field.
 func ByTotpEnabledAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTotpEnabledAt, opts...).ToFunc()
+}
+
+// ByInviteCode orders the results by the invite_code field.
+func ByInviteCode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldInviteCode, opts...).ToFunc()
+}
+
+// ByDiscoverySource orders the results by the discovery_source field.
+func ByDiscoverySource(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDiscoverySource, opts...).ToFunc()
+}
+
+// ByInitialBalance orders the results by the initial_balance field.
+func ByInitialBalance(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldInitialBalance, opts...).ToFunc()
+}
+
+// ByInitialBalanceExpiresAt orders the results by the initial_balance_expires_at field.
+func ByInitialBalanceExpiresAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldInitialBalanceExpiresAt, opts...).ToFunc()
 }
 
 // ByAPIKeysCount orders the results by api_keys count.
@@ -397,6 +483,90 @@ func ByPromoCodeUsages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByReferralsAsInviterCount orders the results by referrals_as_inviter count.
+func ByReferralsAsInviterCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newReferralsAsInviterStep(), opts...)
+	}
+}
+
+// ByReferralsAsInviter orders the results by referrals_as_inviter terms.
+func ByReferralsAsInviter(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newReferralsAsInviterStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByReferralsAsInviteeCount orders the results by referrals_as_invitee count.
+func ByReferralsAsInviteeCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newReferralsAsInviteeStep(), opts...)
+	}
+}
+
+// ByReferralsAsInvitee orders the results by referrals_as_invitee terms.
+func ByReferralsAsInvitee(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newReferralsAsInviteeStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByOwnedOrganizationsCount orders the results by owned_organizations count.
+func ByOwnedOrganizationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newOwnedOrganizationsStep(), opts...)
+	}
+}
+
+// ByOwnedOrganizations orders the results by owned_organizations terms.
+func ByOwnedOrganizations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newOwnedOrganizationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByOrgMembershipsCount orders the results by org_memberships count.
+func ByOrgMembershipsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newOrgMembershipsStep(), opts...)
+	}
+}
+
+// ByOrgMemberships orders the results by org_memberships terms.
+func ByOrgMemberships(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newOrgMembershipsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAdminInviteCodesCount orders the results by admin_invite_codes count.
+func ByAdminInviteCodesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAdminInviteCodesStep(), opts...)
+	}
+}
+
+// ByAdminInviteCodes orders the results by admin_invite_codes terms.
+func ByAdminInviteCodes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAdminInviteCodesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByPaymentOrdersCount orders the results by payment_orders count.
+func ByPaymentOrdersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPaymentOrdersStep(), opts...)
+	}
+}
+
+// ByPaymentOrders orders the results by payment_orders terms.
+func ByPaymentOrders(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPaymentOrdersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByUserAllowedGroupsCount orders the results by user_allowed_groups count.
 func ByUserAllowedGroupsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -464,6 +634,48 @@ func newPromoCodeUsagesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PromoCodeUsagesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PromoCodeUsagesTable, PromoCodeUsagesColumn),
+	)
+}
+func newReferralsAsInviterStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ReferralsAsInviterInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ReferralsAsInviterTable, ReferralsAsInviterColumn),
+	)
+}
+func newReferralsAsInviteeStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ReferralsAsInviteeInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ReferralsAsInviteeTable, ReferralsAsInviteeColumn),
+	)
+}
+func newOwnedOrganizationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(OwnedOrganizationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, OwnedOrganizationsTable, OwnedOrganizationsColumn),
+	)
+}
+func newOrgMembershipsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(OrgMembershipsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, OrgMembershipsTable, OrgMembershipsColumn),
+	)
+}
+func newAdminInviteCodesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AdminInviteCodesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AdminInviteCodesTable, AdminInviteCodesColumn),
+	)
+}
+func newPaymentOrdersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PaymentOrdersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PaymentOrdersTable, PaymentOrdersColumn),
 	)
 }
 func newUserAllowedGroupsStep() *sqlgraph.Step {

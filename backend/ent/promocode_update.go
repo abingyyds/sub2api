@@ -43,24 +43,59 @@ func (_u *PromoCodeUpdate) SetNillableCode(v *string) *PromoCodeUpdate {
 	return _u
 }
 
-// SetBonusAmount sets the "bonus_amount" field.
-func (_u *PromoCodeUpdate) SetBonusAmount(v float64) *PromoCodeUpdate {
-	_u.mutation.ResetBonusAmount()
-	_u.mutation.SetBonusAmount(v)
+// SetDiscountAmount sets the "discount_amount" field.
+func (_u *PromoCodeUpdate) SetDiscountAmount(v float64) *PromoCodeUpdate {
+	_u.mutation.ResetDiscountAmount()
+	_u.mutation.SetDiscountAmount(v)
 	return _u
 }
 
-// SetNillableBonusAmount sets the "bonus_amount" field if the given value is not nil.
-func (_u *PromoCodeUpdate) SetNillableBonusAmount(v *float64) *PromoCodeUpdate {
+// SetNillableDiscountAmount sets the "discount_amount" field if the given value is not nil.
+func (_u *PromoCodeUpdate) SetNillableDiscountAmount(v *float64) *PromoCodeUpdate {
 	if v != nil {
-		_u.SetBonusAmount(*v)
+		_u.SetDiscountAmount(*v)
 	}
 	return _u
 }
 
-// AddBonusAmount adds value to the "bonus_amount" field.
-func (_u *PromoCodeUpdate) AddBonusAmount(v float64) *PromoCodeUpdate {
-	_u.mutation.AddBonusAmount(v)
+// AddDiscountAmount adds value to the "discount_amount" field.
+func (_u *PromoCodeUpdate) AddDiscountAmount(v float64) *PromoCodeUpdate {
+	_u.mutation.AddDiscountAmount(v)
+	return _u
+}
+
+// SetDiscountType sets the "discount_type" field.
+func (_u *PromoCodeUpdate) SetDiscountType(v string) *PromoCodeUpdate {
+	_u.mutation.SetDiscountType(v)
+	return _u
+}
+
+// SetNillableDiscountType sets the "discount_type" field if the given value is not nil.
+func (_u *PromoCodeUpdate) SetNillableDiscountType(v *string) *PromoCodeUpdate {
+	if v != nil {
+		_u.SetDiscountType(*v)
+	}
+	return _u
+}
+
+// SetMinOrderAmount sets the "min_order_amount" field.
+func (_u *PromoCodeUpdate) SetMinOrderAmount(v int) *PromoCodeUpdate {
+	_u.mutation.ResetMinOrderAmount()
+	_u.mutation.SetMinOrderAmount(v)
+	return _u
+}
+
+// SetNillableMinOrderAmount sets the "min_order_amount" field if the given value is not nil.
+func (_u *PromoCodeUpdate) SetNillableMinOrderAmount(v *int) *PromoCodeUpdate {
+	if v != nil {
+		_u.SetMinOrderAmount(*v)
+	}
+	return _u
+}
+
+// AddMinOrderAmount adds value to the "min_order_amount" field.
+func (_u *PromoCodeUpdate) AddMinOrderAmount(v int) *PromoCodeUpdate {
+	_u.mutation.AddMinOrderAmount(v)
 	return _u
 }
 
@@ -250,6 +285,11 @@ func (_u *PromoCodeUpdate) check() error {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "PromoCode.code": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.DiscountType(); ok {
+		if err := promocode.DiscountTypeValidator(v); err != nil {
+			return &ValidationError{Name: "discount_type", err: fmt.Errorf(`ent: validator failed for field "PromoCode.discount_type": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Status(); ok {
 		if err := promocode.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "PromoCode.status": %w`, err)}
@@ -273,11 +313,20 @@ func (_u *PromoCodeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Code(); ok {
 		_spec.SetField(promocode.FieldCode, field.TypeString, value)
 	}
-	if value, ok := _u.mutation.BonusAmount(); ok {
-		_spec.SetField(promocode.FieldBonusAmount, field.TypeFloat64, value)
+	if value, ok := _u.mutation.DiscountAmount(); ok {
+		_spec.SetField(promocode.FieldDiscountAmount, field.TypeFloat64, value)
 	}
-	if value, ok := _u.mutation.AddedBonusAmount(); ok {
-		_spec.AddField(promocode.FieldBonusAmount, field.TypeFloat64, value)
+	if value, ok := _u.mutation.AddedDiscountAmount(); ok {
+		_spec.AddField(promocode.FieldDiscountAmount, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.DiscountType(); ok {
+		_spec.SetField(promocode.FieldDiscountType, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.MinOrderAmount(); ok {
+		_spec.SetField(promocode.FieldMinOrderAmount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedMinOrderAmount(); ok {
+		_spec.AddField(promocode.FieldMinOrderAmount, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.MaxUses(); ok {
 		_spec.SetField(promocode.FieldMaxUses, field.TypeInt, value)
@@ -388,24 +437,59 @@ func (_u *PromoCodeUpdateOne) SetNillableCode(v *string) *PromoCodeUpdateOne {
 	return _u
 }
 
-// SetBonusAmount sets the "bonus_amount" field.
-func (_u *PromoCodeUpdateOne) SetBonusAmount(v float64) *PromoCodeUpdateOne {
-	_u.mutation.ResetBonusAmount()
-	_u.mutation.SetBonusAmount(v)
+// SetDiscountAmount sets the "discount_amount" field.
+func (_u *PromoCodeUpdateOne) SetDiscountAmount(v float64) *PromoCodeUpdateOne {
+	_u.mutation.ResetDiscountAmount()
+	_u.mutation.SetDiscountAmount(v)
 	return _u
 }
 
-// SetNillableBonusAmount sets the "bonus_amount" field if the given value is not nil.
-func (_u *PromoCodeUpdateOne) SetNillableBonusAmount(v *float64) *PromoCodeUpdateOne {
+// SetNillableDiscountAmount sets the "discount_amount" field if the given value is not nil.
+func (_u *PromoCodeUpdateOne) SetNillableDiscountAmount(v *float64) *PromoCodeUpdateOne {
 	if v != nil {
-		_u.SetBonusAmount(*v)
+		_u.SetDiscountAmount(*v)
 	}
 	return _u
 }
 
-// AddBonusAmount adds value to the "bonus_amount" field.
-func (_u *PromoCodeUpdateOne) AddBonusAmount(v float64) *PromoCodeUpdateOne {
-	_u.mutation.AddBonusAmount(v)
+// AddDiscountAmount adds value to the "discount_amount" field.
+func (_u *PromoCodeUpdateOne) AddDiscountAmount(v float64) *PromoCodeUpdateOne {
+	_u.mutation.AddDiscountAmount(v)
+	return _u
+}
+
+// SetDiscountType sets the "discount_type" field.
+func (_u *PromoCodeUpdateOne) SetDiscountType(v string) *PromoCodeUpdateOne {
+	_u.mutation.SetDiscountType(v)
+	return _u
+}
+
+// SetNillableDiscountType sets the "discount_type" field if the given value is not nil.
+func (_u *PromoCodeUpdateOne) SetNillableDiscountType(v *string) *PromoCodeUpdateOne {
+	if v != nil {
+		_u.SetDiscountType(*v)
+	}
+	return _u
+}
+
+// SetMinOrderAmount sets the "min_order_amount" field.
+func (_u *PromoCodeUpdateOne) SetMinOrderAmount(v int) *PromoCodeUpdateOne {
+	_u.mutation.ResetMinOrderAmount()
+	_u.mutation.SetMinOrderAmount(v)
+	return _u
+}
+
+// SetNillableMinOrderAmount sets the "min_order_amount" field if the given value is not nil.
+func (_u *PromoCodeUpdateOne) SetNillableMinOrderAmount(v *int) *PromoCodeUpdateOne {
+	if v != nil {
+		_u.SetMinOrderAmount(*v)
+	}
+	return _u
+}
+
+// AddMinOrderAmount adds value to the "min_order_amount" field.
+func (_u *PromoCodeUpdateOne) AddMinOrderAmount(v int) *PromoCodeUpdateOne {
+	_u.mutation.AddMinOrderAmount(v)
 	return _u
 }
 
@@ -608,6 +692,11 @@ func (_u *PromoCodeUpdateOne) check() error {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "PromoCode.code": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.DiscountType(); ok {
+		if err := promocode.DiscountTypeValidator(v); err != nil {
+			return &ValidationError{Name: "discount_type", err: fmt.Errorf(`ent: validator failed for field "PromoCode.discount_type": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Status(); ok {
 		if err := promocode.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "PromoCode.status": %w`, err)}
@@ -648,11 +737,20 @@ func (_u *PromoCodeUpdateOne) sqlSave(ctx context.Context) (_node *PromoCode, er
 	if value, ok := _u.mutation.Code(); ok {
 		_spec.SetField(promocode.FieldCode, field.TypeString, value)
 	}
-	if value, ok := _u.mutation.BonusAmount(); ok {
-		_spec.SetField(promocode.FieldBonusAmount, field.TypeFloat64, value)
+	if value, ok := _u.mutation.DiscountAmount(); ok {
+		_spec.SetField(promocode.FieldDiscountAmount, field.TypeFloat64, value)
 	}
-	if value, ok := _u.mutation.AddedBonusAmount(); ok {
-		_spec.AddField(promocode.FieldBonusAmount, field.TypeFloat64, value)
+	if value, ok := _u.mutation.AddedDiscountAmount(); ok {
+		_spec.AddField(promocode.FieldDiscountAmount, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.DiscountType(); ok {
+		_spec.SetField(promocode.FieldDiscountType, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.MinOrderAmount(); ok {
+		_spec.SetField(promocode.FieldMinOrderAmount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedMinOrderAmount(); ok {
+		_spec.AddField(promocode.FieldMinOrderAmount, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.MaxUses(); ok {
 		_spec.SetField(promocode.FieldMaxUses, field.TypeInt, value)

@@ -49,6 +49,10 @@ type User struct {
 	InviteCode *string `json:"invite_code,omitempty"`
 	// DiscoverySource holds the value of the "discovery_source" field.
 	DiscoverySource *string `json:"discovery_source,omitempty"`
+	// InitialBalance holds the value of the "initial_balance" field.
+	InitialBalance float64 `json:"initial_balance,omitempty"`
+	// InitialBalanceExpiresAt holds the value of the "initial_balance_expires_at" field.
+	InitialBalanceExpiresAt *time.Time `json:"initial_balance_expires_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges        UserEdges `json:"edges"`
@@ -73,11 +77,23 @@ type UserEdges struct {
 	AttributeValues []*UserAttributeValue `json:"attribute_values,omitempty"`
 	// PromoCodeUsages holds the value of the promo_code_usages edge.
 	PromoCodeUsages []*PromoCodeUsage `json:"promo_code_usages,omitempty"`
+	// ReferralsAsInviter holds the value of the referrals_as_inviter edge.
+	ReferralsAsInviter []*Referral `json:"referrals_as_inviter,omitempty"`
+	// ReferralsAsInvitee holds the value of the referrals_as_invitee edge.
+	ReferralsAsInvitee []*Referral `json:"referrals_as_invitee,omitempty"`
+	// OwnedOrganizations holds the value of the owned_organizations edge.
+	OwnedOrganizations []*Organization `json:"owned_organizations,omitempty"`
+	// OrgMemberships holds the value of the org_memberships edge.
+	OrgMemberships []*OrgMember `json:"org_memberships,omitempty"`
+	// AdminInviteCodes holds the value of the admin_invite_codes edge.
+	AdminInviteCodes []*AdminInviteCode `json:"admin_invite_codes,omitempty"`
+	// PaymentOrders holds the value of the payment_orders edge.
+	PaymentOrders []*PaymentOrder `json:"payment_orders,omitempty"`
 	// UserAllowedGroups holds the value of the user_allowed_groups edge.
 	UserAllowedGroups []*UserAllowedGroup `json:"user_allowed_groups,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [9]bool
+	loadedTypes [15]bool
 }
 
 // APIKeysOrErr returns the APIKeys value or an error if the edge
@@ -152,10 +168,64 @@ func (e UserEdges) PromoCodeUsagesOrErr() ([]*PromoCodeUsage, error) {
 	return nil, &NotLoadedError{edge: "promo_code_usages"}
 }
 
+// ReferralsAsInviterOrErr returns the ReferralsAsInviter value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ReferralsAsInviterOrErr() ([]*Referral, error) {
+	if e.loadedTypes[8] {
+		return e.ReferralsAsInviter, nil
+	}
+	return nil, &NotLoadedError{edge: "referrals_as_inviter"}
+}
+
+// ReferralsAsInviteeOrErr returns the ReferralsAsInvitee value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ReferralsAsInviteeOrErr() ([]*Referral, error) {
+	if e.loadedTypes[9] {
+		return e.ReferralsAsInvitee, nil
+	}
+	return nil, &NotLoadedError{edge: "referrals_as_invitee"}
+}
+
+// OwnedOrganizationsOrErr returns the OwnedOrganizations value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) OwnedOrganizationsOrErr() ([]*Organization, error) {
+	if e.loadedTypes[10] {
+		return e.OwnedOrganizations, nil
+	}
+	return nil, &NotLoadedError{edge: "owned_organizations"}
+}
+
+// OrgMembershipsOrErr returns the OrgMemberships value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) OrgMembershipsOrErr() ([]*OrgMember, error) {
+	if e.loadedTypes[11] {
+		return e.OrgMemberships, nil
+	}
+	return nil, &NotLoadedError{edge: "org_memberships"}
+}
+
+// AdminInviteCodesOrErr returns the AdminInviteCodes value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AdminInviteCodesOrErr() ([]*AdminInviteCode, error) {
+	if e.loadedTypes[12] {
+		return e.AdminInviteCodes, nil
+	}
+	return nil, &NotLoadedError{edge: "admin_invite_codes"}
+}
+
+// PaymentOrdersOrErr returns the PaymentOrders value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) PaymentOrdersOrErr() ([]*PaymentOrder, error) {
+	if e.loadedTypes[13] {
+		return e.PaymentOrders, nil
+	}
+	return nil, &NotLoadedError{edge: "payment_orders"}
+}
+
 // UserAllowedGroupsOrErr returns the UserAllowedGroups value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserAllowedGroupsOrErr() ([]*UserAllowedGroup, error) {
-	if e.loadedTypes[8] {
+	if e.loadedTypes[14] {
 		return e.UserAllowedGroups, nil
 	}
 	return nil, &NotLoadedError{edge: "user_allowed_groups"}
@@ -168,13 +238,13 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldTotpEnabled:
 			values[i] = new(sql.NullBool)
-		case user.FieldBalance:
+		case user.FieldBalance, user.FieldInitialBalance:
 			values[i] = new(sql.NullFloat64)
 		case user.FieldID, user.FieldConcurrency:
 			values[i] = new(sql.NullInt64)
 		case user.FieldEmail, user.FieldPasswordHash, user.FieldRole, user.FieldStatus, user.FieldUsername, user.FieldNotes, user.FieldTotpSecretEncrypted, user.FieldInviteCode, user.FieldDiscoverySource:
 			values[i] = new(sql.NullString)
-		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt, user.FieldTotpEnabledAt:
+		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt, user.FieldTotpEnabledAt, user.FieldInitialBalanceExpiresAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -298,6 +368,19 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				_m.DiscoverySource = new(string)
 				*_m.DiscoverySource = value.String
 			}
+		case user.FieldInitialBalance:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field initial_balance", values[i])
+			} else if value.Valid {
+				_m.InitialBalance = value.Float64
+			}
+		case user.FieldInitialBalanceExpiresAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field initial_balance_expires_at", values[i])
+			} else if value.Valid {
+				_m.InitialBalanceExpiresAt = new(time.Time)
+				*_m.InitialBalanceExpiresAt = value.Time
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -349,6 +432,36 @@ func (_m *User) QueryAttributeValues() *UserAttributeValueQuery {
 // QueryPromoCodeUsages queries the "promo_code_usages" edge of the User entity.
 func (_m *User) QueryPromoCodeUsages() *PromoCodeUsageQuery {
 	return NewUserClient(_m.config).QueryPromoCodeUsages(_m)
+}
+
+// QueryReferralsAsInviter queries the "referrals_as_inviter" edge of the User entity.
+func (_m *User) QueryReferralsAsInviter() *ReferralQuery {
+	return NewUserClient(_m.config).QueryReferralsAsInviter(_m)
+}
+
+// QueryReferralsAsInvitee queries the "referrals_as_invitee" edge of the User entity.
+func (_m *User) QueryReferralsAsInvitee() *ReferralQuery {
+	return NewUserClient(_m.config).QueryReferralsAsInvitee(_m)
+}
+
+// QueryOwnedOrganizations queries the "owned_organizations" edge of the User entity.
+func (_m *User) QueryOwnedOrganizations() *OrganizationQuery {
+	return NewUserClient(_m.config).QueryOwnedOrganizations(_m)
+}
+
+// QueryOrgMemberships queries the "org_memberships" edge of the User entity.
+func (_m *User) QueryOrgMemberships() *OrgMemberQuery {
+	return NewUserClient(_m.config).QueryOrgMemberships(_m)
+}
+
+// QueryAdminInviteCodes queries the "admin_invite_codes" edge of the User entity.
+func (_m *User) QueryAdminInviteCodes() *AdminInviteCodeQuery {
+	return NewUserClient(_m.config).QueryAdminInviteCodes(_m)
+}
+
+// QueryPaymentOrders queries the "payment_orders" edge of the User entity.
+func (_m *User) QueryPaymentOrders() *PaymentOrderQuery {
+	return NewUserClient(_m.config).QueryPaymentOrders(_m)
 }
 
 // QueryUserAllowedGroups queries the "user_allowed_groups" edge of the User entity.
@@ -424,6 +537,24 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	if v := _m.TotpEnabledAt; v != nil {
 		builder.WriteString("totp_enabled_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.InviteCode; v != nil {
+		builder.WriteString("invite_code=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.DiscoverySource; v != nil {
+		builder.WriteString("discovery_source=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	builder.WriteString("initial_balance=")
+	builder.WriteString(fmt.Sprintf("%v", _m.InitialBalance))
+	builder.WriteString(", ")
+	if v := _m.InitialBalanceExpiresAt; v != nil {
+		builder.WriteString("initial_balance_expires_at=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteByte(')')

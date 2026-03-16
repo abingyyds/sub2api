@@ -19,8 +19,12 @@ type PromoCode struct {
 	ID int64 `json:"id,omitempty"`
 	// 优惠码
 	Code string `json:"code,omitempty"`
-	// 赠送余额金额
-	BonusAmount float64 `json:"bonus_amount,omitempty"`
+	// 折扣金额: fixed时为分, percentage时为百分比(如10=减10%)
+	DiscountAmount float64 `json:"discount_amount,omitempty"`
+	// 折扣类型: fixed(固定减免/分), percentage(百分比折扣)
+	DiscountType string `json:"discount_type,omitempty"`
+	// 最低订单金额(分), 0表示无门槛
+	MinOrderAmount int `json:"min_order_amount,omitempty"`
 	// 最大使用次数，0表示无限制
 	MaxUses int `json:"max_uses,omitempty"`
 	// 已使用次数
@@ -64,11 +68,11 @@ func (*PromoCode) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case promocode.FieldBonusAmount:
+		case promocode.FieldDiscountAmount:
 			values[i] = new(sql.NullFloat64)
-		case promocode.FieldID, promocode.FieldMaxUses, promocode.FieldUsedCount:
+		case promocode.FieldID, promocode.FieldMinOrderAmount, promocode.FieldMaxUses, promocode.FieldUsedCount:
 			values[i] = new(sql.NullInt64)
-		case promocode.FieldCode, promocode.FieldStatus, promocode.FieldNotes:
+		case promocode.FieldCode, promocode.FieldDiscountType, promocode.FieldStatus, promocode.FieldNotes:
 			values[i] = new(sql.NullString)
 		case promocode.FieldExpiresAt, promocode.FieldCreatedAt, promocode.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -99,11 +103,23 @@ func (_m *PromoCode) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Code = value.String
 			}
-		case promocode.FieldBonusAmount:
+		case promocode.FieldDiscountAmount:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
-				return fmt.Errorf("unexpected type %T for field bonus_amount", values[i])
+				return fmt.Errorf("unexpected type %T for field discount_amount", values[i])
 			} else if value.Valid {
-				_m.BonusAmount = value.Float64
+				_m.DiscountAmount = value.Float64
+			}
+		case promocode.FieldDiscountType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field discount_type", values[i])
+			} else if value.Valid {
+				_m.DiscountType = value.String
+			}
+		case promocode.FieldMinOrderAmount:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field min_order_amount", values[i])
+			} else if value.Valid {
+				_m.MinOrderAmount = int(value.Int64)
 			}
 		case promocode.FieldMaxUses:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -193,8 +209,14 @@ func (_m *PromoCode) String() string {
 	builder.WriteString("code=")
 	builder.WriteString(_m.Code)
 	builder.WriteString(", ")
-	builder.WriteString("bonus_amount=")
-	builder.WriteString(fmt.Sprintf("%v", _m.BonusAmount))
+	builder.WriteString("discount_amount=")
+	builder.WriteString(fmt.Sprintf("%v", _m.DiscountAmount))
+	builder.WriteString(", ")
+	builder.WriteString("discount_type=")
+	builder.WriteString(_m.DiscountType)
+	builder.WriteString(", ")
+	builder.WriteString("min_order_amount=")
+	builder.WriteString(fmt.Sprintf("%v", _m.MinOrderAmount))
 	builder.WriteString(", ")
 	builder.WriteString("max_uses=")
 	builder.WriteString(fmt.Sprintf("%v", _m.MaxUses))
