@@ -6,7 +6,7 @@
           <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <!-- Total Requests -->
             <GlowCard glow-color="rgb(59, 130, 246)">
-              <div class="card p-4">
+              <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
                 <div class="flex items-center gap-3">
                   <div class="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/30">
                     <Icon name="document" size="md" class="text-blue-600 dark:text-blue-400" />
@@ -28,7 +28,7 @@
 
             <!-- Total Tokens -->
             <GlowCard glow-color="rgb(245, 158, 11)">
-              <div class="card p-4">
+              <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
                 <div class="flex items-center gap-3">
                   <div class="rounded-lg bg-amber-100 p-2 dark:bg-amber-900/30">
                     <Icon name="cube" size="md" class="text-amber-600 dark:text-amber-400" />
@@ -51,7 +51,7 @@
 
             <!-- Total Cost -->
             <GlowCard glow-color="rgb(34, 197, 94)">
-              <div class="card p-4">
+              <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
                 <div class="flex items-center gap-3">
                   <div class="rounded-lg bg-green-100 p-2 dark:bg-green-900/30">
                     <Icon name="dollar" size="md" class="text-green-600 dark:text-green-400" />
@@ -75,7 +75,7 @@
 
             <!-- Average Duration -->
             <GlowCard glow-color="rgb(168, 85, 247)">
-              <div class="card p-4">
+              <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
                 <div class="flex items-center gap-3">
                   <div class="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/30">
                     <Icon name="clock" size="md" class="text-purple-600 dark:text-purple-400" />
@@ -97,7 +97,7 @@
       </template>
 
       <template #filters>
-        <div class="card">
+        <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft">
           <div class="px-6 py-4">
           <div class="flex flex-wrap items-end gap-4">
             <!-- API Key Filter -->
@@ -824,3 +824,9 @@ onMounted(() => {
   loadUsageStats()
 })
 </script>
+
+<style scoped>
+.shadow-soft {
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
+}
+</style>

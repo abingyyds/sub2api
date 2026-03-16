@@ -58,7 +58,7 @@ func (PaymentOrder) Fields() []ent.Field {
 		field.String("pay_method").
 			MaxLen(20).
 			Default("wechat_native").
-			Comment("wechat_native | alipay_native"),
+			Comment("wechat_native | alipay_native | epay_alipay | epay_wxpay"),
 		field.String("wechat_transaction_id").
 			MaxLen(64).
 			Optional().
@@ -69,6 +69,11 @@ func (PaymentOrder) Fields() []ent.Field {
 			Optional().
 			Nillable().
 			Comment("支付宝交易号"),
+		field.String("epay_trade_no").
+			MaxLen(64).
+			Optional().
+			Nillable().
+			Comment("易支付交易号"),
 		field.Text("code_url").
 			Optional().
 			Nillable(),

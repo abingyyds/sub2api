@@ -288,6 +288,15 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	updates[SettingKeyAlipayNotifyURL] = settings.AlipayNotifyURL
 	updates[SettingKeyAlipayIsProduction] = strconv.FormatBool(settings.AlipayIsProduction)
 
+	// Epay (易支付) settings
+	updates[SettingKeyEpayEnabled] = strconv.FormatBool(settings.EpayEnabled)
+	updates[SettingKeyEpayGateway] = settings.EpayGateway
+	updates[SettingKeyEpayPID] = settings.EpayPID
+	if settings.EpayPKey != "" {
+		updates[SettingKeyEpayPKey] = settings.EpayPKey
+	}
+	updates[SettingKeyEpayNotifyURL] = settings.EpayNotifyURL
+
 	err := s.settingRepo.SetMultiple(ctx, updates)
 	if err == nil && s.onUpdate != nil {
 		s.onUpdate() // Invalidate cache after settings update
@@ -463,6 +472,9 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		// Alipay defaults
 		SettingKeyAlipayEnabled:      "false",
 		SettingKeyAlipayIsProduction: "false",
+
+		// Epay defaults
+		SettingKeyEpayEnabled: "false",
 	}
 
 	return s.settingRepo.SetMultiple(ctx, defaults)
@@ -633,6 +645,14 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 	result.AlipayPublicKeyConfigured = settings[SettingKeyAlipayPublicKey] != ""
 	result.AlipayNotifyURL = settings[SettingKeyAlipayNotifyURL]
 	result.AlipayIsProduction = settings[SettingKeyAlipayIsProduction] == "true"
+
+	// Epay (易支付) settings
+	result.EpayEnabled = settings[SettingKeyEpayEnabled] == "true"
+	result.EpayGateway = settings[SettingKeyEpayGateway]
+	result.EpayPID = settings[SettingKeyEpayPID]
+	result.EpayPKey = settings[SettingKeyEpayPKey]
+	result.EpayPKeyConfigured = settings[SettingKeyEpayPKey] != ""
+	result.EpayNotifyURL = settings[SettingKeyEpayNotifyURL]
 
 	return result
 }

@@ -94,6 +94,13 @@ export interface SystemSettings {
   alipay_public_key_configured: boolean
   alipay_notify_url: string
   alipay_is_production: boolean
+
+  // Epay (易支付)
+  epay_enabled: boolean
+  epay_gateway: string
+  epay_pid: string
+  epay_pkey_configured: boolean
+  epay_notify_url: string
 }
 
 export interface UpdateSettingsRequest {
@@ -165,6 +172,13 @@ export interface UpdateSettingsRequest {
   alipay_public_key?: string
   alipay_notify_url?: string
   alipay_is_production?: boolean
+
+  // Epay (易支付)
+  epay_enabled?: boolean
+  epay_gateway?: string
+  epay_pid?: string
+  epay_pkey?: string
+  epay_notify_url?: string
 }
 
 /**

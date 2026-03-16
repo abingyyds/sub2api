@@ -278,6 +278,26 @@ func (_u *PaymentOrderUpdate) ClearAlipayTradeNo() *PaymentOrderUpdate {
 	return _u
 }
 
+// SetEpayTradeNo sets the "epay_trade_no" field.
+func (_u *PaymentOrderUpdate) SetEpayTradeNo(v string) *PaymentOrderUpdate {
+	_u.mutation.SetEpayTradeNo(v)
+	return _u
+}
+
+// SetNillableEpayTradeNo sets the "epay_trade_no" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableEpayTradeNo(v *string) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetEpayTradeNo(*v)
+	}
+	return _u
+}
+
+// ClearEpayTradeNo clears the value of the "epay_trade_no" field.
+func (_u *PaymentOrderUpdate) ClearEpayTradeNo() *PaymentOrderUpdate {
+	_u.mutation.ClearEpayTradeNo()
+	return _u
+}
+
 // SetCodeURL sets the "code_url" field.
 func (_u *PaymentOrderUpdate) SetCodeURL(v string) *PaymentOrderUpdate {
 	_u.mutation.SetCodeURL(v)
@@ -432,6 +452,11 @@ func (_u *PaymentOrderUpdate) check() error {
 			return &ValidationError{Name: "alipay_trade_no", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.alipay_trade_no": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.EpayTradeNo(); ok {
+		if err := paymentorder.EpayTradeNoValidator(v); err != nil {
+			return &ValidationError{Name: "epay_trade_no", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.epay_trade_no": %w`, err)}
+		}
+	}
 	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "PaymentOrder.user"`)
 	}
@@ -512,6 +537,12 @@ func (_u *PaymentOrderUpdate) sqlSave(ctx context.Context) (_node int, err error
 	}
 	if _u.mutation.AlipayTradeNoCleared() {
 		_spec.ClearField(paymentorder.FieldAlipayTradeNo, field.TypeString)
+	}
+	if value, ok := _u.mutation.EpayTradeNo(); ok {
+		_spec.SetField(paymentorder.FieldEpayTradeNo, field.TypeString, value)
+	}
+	if _u.mutation.EpayTradeNoCleared() {
+		_spec.ClearField(paymentorder.FieldEpayTradeNo, field.TypeString)
 	}
 	if value, ok := _u.mutation.CodeURL(); ok {
 		_spec.SetField(paymentorder.FieldCodeURL, field.TypeString, value)
@@ -829,6 +860,26 @@ func (_u *PaymentOrderUpdateOne) ClearAlipayTradeNo() *PaymentOrderUpdateOne {
 	return _u
 }
 
+// SetEpayTradeNo sets the "epay_trade_no" field.
+func (_u *PaymentOrderUpdateOne) SetEpayTradeNo(v string) *PaymentOrderUpdateOne {
+	_u.mutation.SetEpayTradeNo(v)
+	return _u
+}
+
+// SetNillableEpayTradeNo sets the "epay_trade_no" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableEpayTradeNo(v *string) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetEpayTradeNo(*v)
+	}
+	return _u
+}
+
+// ClearEpayTradeNo clears the value of the "epay_trade_no" field.
+func (_u *PaymentOrderUpdateOne) ClearEpayTradeNo() *PaymentOrderUpdateOne {
+	_u.mutation.ClearEpayTradeNo()
+	return _u
+}
+
 // SetCodeURL sets the "code_url" field.
 func (_u *PaymentOrderUpdateOne) SetCodeURL(v string) *PaymentOrderUpdateOne {
 	_u.mutation.SetCodeURL(v)
@@ -996,6 +1047,11 @@ func (_u *PaymentOrderUpdateOne) check() error {
 			return &ValidationError{Name: "alipay_trade_no", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.alipay_trade_no": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.EpayTradeNo(); ok {
+		if err := paymentorder.EpayTradeNoValidator(v); err != nil {
+			return &ValidationError{Name: "epay_trade_no", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.epay_trade_no": %w`, err)}
+		}
+	}
 	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "PaymentOrder.user"`)
 	}
@@ -1093,6 +1149,12 @@ func (_u *PaymentOrderUpdateOne) sqlSave(ctx context.Context) (_node *PaymentOrd
 	}
 	if _u.mutation.AlipayTradeNoCleared() {
 		_spec.ClearField(paymentorder.FieldAlipayTradeNo, field.TypeString)
+	}
+	if value, ok := _u.mutation.EpayTradeNo(); ok {
+		_spec.SetField(paymentorder.FieldEpayTradeNo, field.TypeString, value)
+	}
+	if _u.mutation.EpayTradeNoCleared() {
+		_spec.ClearField(paymentorder.FieldEpayTradeNo, field.TypeString)
 	}
 	if value, ok := _u.mutation.CodeURL(); ok {
 		_spec.SetField(paymentorder.FieldCodeURL, field.TypeString, value)

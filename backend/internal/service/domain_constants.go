@@ -246,6 +246,8 @@ const (
 const (
 	PaymentMethodWechatNative = "wechat_native"
 	PaymentMethodAlipayNative = "alipay_native"
+	PaymentMethodEpayAlipay   = "epay_alipay"
+	PaymentMethodEpayWxpay    = "epay_wxpay"
 )
 
 // Alipay settings keys
@@ -256,4 +258,13 @@ const (
 	SettingKeyAlipayPublicKey    = "alipay_public_key"
 	SettingKeyAlipayNotifyURL    = "alipay_notify_url"
 	SettingKeyAlipayIsProduction = "alipay_is_production"
+)
+
+// Epay (易支付) settings keys
+const (
+	SettingKeyEpayEnabled   = "epay_enabled"
+	SettingKeyEpayGateway   = "epay_gateway"
+	SettingKeyEpayPID       = "epay_pid"
+	SettingKeyEpayPKey      = "epay_pkey"
+	SettingKeyEpayNotifyURL = "epay_notify_url"
 )

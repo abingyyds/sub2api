@@ -42,6 +42,8 @@ const (
 	FieldWechatTransactionID = "wechat_transaction_id"
 	// FieldAlipayTradeNo holds the string denoting the alipay_trade_no field in the database.
 	FieldAlipayTradeNo = "alipay_trade_no"
+	// FieldEpayTradeNo holds the string denoting the epay_trade_no field in the database.
+	FieldEpayTradeNo = "epay_trade_no"
 	// FieldCodeURL holds the string denoting the code_url field in the database.
 	FieldCodeURL = "code_url"
 	// FieldPaidAt holds the string denoting the paid_at field in the database.
@@ -82,6 +84,7 @@ var Columns = []string{
 	FieldPayMethod,
 	FieldWechatTransactionID,
 	FieldAlipayTradeNo,
+	FieldEpayTradeNo,
 	FieldCodeURL,
 	FieldPaidAt,
 	FieldExpiredAt,
@@ -130,6 +133,8 @@ var (
 	WechatTransactionIDValidator func(string) error
 	// AlipayTradeNoValidator is a validator for the "alipay_trade_no" field. It is called by the builders before save.
 	AlipayTradeNoValidator func(string) error
+	// EpayTradeNoValidator is a validator for the "epay_trade_no" field. It is called by the builders before save.
+	EpayTradeNoValidator func(string) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -214,6 +219,11 @@ func ByWechatTransactionID(opts ...sql.OrderTermOption) OrderOption {
 // ByAlipayTradeNo orders the results by the alipay_trade_no field.
 func ByAlipayTradeNo(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAlipayTradeNo, opts...).ToFunc()
+}
+
+// ByEpayTradeNo orders the results by the epay_trade_no field.
+func ByEpayTradeNo(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEpayTradeNo, opts...).ToFunc()
 }
 
 // ByCodeURL orders the results by the code_url field.

@@ -5,8 +5,9 @@
         <!-- Current Balance Card -->
         <SlideIn direction="up" :delay="100">
           <GlowCard glow-color="rgb(59, 130, 246)">
-            <div class="card overflow-hidden">
-              <div class="bg-gradient-to-br from-primary-500 to-primary-600 px-6 py-8 text-center">
+            <div class="overflow-hidden rounded-3xl border-2 border-primary-100 dark:border-primary-800/30 bg-white dark:bg-dark-900 shadow-soft">
+              <div class="bg-gradient-to-br from-primary-500 to-primary-600 px-6 py-8 text-center relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                 <div
                   class="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm"
                 >
@@ -27,7 +28,7 @@
         <!-- Redeem Form -->
         <SlideIn direction="up" :delay="200">
           <GlowCard glow-color="rgb(168, 85, 247)">
-            <div class="card">
+            <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft">
               <div class="p-6">
                 <form @submit.prevent="handleRedeem" class="space-y-5">
                   <div>
@@ -93,7 +94,7 @@
       <transition name="fade">
         <div
           v-if="redeemResult"
-          class="card border-emerald-200 bg-emerald-50 dark:border-emerald-800/50 dark:bg-emerald-900/20"
+          class="rounded-2xl border-2 border-emerald-200 bg-emerald-50 dark:border-emerald-800/50 dark:bg-emerald-900/20 shadow-soft"
         >
           <div class="p-6">
             <div class="flex items-start gap-4">
@@ -147,7 +148,7 @@
       <transition name="fade">
         <div
           v-if="errorMessage"
-          class="card border-red-200 bg-red-50 dark:border-red-800/50 dark:bg-red-900/20"
+          class="rounded-2xl border-2 border-red-200 bg-red-50 dark:border-red-800/50 dark:bg-red-900/20 shadow-soft"
         >
           <div class="p-6">
             <div class="flex items-start gap-4">
@@ -176,7 +177,7 @@
       <!-- Information Card -->
       <SlideIn direction="up" :delay="300">
         <div
-          class="card border-primary-200 bg-primary-50 dark:border-primary-800/50 dark:bg-primary-900/20"
+          class="rounded-2xl border-2 border-primary-200 bg-primary-50 dark:border-primary-800/50 dark:bg-primary-900/20 shadow-soft"
         >
           <div class="p-6">
             <div class="flex items-start gap-4">
@@ -213,9 +214,10 @@
 
       <!-- Recent Activity -->
       <SlideIn direction="up" :delay="400">
-        <div class="card">
-          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+        <GlowCard glow-color="rgb(99, 102, 241)">
+          <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft overflow-hidden">
+            <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+              <h2 class="text-lg font-bold text-gray-900 dark:text-white">
               {{ t('redeem.recentActivity') }}
             </h2>
           </div>
@@ -343,6 +345,7 @@
           </div>
         </div>
         </div>
+        </GlowCard>
       </SlideIn>
     </div>
   </FadeIn>
@@ -497,6 +500,10 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.shadow-soft {
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: all 0.3s ease;

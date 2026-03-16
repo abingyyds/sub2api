@@ -646,6 +646,7 @@ var (
 		{Name: "pay_method", Type: field.TypeString, Size: 20, Default: "wechat_native"},
 		{Name: "wechat_transaction_id", Type: field.TypeString, Nullable: true, Size: 64},
 		{Name: "alipay_trade_no", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "epay_trade_no", Type: field.TypeString, Nullable: true, Size: 64},
 		{Name: "code_url", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "paid_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamp"}},
 		{Name: "expired_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamp"}},
@@ -661,7 +662,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "payment_orders_users_payment_orders",
-				Columns:    []*schema.Column{PaymentOrdersColumns[19]},
+				Columns:    []*schema.Column{PaymentOrdersColumns[20]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -670,7 +671,7 @@ var (
 			{
 				Name:    "paymentorder_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{PaymentOrdersColumns[19]},
+				Columns: []*schema.Column{PaymentOrdersColumns[20]},
 			},
 			{
 				Name:    "paymentorder_order_no",

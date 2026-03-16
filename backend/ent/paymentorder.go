@@ -40,12 +40,14 @@ type PaymentOrder struct {
 	DiscountAmount int `json:"discount_amount,omitempty"`
 	// Status holds the value of the "status" field.
 	Status string `json:"status,omitempty"`
-	// wechat_native | alipay_native
+	// wechat_native | alipay_native | epay_alipay | epay_wxpay
 	PayMethod string `json:"pay_method,omitempty"`
 	// 微信交易号
 	WechatTransactionID *string `json:"wechat_transaction_id,omitempty"`
 	// 支付宝交易号
 	AlipayTradeNo *string `json:"alipay_trade_no,omitempty"`
+	// 易支付交易号
+	EpayTradeNo *string `json:"epay_trade_no,omitempty"`
 	// CodeURL holds the value of the "code_url" field.
 	CodeURL *string `json:"code_url,omitempty"`
 	// PaidAt holds the value of the "paid_at" field.
@@ -91,7 +93,7 @@ func (*PaymentOrder) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullFloat64)
 		case paymentorder.FieldID, paymentorder.FieldUserID, paymentorder.FieldGroupID, paymentorder.FieldAmountFen, paymentorder.FieldValidityDays, paymentorder.FieldDiscountAmount:
 			values[i] = new(sql.NullInt64)
-		case paymentorder.FieldOrderNo, paymentorder.FieldPlanKey, paymentorder.FieldOrderType, paymentorder.FieldPromoCode, paymentorder.FieldStatus, paymentorder.FieldPayMethod, paymentorder.FieldWechatTransactionID, paymentorder.FieldAlipayTradeNo, paymentorder.FieldCodeURL:
+		case paymentorder.FieldOrderNo, paymentorder.FieldPlanKey, paymentorder.FieldOrderType, paymentorder.FieldPromoCode, paymentorder.FieldStatus, paymentorder.FieldPayMethod, paymentorder.FieldWechatTransactionID, paymentorder.FieldAlipayTradeNo, paymentorder.FieldEpayTradeNo, paymentorder.FieldCodeURL:
 			values[i] = new(sql.NullString)
 		case paymentorder.FieldPaidAt, paymentorder.FieldExpiredAt, paymentorder.FieldCreatedAt, paymentorder.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -201,6 +203,13 @@ func (_m *PaymentOrder) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.AlipayTradeNo = new(string)
 				*_m.AlipayTradeNo = value.String
+			}
+		case paymentorder.FieldEpayTradeNo:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field epay_trade_no", values[i])
+			} else if value.Valid {
+				_m.EpayTradeNo = new(string)
+				*_m.EpayTradeNo = value.String
 			}
 		case paymentorder.FieldCodeURL:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -318,6 +327,11 @@ func (_m *PaymentOrder) String() string {
 	builder.WriteString(", ")
 	if v := _m.AlipayTradeNo; v != nil {
 		builder.WriteString("alipay_trade_no=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.EpayTradeNo; v != nil {
+		builder.WriteString("epay_trade_no=")
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")

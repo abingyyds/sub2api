@@ -1,5 +1,5 @@
 <template>
-  <div class="card">
+  <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft">
     <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
       <h2 class="text-lg font-medium text-gray-900 dark:text-white">
         {{ t('profile.changePassword') }}
@@ -107,3 +107,9 @@ const handleChangePassword = async () => {
   }
 }
 </script>
+
+<style scoped>
+.shadow-soft {
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
+}
+</style>

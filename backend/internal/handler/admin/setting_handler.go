@@ -108,6 +108,11 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		AlipayPublicKeyConfigured:            settings.AlipayPublicKeyConfigured,
 		AlipayNotifyURL:                      settings.AlipayNotifyURL,
 		AlipayIsProduction:                   settings.AlipayIsProduction,
+		EpayEnabled:                          settings.EpayEnabled,
+		EpayGateway:                          settings.EpayGateway,
+		EpayPID:                              settings.EpayPID,
+		EpayPKeyConfigured:                   settings.EpayPKeyConfigured,
+		EpayNotifyURL:                        settings.EpayNotifyURL,
 	})
 }
 
@@ -200,6 +205,13 @@ type UpdateSettingsRequest struct {
 	AlipayPublicKey    string `json:"alipay_public_key"`
 	AlipayNotifyURL    string `json:"alipay_notify_url"`
 	AlipayIsProduction bool   `json:"alipay_is_production"`
+
+	// Epay (易支付)
+	EpayEnabled   bool   `json:"epay_enabled"`
+	EpayGateway   string `json:"epay_gateway"`
+	EpayPID       string `json:"epay_pid"`
+	EpayPKey      string `json:"epay_pkey"`
+	EpayNotifyURL string `json:"epay_notify_url"`
 }
 
 // UpdateSettings 更新系统设置
@@ -398,6 +410,11 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		AlipayPublicKey:      req.AlipayPublicKey,
 		AlipayNotifyURL:      req.AlipayNotifyURL,
 		AlipayIsProduction:   req.AlipayIsProduction,
+		EpayEnabled:          req.EpayEnabled,
+		EpayGateway:          req.EpayGateway,
+		EpayPID:              req.EpayPID,
+		EpayPKey:             req.EpayPKey,
+		EpayNotifyURL:        req.EpayNotifyURL,
 	}
 
 	if err := h.settingService.UpdateSettings(c.Request.Context(), settings); err != nil {
@@ -477,6 +494,11 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		AlipayPublicKeyConfigured:            updatedSettings.AlipayPublicKeyConfigured,
 		AlipayNotifyURL:                      updatedSettings.AlipayNotifyURL,
 		AlipayIsProduction:                   updatedSettings.AlipayIsProduction,
+		EpayEnabled:                          updatedSettings.EpayEnabled,
+		EpayGateway:                          updatedSettings.EpayGateway,
+		EpayPID:                              updatedSettings.EpayPID,
+		EpayPKeyConfigured:                   updatedSettings.EpayPKeyConfigured,
+		EpayNotifyURL:                        updatedSettings.EpayNotifyURL,
 	})
 }
 

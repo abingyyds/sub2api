@@ -40,9 +40,6 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 		// Server layer ProviderSet
 		server.ProviderSet,
 
-		// BuildInfo provider
-		provideServiceBuildInfo,
-
 		// Cleanup function provider
 		provideCleanup,
 
@@ -50,13 +47,6 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 		wire.Struct(new(Application), "Server", "Cleanup"),
 	)
 	return nil, nil
-}
-
-func provideServiceBuildInfo(buildInfo handler.BuildInfo) service.BuildInfo {
-	return service.BuildInfo{
-		Version:   buildInfo.Version,
-		BuildType: buildInfo.BuildType,
-	}
 }
 
 func provideCleanup(

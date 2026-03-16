@@ -51,14 +51,14 @@ func (h *PaymentHandler) GetRechargeInfo(c *gin.Context) {
 type CreateOrderRequest struct {
 	PlanKey   string `json:"plan_key" binding:"required"`
 	PromoCode string `json:"promo_code"` // 优惠码
-	PayMethod string `json:"pay_method"` // "wechat" | "alipay"
+	PayMethod string `json:"pay_method"` // "wechat" | "alipay" | "epay_alipay" | "epay_wxpay"
 }
 
 // CreateRechargeRequest represents the request body for creating a recharge order
 type CreateRechargeRequest struct {
 	Amount    float64 `json:"amount" binding:"required,gt=0"`
 	PromoCode string  `json:"promo_code"` // 优惠码
-	PayMethod string  `json:"pay_method"` // "wechat" | "alipay"
+	PayMethod string  `json:"pay_method"` // "wechat" | "alipay" | "epay_alipay" | "epay_wxpay"
 }
 
 // CreateOrder creates a new payment order
@@ -259,5 +259,35 @@ func (h *PaymentHandler) AlipayNotify(c *gin.Context) {
 	}
 
 	// 支付宝要求返回纯文本 "success"
+	c.String(http.StatusOK, "success")
+}
+
+// EpayNotify handles Epay (易支付) callback notifications
+// POST /api/v1/payment/epay/notify
+func (h *PaymentHandler) EpayNotify(c *gin.Context) {
+	// Epay sends params via GET query or POST form
+	params := make(map[string]string)
+	// Try query params first, then form params
+	for key, values := range c.Request.URL.Query() {
+		if len(values) > 0 {
+			params[key] = values[0]
+		}
+	}
+	if c.Request.Method == "POST" {
+		if err := c.Request.ParseForm(); err == nil {
+			for key, values := range c.Request.PostForm {
+				if len(values) > 0 {
+					params[key] = values[0]
+				}
+			}
+		}
+	}
+
+	if err := h.paymentService.HandleEpayNotify(c.Request.Context(), params); err != nil {
+		log.Printf("[Payment] EpayNotify error: %v", err)
+		c.String(http.StatusInternalServerError, "failure")
+		return
+	}
+
 	c.String(http.StatusOK, "success")
 }

@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto"
 	"crypto/aes"
+	"crypto/md5"
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/rsa"
@@ -18,6 +19,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -67,6 +69,7 @@ type PaymentOrder struct {
 	PayMethod           string
 	WechatTransactionID *string
 	AlipayTradeNo       *string
+	EpayTradeNo         *string
 	CodeURL             *string
 	PaidAt              *time.Time
 	ExpiredAt           time.Time
@@ -330,9 +333,23 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 		payMethod = "wechat"
 	}
 	var payMethodStr string
-	if payMethod == "alipay" {
+	switch payMethod {
+	case "alipay":
+		if enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyAlipayEnabled); enabled != "true" {
+			return nil, infraerrors.Forbidden("ALIPAY_DISABLED", "alipay payment is not enabled")
+		}
 		payMethodStr = PaymentMethodAlipayNative
-	} else {
+	case "epay_alipay":
+		if enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayEnabled); enabled != "true" {
+			return nil, infraerrors.Forbidden("EPAY_DISABLED", "epay payment is not enabled")
+		}
+		payMethodStr = PaymentMethodEpayAlipay
+	case "epay_wxpay":
+		if enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayEnabled); enabled != "true" {
+			return nil, infraerrors.Forbidden("EPAY_DISABLED", "epay payment is not enabled")
+		}
+		payMethodStr = PaymentMethodEpayWxpay
+	default:
 		payMethodStr = PaymentMethodWechatNative
 	}
 
@@ -361,9 +378,14 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 
 	// 根据支付方式调用不同的下单接口
 	var codeURL string
-	if payMethod == "alipay" {
+	switch payMethod {
+	case "alipay":
 		codeURL, err = s.createAlipayNativeOrder(ctx, order, plan.Name)
-	} else {
+	case "epay_alipay":
+		codeURL, err = s.createEpayOrder(ctx, order, plan.Name, "alipay")
+	case "epay_wxpay":
+		codeURL, err = s.createEpayOrder(ctx, order, plan.Name, "wxpay")
+	default:
 		codeURL, err = s.createWechatNativeOrder(ctx, order, plan.Name)
 	}
 	if err != nil {
@@ -426,9 +448,23 @@ func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, 
 		payMethod = "wechat"
 	}
 	var payMethodStr string
-	if payMethod == "alipay" {
+	switch payMethod {
+	case "alipay":
+		if enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyAlipayEnabled); enabled != "true" {
+			return nil, infraerrors.Forbidden("ALIPAY_DISABLED", "alipay payment is not enabled")
+		}
 		payMethodStr = PaymentMethodAlipayNative
-	} else {
+	case "epay_alipay":
+		if enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayEnabled); enabled != "true" {
+			return nil, infraerrors.Forbidden("EPAY_DISABLED", "epay payment is not enabled")
+		}
+		payMethodStr = PaymentMethodEpayAlipay
+	case "epay_wxpay":
+		if enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayEnabled); enabled != "true" {
+			return nil, infraerrors.Forbidden("EPAY_DISABLED", "epay payment is not enabled")
+		}
+		payMethodStr = PaymentMethodEpayWxpay
+	default:
 		payMethodStr = PaymentMethodWechatNative
 	}
 
@@ -451,9 +487,14 @@ func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, 
 	description := fmt.Sprintf("余额充值 %.2f 元", amountYuan)
 	var codeURL string
 	var err error
-	if payMethod == "alipay" {
+	switch payMethod {
+	case "alipay":
 		codeURL, err = s.createAlipayNativeOrder(ctx, order, description)
-	} else {
+	case "epay_alipay":
+		codeURL, err = s.createEpayOrder(ctx, order, description, "alipay")
+	case "epay_wxpay":
+		codeURL, err = s.createEpayOrder(ctx, order, description, "wxpay")
+	default:
 		codeURL, err = s.createWechatNativeOrder(ctx, order, description)
 	}
 	if err != nil {
@@ -558,44 +599,7 @@ func (s *PaymentService) HandleWechatNotify(ctx context.Context, body []byte, we
 	}
 
 	// 7. 根据订单类型处理
-	if order.OrderType == "balance" {
-		// 充值余额
-		if err := s.userRepo.UpdateBalance(ctx, order.UserID, order.BalanceAmount); err != nil {
-			log.Printf("[Payment] Failed to update balance for order %s, user %d: %v", order.OrderNo, order.UserID, err)
-			return fmt.Errorf("update balance: %w", err)
-		}
-		// 失效余额缓存
-		if err := s.billingCache.InvalidateUserBalance(ctx, order.UserID); err != nil {
-			log.Printf("[Payment] Failed to invalidate balance cache for user %d: %v", order.UserID, err)
-		}
-		log.Printf("[Payment] Order %s paid successfully, balance +%.2f for user %d",
-			order.OrderNo, order.BalanceAmount, order.UserID)
-	} else {
-		// 分配订阅
-		_, _, err = s.subscriptionService.AssignOrExtendSubscription(ctx, &AssignSubscriptionInput{
-			UserID:       order.UserID,
-			GroupID:      order.GroupID,
-			ValidityDays: order.ValidityDays,
-			AssignedBy:   0, // 系统自动分配
-			Notes:        fmt.Sprintf("微信支付订单 %s", order.OrderNo),
-		})
-		if err != nil {
-			log.Printf("[Payment] Failed to assign subscription for order %s, user %d: %v", order.OrderNo, order.UserID, err)
-			return fmt.Errorf("assign subscription: %w", err)
-		}
-		log.Printf("[Payment] Order %s paid successfully, subscription assigned for user %d, group %d, %d days",
-			order.OrderNo, order.UserID, order.GroupID, order.ValidityDays)
-	}
-
-	// 8. 记录优惠码使用（支付成功后才记录）
-	if order.PromoCode != "" && order.DiscountAmount > 0 && s.promoService != nil {
-		if err := s.promoService.ApplyPromoCode(ctx, order.UserID, order.PromoCode, order.OrderNo, float64(order.DiscountAmount)); err != nil {
-			log.Printf("[Payment] Failed to apply promo code for order %s: %v", order.OrderNo, err)
-			// 不阻断支付流程
-		}
-	}
-
-	return nil
+	return s.handlePaymentSuccess(ctx, order)
 }
 
 // ===========================
@@ -848,6 +852,54 @@ func generateNonce() string {
 }
 
 // ===========================
+// Shared Post-Payment Logic
+// ===========================
+
+// handlePaymentSuccess 处理支付成功后的共享逻辑（订阅分配/余额充值/缓存失效/优惠码记录）
+func (s *PaymentService) handlePaymentSuccess(ctx context.Context, order *PaymentOrder) error {
+	if order.OrderType == "balance" {
+		// 充值余额
+		if err := s.userRepo.UpdateBalance(ctx, order.UserID, order.BalanceAmount); err != nil {
+			log.Printf("[Payment] Failed to update balance for order %s, user %d: %v", order.OrderNo, order.UserID, err)
+			return fmt.Errorf("update balance: %w", err)
+		}
+		// 失效余额缓存
+		if s.billingCache != nil {
+			if err := s.billingCache.InvalidateUserBalance(ctx, order.UserID); err != nil {
+				log.Printf("[Payment] Failed to invalidate balance cache for user %d: %v", order.UserID, err)
+			}
+		}
+		log.Printf("[Payment] Order %s paid successfully, balance +%.2f for user %d",
+			order.OrderNo, order.BalanceAmount, order.UserID)
+	} else {
+		// 分配订阅
+		_, _, err := s.subscriptionService.AssignOrExtendSubscription(ctx, &AssignSubscriptionInput{
+			UserID:       order.UserID,
+			GroupID:      order.GroupID,
+			ValidityDays: order.ValidityDays,
+			AssignedBy:   0, // 系统自动分配
+			Notes:        fmt.Sprintf("支付订单 %s", order.OrderNo),
+		})
+		if err != nil {
+			log.Printf("[Payment] Failed to assign subscription for order %s, user %d: %v", order.OrderNo, order.UserID, err)
+			return fmt.Errorf("assign subscription: %w", err)
+		}
+		log.Printf("[Payment] Order %s paid successfully, subscription assigned for user %d, group %d, %d days",
+			order.OrderNo, order.UserID, order.GroupID, order.ValidityDays)
+	}
+
+	// 记录优惠码使用（支付成功后才记录）
+	if order.PromoCode != "" && order.DiscountAmount > 0 && s.promoService != nil {
+		if err := s.promoService.ApplyPromoCode(ctx, order.UserID, order.PromoCode, order.OrderNo, float64(order.DiscountAmount)); err != nil {
+			log.Printf("[Payment] Failed to apply promo code for order %s: %v", order.OrderNo, err)
+			// 不阻断支付流程
+		}
+	}
+
+	return nil
+}
+
+// ===========================
 // Alipay API Integration
 // ===========================
 
@@ -947,6 +999,18 @@ func (s *PaymentService) HandleAlipayNotify(ctx context.Context, req *http.Reque
 		return nil
 	}
 
+	// 验证金额
+	expectedYuan := fmt.Sprintf("%.2f", float64(order.AmountFen)/100.0)
+	if notification.TotalAmount != expectedYuan {
+		return fmt.Errorf("amount mismatch: expected %s, got %s", expectedYuan, notification.TotalAmount)
+	}
+
+	// 验证 AppID
+	configuredAppID, _ := s.settingService.GetSettingValue(ctx, SettingKeyAlipayAppID)
+	if configuredAppID != "" && notification.AppId != configuredAppID {
+		return fmt.Errorf("app_id mismatch: expected %s, got %s", configuredAppID, notification.AppId)
+	}
+
 	// 更新订单状态
 	paidAt := time.Now()
 	tradeNo := notification.TradeNo
@@ -957,44 +1021,193 @@ func (s *PaymentService) HandleAlipayNotify(ctx context.Context, req *http.Reque
 
 	log.Printf("[Payment] Order %s paid via Alipay, trade_no=%s", order.OrderNo, tradeNo)
 
-	// 处理业务逻辑（订阅或余额）
-	if order.OrderType == "subscription" {
-		// 分配订阅
-		_, _, err = s.subscriptionService.AssignOrExtendSubscription(ctx, &AssignSubscriptionInput{
-			UserID:       order.UserID,
-			GroupID:      order.GroupID,
-			ValidityDays: order.ValidityDays,
-			AssignedBy:   order.UserID, // 用户自己购买
-			Notes:        fmt.Sprintf("支付宝订单: %s", order.OrderNo),
-		})
-		if err != nil {
-			log.Printf("[Payment] Failed to assign subscription for order %s: %v", order.OrderNo, err)
-			return fmt.Errorf("assign subscription: %w", err)
+	return s.handlePaymentSuccess(ctx, order)
+}
+
+// ===========================
+// Epay (易支付/ZPAY) Integration
+// ===========================
+
+// epaySign 易支付 MD5 签名
+func epaySign(params map[string]string, pkey string) string {
+	// 过滤空值、sign、sign_type
+	filtered := make(map[string]string)
+	for k, v := range params {
+		if v == "" || k == "sign" || k == "sign_type" {
+			continue
 		}
-		log.Printf("[Payment] Order %s paid successfully, subscription assigned for user %d, group %d, %d days",
-			order.OrderNo, order.UserID, order.GroupID, order.ValidityDays)
-	} else if order.OrderType == "balance" {
-		// 充值余额
-		err = s.userRepo.UpdateBalance(ctx, order.UserID, order.BalanceAmount)
-		if err != nil {
-			log.Printf("[Payment] Failed to update balance for order %s: %v", order.OrderNo, err)
-			return fmt.Errorf("update balance: %w", err)
-		}
-		// 清除余额缓存
-		if s.billingCache != nil {
-			s.billingCache.InvalidateUserBalance(ctx, order.UserID)
-		}
-		log.Printf("[Payment] Order %s paid successfully, balance recharged for user %d, amount=%.2f",
-			order.OrderNo, order.UserID, order.BalanceAmount)
+		filtered[k] = v
 	}
 
-	// 记录优惠码使用（支付成功后才记录）
-	if order.PromoCode != "" && order.DiscountAmount > 0 && s.promoService != nil {
-		if err := s.promoService.ApplyPromoCode(ctx, order.UserID, order.PromoCode, order.OrderNo, float64(order.DiscountAmount)); err != nil {
-			log.Printf("[Payment] Failed to apply promo code for order %s: %v", order.OrderNo, err)
-			// 不阻断支付流程
+	// 按 key 排序
+	keys := make([]string, 0, len(filtered))
+	for k := range filtered {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	// 拼接查询字符串
+	var buf strings.Builder
+	for i, k := range keys {
+		if i > 0 {
+			buf.WriteByte('&')
 		}
+		buf.WriteString(k)
+		buf.WriteByte('=')
+		buf.WriteString(filtered[k])
+	}
+	buf.WriteString(pkey)
+
+	// MD5 哈希
+	hash := md5.Sum([]byte(buf.String()))
+	return fmt.Sprintf("%x", hash)
+}
+
+// createEpayOrder 调用易支付下单接口
+func (s *PaymentService) createEpayOrder(ctx context.Context, order *PaymentOrder, name string, payType string) (string, error) {
+	gateway, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayGateway)
+	pid, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayPID)
+	pkey, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayPKey)
+	notifyURL, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayNotifyURL)
+
+	if gateway == "" || pid == "" || pkey == "" || notifyURL == "" {
+		missing := make([]string, 0, 4)
+		if gateway == "" {
+			missing = append(missing, "gateway")
+		}
+		if pid == "" {
+			missing = append(missing, "pid")
+		}
+		if pkey == "" {
+			missing = append(missing, "pkey")
+		}
+		if notifyURL == "" {
+			missing = append(missing, "notify_url")
+		}
+		return "", infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", fmt.Sprintf("epay configuration incomplete, missing: %s", strings.Join(missing, ", ")))
 	}
 
-	return nil
+	// 金额转元
+	money := fmt.Sprintf("%.2f", float64(order.AmountFen)/100.0)
+
+	params := map[string]string{
+		"pid":          pid,
+		"type":         payType,
+		"out_trade_no": order.OrderNo,
+		"notify_url":   notifyURL,
+		"name":         name,
+		"money":        money,
+	}
+	params["sign"] = epaySign(params, pkey)
+	params["sign_type"] = "MD5"
+
+	// POST 到网关
+	gateway = strings.TrimRight(gateway, "/")
+	formData := make([]string, 0, len(params))
+	for k, v := range params {
+		formData = append(formData, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", gateway+"/mapi.php",
+		strings.NewReader(strings.Join(formData, "&")))
+	if err != nil {
+		return "", fmt.Errorf("create epay request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("epay api request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("[Payment] Epay API error: status=%d body=%s", resp.StatusCode, string(respBody))
+		return "", infraerrors.BadRequest("EPAY_API_ERROR", fmt.Sprintf("epay api error: %s", string(respBody)))
+	}
+
+	var result struct {
+		Code    int    `json:"code"`
+		Msg     string `json:"msg"`
+		TradeNo string `json:"trade_no"`
+		PayURL  string `json:"payurl"`
+		QRCode  string `json:"qrcode"`
+	}
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return "", fmt.Errorf("parse epay response: %w, body=%s", err, string(respBody))
+	}
+
+	if result.Code != 1 {
+		return "", infraerrors.BadRequest("EPAY_API_ERROR", fmt.Sprintf("epay error: %s", result.Msg))
+	}
+
+	// 优先使用 qrcode，其次 payurl
+	codeURL := result.QRCode
+	if codeURL == "" {
+		codeURL = result.PayURL
+	}
+	if codeURL == "" {
+		return "", infraerrors.BadRequest("EPAY_API_ERROR", "epay returned no payment url")
+	}
+
+	return codeURL, nil
+}
+
+// HandleEpayNotify 处理易支付回调通知
+func (s *PaymentService) HandleEpayNotify(ctx context.Context, params map[string]string) error {
+	// 读取配置
+	pid, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayPID)
+	pkey, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayPKey)
+
+	if pid == "" || pkey == "" {
+		return fmt.Errorf("epay config not found")
+	}
+
+	// 验证签名
+	expectedSign := epaySign(params, pkey)
+	if params["sign"] != expectedSign {
+		log.Printf("[Payment] EpayNotify signature mismatch: expected=%s, got=%s", expectedSign, params["sign"])
+		return ErrPaymentSignature
+	}
+
+	// 检查交易状态
+	if params["trade_status"] != "TRADE_SUCCESS" {
+		return nil
+	}
+
+	// 验证 PID
+	if params["pid"] != pid {
+		return fmt.Errorf("pid mismatch: expected %s, got %s", pid, params["pid"])
+	}
+
+	// 查询订单
+	order, err := s.orderRepo.GetByOrderNo(ctx, params["out_trade_no"])
+	if err != nil {
+		return fmt.Errorf("get order: %w", err)
+	}
+
+	// 幂等检查
+	if order.Status == PaymentOrderStatusPaid {
+		return nil
+	}
+
+	// 验证金额
+	expectedMoney := fmt.Sprintf("%.2f", float64(order.AmountFen)/100.0)
+	if params["money"] != expectedMoney {
+		return fmt.Errorf("amount mismatch: expected %s, got %s", expectedMoney, params["money"])
+	}
+
+	// 更新订单状态
+	paidAt := time.Now()
+	tradeNo := params["trade_no"]
+	if err := s.orderRepo.UpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPaid, &tradeNo, &paidAt); err != nil {
+		return fmt.Errorf("update order status: %w", err)
+	}
+
+	log.Printf("[Payment] Order %s paid via Epay, trade_no=%s", order.OrderNo, tradeNo)
+
+	return s.handlePaymentSuccess(ctx, order)
 }

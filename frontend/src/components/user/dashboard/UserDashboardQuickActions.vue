@@ -1,7 +1,7 @@
 <template>
-  <div class="card">
+  <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft">
     <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('dashboard.quickActions') }}</h2>
+      <h2 class="text-lg font-bold text-gray-900 dark:text-white">{{ t('dashboard.quickActions') }}</h2>
     </div>
     <div class="space-y-3 p-4">
       <button @click="router.push('/keys')" class="group flex w-full items-center gap-4 rounded-xl bg-gray-50 p-4 text-left transition-all duration-200 hover:bg-gray-100 dark:bg-dark-800/50 dark:hover:bg-dark-800">
@@ -59,3 +59,9 @@ import Icon from '@/components/icons/Icon.vue'
 const router = useRouter()
 const { t } = useI18n()
 </script>
+
+<style scoped>
+.shadow-soft {
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
+}
+</style>

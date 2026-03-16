@@ -10,12 +10,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// BuildInfo contains build information
-type BuildInfo struct {
-	Version   string
-	BuildType string
-}
-
 // ProvidePricingService creates and initializes PricingService
 func ProvidePricingService(cfg *config.Config, remoteClient PricingRemoteClient) (*PricingService, error) {
 	svc := NewPricingService(cfg, remoteClient)
@@ -24,11 +18,6 @@ func ProvidePricingService(cfg *config.Config, remoteClient PricingRemoteClient)
 		println("[Service] Warning: Pricing service initialization failed:", err.Error())
 	}
 	return svc, nil
-}
-
-// ProvideUpdateService creates UpdateService with BuildInfo
-func ProvideUpdateService(cache UpdateCache, githubClient GitHubReleaseClient, buildInfo BuildInfo) *UpdateService {
-	return NewUpdateService(cache, githubClient, buildInfo.Version, buildInfo.BuildType)
 }
 
 // ProvideEmailQueueService creates EmailQueueService with default worker count
@@ -267,7 +256,6 @@ var ProviderSet = wire.NewSet(
 	ProvideSchedulerSnapshotService,
 	NewIdentityService,
 	NewCRSSyncService,
-	ProvideUpdateService,
 	ProvideTokenRefreshService,
 	ProvideAccountExpiryService,
 	ProvideSubscriptionExpiryService,

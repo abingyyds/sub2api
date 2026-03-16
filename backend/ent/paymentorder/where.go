@@ -125,6 +125,11 @@ func AlipayTradeNo(v string) predicate.PaymentOrder {
 	return predicate.PaymentOrder(sql.FieldEQ(FieldAlipayTradeNo, v))
 }
 
+// EpayTradeNo applies equality check predicate on the "epay_trade_no" field. It's identical to EpayTradeNoEQ.
+func EpayTradeNo(v string) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldEQ(FieldEpayTradeNo, v))
+}
+
 // CodeURL applies equality check predicate on the "code_url" field. It's identical to CodeURLEQ.
 func CodeURL(v string) predicate.PaymentOrder {
 	return predicate.PaymentOrder(sql.FieldEQ(FieldCodeURL, v))
@@ -918,6 +923,81 @@ func AlipayTradeNoEqualFold(v string) predicate.PaymentOrder {
 // AlipayTradeNoContainsFold applies the ContainsFold predicate on the "alipay_trade_no" field.
 func AlipayTradeNoContainsFold(v string) predicate.PaymentOrder {
 	return predicate.PaymentOrder(sql.FieldContainsFold(FieldAlipayTradeNo, v))
+}
+
+// EpayTradeNoEQ applies the EQ predicate on the "epay_trade_no" field.
+func EpayTradeNoEQ(v string) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldEQ(FieldEpayTradeNo, v))
+}
+
+// EpayTradeNoNEQ applies the NEQ predicate on the "epay_trade_no" field.
+func EpayTradeNoNEQ(v string) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNEQ(FieldEpayTradeNo, v))
+}
+
+// EpayTradeNoIn applies the In predicate on the "epay_trade_no" field.
+func EpayTradeNoIn(vs ...string) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldIn(FieldEpayTradeNo, vs...))
+}
+
+// EpayTradeNoNotIn applies the NotIn predicate on the "epay_trade_no" field.
+func EpayTradeNoNotIn(vs ...string) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNotIn(FieldEpayTradeNo, vs...))
+}
+
+// EpayTradeNoGT applies the GT predicate on the "epay_trade_no" field.
+func EpayTradeNoGT(v string) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldGT(FieldEpayTradeNo, v))
+}
+
+// EpayTradeNoGTE applies the GTE predicate on the "epay_trade_no" field.
+func EpayTradeNoGTE(v string) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldGTE(FieldEpayTradeNo, v))
+}
+
+// EpayTradeNoLT applies the LT predicate on the "epay_trade_no" field.
+func EpayTradeNoLT(v string) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldLT(FieldEpayTradeNo, v))
+}
+
+// EpayTradeNoLTE applies the LTE predicate on the "epay_trade_no" field.
+func EpayTradeNoLTE(v string) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldLTE(FieldEpayTradeNo, v))
+}
+
+// EpayTradeNoContains applies the Contains predicate on the "epay_trade_no" field.
+func EpayTradeNoContains(v string) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldContains(FieldEpayTradeNo, v))
+}
+
+// EpayTradeNoHasPrefix applies the HasPrefix predicate on the "epay_trade_no" field.
+func EpayTradeNoHasPrefix(v string) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldHasPrefix(FieldEpayTradeNo, v))
+}
+
+// EpayTradeNoHasSuffix applies the HasSuffix predicate on the "epay_trade_no" field.
+func EpayTradeNoHasSuffix(v string) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldHasSuffix(FieldEpayTradeNo, v))
+}
+
+// EpayTradeNoIsNil applies the IsNil predicate on the "epay_trade_no" field.
+func EpayTradeNoIsNil() predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldIsNull(FieldEpayTradeNo))
+}
+
+// EpayTradeNoNotNil applies the NotNil predicate on the "epay_trade_no" field.
+func EpayTradeNoNotNil() predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNotNull(FieldEpayTradeNo))
+}
+
+// EpayTradeNoEqualFold applies the EqualFold predicate on the "epay_trade_no" field.
+func EpayTradeNoEqualFold(v string) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldEqualFold(FieldEpayTradeNo, v))
+}
+
+// EpayTradeNoContainsFold applies the ContainsFold predicate on the "epay_trade_no" field.
+func EpayTradeNoContainsFold(v string) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldContainsFold(FieldEpayTradeNo, v))
 }
 
 // CodeURLEQ applies the EQ predicate on the "code_url" field.

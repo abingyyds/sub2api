@@ -703,12 +703,16 @@ func init() {
 	paymentorderDescAlipayTradeNo := paymentorderFields[14].Descriptor()
 	// paymentorder.AlipayTradeNoValidator is a validator for the "alipay_trade_no" field. It is called by the builders before save.
 	paymentorder.AlipayTradeNoValidator = paymentorderDescAlipayTradeNo.Validators[0].(func(string) error)
+	// paymentorderDescEpayTradeNo is the schema descriptor for epay_trade_no field.
+	paymentorderDescEpayTradeNo := paymentorderFields[15].Descriptor()
+	// paymentorder.EpayTradeNoValidator is a validator for the "epay_trade_no" field. It is called by the builders before save.
+	paymentorder.EpayTradeNoValidator = paymentorderDescEpayTradeNo.Validators[0].(func(string) error)
 	// paymentorderDescCreatedAt is the schema descriptor for created_at field.
-	paymentorderDescCreatedAt := paymentorderFields[18].Descriptor()
+	paymentorderDescCreatedAt := paymentorderFields[19].Descriptor()
 	// paymentorder.DefaultCreatedAt holds the default value on creation for the created_at field.
 	paymentorder.DefaultCreatedAt = paymentorderDescCreatedAt.Default.(func() time.Time)
 	// paymentorderDescUpdatedAt is the schema descriptor for updated_at field.
-	paymentorderDescUpdatedAt := paymentorderFields[19].Descriptor()
+	paymentorderDescUpdatedAt := paymentorderFields[20].Descriptor()
 	// paymentorder.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	paymentorder.DefaultUpdatedAt = paymentorderDescUpdatedAt.Default.(func() time.Time)
 	// paymentorder.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

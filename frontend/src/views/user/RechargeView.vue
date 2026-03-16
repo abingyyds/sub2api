@@ -12,7 +12,7 @@
 
         <SlideIn direction="up" :delay="200">
           <GlowCard glow-color="rgb(59, 130, 246)">
-            <div class="card p-6 space-y-6">
+            <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-6 space-y-6">
               <!-- Quick Select Amounts -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-3">
@@ -124,6 +124,34 @@
               </svg>
               <span class="font-medium text-gray-900 dark:text-white">支付宝</span>
             </div>
+
+            <!-- Epay-支付宝 -->
+            <div
+              class="flex items-center gap-3 rounded-lg border-2 p-4 cursor-pointer transition-all"
+              :class="selectedPayMethod === 'epay_alipay' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-200 dark:border-dark-600 hover:border-primary-300'"
+              @click="selectedPayMethod = 'epay_alipay'"
+            >
+              <input type="radio" :checked="selectedPayMethod === 'epay_alipay'" class="h-5 w-5 text-primary-600" />
+              <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none">
+                <rect width="24" height="24" rx="4" fill="#1677FF"/>
+                <path d="M17.5 14.2c-1.2-.5-2.3-1-3.2-1.4.4-.8.7-1.7.9-2.6h-2.5v-1h3V8.4h-3V6.5h-1.4v1.9h-3v.8h3v1h-2.5v.8h4.6c-.2.7-.5 1.3-.8 1.9-1.3-.5-2.7-.8-3.8-.8-2 0-3.3.9-3.3 2.3 0 1.5 1.3 2.3 3.2 2.3 1.5 0 2.9-.6 4-1.5.9.5 1.9 1 3 1.5l.8-1.2zM9.2 16.3c-1.3 0-1.9-.5-1.9-1.2 0-.8.7-1.3 1.9-1.3.9 0 1.9.2 2.9.7-.9.8-1.9 1.8-2.9 1.8z" fill="white"/>
+              </svg>
+              <span class="font-medium text-gray-900 dark:text-white">Epay-支付宝</span>
+            </div>
+
+            <!-- Epay-微信 -->
+            <div
+              class="flex items-center gap-3 rounded-lg border-2 p-4 cursor-pointer transition-all"
+              :class="selectedPayMethod === 'epay_wxpay' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-200 dark:border-dark-600 hover:border-primary-300'"
+              @click="selectedPayMethod = 'epay_wxpay'"
+            >
+              <input type="radio" :checked="selectedPayMethod === 'epay_wxpay'" class="h-5 w-5 text-primary-600" />
+              <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none">
+                <rect width="24" height="24" rx="4" fill="#07C160"/>
+                <path d="M16.7 10.5c-.2 0-.4 0-.6.1.1-.4.1-.8.1-1.2 0-2.8-2.7-5-5.9-5C7 4.4 4.4 6.6 4.4 9.4c0 1.5.8 2.9 2.1 3.9l-.5 1.6 1.9-1c.6.2 1.2.3 1.8.3h.2c-.1-.3-.1-.7-.1-1 0-2.4 2.3-4.4 5.1-4.4l.2-.1c-.1-.1-.2-.2-.4-.2zm-3.3-2.2c.4 0 .7.3.7.7s-.3.7-.7.7-.7-.3-.7-.7.3-.7.7-.7zm-4.2 1.4c-.4 0-.7-.3-.7-.7s.3-.7.7-.7.7.3.7.7-.3.7-.7.7zm10.4 4.5c0-2.2-2.2-4-4.8-4s-4.8 1.8-4.8 4 2.2 4 4.8 4c.5 0 1-.1 1.5-.2l1.5.8-.4-1.3c1.2-.8 2.2-2 2.2-3.3zm-6.4-.6c-.3 0-.6-.3-.6-.6s.3-.6.6-.6.6.3.6.6-.3.6-.6.6zm3.2 0c-.3 0-.6-.3-.6-.6s.3-.6.6-.6.6.3.6.6-.3.6-.6.6z" fill="white"/>
+              </svg>
+              <span class="font-medium text-gray-900 dark:text-white">Epay-微信</span>
+            </div>
           </div>
 
           <div class="flex gap-3">
@@ -224,7 +252,7 @@ const presets = [10, 50, 100, 200, 500, 1000]
 const selectedAmount = ref<number | null>(null)
 const customInput = ref<string>('')
 const creatingOrder = ref(false)
-const selectedPayMethod = ref<'wechat' | 'alipay'>('wechat')
+const selectedPayMethod = ref<'wechat' | 'alipay' | 'epay_alipay' | 'epay_wxpay'>('wechat')
 const showPayMethodModal = ref(false)
 const pendingPaymentAction = ref<(() => Promise<void>) | null>(null)
 
@@ -346,3 +374,9 @@ function goToDashboard() {
   router.push('/dashboard')
 }
 </script>
+
+<style scoped>
+.shadow-soft {
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
+}
+</style>

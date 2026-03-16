@@ -88,9 +88,12 @@ func (r *paymentOrderRepo) UpdateStatus(ctx context.Context, orderNo string, sta
 
 	if transactionID != nil {
 		// 根据支付方式设置不同的交易号字段
-		if order.PayMethod == "alipay_native" {
+		switch order.PayMethod {
+		case "alipay_native":
 			builder.SetAlipayTradeNo(*transactionID)
-		} else {
+		case "epay_alipay", "epay_wxpay":
+			builder.SetEpayTradeNo(*transactionID)
+		default:
 			builder.SetWechatTransactionID(*transactionID)
 		}
 	}
@@ -201,6 +204,7 @@ func toServicePaymentOrder(e *dbent.PaymentOrder) *service.PaymentOrder {
 		PayMethod:           e.PayMethod,
 		WechatTransactionID: e.WechatTransactionID,
 		AlipayTradeNo:       e.AlipayTradeNo,
+		EpayTradeNo:         e.EpayTradeNo,
 		CodeURL:             e.CodeURL,
 		PaidAt:              e.PaidAt,
 		ExpiredAt:           e.ExpiredAt,

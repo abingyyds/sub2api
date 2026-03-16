@@ -13,7 +13,7 @@
         <!-- API Integration Steps -->
         <SlideIn direction="up" :delay="200">
           <GlowCard glow-color="rgb(59, 130, 246)">
-            <div class="card p-6">
+            <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-6">
         <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">{{ t('tutorial.integration.title') }}</h2>
         <div class="space-y-4">
           <div class="flex items-start gap-4">
@@ -45,7 +45,7 @@
   <!-- Config Export Section -->
   <SlideIn direction="up" :delay="300">
     <GlowCard glow-color="rgb(168, 85, 247)">
-      <div class="card p-6">
+      <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-6">
         <h2 class="mb-2 text-xl font-bold text-gray-900 dark:text-white">{{ t('tutorial.configExport.title') }}</h2>
         <p class="mb-6 text-sm text-gray-500 dark:text-dark-400">{{ t('tutorial.configExport.subtitle') }}</p>
 
@@ -455,3 +455,9 @@ const copyConfig = async () => {
   }
 }
 </script>
+
+<style scoped>
+.shadow-soft {
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
+}
+</style>

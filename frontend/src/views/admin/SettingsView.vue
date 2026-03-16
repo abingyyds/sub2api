@@ -635,6 +635,47 @@
           </div>
         </div>
 
+        <!-- Epay (易支付) Settings -->
+        <div class="card">
+          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+              易支付 (Epay) 设置
+            </h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              配置易支付网关，支持支付宝和微信渠道
+            </p>
+          </div>
+          <div class="space-y-5 p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="font-medium text-gray-900 dark:text-white">启用易支付</label>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  允许用户通过易支付网关付款
+                </p>
+              </div>
+              <Toggle v-model="form.epay_enabled" />
+            </div>
+            <div v-if="form.epay_enabled" class="space-y-4 border-t border-gray-100 pt-4 dark:border-dark-700">
+              <div>
+                <label for="epay_gateway" class="input-label">网关地址</label>
+                <input id="epay_gateway" v-model="form.epay_gateway" type="text" class="input mt-1" placeholder="https://zpayz.cn" />
+              </div>
+              <div>
+                <label for="epay_pid" class="input-label">商户 PID</label>
+                <input id="epay_pid" v-model="form.epay_pid" type="text" class="input mt-1" placeholder="1001" />
+              </div>
+              <div>
+                <label for="epay_pkey" class="input-label">商户密钥 (PKey)</label>
+                <input id="epay_pkey" v-model="form.epay_pkey" type="password" class="input mt-1" :placeholder="form.epay_pkey_configured ? '已配置（留空保留当前值）' : '请输入商户密钥'" />
+              </div>
+              <div>
+                <label for="epay_notify_url" class="input-label">支付回调通知 URL</label>
+                <input id="epay_notify_url" v-model="form.epay_notify_url" type="text" class="input mt-1" placeholder="https://example.com/api/v1/payment/epay/notify" />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Cloudflare Turnstile Settings -->
         <div class="card">
           <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
@@ -1353,6 +1394,7 @@ type SettingsForm = SystemSettings & {
   wechat_pay_private_key: string
   alipay_private_key: string
   alipay_public_key: string
+  epay_pkey: string
 }
 
 const form = reactive<SettingsForm>({
@@ -1435,7 +1477,14 @@ const form = reactive<SettingsForm>({
   alipay_public_key: '',
   alipay_public_key_configured: false,
   alipay_notify_url: '',
-  alipay_is_production: false
+  alipay_is_production: false,
+  // Epay (易支付)
+  epay_enabled: false,
+  epay_gateway: '',
+  epay_pid: '',
+  epay_pkey: '',
+  epay_pkey_configured: false,
+  epay_notify_url: ''
 })
 
 // LinuxDo OAuth redirect URL suggestion
@@ -1634,7 +1683,12 @@ async function saveSettings() {
       alipay_private_key: form.alipay_private_key || undefined,
       alipay_public_key: form.alipay_public_key || undefined,
       alipay_notify_url: form.alipay_notify_url,
-      alipay_is_production: form.alipay_is_production
+      alipay_is_production: form.alipay_is_production,
+      epay_enabled: form.epay_enabled,
+      epay_gateway: form.epay_gateway,
+      epay_pid: form.epay_pid,
+      epay_pkey: form.epay_pkey || undefined,
+      epay_notify_url: form.epay_notify_url
     }
     const updated = await adminAPI.settings.updateSettings(payload)
     Object.assign(form, updated)
@@ -1646,6 +1700,7 @@ async function saveSettings() {
     form.wechat_pay_private_key = ''
     form.alipay_private_key = ''
     form.alipay_public_key = ''
+    form.epay_pkey = ''
     // Re-parse recharge plans from updated response
     rechargePlansList.value = parseRechargePlans(form.recharge_plans)
     // Refresh cached public settings so sidebar/header update immediately

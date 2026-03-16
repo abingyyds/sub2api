@@ -15842,6 +15842,7 @@ type PaymentOrderMutation struct {
 	pay_method            *string
 	wechat_transaction_id *string
 	alipay_trade_no       *string
+	epay_trade_no         *string
 	code_url              *string
 	paid_at               *time.Time
 	expired_at            *time.Time
@@ -16602,6 +16603,55 @@ func (m *PaymentOrderMutation) ResetAlipayTradeNo() {
 	delete(m.clearedFields, paymentorder.FieldAlipayTradeNo)
 }
 
+// SetEpayTradeNo sets the "epay_trade_no" field.
+func (m *PaymentOrderMutation) SetEpayTradeNo(s string) {
+	m.epay_trade_no = &s
+}
+
+// EpayTradeNo returns the value of the "epay_trade_no" field in the mutation.
+func (m *PaymentOrderMutation) EpayTradeNo() (r string, exists bool) {
+	v := m.epay_trade_no
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEpayTradeNo returns the old "epay_trade_no" field's value of the PaymentOrder entity.
+// If the PaymentOrder object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PaymentOrderMutation) OldEpayTradeNo(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEpayTradeNo is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEpayTradeNo requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEpayTradeNo: %w", err)
+	}
+	return oldValue.EpayTradeNo, nil
+}
+
+// ClearEpayTradeNo clears the value of the "epay_trade_no" field.
+func (m *PaymentOrderMutation) ClearEpayTradeNo() {
+	m.epay_trade_no = nil
+	m.clearedFields[paymentorder.FieldEpayTradeNo] = struct{}{}
+}
+
+// EpayTradeNoCleared returns if the "epay_trade_no" field was cleared in this mutation.
+func (m *PaymentOrderMutation) EpayTradeNoCleared() bool {
+	_, ok := m.clearedFields[paymentorder.FieldEpayTradeNo]
+	return ok
+}
+
+// ResetEpayTradeNo resets all changes to the "epay_trade_no" field.
+func (m *PaymentOrderMutation) ResetEpayTradeNo() {
+	m.epay_trade_no = nil
+	delete(m.clearedFields, paymentorder.FieldEpayTradeNo)
+}
+
 // SetCodeURL sets the "code_url" field.
 func (m *PaymentOrderMutation) SetCodeURL(s string) {
 	m.code_url = &s
@@ -16869,7 +16919,7 @@ func (m *PaymentOrderMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PaymentOrderMutation) Fields() []string {
-	fields := make([]string, 0, 19)
+	fields := make([]string, 0, 20)
 	if m.order_no != nil {
 		fields = append(fields, paymentorder.FieldOrderNo)
 	}
@@ -16911,6 +16961,9 @@ func (m *PaymentOrderMutation) Fields() []string {
 	}
 	if m.alipay_trade_no != nil {
 		fields = append(fields, paymentorder.FieldAlipayTradeNo)
+	}
+	if m.epay_trade_no != nil {
+		fields = append(fields, paymentorder.FieldEpayTradeNo)
 	}
 	if m.code_url != nil {
 		fields = append(fields, paymentorder.FieldCodeURL)
@@ -16963,6 +17016,8 @@ func (m *PaymentOrderMutation) Field(name string) (ent.Value, bool) {
 		return m.WechatTransactionID()
 	case paymentorder.FieldAlipayTradeNo:
 		return m.AlipayTradeNo()
+	case paymentorder.FieldEpayTradeNo:
+		return m.EpayTradeNo()
 	case paymentorder.FieldCodeURL:
 		return m.CodeURL()
 	case paymentorder.FieldPaidAt:
@@ -17010,6 +17065,8 @@ func (m *PaymentOrderMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldWechatTransactionID(ctx)
 	case paymentorder.FieldAlipayTradeNo:
 		return m.OldAlipayTradeNo(ctx)
+	case paymentorder.FieldEpayTradeNo:
+		return m.OldEpayTradeNo(ctx)
 	case paymentorder.FieldCodeURL:
 		return m.OldCodeURL(ctx)
 	case paymentorder.FieldPaidAt:
@@ -17126,6 +17183,13 @@ func (m *PaymentOrderMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetAlipayTradeNo(v)
+		return nil
+	case paymentorder.FieldEpayTradeNo:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEpayTradeNo(v)
 		return nil
 	case paymentorder.FieldCodeURL:
 		v, ok := value.(string)
@@ -17264,6 +17328,9 @@ func (m *PaymentOrderMutation) ClearedFields() []string {
 	if m.FieldCleared(paymentorder.FieldAlipayTradeNo) {
 		fields = append(fields, paymentorder.FieldAlipayTradeNo)
 	}
+	if m.FieldCleared(paymentorder.FieldEpayTradeNo) {
+		fields = append(fields, paymentorder.FieldEpayTradeNo)
+	}
 	if m.FieldCleared(paymentorder.FieldCodeURL) {
 		fields = append(fields, paymentorder.FieldCodeURL)
 	}
@@ -17292,6 +17359,9 @@ func (m *PaymentOrderMutation) ClearField(name string) error {
 		return nil
 	case paymentorder.FieldAlipayTradeNo:
 		m.ClearAlipayTradeNo()
+		return nil
+	case paymentorder.FieldEpayTradeNo:
+		m.ClearEpayTradeNo()
 		return nil
 	case paymentorder.FieldCodeURL:
 		m.ClearCodeURL()
@@ -17348,6 +17418,9 @@ func (m *PaymentOrderMutation) ResetField(name string) error {
 		return nil
 	case paymentorder.FieldAlipayTradeNo:
 		m.ResetAlipayTradeNo()
+		return nil
+	case paymentorder.FieldEpayTradeNo:
+		m.ResetEpayTradeNo()
 		return nil
 	case paymentorder.FieldCodeURL:
 		m.ResetCodeURL()

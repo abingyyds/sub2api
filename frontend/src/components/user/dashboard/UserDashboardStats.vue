@@ -4,7 +4,7 @@
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
       <!-- Balance -->
       <GlowCard v-if="!isSimple" glow-color="rgb(16, 185, 129)">
-        <div class="card p-4">
+        <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
           <div class="flex items-center gap-3">
             <div class="rounded-lg bg-emerald-100 p-2 dark:bg-emerald-900/30">
               <svg class="h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -22,7 +22,7 @@
 
       <!-- API Keys -->
       <GlowCard glow-color="rgb(59, 130, 246)">
-        <div class="card p-4">
+        <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
           <div class="flex items-center gap-3">
             <div class="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/30">
               <Icon name="key" size="md" class="text-blue-600 dark:text-blue-400" :stroke-width="2" />
@@ -38,7 +38,7 @@
 
       <!-- Today Requests -->
       <GlowCard glow-color="rgb(34, 197, 94)">
-        <div class="card p-4">
+        <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
           <div class="flex items-center gap-3">
             <div class="rounded-lg bg-green-100 p-2 dark:bg-green-900/30">
               <Icon name="chart" size="md" class="text-green-600 dark:text-green-400" :stroke-width="2" />
@@ -54,7 +54,7 @@
 
       <!-- Today Cost -->
       <GlowCard glow-color="rgb(168, 85, 247)">
-        <div class="card p-4">
+        <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
           <div class="flex items-center gap-3">
             <div class="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/30">
               <Icon name="dollar" size="md" class="text-purple-600 dark:text-purple-400" :stroke-width="2" />
@@ -82,7 +82,7 @@
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
       <!-- Today Tokens -->
       <GlowCard glow-color="rgb(245, 158, 11)">
-        <div class="card p-4">
+        <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
           <div class="flex items-center gap-3">
             <div class="rounded-lg bg-amber-100 p-2 dark:bg-amber-900/30">
               <Icon name="cube" size="md" class="text-amber-600 dark:text-amber-400" :stroke-width="2" />
@@ -98,7 +98,7 @@
 
       <!-- Total Tokens -->
       <GlowCard glow-color="rgb(99, 102, 241)">
-        <div class="card p-4">
+        <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
           <div class="flex items-center gap-3">
             <div class="rounded-lg bg-indigo-100 p-2 dark:bg-indigo-900/30">
               <Icon name="database" size="md" class="text-indigo-600 dark:text-indigo-400" :stroke-width="2" />
@@ -114,7 +114,7 @@
 
       <!-- Performance (RPM/TPM) -->
       <GlowCard glow-color="rgb(139, 92, 246)">
-        <div class="card p-4">
+        <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
           <div class="flex items-center gap-3">
             <div class="rounded-lg bg-violet-100 p-2 dark:bg-violet-900/30">
               <Icon name="bolt" size="md" class="text-violet-600 dark:text-violet-400" :stroke-width="2" />
@@ -136,7 +136,7 @@
 
       <!-- Avg Response Time -->
       <GlowCard glow-color="rgb(244, 63, 94)">
-        <div class="card p-4">
+        <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
           <div class="flex items-center gap-3">
             <div class="rounded-lg bg-rose-100 p-2 dark:bg-rose-900/30">
               <Icon name="clock" size="md" class="text-rose-600 dark:text-rose-400" :stroke-width="2" />
@@ -175,3 +175,9 @@ const formatTokens = (t: number) => {
 }
 const formatDuration = (ms: number) => ms >= 1000 ? `${(ms / 1000).toFixed(2)}s` : `${ms.toFixed(0)}ms`
 </script>
+
+<style scoped>
+.shadow-soft {
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
+}
+</style>

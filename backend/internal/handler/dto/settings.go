@@ -84,6 +84,13 @@ type SystemSettings struct {
 	AlipayPublicKeyConfigured  bool   `json:"alipay_public_key_configured"`
 	AlipayNotifyURL            string `json:"alipay_notify_url"`
 	AlipayIsProduction         bool   `json:"alipay_is_production"`
+
+	// Epay (易支付)
+	EpayEnabled        bool   `json:"epay_enabled"`
+	EpayGateway        string `json:"epay_gateway"`
+	EpayPID            string `json:"epay_pid"`
+	EpayPKeyConfigured bool   `json:"epay_pkey_configured"`
+	EpayNotifyURL      string `json:"epay_notify_url"`
 }
 
 type PublicSettings struct {

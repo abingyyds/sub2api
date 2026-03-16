@@ -19,7 +19,7 @@
           <ProfileInfoCard :user="user" />
         </SlideIn>
         <SlideIn direction="up" :delay="400">
-          <div v-if="contactInfo" class="card border-primary-200 bg-primary-50 dark:bg-primary-900/20 p-6">
+          <div v-if="contactInfo" class="rounded-2xl border-2 border-primary-200 bg-primary-50 dark:border-primary-800/30 dark:bg-primary-900/20 shadow-soft p-6">
             <div class="flex items-center gap-4">
               <div class="p-3 bg-primary-100 rounded-xl text-primary-600"><Icon name="chat" size="lg" /></div>
               <div><h3 class="font-semibold text-primary-800 dark:text-primary-200">{{ t('common.contactSupport') }}</h3><p class="text-sm font-medium">{{ contactInfo }}</p></div>
@@ -62,3 +62,9 @@ const CalendarIcon = { render: () => h('svg', { fill: 'none', viewBox: '0 0 24 2
 onMounted(async () => { try { const s = await authAPI.getPublicSettings(); contactInfo.value = s.contact_info || '' } catch (error) { console.error('Failed to load contact info:', error) } })
 const formatCurrency = (v: number) => `$${v.toFixed(2)}`
 </script>
+
+<style scoped>
+.shadow-soft {
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
+}
+</style>

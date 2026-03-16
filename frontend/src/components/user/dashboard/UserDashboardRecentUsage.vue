@@ -1,7 +1,7 @@
 <template>
-  <div class="card">
+  <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft">
     <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('dashboard.recentUsage') }}</h2>
+      <h2 class="text-lg font-bold text-gray-900 dark:text-white">{{ t('dashboard.recentUsage') }}</h2>
       <span class="badge badge-gray">{{ t('dashboard.last7Days') }}</span>
     </div>
     <div class="p-6">
@@ -55,3 +55,9 @@ defineProps<{
 const { t } = useI18n()
 const formatCost = (c: number) => c.toFixed(4)
 </script>
+
+<style scoped>
+.shadow-soft {
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
+}
+</style>

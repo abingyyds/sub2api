@@ -72,7 +72,7 @@ export async function getRechargeInfo(): Promise<RechargeInfo> {
 /**
  * Create a payment order
  */
-export async function createOrder(planKey: string, promoCode?: string, payMethod?: 'wechat' | 'alipay'): Promise<CreateOrderResponse> {
+export async function createOrder(planKey: string, promoCode?: string, payMethod?: 'wechat' | 'alipay' | 'epay_alipay' | 'epay_wxpay'): Promise<CreateOrderResponse> {
   const { data } = await apiClient.post<CreateOrderResponse>('/payment/orders', {
     plan_key: planKey,
     promo_code: promoCode || '',
@@ -84,7 +84,7 @@ export async function createOrder(planKey: string, promoCode?: string, payMethod
 /**
  * Create a balance recharge order with custom amount
  */
-export async function createRechargeOrder(amount: number, promoCode?: string, payMethod?: 'wechat' | 'alipay'): Promise<CreateOrderResponse> {
+export async function createRechargeOrder(amount: number, promoCode?: string, payMethod?: 'wechat' | 'alipay' | 'epay_alipay' | 'epay_wxpay'): Promise<CreateOrderResponse> {
   const { data } = await apiClient.post<CreateOrderResponse>('/payment/recharge', {
     amount,
     promo_code: promoCode || '',

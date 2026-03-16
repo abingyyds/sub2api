@@ -179,6 +179,20 @@ func (_c *PaymentOrderCreate) SetNillableAlipayTradeNo(v *string) *PaymentOrderC
 	return _c
 }
 
+// SetEpayTradeNo sets the "epay_trade_no" field.
+func (_c *PaymentOrderCreate) SetEpayTradeNo(v string) *PaymentOrderCreate {
+	_c.mutation.SetEpayTradeNo(v)
+	return _c
+}
+
+// SetNillableEpayTradeNo sets the "epay_trade_no" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableEpayTradeNo(v *string) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetEpayTradeNo(*v)
+	}
+	return _c
+}
+
 // SetCodeURL sets the "code_url" field.
 func (_c *PaymentOrderCreate) SetCodeURL(v string) *PaymentOrderCreate {
 	_c.mutation.SetCodeURL(v)
@@ -400,6 +414,11 @@ func (_c *PaymentOrderCreate) check() error {
 			return &ValidationError{Name: "alipay_trade_no", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.alipay_trade_no": %w`, err)}
 		}
 	}
+	if v, ok := _c.mutation.EpayTradeNo(); ok {
+		if err := paymentorder.EpayTradeNoValidator(v); err != nil {
+			return &ValidationError{Name: "epay_trade_no", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.epay_trade_no": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.ExpiredAt(); !ok {
 		return &ValidationError{Name: "expired_at", err: errors.New(`ent: missing required field "PaymentOrder.expired_at"`)}
 	}
@@ -496,6 +515,10 @@ func (_c *PaymentOrderCreate) createSpec() (*PaymentOrder, *sqlgraph.CreateSpec)
 	if value, ok := _c.mutation.AlipayTradeNo(); ok {
 		_spec.SetField(paymentorder.FieldAlipayTradeNo, field.TypeString, value)
 		_node.AlipayTradeNo = &value
+	}
+	if value, ok := _c.mutation.EpayTradeNo(); ok {
+		_spec.SetField(paymentorder.FieldEpayTradeNo, field.TypeString, value)
+		_node.EpayTradeNo = &value
 	}
 	if value, ok := _c.mutation.CodeURL(); ok {
 		_spec.SetField(paymentorder.FieldCodeURL, field.TypeString, value)
@@ -799,6 +822,24 @@ func (u *PaymentOrderUpsert) UpdateAlipayTradeNo() *PaymentOrderUpsert {
 // ClearAlipayTradeNo clears the value of the "alipay_trade_no" field.
 func (u *PaymentOrderUpsert) ClearAlipayTradeNo() *PaymentOrderUpsert {
 	u.SetNull(paymentorder.FieldAlipayTradeNo)
+	return u
+}
+
+// SetEpayTradeNo sets the "epay_trade_no" field.
+func (u *PaymentOrderUpsert) SetEpayTradeNo(v string) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldEpayTradeNo, v)
+	return u
+}
+
+// UpdateEpayTradeNo sets the "epay_trade_no" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateEpayTradeNo() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldEpayTradeNo)
+	return u
+}
+
+// ClearEpayTradeNo clears the value of the "epay_trade_no" field.
+func (u *PaymentOrderUpsert) ClearEpayTradeNo() *PaymentOrderUpsert {
+	u.SetNull(paymentorder.FieldEpayTradeNo)
 	return u
 }
 
@@ -1162,6 +1203,27 @@ func (u *PaymentOrderUpsertOne) UpdateAlipayTradeNo() *PaymentOrderUpsertOne {
 func (u *PaymentOrderUpsertOne) ClearAlipayTradeNo() *PaymentOrderUpsertOne {
 	return u.Update(func(s *PaymentOrderUpsert) {
 		s.ClearAlipayTradeNo()
+	})
+}
+
+// SetEpayTradeNo sets the "epay_trade_no" field.
+func (u *PaymentOrderUpsertOne) SetEpayTradeNo(v string) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetEpayTradeNo(v)
+	})
+}
+
+// UpdateEpayTradeNo sets the "epay_trade_no" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateEpayTradeNo() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateEpayTradeNo()
+	})
+}
+
+// ClearEpayTradeNo clears the value of the "epay_trade_no" field.
+func (u *PaymentOrderUpsertOne) ClearEpayTradeNo() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearEpayTradeNo()
 	})
 }
 
@@ -1701,6 +1763,27 @@ func (u *PaymentOrderUpsertBulk) UpdateAlipayTradeNo() *PaymentOrderUpsertBulk {
 func (u *PaymentOrderUpsertBulk) ClearAlipayTradeNo() *PaymentOrderUpsertBulk {
 	return u.Update(func(s *PaymentOrderUpsert) {
 		s.ClearAlipayTradeNo()
+	})
+}
+
+// SetEpayTradeNo sets the "epay_trade_no" field.
+func (u *PaymentOrderUpsertBulk) SetEpayTradeNo(v string) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetEpayTradeNo(v)
+	})
+}
+
+// UpdateEpayTradeNo sets the "epay_trade_no" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateEpayTradeNo() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateEpayTradeNo()
+	})
+}
+
+// ClearEpayTradeNo clears the value of the "epay_trade_no" field.
+func (u *PaymentOrderUpsertBulk) ClearEpayTradeNo() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearEpayTradeNo()
 	})
 }
 

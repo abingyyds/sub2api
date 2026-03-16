@@ -92,6 +92,14 @@ type SystemSettings struct {
 	AlipayPublicKeyConfigured  bool
 	AlipayNotifyURL            string
 	AlipayIsProduction         bool
+
+	// Epay (易支付)
+	EpayEnabled        bool
+	EpayGateway        string
+	EpayPID            string
+	EpayPKey           string
+	EpayPKeyConfigured bool
+	EpayNotifyURL      string
 }
 
 type PublicSettings struct {

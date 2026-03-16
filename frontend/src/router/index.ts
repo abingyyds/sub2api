@@ -579,7 +579,7 @@ router.beforeEach((to, _from, next) => {
       } else if (authStore.isOrgAdmin) {
         next('/org/dashboard')
       } else {
-        next('/dashboard')
+        next('/pricing')
       }
       return
     }

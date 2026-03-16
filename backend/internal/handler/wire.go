@@ -3,7 +3,6 @@ package handler
 import (
 	"github.com/Wei-Shaw/sub2api/internal/handler/admin"
 	"github.com/Wei-Shaw/sub2api/internal/handler/org"
-	"github.com/Wei-Shaw/sub2api/internal/service"
 
 	"github.com/google/wire"
 )
@@ -61,9 +60,9 @@ func ProvideAdminHandlers(
 	}
 }
 
-// ProvideSystemHandler creates admin.SystemHandler with UpdateService
-func ProvideSystemHandler(updateService *service.UpdateService) *admin.SystemHandler {
-	return admin.NewSystemHandler(updateService)
+// ProvideSystemHandler creates admin.SystemHandler with version from BuildInfo
+func ProvideSystemHandler(buildInfo BuildInfo) *admin.SystemHandler {
+	return admin.NewSystemHandler(buildInfo.Version)
 }
 
 // ProvideSettingHandler creates SettingHandler with version from BuildInfo
