@@ -55,9 +55,3 @@ defineProps<{
 const { t } = useI18n()
 const formatCost = (c: number) => c.toFixed(4)
 </script>
-
-<style scoped>
-.shadow-soft {
-  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
-}
-</style>

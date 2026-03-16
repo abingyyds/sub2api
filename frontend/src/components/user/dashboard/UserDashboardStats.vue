@@ -175,9 +175,3 @@ const formatTokens = (t: number) => {
 }
 const formatDuration = (ms: number) => ms >= 1000 ? `${(ms / 1000).toFixed(2)}s` : `${ms.toFixed(0)}ms`
 </script>
-
-<style scoped>
-.shadow-soft {
-  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
-}
-</style>

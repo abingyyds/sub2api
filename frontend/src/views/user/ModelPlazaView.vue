@@ -29,7 +29,7 @@
               glow-color="rgb(139, 92, 246)"
             >
               <div
-                class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-dark-700 dark:bg-dark-800"
+                class="rounded-2xl border-2 border-gray-200 bg-white p-6 shadow-soft dark:border-dark-700 dark:bg-dark-900"
               >
           <!-- Group Header -->
           <div class="mb-4 flex items-center justify-between">

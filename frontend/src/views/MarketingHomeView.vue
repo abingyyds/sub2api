@@ -450,8 +450,4 @@ onMounted(() => {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-
-.shadow-soft {
-  box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
-}
 </style>

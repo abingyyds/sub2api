@@ -16,7 +16,7 @@ const isHovered = ref(false)
 
 <template>
   <div
-    class="relative rounded-lg transition-all duration-300"
+    class="relative rounded-2xl transition-all duration-300"
     :class="{ 'glow-active': isHovered }"
     @mouseenter="isHovered = true"
     @mouseleave="isHovered = false"
@@ -31,33 +31,8 @@ const isHovered = ref(false)
 
 <style scoped>
 .glow-active {
-  box-shadow: 0 0 20px var(--glow-color),
-              0 0 40px var(--glow-color);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--glow-color) 30%, transparent),
+              0 0 30px color-mix(in srgb, var(--glow-color) 15%, transparent);
   transform: translateY(-2px);
-}
-
-.glow-active::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  background: linear-gradient(
-    45deg,
-    transparent,
-    var(--glow-color),
-    transparent
-  );
-  opacity: var(--glow-intensity);
-  z-index: -1;
-  animation: glow-pulse 2s ease-in-out infinite;
-}
-
-@keyframes glow-pulse {
-  0%, 100% {
-    opacity: calc(var(--glow-intensity) * 0.5);
-  }
-  50% {
-    opacity: var(--glow-intensity);
-  }
 }
 </style>

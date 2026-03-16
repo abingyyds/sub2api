@@ -824,9 +824,3 @@ onMounted(() => {
   loadUsageStats()
 })
 </script>
-
-<style scoped>
-.shadow-soft {
-  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
-}
-</style>

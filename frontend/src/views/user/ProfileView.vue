@@ -5,13 +5,37 @@
         <StaggerContainer :stagger-delay="100">
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
             <GlowCard glow-color="rgb(34, 197, 94)">
-              <StatCard :title="t('profile.accountBalance')" :value="formatCurrency(user?.balance || 0)" :icon="WalletIcon" icon-variant="success" />
+              <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-5 flex items-start gap-4">
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
+                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12" /></svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm text-gray-500 dark:text-dark-400">{{ t('profile.accountBalance') }}</p>
+                  <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(user?.balance || 0) }}</p>
+                </div>
+              </div>
             </GlowCard>
             <GlowCard glow-color="rgb(245, 158, 11)">
-              <StatCard :title="t('profile.concurrencyLimit')" :value="user?.concurrency || 0" :icon="BoltIcon" icon-variant="warning" />
+              <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-5 flex items-start gap-4">
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm text-gray-500 dark:text-dark-400">{{ t('profile.concurrencyLimit') }}</p>
+                  <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ user?.concurrency || 0 }}</p>
+                </div>
+              </div>
             </GlowCard>
             <GlowCard glow-color="rgb(59, 130, 246)">
-              <StatCard :title="t('profile.memberSince')" :value="formatDate(user?.created_at || '', { year: 'numeric', month: 'long' })" :icon="CalendarIcon" icon-variant="primary" />
+              <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-5 flex items-start gap-4">
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
+                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M6.75 3v2.25M17.25 3v2.25" /></svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm text-gray-500 dark:text-dark-400">{{ t('profile.memberSince') }}</p>
+                  <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ formatDate(user?.created_at || '', { year: 'numeric', month: 'long' }) }}</p>
+                </div>
+              </div>
             </GlowCard>
           </div>
         </StaggerContainer>
@@ -41,10 +65,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h, onMounted } from 'vue'; import { useI18n } from 'vue-i18n'
-import { useAuthStore } from '@/stores/auth'; import { formatDate } from '@/utils/format'
-import { authAPI } from '@/api'; import AppLayout from '@/components/layout/AppLayout.vue'
-import StatCard from '@/components/common/StatCard.vue'
+import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useAuthStore } from '@/stores/auth'
+import { formatDate } from '@/utils/format'
+import { authAPI } from '@/api'
+import AppLayout from '@/components/layout/AppLayout.vue'
 import ProfileInfoCard from '@/components/user/profile/ProfileInfoCard.vue'
 import ProfileEditForm from '@/components/user/profile/ProfileEditForm.vue'
 import ProfilePasswordForm from '@/components/user/profile/ProfilePasswordForm.vue'
@@ -52,19 +78,19 @@ import ProfileTotpCard from '@/components/user/profile/ProfileTotpCard.vue'
 import { Icon } from '@/components/icons'
 import { FadeIn, SlideIn, StaggerContainer, GlowCard } from '@/components/animations'
 
-const { t } = useI18n(); const authStore = useAuthStore(); const user = computed(() => authStore.user)
+const { t } = useI18n()
+const authStore = useAuthStore()
+const user = computed(() => authStore.user)
 const contactInfo = ref('')
 
-const WalletIcon = { render: () => h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' }, [h('path', { d: 'M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12' })]) }
-const BoltIcon = { render: () => h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' }, [h('path', { d: 'm3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z' })]) }
-const CalendarIcon = { render: () => h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' }, [h('path', { d: 'M6.75 3v2.25M17.25 3v2.25' })]) }
+onMounted(async () => {
+  try {
+    const s = await authAPI.getPublicSettings()
+    contactInfo.value = s.contact_info || ''
+  } catch (error) {
+    console.error('Failed to load contact info:', error)
+  }
+})
 
-onMounted(async () => { try { const s = await authAPI.getPublicSettings(); contactInfo.value = s.contact_info || '' } catch (error) { console.error('Failed to load contact info:', error) } })
 const formatCurrency = (v: number) => `$${v.toFixed(2)}`
 </script>
-
-<style scoped>
-.shadow-soft {
-  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
-}
-</style>
