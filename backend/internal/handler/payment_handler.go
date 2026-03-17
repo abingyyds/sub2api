@@ -292,6 +292,8 @@ func (h *PaymentHandler) EpayNotify(c *gin.Context) {
 		}
 	}
 
+	log.Printf("[Payment] EpayNotify %s params: %v", c.Request.Method, params)
+
 	if err := h.paymentService.HandleEpayNotify(c.Request.Context(), params); err != nil {
 		log.Printf("[Payment] EpayNotify error: %v", err)
 		c.String(http.StatusInternalServerError, "failure")

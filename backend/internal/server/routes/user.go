@@ -19,6 +19,7 @@ func RegisterUserRoutes(
 		payment.POST("/wechat/notify", h.Payment.WechatNotify)
 		payment.POST("/alipay/notify", h.Payment.AlipayNotify)
 		payment.POST("/epay/notify", h.Payment.EpayNotify)
+		payment.GET("/epay/notify", h.Payment.EpayNotify)
 		// 公开接口：获取套餐列表（无需认证）
 		payment.GET("/plans", h.Payment.GetPlans)
 		// 公开接口：获取充值信息（无需认证）
