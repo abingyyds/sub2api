@@ -80,17 +80,17 @@ func (PaymentOrder) Fields() []ent.Field {
 		field.Time("paid_at").
 			Optional().
 			Nillable().
-			SchemaType(map[string]string{dialect.Postgres: "timestamp"}),
+			SchemaType(map[string]string{dialect.Postgres: "timestamptz"}),
 		field.Time("expired_at").
-			SchemaType(map[string]string{dialect.Postgres: "timestamp"}),
+			SchemaType(map[string]string{dialect.Postgres: "timestamptz"}),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable().
-			SchemaType(map[string]string{dialect.Postgres: "timestamp"}),
+			SchemaType(map[string]string{dialect.Postgres: "timestamptz"}),
 		field.Time("updated_at").
 			Default(time.Now).
 			UpdateDefault(time.Now).
-			SchemaType(map[string]string{dialect.Postgres: "timestamp"}),
+			SchemaType(map[string]string{dialect.Postgres: "timestamptz"}),
 	}
 }
 
