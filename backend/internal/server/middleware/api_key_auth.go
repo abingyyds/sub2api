@@ -196,7 +196,7 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 
 			// 预检查用量限制（使用0作为额外费用进行预检查）
 			if err := subscriptionService.CheckUsageLimits(c.Request.Context(), subscription, apiKey.Group, 0); err != nil {
-				AbortWithError(c, 429, "USAGE_LIMIT_EXCEEDED", err.Error())
+				AbortWithError(c, 429, "USAGE_LIMIT_EXCEEDED", err.Error()+", please switch to balance mode")
 				return
 			}
 

@@ -996,6 +996,14 @@ func billingErrorDetails(err error) (status int, code, message string) {
 		}
 		return http.StatusServiceUnavailable, "billing_service_error", msg
 	}
+	// 订阅额度用完应返回 429
+	if errors.Is(err, service.ErrDailyLimitExceeded) || errors.Is(err, service.ErrWeeklyLimitExceeded) || errors.Is(err, service.ErrMonthlyLimitExceeded) {
+		msg := pkgerrors.Message(err)
+		if msg == "" {
+			msg = err.Error()
+		}
+		return http.StatusTooManyRequests, "USAGE_LIMIT_EXCEEDED", msg
+	}
 	msg := pkgerrors.Message(err)
 	if msg == "" {
 		msg = err.Error()
