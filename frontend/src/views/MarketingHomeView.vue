@@ -96,7 +96,7 @@
                 <ul class="space-y-4 text-sm text-gray-700 dark:text-dark-300">
                   <li class="flex items-start gap-3">
                     <Icon name="check" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
-                    <span class="leading-relaxed">获得 <strong>$1300</strong> 的官方算力额度</span>
+                    <span class="leading-relaxed">获得 <strong>$1800</strong> 的官方算力额度</span>
                   </li>
                   <li class="flex items-start gap-3">
                     <Icon name="check" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
@@ -151,7 +151,7 @@
               <ul class="space-y-5 mb-8 text-sm text-gray-600 dark:text-dark-400 flex-grow">
                 <li class="flex items-start gap-3">
                   <Icon name="check" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white">总额 $600：</strong>官方价格体系，无需复杂换算</div>
+                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white">总额 $900：</strong>官方价格体系，无需复杂换算</div>
                 </li>
                 <li class="flex items-start gap-3">
                   <Icon name="check" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
@@ -189,13 +189,13 @@
               <div class="text-5xl font-extrabold text-gray-900 dark:text-white mb-4">¥589</div>
 
               <div class="bg-primary-500/10 dark:bg-primary-400/10 border border-primary-500/20 dark:border-primary-400/20 rounded-xl p-2.5 mb-6 text-sm text-primary-600 dark:text-primary-400 text-center font-bold">
-                折合 $1 = ¥0.45，立省 55% 成本！
+                折合 $1 = ¥0.33，立省 67% 成本！
               </div>
 
               <ul class="space-y-5 mb-8 text-sm text-gray-600 dark:text-dark-400 flex-grow">
                 <li class="flex items-start gap-3">
                   <Icon name="database" size="sm" class="text-primary-600 dark:text-primary-400 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white text-base">总额 $1300：</strong>充足算力储备，应对高频调用</div>
+                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white text-base">总额 $1800：</strong>充足算力储备，应对高频调用</div>
                 </li>
                 <li class="flex items-start gap-3">
                   <Icon name="bolt" size="sm" class="text-yellow-500 mt-0.5 flex-shrink-0" />
@@ -234,7 +234,7 @@
               <ul class="space-y-5 mb-8 text-sm text-gray-600 dark:text-dark-400 flex-grow">
                 <li class="flex items-start gap-3">
                   <Icon name="server" size="sm" class="text-gray-700 dark:text-dark-300 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white">总额 $2500：</strong>顶配储备，支撑海量高并发接入</div>
+                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white">总额 $3600：</strong>顶配储备，支撑海量高并发接入</div>
                 </li>
                 <li class="flex items-start gap-3">
                   <Icon name="badge" size="sm" class="text-gray-700 dark:text-dark-300 mt-0.5 flex-shrink-0" />
