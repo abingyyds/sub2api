@@ -13,7 +13,7 @@
 
       <template #table>
         <DataTable :columns="columns" :data="items" :loading="loading">
-          <template #cell-agent_status="{ value, row }">
+          <template #cell-agent_status="{ value }">
             <span :class="['badge', statusBadgeClass(value)]">
               {{ statusLabel(value) }}
             </span>

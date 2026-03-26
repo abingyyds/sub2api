@@ -31,7 +31,7 @@
                     <div class="mt-4">
                       <MagneticButton>
                         <button @click="handleApply" :disabled="applying" class="inline-flex items-center gap-2 rounded-xl bg-white/20 px-6 py-2.5 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/30 border border-white/20 disabled:opacity-50">
-                          <Icon name="send" size="sm" />
+                          <Icon name="arrowRight" size="sm" />
                           {{ applying ? t('agent.applying') : t('agent.applyNow') }}
                         </button>
                       </MagneticButton>
@@ -173,7 +173,7 @@
                 <router-link to="/agent/commissions" class="group rounded-2xl border-2 border-gray-200 bg-white p-6 dark:border-dark-700 dark:bg-dark-900 shadow-soft transition hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md">
                   <div class="flex items-center gap-4">
                     <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 dark:bg-primary-900/20">
-                      <Icon name="receipt" size="md" class="text-primary-600 dark:text-primary-400" />
+                      <Icon name="document" size="md" class="text-primary-600 dark:text-primary-400" />
                     </div>
                     <div>
                       <p class="font-bold text-gray-900 dark:text-white">{{ t('agent.commissions') }}</p>
