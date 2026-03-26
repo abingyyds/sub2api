@@ -304,7 +304,8 @@ func (r *agentRepository) ListAgents(ctx context.Context, params pagination.Pagi
 	selectQuery := `SELECT u.id, u.email, u.username, u.is_agent, u.agent_status, u.agent_commission_rate,
 		u.agent_note, u.agent_approved_at, COALESCE(u.invite_code, ''), u.created_at,
 		(SELECT COUNT(*) FROM referrals WHERE inviter_id = u.id) AS sub_user_count,
-		COALESCE((SELECT SUM(commission_amount) FROM agent_commissions WHERE agent_id = u.id), 0) AS total_commission
+		COALESCE((SELECT SUM(commission_amount) FROM agent_commissions WHERE agent_id = u.id), 0) AS total_commission,
+		COALESCE((SELECT SUM(commission_amount) FROM agent_commissions WHERE agent_id = u.id AND status = 'pending'), 0) AS pending_commission
 		FROM users u WHERE (u.is_agent = true OR u.agent_status != '') AND u.deleted_at IS NULL`
 
 	var selectArgs []any
@@ -336,7 +337,7 @@ func (r *agentRepository) ListAgents(ctx context.Context, params pagination.Pagi
 		var approvedAt sql.NullTime
 		if err := rows.Scan(&a.ID, &a.Email, &a.Username, &a.IsAgent, &a.AgentStatus, &a.CommissionRate,
 			&a.AgentNote, &approvedAt, &a.InviteCode, &a.CreatedAt,
-			&a.SubUserCount, &a.TotalCommission); err != nil {
+			&a.SubUserCount, &a.TotalCommission, &a.PendingCommission); err != nil {
 			return nil, nil, err
 		}
 		if approvedAt.Valid {

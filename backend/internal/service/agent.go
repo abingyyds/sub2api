@@ -61,16 +61,17 @@ type AgentFinancialLog struct {
 
 // AgentInfo holds agent profile information (for admin listing).
 type AgentInfo struct {
-	ID               int64      `json:"id"`
-	Email            string     `json:"email"`
-	Username         string     `json:"username,omitempty"`
-	IsAgent          bool       `json:"is_agent"`
-	AgentStatus      string     `json:"agent_status"`
-	CommissionRate   float64    `json:"commission_rate"`
-	AgentNote        string     `json:"agent_note,omitempty"`
-	ApprovedAt       *time.Time `json:"approved_at,omitempty"`
-	InviteCode       string     `json:"invite_code,omitempty"`
-	SubUserCount     int64      `json:"sub_user_count"`
-	TotalCommission  float64    `json:"total_commission"`
-	CreatedAt        time.Time  `json:"created_at"`
+	ID                int64      `json:"id"`
+	Email             string     `json:"email"`
+	Username          string     `json:"username,omitempty"`
+	IsAgent           bool       `json:"is_agent"`
+	AgentStatus       string     `json:"agent_status"`
+	CommissionRate    float64    `json:"agent_commission_rate"`
+	AgentNote         string     `json:"agent_note,omitempty"`
+	ApprovedAt        *time.Time `json:"agent_approved_at,omitempty"`
+	InviteCode        string     `json:"invite_code,omitempty"`
+	SubUserCount      int64      `json:"sub_user_count"`
+	TotalCommission   float64    `json:"total_commission"`
+	PendingCommission float64    `json:"pending_commission"`
+	CreatedAt         time.Time  `json:"created_at"`
 }
