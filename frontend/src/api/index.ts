@@ -23,6 +23,9 @@ export { adminAPI } from './admin'
 // Org APIs
 export { orgAPI } from './org'
 
+// Agent APIs
+export { agentAPI } from './agent'
+
 // Payment APIs
 export { paymentAPI } from './payment'
 

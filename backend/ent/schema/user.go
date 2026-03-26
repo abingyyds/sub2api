@@ -92,6 +92,23 @@ func (User) Fields() []ent.Field {
 		field.Time("initial_balance_expires_at").
 			Optional().
 			Nillable(),
+
+		// 代理系统字段
+		field.Bool("is_agent").
+			Default(false),
+		field.String("agent_status").
+			MaxLen(20).
+			Default(""),
+		field.Float("agent_commission_rate").
+			SchemaType(map[string]string{dialect.Postgres: "decimal(5,4)"}).
+			Default(0),
+		field.String("agent_note").
+			SchemaType(map[string]string{dialect.Postgres: "text"}).
+			Default(""),
+		field.Time("agent_approved_at").
+			Optional().
+			Nillable().
+			SchemaType(map[string]string{dialect.Postgres: "timestamptz"}),
 	}
 }
 
@@ -112,6 +129,8 @@ func (User) Edges() []ent.Edge {
 		edge.To("org_memberships", OrgMember.Type),
 		edge.To("admin_invite_codes", AdminInviteCode.Type),
 		edge.To("payment_orders", PaymentOrder.Type),
+		edge.To("agent_commissions_as_agent", AgentCommission.Type),
+		edge.To("agent_commissions_as_user", AgentCommission.Type),
 	}
 }
 

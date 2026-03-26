@@ -254,6 +254,54 @@ const routes: RouteRecordRaw[] = [
       descriptionKey: 'referral.description'
     }
   },
+  {
+    path: '/agent',
+    name: 'AgentDashboard',
+    component: () => import('@/views/user/AgentDashboardView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Agent Dashboard',
+      titleKey: 'agent.dashboard.title',
+      descriptionKey: 'agent.dashboard.description'
+    }
+  },
+  {
+    path: '/agent/sub-users',
+    name: 'AgentSubUsers',
+    component: () => import('@/views/user/AgentSubUsersView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Sub Users',
+      titleKey: 'agent.subUsers.title',
+      descriptionKey: 'agent.subUsers.description'
+    }
+  },
+  {
+    path: '/agent/financial-logs',
+    name: 'AgentFinancialLogs',
+    component: () => import('@/views/user/AgentFinancialLogsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Financial Logs',
+      titleKey: 'agent.financialLogs.title',
+      descriptionKey: 'agent.financialLogs.description'
+    }
+  },
+  {
+    path: '/agent/commissions',
+    name: 'AgentCommissions',
+    component: () => import('@/views/user/AgentCommissionsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Commissions',
+      titleKey: 'agent.commissions.title',
+      descriptionKey: 'agent.commissions.description'
+    }
+  },
 
   // ==================== Admin Routes ====================
   {
@@ -450,6 +498,18 @@ const routes: RouteRecordRaw[] = [
       title: 'Order Management',
       titleKey: 'admin.orders.title',
       descriptionKey: 'admin.orders.description'
+    }
+  },
+  {
+    path: '/admin/agents',
+    name: 'AdminAgents',
+    component: () => import('@/views/admin/AgentsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Agent Management',
+      titleKey: 'admin.agents.title',
+      descriptionKey: 'admin.agents.description'
     }
   },
 

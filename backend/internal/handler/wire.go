@@ -33,6 +33,7 @@ func ProvideAdminHandlers(
 	adminInviteCodeHandler *admin.AdminInviteCodeHandler,
 	discoverySourceStatsHandler *admin.DiscoverySourceStatsHandler,
 	paymentOrderHandler *admin.PaymentOrderHandler,
+	agentHandler *admin.AgentHandler,
 ) *AdminHandlers {
 	return &AdminHandlers{
 		Dashboard:            dashboardHandler,
@@ -58,6 +59,7 @@ func ProvideAdminHandlers(
 		AdminInviteCode:      adminInviteCodeHandler,
 		DiscoverySourceStats: discoverySourceStatsHandler,
 		PaymentOrder:         paymentOrderHandler,
+		Agent:                agentHandler,
 	}
 }
 
@@ -104,6 +106,7 @@ func ProvideHandlers(
 	referralHandler *ReferralHandler,
 	announcementHandler *AnnouncementHandler,
 	paymentHandler *PaymentHandler,
+	agentHandler *AgentHandler,
 ) *Handlers {
 	return &Handlers{
 		Auth:          authHandler,
@@ -122,6 +125,7 @@ func ProvideHandlers(
 		Referral:      referralHandler,
 		Announcement:  announcementHandler,
 		Payment:       paymentHandler,
+		Agent:         agentHandler,
 	}
 }
 
@@ -141,6 +145,7 @@ var ProviderSet = wire.NewSet(
 	NewAnnouncementHandler,
 	NewModelPlazaHandler,
 	NewPaymentHandler,
+	NewAgentHandler,
 	ProvideSettingHandler,
 
 	// Admin handlers
@@ -167,6 +172,7 @@ var ProviderSet = wire.NewSet(
 	admin.NewAdminInviteCodeHandler,
 	admin.NewDiscoverySourceStatsHandler,
 	admin.NewPaymentOrderHandler,
+	admin.NewAgentHandler,
 
 	// Org handlers
 	org.NewDashboardHandler,

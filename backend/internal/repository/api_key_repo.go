@@ -408,6 +408,11 @@ func userEntityToService(u *dbent.User) *service.User {
 		DiscoverySource:         u.DiscoverySource,
 		InitialBalance:          u.InitialBalance,
 		InitialBalanceExpiresAt: u.InitialBalanceExpiresAt,
+		IsAgent:                 u.IsAgent,
+		AgentStatus:             u.AgentStatus,
+		AgentCommissionRate:     u.AgentCommissionRate,
+		AgentNote:               u.AgentNote,
+		AgentApprovedAt:         u.AgentApprovedAt,
 		CreatedAt:               u.CreatedAt,
 		UpdatedAt:               u.UpdatedAt,
 	}

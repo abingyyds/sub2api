@@ -30,6 +30,7 @@ type AdminHandlers struct {
 	AdminInviteCode       *admin.AdminInviteCodeHandler
 	DiscoverySourceStats  *admin.DiscoverySourceStatsHandler
 	PaymentOrder          *admin.PaymentOrderHandler
+	Agent                 *admin.AgentHandler
 }
 
 // Handlers contains all HTTP handlers
@@ -50,6 +51,7 @@ type Handlers struct {
 	Announcement  *AnnouncementHandler
 	ModelPlaza    *ModelPlazaHandler
 	Payment       *PaymentHandler
+	Agent         *AgentHandler
 }
 
 // BuildInfo contains build-time information

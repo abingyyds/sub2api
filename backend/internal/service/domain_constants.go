@@ -78,6 +78,24 @@ const (
 	ReferralRewardRewarded = "rewarded"
 )
 
+// Agent status constants
+const (
+	AgentStatusPending  = "pending"
+	AgentStatusApproved = "approved"
+	AgentStatusRejected = "rejected"
+)
+
+// Agent commission source type constants
+const (
+	AgentCommissionSourcePayment = "payment"
+)
+
+// Agent commission status constants
+const (
+	AgentCommissionStatusPending = "pending"
+	AgentCommissionStatusSettled = "settled"
+)
+
 // LinuxDoConnectSyntheticEmailDomain 是 LinuxDo Connect 用户的合成邮箱后缀（RFC 保留域名）。
 const LinuxDoConnectSyntheticEmailDomain = "@linuxdo-connect.invalid"
 
@@ -203,6 +221,13 @@ const (
 
 	// 初始余额有效期
 	SettingKeyInitialBalanceExpiryDays = "initial_balance_expiry_days" // 新用户初始余额有效天数（0=永不过期）
+
+	// =========================
+	// Agent / Affiliate System
+	// =========================
+
+	SettingKeyAgentEnabled              = "agent_enabled"               // 是否启用代理系统
+	SettingKeyAgentDefaultCommissionRate = "agent_default_commission_rate" // 默认佣金比例
 )
 
 // AdminAPIKeyPrefix is the prefix for admin API keys (distinct from user "sk-" keys).

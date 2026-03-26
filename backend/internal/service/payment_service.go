@@ -96,6 +96,7 @@ type PaymentService struct {
 	userRepo            UserRepository
 	groupRepo           GroupRepository
 	promoService        *PromoService
+	agentService        *AgentService
 }
 
 // NewPaymentService 创建支付服务
@@ -107,6 +108,7 @@ func NewPaymentService(
 	userRepo UserRepository,
 	groupRepo GroupRepository,
 	promoService *PromoService,
+	agentService *AgentService,
 ) *PaymentService {
 	return &PaymentService{
 		orderRepo:           orderRepo,
@@ -116,6 +118,7 @@ func NewPaymentService(
 		userRepo:            userRepo,
 		groupRepo:           groupRepo,
 		promoService:        promoService,
+		agentService:        agentService,
 	}
 }
 
@@ -916,6 +919,15 @@ func (s *PaymentService) handlePaymentSuccess(ctx context.Context, order *Paymen
 			log.Printf("[Payment] Failed to apply promo code for order %s: %v", order.OrderNo, err)
 			// 不阻断支付流程
 		}
+	}
+
+	// 触发代理佣金（支付成功后自动检查并创建佣金记录）
+	if s.agentService != nil {
+		payAmount := order.BalanceAmount
+		if payAmount <= 0 {
+			payAmount = float64(order.AmountFen) / 100.0
+		}
+		s.agentService.TriggerCommissionForPayment(ctx, order.UserID, order.ID, payAmount)
 	}
 
 	return nil

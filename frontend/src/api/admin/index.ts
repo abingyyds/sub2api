@@ -23,6 +23,7 @@ import organizationsAPI from './organizations'
 import inviteCodesAPI from './inviteCodes'
 import discoverySourceStatsAPI from './discoverySourceStats'
 import ordersAPI from './orders'
+import agentsAPI from './agents'
 
 /**
  * Unified admin API object for convenient access
@@ -47,7 +48,8 @@ export const adminAPI = {
   organizations: organizationsAPI,
   inviteCodes: inviteCodesAPI,
   discoverySourceStats: discoverySourceStatsAPI,
-  orders: ordersAPI
+  orders: ordersAPI,
+  agents: agentsAPI
 }
 
 export {
@@ -70,7 +72,8 @@ export {
   organizationsAPI,
   inviteCodesAPI,
   discoverySourceStatsAPI,
-  ordersAPI
+  ordersAPI,
+  agentsAPI
 }
 
 export default adminAPI

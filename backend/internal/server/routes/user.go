@@ -115,5 +115,17 @@ func RegisterUserRoutes(
 			authPayment.GET("/orders", h.Payment.ListOrders)
 			authPayment.GET("/orders/:orderNo", h.Payment.QueryOrder)
 		}
+
+		// 代理中心
+		agent := authenticated.Group("/agent")
+		{
+			agent.GET("/status", h.Agent.GetStatus)
+			agent.POST("/apply", h.Agent.Apply)
+			agent.GET("/dashboard", h.Agent.Dashboard)
+			agent.GET("/link", h.Agent.GetLink)
+			agent.GET("/sub-users", h.Agent.ListSubUsers)
+			agent.GET("/financial-logs", h.Agent.ListFinancialLogs)
+			agent.GET("/commissions", h.Agent.ListCommissions)
+		}
 	}
 }

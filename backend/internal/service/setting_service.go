@@ -1015,3 +1015,24 @@ func (s *SettingService) SetStreamTimeoutSettings(ctx context.Context, settings 
 
 	return s.settingRepo.Set(ctx, SettingKeyStreamTimeoutSettings, string(data))
 }
+
+// IsAgentEnabled 检查是否启用代理系统
+func (s *SettingService) IsAgentEnabled(ctx context.Context) bool {
+	value, err := s.settingRepo.GetValue(ctx, SettingKeyAgentEnabled)
+	if err != nil {
+		return false
+	}
+	return value == "true"
+}
+
+// GetAgentDefaultCommissionRate 获取默认代理佣金比例
+func (s *SettingService) GetAgentDefaultCommissionRate(ctx context.Context) float64 {
+	value, err := s.settingRepo.GetValue(ctx, SettingKeyAgentDefaultCommissionRate)
+	if err != nil {
+		return 0.1 // 默认 10%
+	}
+	if v, err := strconv.ParseFloat(value, 64); err == nil && v > 0 && v <= 1 {
+		return v
+	}
+	return 0.1
+}

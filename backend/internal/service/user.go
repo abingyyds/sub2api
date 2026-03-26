@@ -36,6 +36,13 @@ type User struct {
 	InitialBalance          float64
 	InitialBalanceExpiresAt *time.Time
 
+	// 代理系统字段
+	IsAgent             bool
+	AgentStatus         string
+	AgentCommissionRate float64
+	AgentNote           string
+	AgentApprovedAt     *time.Time
+
 	APIKeys       []APIKey
 	Subscriptions []UserSubscription
 }

@@ -567,6 +567,7 @@ const userNavItems = computed(() => {
     ...(appStore.referralEnabled
       ? [{ path: '/referral', label: t('nav.referral'), icon: ShareIcon, hideInSimpleMode: true }]
       : []),
+    { path: '/agent', label: t('nav.agent'), icon: UsersIcon, hideInSimpleMode: true },
     { path: '/profile', label: t('nav.profile'), icon: UserIcon }
   ]
   return authStore.isSimpleMode ? items.filter(item => !item.hideInSimpleMode) : items
@@ -593,6 +594,7 @@ const personalNavItems = computed(() => {
     ...(appStore.referralEnabled
       ? [{ path: '/referral', label: t('nav.referral'), icon: ShareIcon, hideInSimpleMode: true }]
       : []),
+    { path: '/agent', label: t('nav.agent'), icon: UsersIcon, hideInSimpleMode: true },
     { path: '/profile', label: t('nav.profile'), icon: UserIcon }
   ]
   return authStore.isSimpleMode ? items.filter(item => !item.hideInSimpleMode) : items
@@ -620,6 +622,7 @@ const adminNavItems = computed(() => {
       : []),
     { path: '/admin/usage', label: t('nav.usage'), icon: ChartIcon },
     { path: '/admin/orders', label: t('nav.orders'), icon: ShoppingBagIcon },
+    { path: '/admin/agents', label: t('nav.agents'), icon: UsersIcon },
     { path: '/admin/announcements', label: t('nav.announcements'), icon: MegaphoneIcon },
     { path: '/admin/organizations', label: t('nav.organizations'), icon: GlobeIcon },
   ]

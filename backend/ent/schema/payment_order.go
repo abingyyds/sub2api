@@ -102,6 +102,7 @@ func (PaymentOrder) Edges() []ent.Edge {
 			Field("user_id").
 			Unique().
 			Required(),
+		edge.To("agent_commissions", AgentCommission.Type),
 	}
 }
 

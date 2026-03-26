@@ -82,6 +82,9 @@ func RegisterAdminRoutes(
 
 		// 订单管理
 		registerPaymentOrderRoutes(admin, h)
+
+		// 代理管理
+		registerAgentRoutes(admin, h)
 	}
 }
 
@@ -435,5 +438,16 @@ func registerPaymentOrderRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	orders := admin.Group("/orders")
 	{
 		orders.GET("", h.Admin.PaymentOrder.List)
+	}
+}
+
+func registerAgentRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	agents := admin.Group("/agents")
+	{
+		agents.GET("", h.Admin.Agent.List)
+		agents.POST("/:id/approve", h.Admin.Agent.Approve)
+		agents.POST("/:id/reject", h.Admin.Agent.Reject)
+		agents.PUT("/:id", h.Admin.Agent.Update)
+		agents.POST("/:id/settle", h.Admin.Agent.Settle)
 	}
 }
