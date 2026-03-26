@@ -164,7 +164,18 @@ func (r *userRepository) Update(ctx context.Context, userIn *service.User) error
 		return translatePersistenceError(err, service.ErrUserNotFound, service.ErrEmailExists)
 	}
 
-	// Update agent fields via raw SQL (ent generated code does not include agent field setters)
+	if err := r.syncUserAllowedGroupsWithClient(ctx, txClient, updated.ID, userIn.AllowedGroups); err != nil {
+		return err
+	}
+
+	if tx != nil {
+		if err := tx.Commit(); err != nil {
+			return err
+		}
+	}
+
+	// Update agent fields via raw SQL AFTER the ent transaction is committed
+	// to avoid deadlock (ent tx holds a row lock on the same user row).
 	if r.sql != nil {
 		agentQuery := `UPDATE users SET is_agent = $1, agent_status = $2, agent_commission_rate = $3, agent_note = $4, agent_approved_at = $5 WHERE id = $6`
 		_, err = r.sql.ExecContext(ctx, agentQuery,
@@ -177,16 +188,6 @@ func (r *userRepository) Update(ctx context.Context, userIn *service.User) error
 		)
 		if err != nil {
 			return fmt.Errorf("update agent fields: %w", err)
-		}
-	}
-
-	if err := r.syncUserAllowedGroupsWithClient(ctx, txClient, updated.ID, userIn.AllowedGroups); err != nil {
-		return err
-	}
-
-	if tx != nil {
-		if err := tx.Commit(); err != nil {
-			return err
 		}
 	}
 
