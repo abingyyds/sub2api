@@ -60,18 +60,24 @@
     </TablePageLayout>
 
     <!-- Edit Commission Rate Modal -->
-    <Modal v-model="showEditModal" :title="t('admin.agents.editRateTitle')">
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">{{ t('admin.agents.commissionRate') }} (%)</label>
-          <input v-model.number="editRate" type="number" min="0" max="100" step="0.1" class="input w-full" />
+    <Teleport to="body">
+      <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="fixed inset-0 bg-black/50" @click="showEditModal = false"></div>
+        <div class="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-dark-800">
+          <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">{{ t('admin.agents.editRateTitle') }}</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">{{ t('admin.agents.commissionRate') }} (%)</label>
+              <input v-model.number="editRate" type="number" min="0" max="100" step="0.1" class="input w-full" />
+            </div>
+          </div>
+          <div class="mt-6 flex justify-end gap-3">
+            <button @click="showEditModal = false" class="btn btn-secondary">{{ t('common.cancel') }}</button>
+            <button @click="saveRate" :disabled="saving" class="btn btn-primary">{{ saving ? t('common.saving') : t('common.save') }}</button>
+          </div>
         </div>
       </div>
-      <template #footer>
-        <button @click="showEditModal = false" class="btn btn-secondary">{{ t('common.cancel') }}</button>
-        <button @click="saveRate" :disabled="saving" class="btn btn-primary">{{ saving ? t('common.saving') : t('common.save') }}</button>
-      </template>
-    </Modal>
+    </Teleport>
   </AppLayout>
 </template>
 
@@ -87,7 +93,6 @@ import DataTable from '@/components/common/DataTable.vue'
 import Pagination from '@/components/common/Pagination.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import Select from '@/components/common/Select.vue'
-import Modal from '@/components/common/Modal.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { formatDateTime } from '@/utils/format'
 import type { Column } from '@/components/common/types'
