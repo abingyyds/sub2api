@@ -53,6 +53,16 @@ type User struct {
 	InitialBalance float64 `json:"initial_balance,omitempty"`
 	// InitialBalanceExpiresAt holds the value of the "initial_balance_expires_at" field.
 	InitialBalanceExpiresAt *time.Time `json:"initial_balance_expires_at,omitempty"`
+	// IsAgent holds the value of the "is_agent" field.
+	IsAgent bool `json:"is_agent,omitempty"`
+	// AgentStatus holds the value of the "agent_status" field.
+	AgentStatus string `json:"agent_status,omitempty"`
+	// AgentCommissionRate holds the value of the "agent_commission_rate" field.
+	AgentCommissionRate float64 `json:"agent_commission_rate,omitempty"`
+	// AgentNote holds the value of the "agent_note" field.
+	AgentNote string `json:"agent_note,omitempty"`
+	// AgentApprovedAt holds the value of the "agent_approved_at" field.
+	AgentApprovedAt *time.Time `json:"agent_approved_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges        UserEdges `json:"edges"`
@@ -236,15 +246,15 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldTotpEnabled:
+		case user.FieldTotpEnabled, user.FieldIsAgent:
 			values[i] = new(sql.NullBool)
-		case user.FieldBalance, user.FieldInitialBalance:
+		case user.FieldBalance, user.FieldInitialBalance, user.FieldAgentCommissionRate:
 			values[i] = new(sql.NullFloat64)
 		case user.FieldID, user.FieldConcurrency:
 			values[i] = new(sql.NullInt64)
-		case user.FieldEmail, user.FieldPasswordHash, user.FieldRole, user.FieldStatus, user.FieldUsername, user.FieldNotes, user.FieldTotpSecretEncrypted, user.FieldInviteCode, user.FieldDiscoverySource:
+		case user.FieldEmail, user.FieldPasswordHash, user.FieldRole, user.FieldStatus, user.FieldUsername, user.FieldNotes, user.FieldTotpSecretEncrypted, user.FieldInviteCode, user.FieldDiscoverySource, user.FieldAgentStatus, user.FieldAgentNote:
 			values[i] = new(sql.NullString)
-		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt, user.FieldTotpEnabledAt, user.FieldInitialBalanceExpiresAt:
+		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt, user.FieldTotpEnabledAt, user.FieldInitialBalanceExpiresAt, user.FieldAgentApprovedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -380,6 +390,37 @@ func (_m *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.InitialBalanceExpiresAt = new(time.Time)
 				*_m.InitialBalanceExpiresAt = value.Time
+			}
+		case user.FieldIsAgent:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_agent", values[i])
+			} else if value.Valid {
+				_m.IsAgent = value.Bool
+			}
+		case user.FieldAgentStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field agent_status", values[i])
+			} else if value.Valid {
+				_m.AgentStatus = value.String
+			}
+		case user.FieldAgentCommissionRate:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field agent_commission_rate", values[i])
+			} else if value.Valid {
+				_m.AgentCommissionRate = value.Float64
+			}
+		case user.FieldAgentNote:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field agent_note", values[i])
+			} else if value.Valid {
+				_m.AgentNote = value.String
+			}
+		case user.FieldAgentApprovedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field agent_approved_at", values[i])
+			} else if value.Valid {
+				_m.AgentApprovedAt = new(time.Time)
+				*_m.AgentApprovedAt = value.Time
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])

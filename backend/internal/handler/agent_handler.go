@@ -93,7 +93,9 @@ func (h *AgentHandler) GetLink(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, gin.H{"invite_code": code})
+	response.Success(c, gin.H{
+		"invite_code": code,
+	})
 }
 
 // ListSubUsers returns the agent's sub-users

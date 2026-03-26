@@ -231,7 +231,7 @@ onMounted(async () => {
         agentAPI.getLink()
       ])
       dashboard.value = dashData
-      inviteLink.value = linkData.invite_url
+      inviteLink.value = linkData.invite_url || `${window.location.origin}/?ref=${linkData.invite_code}`
     }
   } catch (err) {
     console.error('Failed to load agent data:', err)

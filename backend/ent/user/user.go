@@ -51,6 +51,16 @@ const (
 	FieldInitialBalance = "initial_balance"
 	// FieldInitialBalanceExpiresAt holds the string denoting the initial_balance_expires_at field in the database.
 	FieldInitialBalanceExpiresAt = "initial_balance_expires_at"
+	// FieldIsAgent holds the string denoting the is_agent field in the database.
+	FieldIsAgent = "is_agent"
+	// FieldAgentStatus holds the string denoting the agent_status field in the database.
+	FieldAgentStatus = "agent_status"
+	// FieldAgentCommissionRate holds the string denoting the agent_commission_rate field in the database.
+	FieldAgentCommissionRate = "agent_commission_rate"
+	// FieldAgentNote holds the string denoting the agent_note field in the database.
+	FieldAgentNote = "agent_note"
+	// FieldAgentApprovedAt holds the string denoting the agent_approved_at field in the database.
+	FieldAgentApprovedAt = "agent_approved_at"
 	// EdgeAPIKeys holds the string denoting the api_keys edge name in mutations.
 	EdgeAPIKeys = "api_keys"
 	// EdgeRedeemCodes holds the string denoting the redeem_codes edge name in mutations.
@@ -209,6 +219,11 @@ var Columns = []string{
 	FieldDiscoverySource,
 	FieldInitialBalance,
 	FieldInitialBalanceExpiresAt,
+	FieldIsAgent,
+	FieldAgentStatus,
+	FieldAgentCommissionRate,
+	FieldAgentNote,
+	FieldAgentApprovedAt,
 }
 
 var (

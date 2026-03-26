@@ -69,6 +69,7 @@ func (s *AgentService) ApplyForAgent(ctx context.Context, userID int64, note str
 		return ErrAgentAlreadyApplied
 	}
 
+	user.IsAgent = true
 	user.AgentStatus = AgentStatusPending
 	user.AgentNote = note
 	if err := s.userRepo.Update(ctx, user); err != nil {
