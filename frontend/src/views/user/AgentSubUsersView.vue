@@ -8,7 +8,7 @@
             <router-link to="/agent" class="text-gray-500 hover:text-gray-700 dark:text-dark-400 dark:hover:text-dark-200">
               <Icon name="arrowLeft" size="md" />
             </router-link>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('agent.subUsers') }}</h1>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('agent.subUsers.title') }}</h1>
           </div>
         </div>
 

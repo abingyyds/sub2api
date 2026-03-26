@@ -3543,15 +3543,21 @@ export default {
     },
     subUsers: {
       title: 'Sub Users',
-      description: 'View your sub users'
+      description: 'View your sub users',
+      label: 'Sub Users',
+      desc: 'View all sub users'
     },
     financialLogs: {
       title: 'Financial Logs',
-      description: 'View sub user financial activities'
+      description: 'View sub user financial activities',
+      label: 'Financial Logs',
+      desc: 'Sub user payment orders'
     },
     commissions: {
       title: 'Commissions',
-      description: 'View commission records'
+      description: 'View commission records',
+      label: 'Commissions',
+      desc: 'View commission records'
     },
     becomeAgent: 'Become an Agent',
     becomeAgentDesc: 'Apply to become an agent and earn commissions through referrals',
@@ -3573,12 +3579,6 @@ export default {
     totalCommission: 'Total Commission',
     pendingCommission: 'Pending',
     settledCommission: 'Settled',
-    subUsers: 'Sub Users',
-    subUsersDesc: 'View all sub users',
-    financialLogs: 'Financial Logs',
-    financialLogsDesc: 'Sub user payment orders',
-    commissions: 'Commissions',
-    commissionsDesc: 'View commission records',
     email: 'Email',
     username: 'Username',
     registeredAt: 'Registered At',

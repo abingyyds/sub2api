@@ -154,8 +154,8 @@
                       <Icon name="users" size="md" class="text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
-                      <p class="font-bold text-gray-900 dark:text-white">{{ t('agent.subUsers') }}</p>
-                      <p class="text-xs text-gray-500 dark:text-dark-400">{{ t('agent.subUsersDesc') }}</p>
+                      <p class="font-bold text-gray-900 dark:text-white">{{ t('agent.subUsers.label') }}</p>
+                      <p class="text-xs text-gray-500 dark:text-dark-400">{{ t('agent.subUsers.desc') }}</p>
                     </div>
                   </div>
                 </router-link>
@@ -165,8 +165,8 @@
                       <Icon name="dollar" size="md" class="text-green-600 dark:text-green-400" />
                     </div>
                     <div>
-                      <p class="font-bold text-gray-900 dark:text-white">{{ t('agent.financialLogs') }}</p>
-                      <p class="text-xs text-gray-500 dark:text-dark-400">{{ t('agent.financialLogsDesc') }}</p>
+                      <p class="font-bold text-gray-900 dark:text-white">{{ t('agent.financialLogs.label') }}</p>
+                      <p class="text-xs text-gray-500 dark:text-dark-400">{{ t('agent.financialLogs.desc') }}</p>
                     </div>
                   </div>
                 </router-link>
@@ -176,8 +176,8 @@
                       <Icon name="document" size="md" class="text-primary-600 dark:text-primary-400" />
                     </div>
                     <div>
-                      <p class="font-bold text-gray-900 dark:text-white">{{ t('agent.commissions') }}</p>
-                      <p class="text-xs text-gray-500 dark:text-dark-400">{{ t('agent.commissionsDesc') }}</p>
+                      <p class="font-bold text-gray-900 dark:text-white">{{ t('agent.commissions.label') }}</p>
+                      <p class="text-xs text-gray-500 dark:text-dark-400">{{ t('agent.commissions.desc') }}</p>
                     </div>
                   </div>
                 </router-link>

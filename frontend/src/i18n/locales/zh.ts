@@ -3692,15 +3692,21 @@ export default {
     },
     subUsers: {
       title: '下级用户',
-      description: '查看下级用户列表'
+      description: '查看下级用户列表',
+      label: '下级用户',
+      desc: '查看所有下级用户'
     },
     financialLogs: {
       title: '资金流水',
-      description: '查看下级用户资金变动'
+      description: '查看下级用户资金变动',
+      label: '资金流水',
+      desc: '下级用户充值订单'
     },
     commissions: {
       title: '佣金明细',
-      description: '查看佣金记录'
+      description: '查看佣金记录',
+      label: '佣金明细',
+      desc: '查看佣金记录'
     },
     becomeAgent: '成为代理',
     becomeAgentDesc: '申请成为代理，通过推广赚取佣金收入',
@@ -3722,12 +3728,6 @@ export default {
     totalCommission: '总佣金',
     pendingCommission: '待结算',
     settledCommission: '已结算',
-    subUsers: '下级用户',
-    subUsersDesc: '查看所有下级用户',
-    financialLogs: '资金流水',
-    financialLogsDesc: '下级用户充值订单',
-    commissions: '佣金明细',
-    commissionsDesc: '查看佣金记录',
     email: '邮箱',
     username: '用户名',
     registeredAt: '注册时间',
