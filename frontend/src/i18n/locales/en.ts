@@ -226,7 +226,9 @@ export default {
     projects: 'Projects',
     auditLogs: 'Audit Logs',
     orgManagement: 'Organization',
-    tutorial: 'Tutorial'
+    tutorial: 'Tutorial',
+    agent: 'Agent Center',
+    agents: 'Agent Management'
   },
 
   // Auth
@@ -3248,6 +3250,39 @@ export default {
       failedToSave: 'Failed to save settings',
       failedToTestSmtp: 'SMTP connection test failed',
       failedToSendTestEmail: 'Failed to send test email'
+    },
+
+    // Agent Management
+    agents: {
+      title: 'Agent Management',
+      description: 'Manage agents and commissions',
+      email: 'Email',
+      username: 'Username',
+      allStatus: 'All Status',
+      searchPlaceholder: 'Search agents...',
+      statusPending: 'Pending',
+      statusApproved: 'Approved',
+      statusRejected: 'Rejected',
+      commissionRate: 'Commission Rate',
+      subUserCount: 'Sub Users',
+      totalCommission: 'Total Commission',
+      pendingCommission: 'Pending Commission',
+      approve: 'Approve',
+      reject: 'Reject',
+      settle: 'Settle',
+      editRate: 'Edit Rate',
+      editRateTitle: 'Edit Commission Rate',
+      noData: 'No agents',
+      noDataDesc: 'No users have applied to become agents yet.',
+      loadError: 'Failed to load agents',
+      approveSuccess: 'Agent approved',
+      approveError: 'Failed to approve',
+      rejectSuccess: 'Agent rejected',
+      rejectError: 'Failed to reject',
+      updateSuccess: 'Commission rate updated',
+      updateError: 'Failed to update',
+      settleSuccess: 'Settled {count} commissions, total ${amount}',
+      settleError: 'Failed to settle'
     }
   },
 
@@ -3498,6 +3533,75 @@ export default {
     statusPending: 'Pending',
     statusRewarded: 'Rewarded',
     loadError: 'Failed to load referral data'
+  },
+
+  // Agent Center
+  agent: {
+    dashboard: {
+      title: 'Agent Center',
+      description: 'Manage your agent business and commissions'
+    },
+    subUsers: {
+      title: 'Sub Users',
+      description: 'View your sub users'
+    },
+    financialLogs: {
+      title: 'Financial Logs',
+      description: 'View sub user financial activities'
+    },
+    commissions: {
+      title: 'Commissions',
+      description: 'View commission records'
+    },
+    becomeAgent: 'Become an Agent',
+    becomeAgentDesc: 'Apply to become an agent and earn commissions through referrals',
+    applyNotePlaceholder: 'Briefly describe your promotion plan (optional)',
+    applyNow: 'Apply Now',
+    applying: 'Applying...',
+    applySuccess: 'Application submitted, please wait for admin review',
+    applyError: 'Application failed, please try again later',
+    pendingTitle: 'Application Under Review',
+    pendingDesc: 'Your agent application has been submitted. Please wait for admin approval.',
+    rejectedTitle: 'Application Rejected',
+    rejectedDesc: 'Sorry, your agent application was not approved. Please contact the admin for details.',
+    yourInviteLink: 'Your Referral Link',
+    copyLink: 'Copy Link',
+    linkCopied: 'Referral link copied',
+    totalSubUsers: 'Sub Users',
+    totalRecharge: 'Total Recharge',
+    totalConsumed: 'Total Consumed',
+    totalCommission: 'Total Commission',
+    pendingCommission: 'Pending',
+    settledCommission: 'Settled',
+    subUsers: 'Sub Users',
+    subUsersDesc: 'View all sub users',
+    financialLogs: 'Financial Logs',
+    financialLogsDesc: 'Sub user payment orders',
+    commissions: 'Commissions',
+    commissionsDesc: 'View commission records',
+    email: 'Email',
+    username: 'Username',
+    registeredAt: 'Registered At',
+    noSubUsers: 'No sub users yet. Share your referral link to start promoting.',
+    orderNo: 'Order No.',
+    userEmail: 'User Email',
+    planKey: 'Plan',
+    amount: 'Amount',
+    orderStatus: 'Status',
+    paidAt: 'Paid At',
+    noFinancialLogs: 'No financial logs yet',
+    sourceType: 'Source Type',
+    sourceAmount: 'Order Amount',
+    commissionRate: 'Rate',
+    commissionAmount: 'Commission',
+    createdAt: 'Created At',
+    noCommissions: 'No commission records yet',
+    all: 'All',
+    pendingStatus: 'Pending',
+    settledStatus: 'Settled',
+    page: 'Page',
+    prev: 'Previous',
+    next: 'Next'
   },
 
   // Organization (Org Admin)

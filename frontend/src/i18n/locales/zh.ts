@@ -223,7 +223,9 @@ export default {
     projects: '项目管理',
     auditLogs: '审计日志',
     orgManagement: '企业',
-    tutorial: '使用教程'
+    tutorial: '使用教程',
+    agent: '代理中心',
+    agents: '代理管理'
   },
 
   // Auth
@@ -3398,6 +3400,39 @@ export default {
       failedToSave: '保存设置失败',
       failedToTestSmtp: 'SMTP 连接测试失败',
       failedToSendTestEmail: '发送测试邮件失败'
+    },
+
+    // 代理管理
+    agents: {
+      title: '代理管理',
+      description: '管理代理用户和佣金',
+      email: '邮箱',
+      username: '用户名',
+      allStatus: '全部状态',
+      searchPlaceholder: '搜索代理...',
+      statusPending: '待审核',
+      statusApproved: '已通过',
+      statusRejected: '已拒绝',
+      commissionRate: '佣金比例',
+      subUserCount: '下级用户数',
+      totalCommission: '总佣金',
+      pendingCommission: '待结算佣金',
+      approve: '通过',
+      reject: '拒绝',
+      settle: '结算',
+      editRate: '修改佣金比例',
+      editRateTitle: '修改佣金比例',
+      noData: '暂无代理',
+      noDataDesc: '还没有用户申请成为代理。',
+      loadError: '加载代理列表失败',
+      approveSuccess: '代理已通过审核',
+      approveError: '审核通过失败',
+      rejectSuccess: '代理已拒绝',
+      rejectError: '拒绝失败',
+      updateSuccess: '佣金比例已更新',
+      updateError: '更新失败',
+      settleSuccess: '结算成功：{count} 条佣金，共 ${amount}',
+      settleError: '结算失败'
     }
   },
 
@@ -3647,6 +3682,75 @@ export default {
     statusPending: '待奖励',
     statusRewarded: '已奖励',
     loadError: '加载邀请数据失败'
+  },
+
+  // 代理中心
+  agent: {
+    dashboard: {
+      title: '代理中心',
+      description: '管理代理业务和佣金'
+    },
+    subUsers: {
+      title: '下级用户',
+      description: '查看下级用户列表'
+    },
+    financialLogs: {
+      title: '资金流水',
+      description: '查看下级用户资金变动'
+    },
+    commissions: {
+      title: '佣金明细',
+      description: '查看佣金记录'
+    },
+    becomeAgent: '成为代理',
+    becomeAgentDesc: '申请成为代理，通过推广赚取佣金收入',
+    applyNotePlaceholder: '请简要说明您的推广计划（可选）',
+    applyNow: '立即申请',
+    applying: '申请中...',
+    applySuccess: '申请已提交，请等待管理员审核',
+    applyError: '申请失败，请稍后重试',
+    pendingTitle: '申请审核中',
+    pendingDesc: '您的代理申请已提交，请耐心等待管理员审核。',
+    rejectedTitle: '申请未通过',
+    rejectedDesc: '很抱歉，您的代理申请未通过审核。如有疑问请联系管理员。',
+    yourInviteLink: '您的推广链接',
+    copyLink: '复制链接',
+    linkCopied: '推广链接已复制',
+    totalSubUsers: '下级用户',
+    totalRecharge: '总充值',
+    totalConsumed: '总消费',
+    totalCommission: '总佣金',
+    pendingCommission: '待结算',
+    settledCommission: '已结算',
+    subUsers: '下级用户',
+    subUsersDesc: '查看所有下级用户',
+    financialLogs: '资金流水',
+    financialLogsDesc: '下级用户充值订单',
+    commissions: '佣金明细',
+    commissionsDesc: '查看佣金记录',
+    email: '邮箱',
+    username: '用户名',
+    registeredAt: '注册时间',
+    noSubUsers: '暂无下级用户，分享您的推广链接开始推广吧。',
+    orderNo: '订单号',
+    userEmail: '用户邮箱',
+    planKey: '套餐',
+    amount: '金额',
+    orderStatus: '状态',
+    paidAt: '支付时间',
+    noFinancialLogs: '暂无资金流水记录',
+    sourceType: '来源类型',
+    sourceAmount: '订单金额',
+    commissionRate: '佣金比例',
+    commissionAmount: '佣金金额',
+    createdAt: '创建时间',
+    noCommissions: '暂无佣金记录',
+    all: '全部',
+    pendingStatus: '待结算',
+    settledStatus: '已结算',
+    page: '第',
+    prev: '上一页',
+    next: '下一页'
   },
 
   // 企业 (企业管理员)
