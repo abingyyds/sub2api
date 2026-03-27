@@ -29,8 +29,8 @@
           </template>
           <template #cell-agent_note="{ value }">
             <div v-if="value" class="text-xs text-gray-600 dark:text-dark-300 max-w-48">
-              <template v-if="parseAgentNote(value)">
-                <div v-if="parseAgentNote(value).contact"><span class="font-medium">{{ t('admin.agents.contact') }}:</span> {{ parseAgentNote(value).contact }}</div>
+              <template v-if="parseAgentNote(value).contact">
+                <div><span class="font-medium">{{ t('admin.agents.contact') }}:</span> {{ parseAgentNote(value).contact }}</div>
                 <div v-if="parseAgentNote(value).social"><span class="font-medium">{{ t('admin.agents.social') }}:</span> {{ parseAgentNote(value).social }}</div>
                 <div v-if="parseAgentNote(value).promotion" class="truncate"><span class="font-medium">{{ t('admin.agents.promotion') }}:</span> {{ parseAgentNote(value).promotion }}</div>
               </template>
@@ -161,13 +161,15 @@ function statusLabel(status: string) {
   }
 }
 
-function parseAgentNote(note: string): { contact?: string; social?: string; promotion?: string } | null {
+function parseAgentNote(note: string): { contact: string; social: string; promotion: string } {
   try {
     const parsed = JSON.parse(note)
-    if (typeof parsed === 'object' && parsed !== null) return parsed
-    return null
+    if (typeof parsed === 'object' && parsed !== null) {
+      return { contact: parsed.contact || '', social: parsed.social || '', promotion: parsed.promotion || '' }
+    }
+    return { contact: '', social: '', promotion: '' }
   } catch {
-    return null
+    return { contact: '', social: '', promotion: '' }
   }
 }
 
