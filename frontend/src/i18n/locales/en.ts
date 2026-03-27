@@ -3275,6 +3275,7 @@ export default {
       reject: 'Reject',
       settle: 'Settle',
       editRate: 'Edit Rate',
+      viewDetail: 'Application Details',
       editRateTitle: 'Edit Commission Rate',
       noData: 'No agents',
       noDataDesc: 'No users have applied to become agents yet.',

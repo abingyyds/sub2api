@@ -3425,6 +3425,7 @@ export default {
       reject: '拒绝',
       settle: '结算',
       editRate: '修改佣金比例',
+      viewDetail: '申请详情',
       editRateTitle: '修改佣金比例',
       noData: '暂无代理',
       noDataDesc: '还没有用户申请成为代理。',

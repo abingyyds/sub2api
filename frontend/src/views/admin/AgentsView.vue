@@ -27,17 +27,6 @@
           <template #cell-pending_commission="{ value }">
             <span class="font-medium text-orange-600 dark:text-orange-400">${{ (value || 0).toFixed(2) }}</span>
           </template>
-          <template #cell-agent_note="{ value }">
-            <div v-if="value" class="text-xs text-gray-600 dark:text-dark-300 max-w-48">
-              <template v-if="parseAgentNote(value).contact">
-                <div><span class="font-medium">{{ t('admin.agents.contact') }}:</span> {{ parseAgentNote(value).contact }}</div>
-                <div v-if="parseAgentNote(value).social"><span class="font-medium">{{ t('admin.agents.social') }}:</span> {{ parseAgentNote(value).social }}</div>
-                <div v-if="parseAgentNote(value).promotion" class="truncate"><span class="font-medium">{{ t('admin.agents.promotion') }}:</span> {{ parseAgentNote(value).promotion }}</div>
-              </template>
-              <span v-else>{{ value }}</span>
-            </div>
-            <span v-else class="text-sm text-gray-400">-</span>
-          </template>
           <template #cell-agent_approved_at="{ value }">
             <span v-if="value" class="text-sm text-gray-500 dark:text-dark-400">{{ formatDateTime(value) }}</span>
             <span v-else class="text-sm text-gray-400">-</span>
@@ -47,6 +36,9 @@
           </template>
           <template #cell-actions="{ row }">
             <div class="flex items-center gap-2">
+              <button v-if="row.agent_note" @click="openDetail(row)" class="btn btn-xs btn-secondary" :title="t('admin.agents.viewDetail')">
+                <Icon name="document" size="sm" />
+              </button>
               <template v-if="row.agent_status === 'pending'">
                 <button @click="handleApprove(row)" class="btn btn-xs btn-success">{{ t('admin.agents.approve') }}</button>
                 <button @click="handleReject(row)" class="btn btn-xs btn-danger">{{ t('admin.agents.reject') }}</button>
@@ -89,6 +81,40 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Agent Detail Modal -->
+    <Teleport to="body">
+      <div v-if="showDetailModal" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="fixed inset-0 bg-black/50" @click="showDetailModal = false"></div>
+        <div class="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-dark-800">
+          <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">{{ t('admin.agents.viewDetail') }}</h3>
+          <div v-if="detailAgent" class="space-y-3">
+            <div class="text-sm text-gray-500 dark:text-dark-400">{{ detailAgent.email }}</div>
+            <template v-if="parseAgentNote(detailAgent.agent_note).contact">
+              <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">{{ t('admin.agents.contact') }}</label>
+                <p class="text-sm text-gray-900 dark:text-white break-all">{{ parseAgentNote(detailAgent.agent_note).contact }}</p>
+              </div>
+              <div v-if="parseAgentNote(detailAgent.agent_note).social">
+                <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">{{ t('admin.agents.social') }}</label>
+                <p class="text-sm text-gray-900 dark:text-white break-all">{{ parseAgentNote(detailAgent.agent_note).social }}</p>
+              </div>
+              <div v-if="parseAgentNote(detailAgent.agent_note).promotion">
+                <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">{{ t('admin.agents.promotion') }}</label>
+                <p class="text-sm text-gray-900 dark:text-white whitespace-pre-wrap break-all">{{ parseAgentNote(detailAgent.agent_note).promotion }}</p>
+              </div>
+            </template>
+            <div v-else>
+              <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">{{ t('admin.agents.agentNote') }}</label>
+              <p class="text-sm text-gray-900 dark:text-white whitespace-pre-wrap break-all">{{ detailAgent.agent_note }}</p>
+            </div>
+          </div>
+          <div class="mt-6 flex justify-end">
+            <button @click="showDetailModal = false" class="btn btn-secondary">{{ t('common.close') }}</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </AppLayout>
 </template>
 
@@ -122,13 +148,16 @@ const showEditModal = ref(false)
 const editRate = ref(0)
 const editingAgent = ref<AdminAgent | null>(null)
 
+// Detail modal
+const showDetailModal = ref(false)
+const detailAgent = ref<AdminAgent | null>(null)
+
 const columns = computed<Column[]>(() => [
   { key: 'id', label: 'ID', sortable: false },
   { key: 'email', label: t('admin.agents.email'), sortable: false },
   { key: 'username', label: t('admin.agents.username'), sortable: false },
   { key: 'agent_status', label: t('common.status'), sortable: false },
   { key: 'agent_commission_rate', label: t('admin.agents.commissionRate'), sortable: false },
-  { key: 'agent_note', label: t('admin.agents.agentNote'), sortable: false },
   { key: 'sub_user_count', label: t('admin.agents.subUserCount'), sortable: false },
   { key: 'total_commission', label: t('admin.agents.totalCommission'), sortable: false },
   { key: 'pending_commission', label: t('admin.agents.pendingCommission'), sortable: false },
@@ -176,6 +205,11 @@ function parseAgentNote(note: string): { contact: string; social: string; promot
 function onFilterChange() {
   pagination.value.page = 1
   loadData()
+}
+
+function openDetail(agent: AdminAgent) {
+  detailAgent.value = agent
+  showDetailModal.value = true
 }
 
 async function loadData() {
