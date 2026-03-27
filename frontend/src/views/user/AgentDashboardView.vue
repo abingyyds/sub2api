@@ -20,17 +20,36 @@
                     </div>
                     <h2 class="text-2xl font-extrabold text-white">{{ t('agent.becomeAgent') }}</h2>
                     <p class="mt-2 text-sm text-primary-100">{{ t('agent.becomeAgentDesc') }}</p>
-                    <div class="mt-6">
-                      <textarea
-                        v-model="applyNote"
-                        :placeholder="t('agent.applyNotePlaceholder')"
-                        rows="3"
-                        class="w-full max-w-md mx-auto rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder-white/50 backdrop-blur-sm focus:border-white/40 focus:outline-none"
-                      ></textarea>
+                    <div class="mt-6 space-y-3 max-w-md mx-auto text-left">
+                      <div>
+                        <label class="block text-xs font-medium text-primary-100 mb-1">{{ t('agent.applyContact') }} *</label>
+                        <input
+                          v-model="applyForm.contact"
+                          :placeholder="t('agent.applyContactPlaceholder')"
+                          class="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/50 backdrop-blur-sm focus:border-white/40 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-primary-100 mb-1">{{ t('agent.applySocial') }}</label>
+                        <input
+                          v-model="applyForm.social"
+                          :placeholder="t('agent.applySocialPlaceholder')"
+                          class="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/50 backdrop-blur-sm focus:border-white/40 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-primary-100 mb-1">{{ t('agent.applyPromotion') }}</label>
+                        <textarea
+                          v-model="applyForm.promotion"
+                          :placeholder="t('agent.applyPromotionPlaceholder')"
+                          rows="2"
+                          class="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/50 backdrop-blur-sm focus:border-white/40 focus:outline-none"
+                        ></textarea>
+                      </div>
                     </div>
                     <div class="mt-4">
                       <MagneticButton>
-                        <button @click="handleApply" :disabled="applying" class="inline-flex items-center gap-2 rounded-xl bg-white/20 px-6 py-2.5 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/30 border border-white/20 disabled:opacity-50">
+                        <button @click="handleApply" :disabled="applying || !applyForm.contact.trim()" class="inline-flex items-center gap-2 rounded-xl bg-white/20 px-6 py-2.5 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/30 border border-white/20 disabled:opacity-50">
                           <Icon name="arrowRight" size="sm" />
                           {{ applying ? t('agent.applying') : t('agent.applyNow') }}
                         </button>
@@ -204,7 +223,11 @@ const appStore = useAppStore()
 
 const loading = ref(true)
 const applying = ref(false)
-const applyNote = ref('')
+const applyForm = ref({
+  contact: '',
+  social: '',
+  promotion: ''
+})
 const inviteLink = ref('')
 const status = ref<AgentStatus>({
   is_agent: false,
@@ -231,7 +254,7 @@ onMounted(async () => {
         agentAPI.getLink()
       ])
       dashboard.value = dashData
-      inviteLink.value = linkData.invite_url || `${window.location.origin}/?ref=${linkData.invite_code}`
+      inviteLink.value = linkData.invite_url || `${window.location.origin}/register?invite=${linkData.invite_code}`
     }
   } catch (err) {
     console.error('Failed to load agent data:', err)
@@ -243,7 +266,11 @@ onMounted(async () => {
 async function handleApply() {
   applying.value = true
   try {
-    await agentAPI.apply(applyNote.value || undefined)
+    await agentAPI.apply({
+      contact: applyForm.value.contact,
+      social: applyForm.value.social || undefined,
+      promotion: applyForm.value.promotion || undefined
+    })
     status.value.is_agent = true
     status.value.agent_status = 'pending'
     appStore.showSuccess(t('agent.applySuccess'))

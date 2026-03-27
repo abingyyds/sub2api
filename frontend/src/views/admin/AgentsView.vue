@@ -27,6 +27,17 @@
           <template #cell-pending_commission="{ value }">
             <span class="font-medium text-orange-600 dark:text-orange-400">${{ (value || 0).toFixed(2) }}</span>
           </template>
+          <template #cell-agent_note="{ value }">
+            <div v-if="value" class="text-xs text-gray-600 dark:text-dark-300 max-w-48">
+              <template v-if="parseAgentNote(value)">
+                <div v-if="parseAgentNote(value).contact"><span class="font-medium">{{ t('admin.agents.contact') }}:</span> {{ parseAgentNote(value).contact }}</div>
+                <div v-if="parseAgentNote(value).social"><span class="font-medium">{{ t('admin.agents.social') }}:</span> {{ parseAgentNote(value).social }}</div>
+                <div v-if="parseAgentNote(value).promotion" class="truncate"><span class="font-medium">{{ t('admin.agents.promotion') }}:</span> {{ parseAgentNote(value).promotion }}</div>
+              </template>
+              <span v-else>{{ value }}</span>
+            </div>
+            <span v-else class="text-sm text-gray-400">-</span>
+          </template>
           <template #cell-agent_approved_at="{ value }">
             <span v-if="value" class="text-sm text-gray-500 dark:text-dark-400">{{ formatDateTime(value) }}</span>
             <span v-else class="text-sm text-gray-400">-</span>
@@ -117,6 +128,7 @@ const columns = computed<Column[]>(() => [
   { key: 'username', label: t('admin.agents.username'), sortable: false },
   { key: 'agent_status', label: t('common.status'), sortable: false },
   { key: 'agent_commission_rate', label: t('admin.agents.commissionRate'), sortable: false },
+  { key: 'agent_note', label: t('admin.agents.agentNote'), sortable: false },
   { key: 'sub_user_count', label: t('admin.agents.subUserCount'), sortable: false },
   { key: 'total_commission', label: t('admin.agents.totalCommission'), sortable: false },
   { key: 'pending_commission', label: t('admin.agents.pendingCommission'), sortable: false },
@@ -146,6 +158,16 @@ function statusLabel(status: string) {
     case 'pending': return t('admin.agents.statusPending')
     case 'rejected': return t('admin.agents.statusRejected')
     default: return status
+  }
+}
+
+function parseAgentNote(note: string): { contact?: string; social?: string; promotion?: string } | null {
+  try {
+    const parsed = JSON.parse(note)
+    if (typeof parsed === 'object' && parsed !== null) return parsed
+    return null
+  } catch {
+    return null
   }
 }
 

@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"encoding/json"
+
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
 	middleware2 "github.com/Wei-Shaw/sub2api/internal/server/middleware"
@@ -46,13 +48,22 @@ func (h *AgentHandler) Apply(c *gin.Context) {
 	}
 
 	var req struct {
-		Note string `json:"note"`
+		Contact   string `json:"contact"`
+		Social    string `json:"social"`
+		Promotion string `json:"promotion"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		// note is optional
+		// fields are optional except contact
 	}
 
-	if err := h.agentService.ApplyForAgent(c.Request.Context(), subject.UserID, req.Note); err != nil {
+	// Serialize structured fields to JSON for storage in agent_note
+	noteData, _ := json.Marshal(map[string]string{
+		"contact":   req.Contact,
+		"social":    req.Social,
+		"promotion": req.Promotion,
+	})
+
+	if err := h.agentService.ApplyForAgent(c.Request.Context(), subject.UserID, string(noteData)); err != nil {
 		response.ErrorFrom(c, err)
 		return
 	}

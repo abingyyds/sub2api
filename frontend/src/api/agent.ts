@@ -67,8 +67,14 @@ export async function getStatus(): Promise<AgentStatus> {
   return data
 }
 
-export async function apply(note?: string): Promise<void> {
-  await apiClient.post('/agent/apply', { note })
+export interface AgentApplyRequest {
+  contact: string
+  social?: string
+  promotion?: string
+}
+
+export async function apply(data: AgentApplyRequest): Promise<void> {
+  await apiClient.post('/agent/apply', data)
 }
 
 export async function getDashboard(): Promise<AgentDashboardStats> {
