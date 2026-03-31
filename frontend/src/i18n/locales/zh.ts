@@ -547,6 +547,8 @@ export default {
     create: '创建',
     unavailable: '暂不可用',
     groupCount: '{count} 个分组',
+    groupInfo: '分组信息',
+    createKeyForGroup: '已根据你点击的分组创建，确认信息后提交',
   },
 
   // Usage
@@ -1110,7 +1112,7 @@ export default {
         openai: 'OpenAI',
         gemini: 'Gemini',
         antigravity: 'Antigravity',
-        multi: '多平台'
+        multi: '通用套餐'
       },
       saving: '保存中...',
       noGroups: '暂无分组',
@@ -3391,6 +3393,8 @@ export default {
         rpDescription: '描述',
         rpDescriptionPlaceholder: '如：零门槛体验',
         rpPopular: '标记为最受欢迎',
+        rpNewcomer: '新人专享套餐',
+        rpMaxPurchases: '最大购买次数（0=无限）',
         configured: '已配置（留空保留当前值）'
       },
       opsMonitoring: {
@@ -3561,10 +3565,18 @@ export default {
     goRedeem: '前往兑换 →',
     warning: '购买后请务必保存下单详情里的兑换码，丢失无法找回。',
     buyNow: '立即购买',
-    subscriptionSection: '订阅套餐',
-    balanceSection: '余额充值',
+    subscriptionSection: '套餐订阅',
+    subscriptionSectionDesc: '周额度每周重置，套餐内有效，过期不补',
+    balanceSection: '灵活额度',
+    balanceSectionDesc: '额度用完前，永久有效',
     rechargeNow: '立即充值',
+    rechargePayBtn: '支付',
     rechargeGet: '充值到账',
+    purchaseQuota: '购买额度',
+    newcomerBadge: '新人专享',
+    newcomerSpecialPrice: '限时特价',
+    newcomerCta: '立即抢购',
+    purchaseLimitNote: '每个账号仅限购买 {count} 次',
     rechargeAmount: '充值 {amount} 元到账户余额',
     customRecharge: '自定义充值金额',
     promoCodePlaceholder: '输入优惠码享折扣（可选）',
@@ -3586,6 +3598,21 @@ export default {
       m459: { name: '月卡 459' },
       m559: { name: '月卡 559' },
       m1180: { name: '月卡 1180' }
+    },
+    faq: {
+      title: '常见问题',
+      q1: '额度与计费规则',
+      a1: '本站额度单位为美元，与 Anthropic 官方一致。\n使用量按 Claude API 官方 Token 价格实时扣费，不同模型价格不同。\n套餐内含的「每日额度」在每天零点（UTC）自动重置。',
+      q2: '灵活额度说明',
+      a2: '灵活额度是一次性充值的余额，按实际使用量扣费。\n没有有效期限制，用完为止。\n适合用量不固定、偶尔使用的用户。',
+      q3: '如何升级套餐？',
+      a3: '直接购买新套餐即可，新套餐会立即生效。\n多个套餐可以叠加使用，额度累加。\n无需取消旧套餐，到期后自动失效。',
+      q4: '额度恢复机制',
+      a4: '套餐每日额度在每天 UTC 零点自动重置。\n灵活额度不会重置，用完需重新充值。\n如果当天额度用完，可以通过充值灵活额度继续使用。',
+      q5: '套餐变更说明',
+      a5: '套餐购买后立即生效，有效期从购买日起计算。\n支持多套餐叠加，额度会自动累加。\n套餐到期后停止重置每日额度，剩余灵活额度仍可使用。',
+      q6: '订阅额度与灵活额度有什么区别？',
+      a6: '订阅额度：随套餐提供，每日自动重置，套餐到期后失效。\n灵活额度：一次性充值，永久有效直到用完，按实际使用扣费。\n两者可同时使用，系统优先消耗订阅每日额度，超出部分从灵活额度扣除。'
     },
     payment: {
       scanToPay: '微信扫码支付',

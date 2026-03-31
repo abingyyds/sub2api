@@ -566,6 +566,18 @@
                           <span class="text-xs font-medium text-gray-600 dark:text-dark-400">{{ t('admin.settings.payment.rpPopular') }}</span>
                         </label>
                       </div>
+                      <!-- Newcomer -->
+                      <div class="flex items-end">
+                        <label class="flex items-center gap-2 cursor-pointer pb-1">
+                          <input v-model="rp.is_newcomer" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500" />
+                          <span class="text-xs font-medium text-gray-600 dark:text-dark-400">{{ t('admin.settings.payment.rpNewcomer') }}</span>
+                        </label>
+                      </div>
+                      <!-- Max Purchases -->
+                      <div>
+                        <label class="text-xs font-medium text-gray-600 dark:text-dark-400">{{ t('admin.settings.payment.rpMaxPurchases') }}</label>
+                        <input v-model.number="rp.max_purchases" type="number" min="0" step="1" class="input mt-0.5 text-sm" placeholder="0" />
+                      </div>
                     </div>
 
                     <!-- Preview -->
@@ -1503,6 +1515,8 @@ interface RechargePlanForm {
   pay_yuan: number
   balance_amount: number
   popular: boolean
+  is_newcomer: boolean
+  max_purchases: number
 }
 
 const rechargePlansList = ref<RechargePlanForm[]>([])
@@ -1517,7 +1531,9 @@ function parseRechargePlans(json: string): RechargePlanForm[] {
       description: p.description || '',
       pay_yuan: (p.pay_amount_fen || 0) / 100,
       balance_amount: p.balance_amount || 0,
-      popular: p.popular || false
+      popular: p.popular || false,
+      is_newcomer: p.is_newcomer || false,
+      max_purchases: p.max_purchases || 0
     }))
   } catch {
     return []
@@ -1532,7 +1548,9 @@ function serializeRechargePlans(plans: RechargePlanForm[]): string {
     description: p.description || undefined,
     pay_amount_fen: Math.round(p.pay_yuan * 100),
     balance_amount: p.balance_amount,
-    popular: p.popular || undefined
+    popular: p.popular || undefined,
+    is_newcomer: p.is_newcomer || undefined,
+    max_purchases: p.max_purchases > 0 ? p.max_purchases : undefined
   }))
   return arr.length > 0 ? JSON.stringify(arr) : ''
 }
@@ -1544,7 +1562,9 @@ function addRechargePlan() {
     description: '',
     pay_yuan: 0,
     balance_amount: 0,
-    popular: false
+    popular: false,
+    is_newcomer: false,
+    max_purchases: 0
   })
 }
 

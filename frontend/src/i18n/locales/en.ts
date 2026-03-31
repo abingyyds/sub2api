@@ -551,6 +551,8 @@ export default {
     create: 'Create',
     unavailable: 'Unavailable',
     groupCount: '{count} groups',
+    groupInfo: 'Group Info',
+    createKeyForGroup: 'Pre-filled based on your selected group. Confirm and submit.',
   },
 
   // Usage
@@ -1064,7 +1066,7 @@ export default {
         openai: 'OpenAI',
         gemini: 'Gemini',
         antigravity: 'Antigravity',
-        multi: 'Multi-Platform'
+        multi: 'Universal Plan'
       },
       deleteConfirm:
         "Are you sure you want to delete '{name}'? All associated API keys will no longer belong to any group.",
@@ -3240,6 +3242,8 @@ export default {
         rpDescription: 'Description',
         rpDescriptionPlaceholder: 'e.g. Perfect for getting started',
         rpPopular: 'Mark as Most Popular',
+        rpNewcomer: 'Newcomer Exclusive',
+        rpMaxPurchases: 'Max Purchases (0 = unlimited)',
         configured: 'Configured (leave empty to keep current value)'
       },
       opsMonitoring: {
@@ -3412,9 +3416,17 @@ export default {
     warning: 'Please save the redeem code from your order details. Lost codes cannot be recovered.',
     buyNow: 'Buy Now',
     subscriptionSection: 'Subscription Plans',
-    balanceSection: 'Balance Recharge',
+    subscriptionSectionDesc: 'Daily quota resets every day, valid within plan period, no carry-over after expiry',
+    balanceSection: 'Flexible Balance',
+    balanceSectionDesc: 'Never expires until fully used',
     rechargeNow: 'Recharge',
+    rechargePayBtn: 'Pay',
     rechargeGet: 'Get',
+    purchaseQuota: 'Purchase Quota',
+    newcomerBadge: 'New User Exclusive',
+    newcomerSpecialPrice: 'Limited Time Offer',
+    newcomerCta: 'Grab Now',
+    purchaseLimitNote: 'Limited to {count} purchase(s) per account',
     rechargeAmount: 'Recharge ¥{amount} to account balance',
     customRecharge: 'Custom Recharge Amount',
     promoCodePlaceholder: 'Enter promo code for discount (optional)',
@@ -3429,6 +3441,21 @@ export default {
     promoDiscountPercent: '{percent}% off, save ¥{amount}',
     minAmountHint: 'Minimum ¥{amount}',
     minAmountNote: 'Minimum recharge amount is ¥{amount}',
+    faq: {
+      title: 'FAQ',
+      q1: 'Quota & Billing Rules',
+      a1: 'Quotas on this site are in USD, consistent with Anthropic\'s official pricing.\nUsage is billed in real-time based on Claude API official token prices, which vary by model.\nThe "daily quota" included in plans resets automatically at midnight UTC each day.',
+      q2: 'Flexible Balance Explained',
+      a2: 'Flexible balance is a one-time top-up that is deducted based on actual usage.\nThere is no expiration — it remains valid until fully used.\nIdeal for users with irregular or occasional usage.',
+      q3: 'How to Upgrade Plans?',
+      a3: 'Simply purchase a new plan and it takes effect immediately.\nMultiple plans can be stacked, and quotas are combined.\nNo need to cancel old plans — they expire automatically.',
+      q4: 'Quota Reset Mechanism',
+      a4: 'Plan daily quotas reset automatically at midnight UTC.\nFlexible balance does not reset — recharge when depleted.\nIf daily quota is used up, you can recharge flexible balance to continue.',
+      q5: 'Plan Changes',
+      a5: 'Plans take effect immediately upon purchase, with validity starting from the purchase date.\nMultiple plans can be stacked with combined quotas.\nAfter a plan expires, daily quota stops resetting, but remaining flexible balance is still usable.',
+      q6: 'Subscription Quota vs. Flexible Balance',
+      a6: 'Subscription quota: Provided with plans, resets daily, expires with the plan.\nFlexible balance: One-time top-up, never expires until fully used, billed by actual usage.\nBoth can be used simultaneously — the system prioritizes subscription daily quota, and any excess is deducted from flexible balance.'
+    },
     plans: {
       payg: { name: 'Pay As You Go', desc: 'Pay for what you use' },
       m289: { name: 'Monthly 289' },

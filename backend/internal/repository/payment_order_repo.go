@@ -187,6 +187,20 @@ func (r *paymentOrderRepo) CloseExpiredOrders(ctx context.Context) (int64, error
 	return int64(affected), nil
 }
 
+func (r *paymentOrderRepo) CountPaidByUserAndPlanKey(ctx context.Context, userID int64, planKey string) (int, error) {
+	count, err := r.client.PaymentOrder.Query().
+		Where(
+			paymentorder.UserIDEQ(userID),
+			paymentorder.PlanKeyEQ(planKey),
+			paymentorder.StatusEQ(service.PaymentOrderStatusPaid),
+		).
+		Count(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("count paid orders by user and plan_key: %w", err)
+	}
+	return count, nil
+}
+
 func toServicePaymentOrder(e *dbent.PaymentOrder) *service.PaymentOrder {
 	return &service.PaymentOrder{
 		ID:                  e.ID,

@@ -68,6 +68,7 @@ type CreateRechargeRequest struct {
 	Amount    float64 `json:"amount" binding:"required,gt=0"`
 	PromoCode string  `json:"promo_code"` // 优惠码
 	PayMethod string  `json:"pay_method"` // "wechat" | "alipay" | "epay_alipay" | "epay_wxpay"
+	PlanKey   string  `json:"plan_key"`   // 充值套餐key（可选，用于验证和限购）
 }
 
 // CreateOrder creates a new payment order
@@ -127,7 +128,7 @@ func (h *PaymentHandler) CreateRecharge(c *gin.Context) {
 		payMethod = "wechat"
 	}
 
-	order, err := h.paymentService.CreateRechargeOrder(c.Request.Context(), subject.UserID, req.Amount, req.PromoCode, payMethod)
+	order, err := h.paymentService.CreateRechargeOrder(c.Request.Context(), subject.UserID, req.Amount, req.PromoCode, payMethod, req.PlanKey)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return

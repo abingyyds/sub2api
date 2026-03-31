@@ -24,6 +24,8 @@ export interface RechargePlan {
   pay_amount_fen: number
   balance_amount: number
   popular?: boolean
+  is_newcomer?: boolean
+  max_purchases?: number
 }
 
 export interface RechargeInfo {
@@ -94,11 +96,12 @@ export async function createOrder(planKey: string, promoCode?: string, payMethod
 /**
  * Create a balance recharge order with custom amount
  */
-export async function createRechargeOrder(amount: number, promoCode?: string, payMethod?: PayMethod): Promise<CreateOrderResponse> {
+export async function createRechargeOrder(amount: number, promoCode?: string, payMethod?: PayMethod, planKey?: string): Promise<CreateOrderResponse> {
   const { data } = await apiClient.post<CreateOrderResponse>('/payment/recharge', {
     amount,
     promo_code: promoCode || '',
     pay_method: payMethod || 'wechat',
+    plan_key: planKey || '',
   })
   return data
 }

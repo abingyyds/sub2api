@@ -85,6 +85,7 @@ type PaymentOrderRepository interface {
 	ListByUserID(ctx context.Context, userID int64, params pagination.PaginationParams) ([]PaymentOrder, *pagination.PaginationResult, error)
 	ListAll(ctx context.Context, params pagination.PaginationParams, status string, orderType string) ([]PaymentOrder, *pagination.PaginationResult, error)
 	CloseExpiredOrders(ctx context.Context) (int64, error)
+	CountPaidByUserAndPlanKey(ctx context.Context, userID int64, planKey string) (int, error)
 }
 
 // PaymentService 支付服务
@@ -201,9 +202,11 @@ type RechargePlan struct {
 	Key           string  `json:"key"`
 	Name          string  `json:"name"`
 	Description   string  `json:"description,omitempty"`
-	PayAmountFen  int     `json:"pay_amount_fen"` // 实付金额（分）
-	BalanceAmount float64 `json:"balance_amount"` // 到账金额（美元）
+	PayAmountFen  int     `json:"pay_amount_fen"`  // 实付金额（分）
+	BalanceAmount float64 `json:"balance_amount"`  // 到账金额（美元）
 	Popular       bool    `json:"popular,omitempty"`
+	IsNewcomer    bool    `json:"is_newcomer,omitempty"`    // 新人专享标记
+	MaxPurchases  int     `json:"max_purchases,omitempty"`  // 最大购买次数（0=无限）
 }
 
 // RechargeInfo 充值信息（含优惠套餐和最低金额）
@@ -428,7 +431,7 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 }
 
 // CreateRechargeOrder 创建余额充值订单（支持自定义金额）
-func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, amountYuan float64, promoCode string, payMethod string) (*PaymentOrder, error) {
+func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, amountYuan float64, promoCode string, payMethod string, planKey string) (*PaymentOrder, error) {
 	// 检查支付是否启用
 	enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyPaymentEnabled)
 	if enabled != "true" {
@@ -439,11 +442,44 @@ func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, 
 		return nil, infraerrors.BadRequest("INVALID_AMOUNT", "recharge amount must be positive")
 	}
 
-	// 检查最低充值金额
-	if minAmountStr, _ := s.settingService.GetSettingValue(ctx, SettingKeyRechargeMinAmount); minAmountStr != "" {
-		if minAmount, err := strconv.ParseFloat(minAmountStr, 64); err == nil && minAmount > 0 {
-			if amountYuan < minAmount {
-				return nil, infraerrors.BadRequest("AMOUNT_TOO_LOW", fmt.Sprintf("minimum recharge amount is ¥%.0f", minAmount))
+	// 如果指定了 planKey，验证充值套餐并执行购买限制
+	usePlanKey := "recharge_custom"
+	planBalanceAmount := amountYuan // 默认到账金额=支付金额
+	if planKey != "" {
+		rechargeInfo, err := s.GetRechargeInfo(ctx)
+		if err == nil {
+			for _, rp := range rechargeInfo.Plans {
+				if rp.Key == planKey {
+					// 验证金额匹配
+					expectedYuan := float64(rp.PayAmountFen) / 100
+					if amountYuan != expectedYuan {
+						return nil, infraerrors.BadRequest("AMOUNT_MISMATCH", "amount does not match the selected plan")
+					}
+					// 检查购买次数限制
+					if rp.MaxPurchases > 0 {
+						count, err := s.orderRepo.CountPaidByUserAndPlanKey(ctx, userID, planKey)
+						if err != nil {
+							return nil, fmt.Errorf("check purchase count: %w", err)
+						}
+						if count >= rp.MaxPurchases {
+							return nil, infraerrors.BadRequest("PURCHASE_LIMIT_REACHED", fmt.Sprintf("this plan can only be purchased %d time(s)", rp.MaxPurchases))
+						}
+					}
+					usePlanKey = planKey
+					planBalanceAmount = rp.BalanceAmount
+					break
+				}
+			}
+		}
+	}
+
+	// 检查最低充值金额（仅自定义充值时）
+	if usePlanKey == "recharge_custom" {
+		if minAmountStr, _ := s.settingService.GetSettingValue(ctx, SettingKeyRechargeMinAmount); minAmountStr != "" {
+			if minAmount, err := strconv.ParseFloat(minAmountStr, 64); err == nil && minAmount > 0 {
+				if amountYuan < minAmount {
+					return nil, infraerrors.BadRequest("AMOUNT_TOO_LOW", fmt.Sprintf("minimum recharge amount is ¥%.0f", minAmount))
+				}
 			}
 		}
 	}
@@ -496,12 +532,12 @@ func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, 
 	order := &PaymentOrder{
 		OrderNo:        orderNo,
 		UserID:         userID,
-		PlanKey:        "recharge_custom",
+		PlanKey:        usePlanKey,
 		AmountFen:      finalAmount,
 		GroupID:        0,
 		ValidityDays:   0,
 		OrderType:      "balance",
-		BalanceAmount:  amountYuan,
+		BalanceAmount:  planBalanceAmount,
 		PromoCode:      promoCode,
 		DiscountAmount: discountFen,
 		Status:         PaymentOrderStatusPending,
