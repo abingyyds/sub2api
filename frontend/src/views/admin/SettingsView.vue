@@ -551,7 +551,7 @@
                         <label class="text-xs font-medium text-gray-600 dark:text-dark-400">{{ t('admin.settings.payment.rpBalanceAmount') }}</label>
                         <div class="relative mt-0.5">
                           <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-500">$</span>
-                          <input v-model.number="rp.balance_amount" type="number" min="0" step="1" class="input text-sm pl-7" placeholder="0" />
+                          <input v-model.number="rp.balance_amount" type="number" min="0" step="0.01" class="input text-sm pl-7" placeholder="0" />
                         </div>
                       </div>
                       <!-- Description -->

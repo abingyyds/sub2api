@@ -100,6 +100,31 @@
                     </span>
                   </div>
                 </div>
+
+                <!-- 购买新套餐 card (only for multi/通用套餐 platform) -->
+                <router-link
+                  v-if="platformGroup.platform === 'multi'"
+                  to="/pricing"
+                  class="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-primary-300 bg-primary-50/50 p-4 transition-all duration-200 hover:border-primary-400 hover:bg-primary-50 hover:shadow-md dark:border-primary-700 dark:bg-primary-900/10 dark:hover:border-primary-600 dark:hover:bg-primary-900/20"
+                >
+                  <svg class="mb-2 h-8 w-8 text-primary-500 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                  </svg>
+                  <span class="text-sm font-medium text-primary-700 dark:text-primary-400">{{ t('keys.buyNewPlan') }}</span>
+                  <span class="mt-1 text-[11px] text-primary-500/70 dark:text-primary-500/50">{{ t('keys.buyNewPlanDesc') }}</span>
+                </router-link>
+
+                <!-- 充值 card (last card in every platform group) -->
+                <router-link
+                  to="/pricing?tab=recharge"
+                  class="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/50 p-4 transition-all duration-200 hover:border-amber-400 hover:bg-amber-50 hover:shadow-md dark:border-amber-700 dark:bg-amber-900/10 dark:hover:border-amber-600 dark:hover:bg-amber-900/20"
+                >
+                  <svg class="mb-2 h-8 w-8 text-amber-500 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span class="text-sm font-medium text-amber-700 dark:text-amber-400">{{ t('keys.recharge') }}</span>
+                  <span class="mt-1 text-[11px] text-amber-500/70 dark:text-amber-500/50">{{ t('keys.rechargeDesc') }}</span>
+                </router-link>
               </div>
             </div>
 
@@ -252,7 +277,6 @@
               </button>
               <!-- Import to CC Switch Button -->
               <button
-                v-if="!publicSettings?.hide_ccs_import_button"
                 @click="importToCcswitch(row)"
                 class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
               >
