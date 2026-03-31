@@ -642,6 +642,7 @@ const userNavGroups = computed(() => {
         { path: '/pricing', label: t('nav.purchase'), icon: ShoppingBagIcon },
         { path: '/order-history', label: t('nav.orderHistory'), icon: ReceiptIcon },
         { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
+        { path: '/agent', label: t('nav.agent'), icon: UsersIcon },
       ]
     },
     {
@@ -685,6 +686,7 @@ const personalNavItems = computed(() => {
     { path: '/pricing', label: t('nav.purchase'), icon: ShoppingBagIcon },
     { path: '/order-history', label: t('nav.orderHistory'), icon: ReceiptIcon },
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
+    { path: '/agent', label: t('nav.agent'), icon: UsersIcon },
     { path: '/changelog', label: t('nav.changelog'), icon: MegaphoneIcon },
     { path: '/tutorial', label: t('nav.tutorial'), icon: BookIcon },
     { path: '/contact', label: t('nav.contact'), icon: ChatBubbleIcon },

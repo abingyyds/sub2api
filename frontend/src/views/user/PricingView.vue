@@ -253,12 +253,8 @@
                   </div>
                 </div>
               </GlowCard>
-            </div>
-          </StaggerContainer>
 
-          <!-- Custom Amount - inline as a card in the same grid -->
-          <StaggerContainer v-if="rechargePlans.length > 0" :stagger-delay="100" :delay="500">
-            <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              <!-- Custom Amount Card - same grid -->
               <GlowCard glow-color="rgb(99, 102, 241)">
                 <div
                   class="relative flex flex-col rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-600 dark:bg-dark-900 shadow-soft h-full"
@@ -276,6 +272,7 @@
                           step="1"
                           :placeholder="rechargeMinAmount > 0 ? t('pricing.minAmountHint', { amount: rechargeMinAmount }) : t('recharge.inputPlaceholder')"
                           class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2.5 pl-8 pr-3 text-sm font-bold text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20 dark:border-dark-600 dark:bg-dark-800 dark:text-white dark:placeholder-dark-500 dark:focus:bg-dark-700 transition-all"
+                          @click.stop
                         />
                       </div>
                       <p v-if="rechargeMinAmount > 0" class="mt-1 text-xs text-gray-400 dark:text-dark-500">
