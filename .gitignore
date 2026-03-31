@@ -122,6 +122,8 @@ scripts
 .code-review-state
 openspec/
 docs/
+!frontend/src/components/docs/
+!frontend/src/components/docs/**
 code-reviews/
 AGENTS.md
 backend/cmd/server/server
@@ -129,4 +131,5 @@ deploy/docker-compose.override.yml
 .gocache/
 vite.config.js
 docs/*
+!frontend/src/components/docs/
 .serena/

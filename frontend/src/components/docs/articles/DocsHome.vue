@@ -1,0 +1,101 @@
+<template>
+  <div class="space-y-8">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('tutorial.docs.home') }}</h1>
+      <p class="mt-2 text-gray-500 dark:text-dark-400">{{ t('tutorial.subtitle') }}</p>
+    </div>
+
+    <!-- Config Generator (inline) -->
+    <section>
+      <ConfigGenerator />
+    </section>
+
+    <!-- Quick Start -->
+    <section>
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ t('tutorial.docs.quickStart') }}</h2>
+      <div class="grid gap-4 md:grid-cols-2">
+        <router-link
+          v-for="doc in quickStartDocs"
+          :key="doc.slug"
+          :to="{ path: '/tutorial', query: { doc: doc.slug } }"
+          class="group rounded-xl border-2 border-gray-200 bg-white p-5 transition-all hover:border-primary-300 hover:shadow-md dark:border-dark-700 dark:bg-dark-900 dark:hover:border-primary-600"
+        >
+          <div class="flex items-start gap-3">
+            <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400">
+              <component :is="doc.icon" class="h-5 w-5" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-medium text-gray-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400 transition-colors">{{ doc.title }}</h3>
+              <p class="mt-1 text-sm text-gray-500 dark:text-dark-400 line-clamp-2">{{ doc.desc }}</p>
+            </div>
+          </div>
+        </router-link>
+      </div>
+    </section>
+
+    <!-- Advanced -->
+    <section>
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ t('tutorial.docs.advanced') }}</h2>
+      <div class="grid gap-4 md:grid-cols-2">
+        <router-link
+          v-for="doc in advancedDocs"
+          :key="doc.slug"
+          :to="{ path: '/tutorial', query: { doc: doc.slug } }"
+          class="group rounded-xl border-2 border-gray-200 bg-white p-5 transition-all hover:border-primary-300 hover:shadow-md dark:border-dark-700 dark:bg-dark-900 dark:hover:border-primary-600"
+        >
+          <div class="flex items-start gap-3">
+            <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400">
+              <component :is="doc.icon" class="h-5 w-5" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-medium text-gray-900 group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400 transition-colors">{{ doc.title }}</h3>
+              <p class="mt-1 text-sm text-gray-500 dark:text-dark-400 line-clamp-2">{{ doc.desc }}</p>
+            </div>
+          </div>
+        </router-link>
+      </div>
+    </section>
+
+  </div>
+</template>
+
+<script setup lang="ts">
+import { h } from 'vue'
+import { useI18n } from 'vue-i18n'
+import ConfigGenerator from './ConfigGenerator.vue'
+
+const { t } = useI18n()
+
+// Inline icons
+const NodeIcon = () => h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' }, [
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z' })
+])
+
+const BotIcon = () => h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' }, [
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5' })
+])
+
+const SparkIcon = () => h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' }, [
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z' })
+])
+
+const CodeIcon = () => h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' }, [
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5' })
+])
+
+const RocketIcon = () => h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' }, [
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z' })
+])
+
+const quickStartDocs = [
+  { slug: 'nodejs', title: 'Node.js 环境安装教程', desc: '在 Windows、macOS、Linux 安装 Node.js LTS，并验证 node/npm 命令可用。', icon: NodeIcon },
+  { slug: 'claude-code', title: 'Claude Code 配置教程', desc: '安装并配置 Claude Code CLI 工具，连接 Ai Go Code 平台。', icon: SparkIcon },
+  { slug: 'gemini-cli', title: 'Gemini CLI 配置教程', desc: '安装并配置 Gemini CLI 工具，连接 Ai Go Code 平台使用 Gemini 模型。', icon: SparkIcon },
+  { slug: 'codex', title: 'Codex (OpenAI) 配置教程', desc: '安装并配置 Codex CLI 工具，通过配置文件连接 Ai Go Code 平台。', icon: CodeIcon },
+]
+
+const advancedDocs = [
+  { slug: 'openclaw', title: 'OpenClaw 部署教程', desc: '从零开始部署 OpenClaw Telegram 机器人，并接入 ccoder.me 平台。', icon: RocketIcon },
+  { slug: 'opencode', title: 'OpenCode 配置教程', desc: '通过配置文件将 OpenCode 接入 Ai Go Code 平台，快速完成模型配置。', icon: BotIcon },
+]
+</script>
