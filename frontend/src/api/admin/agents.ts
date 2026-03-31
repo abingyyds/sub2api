@@ -53,5 +53,9 @@ export async function settle(id: number): Promise<{ settled_count: number; settl
   return data
 }
 
-export const agentsAPI = { list, approve, reject, update, settle }
+export async function updateParent(userId: number, parentId: number): Promise<void> {
+  await apiClient.put(`/admin/agents/${userId}/parent`, { parent_id: parentId })
+}
+
+export const agentsAPI = { list, approve, reject, update, settle, updateParent }
 export default agentsAPI

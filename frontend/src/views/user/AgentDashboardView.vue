@@ -112,7 +112,7 @@
 
             <!-- Stats Cards -->
             <StaggerContainer :stagger-delay="100" :delay="200">
-              <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+              <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-8">
                 <GlowCard glow-color="rgb(59, 130, 246)">
                   <div class="rounded-2xl border-2 border-gray-200 bg-white p-5 text-center dark:border-dark-700 dark:bg-dark-900 shadow-soft">
                     <p class="text-xs font-medium text-gray-500 dark:text-dark-400">{{ t('agent.totalSubUsers') }}</p>
@@ -158,6 +158,22 @@
                     <p class="text-xs font-medium text-gray-500 dark:text-dark-400">{{ t('agent.settledCommission') }}</p>
                     <p class="mt-1 text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">
                       $<AnimatedNumber :value="dashboard.settled_commission" :decimals="2" />
+                    </p>
+                  </div>
+                </GlowCard>
+                <GlowCard glow-color="rgb(16, 185, 129)">
+                  <div class="rounded-2xl border-2 border-gray-200 bg-white p-5 text-center dark:border-dark-700 dark:bg-dark-900 shadow-soft">
+                    <p class="text-xs font-medium text-gray-500 dark:text-dark-400">{{ t('agent.directCommission') }}</p>
+                    <p class="mt-1 text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
+                      $<AnimatedNumber :value="dashboard.direct_commission" :decimals="2" />
+                    </p>
+                  </div>
+                </GlowCard>
+                <GlowCard glow-color="rgb(168, 85, 247)">
+                  <div class="rounded-2xl border-2 border-gray-200 bg-white p-5 text-center dark:border-dark-700 dark:bg-dark-900 shadow-soft">
+                    <p class="text-xs font-medium text-gray-500 dark:text-dark-400">{{ t('agent.differentialCommission') }}</p>
+                    <p class="mt-1 text-2xl font-extrabold text-purple-600 dark:text-purple-400">
+                      $<AnimatedNumber :value="dashboard.differential_commission" :decimals="2" />
                     </p>
                   </div>
                 </GlowCard>
@@ -242,7 +258,9 @@ const dashboard = ref<AgentDashboardStats>({
   total_consumed: 0,
   total_commission: 0,
   pending_commission: 0,
-  settled_commission: 0
+  settled_commission: 0,
+  direct_commission: 0,
+  differential_commission: 0
 })
 
 onMounted(async () => {

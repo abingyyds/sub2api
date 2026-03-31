@@ -87,7 +87,8 @@ const (
 
 // Agent commission source type constants
 const (
-	AgentCommissionSourcePayment = "payment"
+	AgentCommissionSourcePayment      = "payment"
+	AgentCommissionSourceDifferential = "differential"
 )
 
 // Agent commission status constants

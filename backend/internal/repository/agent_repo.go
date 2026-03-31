@@ -49,7 +49,9 @@ func (r *agentRepository) ListSubUsers(ctx context.Context, agentID int64, param
 	queryBase := `SELECT u.id, u.email, u.username, u.balance, u.status, u.created_at,
 		COALESCE((SELECT SUM(po.balance_amount) FROM payment_orders po WHERE po.user_id = u.id AND po.status = 'paid'), 0) AS total_recharge,
 		COALESCE((SELECT SUM(ul.total_cost) FROM usage_logs ul WHERE ul.user_id = u.id), 0) AS total_consumed,
-		COALESCE((SELECT COUNT(*) FROM payment_orders po2 WHERE po2.user_id = u.id AND po2.status = 'paid'), 0) AS order_count
+		COALESCE((SELECT COUNT(*) FROM payment_orders po2 WHERE po2.user_id = u.id AND po2.status = 'paid'), 0) AS order_count,
+		ref.commission_rate,
+		(u.is_agent = true AND u.agent_status = 'approved') AS is_sub_agent
 		FROM referrals ref JOIN users u ON u.id = ref.invitee_id
 		WHERE ref.inviter_id = $1 AND u.deleted_at IS NULL`
 
@@ -73,9 +75,14 @@ func (r *agentRepository) ListSubUsers(ctx context.Context, agentID int64, param
 	var results []service.AgentSubUser
 	for rows.Next() {
 		var su service.AgentSubUser
+		var commRate sql.NullFloat64
 		if err := rows.Scan(&su.ID, &su.Email, &su.Username, &su.Balance, &su.Status, &su.CreatedAt,
-			&su.TotalRecharge, &su.TotalConsumed, &su.OrderCount); err != nil {
+			&su.TotalRecharge, &su.TotalConsumed, &su.OrderCount, &commRate, &su.IsAgent); err != nil {
 			return nil, nil, err
+		}
+		if commRate.Valid {
+			v := commRate.Float64
+			su.CommissionRate = &v
 		}
 		results = append(results, su)
 	}
@@ -174,9 +181,12 @@ func (r *agentRepository) GetDashboardStats(ctx context.Context, agentID int64) 
 	r.db.QueryRowContext(ctx,
 		`SELECT COALESCE(SUM(commission_amount), 0),
 			COALESCE(SUM(commission_amount) FILTER (WHERE status = 'pending'), 0),
-			COALESCE(SUM(commission_amount) FILTER (WHERE status = 'settled'), 0)
+			COALESCE(SUM(commission_amount) FILTER (WHERE status = 'settled'), 0),
+			COALESCE(SUM(commission_amount) FILTER (WHERE source_type = 'payment'), 0),
+			COALESCE(SUM(commission_amount) FILTER (WHERE source_type = 'differential'), 0)
 		 FROM agent_commissions WHERE agent_id = $1`, agentID).Scan(
-		&stats.TotalCommission, &stats.PendingCommission, &stats.SettledCommission)
+		&stats.TotalCommission, &stats.PendingCommission, &stats.SettledCommission,
+		&stats.DirectCommission, &stats.DifferentialCommission)
 
 	// Today stats
 	today := time.Now().Truncate(24 * time.Hour)
@@ -352,15 +362,75 @@ func (r *agentRepository) ListAgents(ctx context.Context, params pagination.Pagi
 }
 
 // GetAgentByUserID finds the agent (inviter) for a given user via referrals table.
-func (r *agentRepository) GetAgentByUserID(ctx context.Context, userID int64) (int64, error) {
+// Returns agentID, per-user commission rate (may be nil), and error.
+func (r *agentRepository) GetAgentByUserID(ctx context.Context, userID int64) (int64, *float64, error) {
 	var agentID int64
+	var perUserRate sql.NullFloat64
 	err := r.db.QueryRowContext(ctx,
-		`SELECT ref.inviter_id FROM referrals ref
+		`SELECT ref.inviter_id, ref.commission_rate FROM referrals ref
 		 JOIN users u ON u.id = ref.inviter_id
 		 WHERE ref.invitee_id = $1 AND u.is_agent = true AND u.agent_status = 'approved'`,
-		userID).Scan(&agentID)
+		userID).Scan(&agentID, &perUserRate)
 	if err == sql.ErrNoRows {
-		return 0, nil
+		return 0, nil, nil
 	}
-	return agentID, err
+	if err != nil {
+		return 0, nil, err
+	}
+	if perUserRate.Valid {
+		v := perUserRate.Float64
+		return agentID, &v, nil
+	}
+	return agentID, nil, nil
+}
+
+// GetParentAgent finds the parent agent of a given agent (the agent's inviter who is also an approved agent).
+// Returns parentAgentID, per-user commission rate, and error.
+func (r *agentRepository) GetParentAgent(ctx context.Context, agentID int64) (int64, *float64, error) {
+	var parentID int64
+	var perUserRate sql.NullFloat64
+	err := r.db.QueryRowContext(ctx,
+		`SELECT ref.inviter_id, ref.commission_rate FROM referrals ref
+		 JOIN users u ON u.id = ref.inviter_id
+		 WHERE ref.invitee_id = $1 AND u.is_agent = true AND u.agent_status = 'approved'`,
+		agentID).Scan(&parentID, &perUserRate)
+	if err == sql.ErrNoRows {
+		return 0, nil, nil
+	}
+	if err != nil {
+		return 0, nil, err
+	}
+	if perUserRate.Valid {
+		v := perUserRate.Float64
+		return parentID, &v, nil
+	}
+	return parentID, nil, nil
+}
+
+// UpdateReferralCommissionRate sets the per-user commission rate for a referral relationship.
+func (r *agentRepository) UpdateReferralCommissionRate(ctx context.Context, inviterID, inviteeID int64, rate float64) error {
+	result, err := r.db.ExecContext(ctx,
+		`UPDATE referrals SET commission_rate = $1 WHERE inviter_id = $2 AND invitee_id = $3`,
+		rate, inviterID, inviteeID)
+	if err != nil {
+		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+// UpdateReferralInviter changes the inviter (parent) of a user. Upserts the referral record.
+func (r *agentRepository) UpdateReferralInviter(ctx context.Context, inviteeID, newInviterID int64) error {
+	_, err := r.db.ExecContext(ctx,
+		`INSERT INTO referrals (inviter_id, invitee_id, commission_rate, created_at)
+		 VALUES ($1, $2, NULL, NOW())
+		 ON CONFLICT (invitee_id) DO UPDATE SET inviter_id = $1, commission_rate = NULL`,
+		newInviterID, inviteeID)
+	return err
 }

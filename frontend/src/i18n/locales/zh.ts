@@ -225,7 +225,19 @@ export default {
     orgManagement: '企业',
     tutorial: '使用教程',
     agent: '代理中心',
-    agents: '代理管理'
+    agents: '代理管理',
+    changelog: '更新公告'
+  },
+
+  // Changelog
+  changelog: {
+    title: '更新日志',
+    description: '查看平台最新动态和更新',
+    subtitle: '追踪我们的最新功能、改进和修复',
+    noData: '暂无更新日志',
+    noDataDesc: '稍后回来查看最新动态。',
+    closeForToday: '今日关闭',
+    dismissThis: '这条关闭'
   },
 
   // Auth
@@ -2373,7 +2385,11 @@ export default {
       deleted: '公告删除成功',
       loadError: '加载公告失败',
       saveError: '保存公告失败',
-      deleteError: '删除公告失败'
+      deleteError: '删除公告失败',
+      version: '版本号',
+      versionPlaceholder: '例如: v2026.03.24',
+      category: '分类',
+      publishedAt: '发布日期'
     },
 
     // 订单管理
@@ -3437,7 +3453,13 @@ export default {
       updateSuccess: '佣金比例已更新',
       updateError: '更新失败',
       settleSuccess: '结算成功：{count} 条佣金，共 ${amount}',
-      settleError: '结算失败'
+      settleError: '结算失败',
+      parentAgent: '上级代理',
+      reassignParent: '修改上级',
+      reassignParentTitle: '修改上级代理',
+      parentIdPlaceholder: '输入上级代理用户 ID',
+      parentUpdated: '上级代理已更新',
+      parentUpdateError: '修改上级代理失败'
     }
   },
 
@@ -3760,7 +3782,17 @@ export default {
     settledStatus: '已结算',
     page: '第',
     prev: '上一页',
-    next: '下一页'
+    next: '下一页',
+    setRate: '设置比例',
+    setRateTitle: '设置佣金比例',
+    rateDefault: '默认',
+    rateSaved: '佣金比例已保存',
+    rateError: '保存佣金比例失败',
+    rateExceedsOwn: '比例不能超过自己的佣金比例',
+    isSubAgent: '子代理',
+    actions: '操作',
+    directCommission: '直推佣金',
+    differentialCommission: '差额佣金'
   },
 
   // 企业 (企业管理员)

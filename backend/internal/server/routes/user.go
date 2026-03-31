@@ -124,6 +124,7 @@ func RegisterUserRoutes(
 			agent.GET("/dashboard", h.Agent.Dashboard)
 			agent.GET("/link", h.Agent.GetLink)
 			agent.GET("/sub-users", h.Agent.ListSubUsers)
+			agent.PUT("/sub-users/:id/rate", h.Agent.SetSubUserRate)
 			agent.GET("/financial-logs", h.Agent.ListFinancialLogs)
 			agent.GET("/commissions", h.Agent.ListCommissions)
 		}

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
@@ -173,4 +174,35 @@ func (h *AgentHandler) ListCommissions(c *gin.Context) {
 	}
 
 	response.Paginated(c, commissions, pag.Total, pag.Page, pag.PageSize)
+}
+
+// SetSubUserRate sets a per-user commission rate for a sub-user
+// PUT /api/v1/agent/sub-users/:id/rate
+func (h *AgentHandler) SetSubUserRate(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "User not authenticated")
+		return
+	}
+
+	subUserID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "invalid sub-user ID")
+		return
+	}
+
+	var req struct {
+		CommissionRate float64 `json:"commission_rate" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "commission_rate is required")
+		return
+	}
+
+	if err := h.agentService.SetSubUserCommissionRate(c.Request.Context(), subject.UserID, subUserID, req.CommissionRate); err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{"message": "commission rate updated"})
 }

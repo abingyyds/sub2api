@@ -228,7 +228,19 @@ export default {
     orgManagement: 'Organization',
     tutorial: 'Tutorial',
     agent: 'Agent Center',
-    agents: 'Agent Management'
+    agents: 'Agent Management',
+    changelog: 'Changelog'
+  },
+
+  // Changelog
+  changelog: {
+    title: 'Changelog',
+    description: 'View platform updates and changes',
+    subtitle: 'Track our latest features, improvements and fixes',
+    noData: 'No changelog entries',
+    noDataDesc: 'Check back later for updates.',
+    closeForToday: 'Close for today',
+    dismissThis: 'Dismiss this'
   },
 
   // Auth
@@ -2226,7 +2238,11 @@ export default {
       deleted: 'Announcement deleted successfully',
       loadError: 'Failed to load announcements',
       saveError: 'Failed to save announcement',
-      deleteError: 'Failed to delete announcement'
+      deleteError: 'Failed to delete announcement',
+      version: 'Version',
+      versionPlaceholder: 'e.g. v2026.03.24',
+      category: 'Category',
+      publishedAt: 'Published Date'
     },
 
     // Orders
@@ -3287,7 +3303,13 @@ export default {
       updateSuccess: 'Commission rate updated',
       updateError: 'Failed to update',
       settleSuccess: 'Settled {count} commissions, total ${amount}',
-      settleError: 'Failed to settle'
+      settleError: 'Failed to settle',
+      parentAgent: 'Parent Agent',
+      reassignParent: 'Reassign Parent',
+      reassignParentTitle: 'Reassign Parent Agent',
+      parentIdPlaceholder: 'Enter parent agent user ID',
+      parentUpdated: 'Parent agent updated',
+      parentUpdateError: 'Failed to update parent agent'
     }
   },
 
@@ -3611,7 +3633,17 @@ export default {
     settledStatus: 'Settled',
     page: 'Page',
     prev: 'Previous',
-    next: 'Next'
+    next: 'Next',
+    setRate: 'Set Rate',
+    setRateTitle: 'Set Commission Rate',
+    rateDefault: 'Default',
+    rateSaved: 'Commission rate saved',
+    rateError: 'Failed to save commission rate',
+    rateExceedsOwn: 'Rate cannot exceed your own rate',
+    isSubAgent: 'Sub-Agent',
+    actions: 'Actions',
+    directCommission: 'Direct Commission',
+    differentialCommission: 'Differential Commission'
   },
 
   // Organization (Org Admin)

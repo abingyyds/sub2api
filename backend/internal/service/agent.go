@@ -25,27 +25,31 @@ type AgentCommission struct {
 
 // AgentSubUser represents a sub-user under an agent.
 type AgentSubUser struct {
-	ID             int64     `json:"id"`
-	Email          string    `json:"email"`
-	Username       string    `json:"username,omitempty"`
-	Balance        float64   `json:"balance"`
-	Status         string    `json:"status"`
-	CreatedAt      time.Time `json:"created_at"`
-	TotalRecharge  float64   `json:"total_recharge"`
-	TotalConsumed  float64   `json:"total_consumed"`
-	OrderCount     int       `json:"order_count"`
+	ID             int64      `json:"id"`
+	Email          string     `json:"email"`
+	Username       string     `json:"username,omitempty"`
+	Balance        float64    `json:"balance"`
+	Status         string     `json:"status"`
+	CreatedAt      time.Time  `json:"created_at"`
+	TotalRecharge  float64    `json:"total_recharge"`
+	TotalConsumed  float64    `json:"total_consumed"`
+	OrderCount     int        `json:"order_count"`
+	CommissionRate *float64   `json:"commission_rate"`
+	IsAgent        bool       `json:"is_agent"`
 }
 
 // AgentDashboardStats holds aggregated stats for an agent's dashboard.
 type AgentDashboardStats struct {
-	TotalSubUsers      int64   `json:"total_sub_users"`
-	TotalRecharge      float64 `json:"total_recharge"`
-	TotalConsumed      float64 `json:"total_consumed"`
-	TotalCommission    float64 `json:"total_commission"`
-	PendingCommission  float64 `json:"pending_commission"`
-	SettledCommission  float64 `json:"settled_commission"`
-	TodayNewUsers      int64   `json:"today_new_users"`
-	TodayRecharge      float64 `json:"today_recharge"`
+	TotalSubUsers            int64   `json:"total_sub_users"`
+	TotalRecharge            float64 `json:"total_recharge"`
+	TotalConsumed            float64 `json:"total_consumed"`
+	TotalCommission          float64 `json:"total_commission"`
+	PendingCommission        float64 `json:"pending_commission"`
+	SettledCommission        float64 `json:"settled_commission"`
+	TodayNewUsers            int64   `json:"today_new_users"`
+	TodayRecharge            float64 `json:"today_recharge"`
+	DirectCommission         float64 `json:"direct_commission"`
+	DifferentialCommission   float64 `json:"differential_commission"`
 }
 
 // AgentFinancialLog represents a financial event for a sub-user (payment or consumption).

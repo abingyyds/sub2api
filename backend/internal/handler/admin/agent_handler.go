@@ -123,3 +123,28 @@ func (h *AgentHandler) Settle(c *gin.Context) {
 
 	response.Success(c, gin.H{"settled_amount": amount})
 }
+
+// UpdateParent updates the parent agent for a user
+// PUT /api/v1/admin/agents/:id/parent
+func (h *AgentHandler) UpdateParent(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "invalid user ID")
+		return
+	}
+
+	var req struct {
+		ParentID int64 `json:"parent_id" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "parent_id is required")
+		return
+	}
+
+	if err := h.agentService.AdminUpdateParentAgent(c.Request.Context(), id, req.ParentID); err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{"message": "parent agent updated"})
+}

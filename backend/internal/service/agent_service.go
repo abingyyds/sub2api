@@ -15,6 +15,8 @@ var (
 	ErrAgentAlreadyApplied = infraerrors.Conflict("AGENT_ALREADY_APPLIED", "you have already applied or are already an agent")
 	ErrAgentNotFound       = infraerrors.NotFound("AGENT_NOT_FOUND", "agent not found")
 	ErrAgentNotApproved    = infraerrors.Forbidden("AGENT_NOT_APPROVED", "your agent application has not been approved")
+	ErrRateExceedsOwn      = infraerrors.BadRequest("RATE_EXCEEDS_OWN", "commission rate cannot exceed your own rate")
+	ErrSelfReference       = infraerrors.BadRequest("SELF_REFERENCE", "cannot set user as their own parent")
 )
 
 // AgentRepository defines the data access interface for agent operations.
@@ -27,7 +29,10 @@ type AgentRepository interface {
 	ListCommissions(ctx context.Context, agentID int64, params pagination.PaginationParams, status string) ([]AgentCommission, *pagination.PaginationResult, error)
 	SettlePendingCommissions(ctx context.Context, agentID int64) (float64, error)
 	ListAgents(ctx context.Context, params pagination.PaginationParams, status string, search string) ([]AgentInfo, *pagination.PaginationResult, error)
-	GetAgentByUserID(ctx context.Context, userID int64) (int64, error)
+	GetAgentByUserID(ctx context.Context, userID int64) (int64, *float64, error)
+	GetParentAgent(ctx context.Context, agentID int64) (int64, *float64, error)
+	UpdateReferralCommissionRate(ctx context.Context, inviterID, inviteeID int64, rate float64) error
+	UpdateReferralInviter(ctx context.Context, inviteeID, newInviterID int64) error
 }
 
 // AgentService handles agent/affiliate business logic.
@@ -148,35 +153,43 @@ func (s *AgentService) ListCommissions(ctx context.Context, userID int64, params
 
 // TriggerCommissionForPayment is called when a payment is completed. It checks if
 // the paying user has an agent (via referrals), and if so, creates a commission record.
+// It also checks for a parent agent and creates a differential commission if applicable.
 func (s *AgentService) TriggerCommissionForPayment(ctx context.Context, userID int64, orderID int64, paymentAmount float64) {
 	if !s.settingService.IsAgentEnabled(ctx) {
 		return
 	}
 
-	agentID, err := s.agentRepo.GetAgentByUserID(ctx, userID)
+	// Step 1: Find direct agent + per-user rate
+	agentID, perUserRate, err := s.agentRepo.GetAgentByUserID(ctx, userID)
 	if err != nil || agentID == 0 {
 		return // no agent for this user
 	}
 
-	// Get agent's commission rate
+	// Step 2: Get agent's global commission rate
 	agent, err := s.userRepo.GetByID(ctx, agentID)
 	if err != nil || !agent.IsAgent || agent.AgentStatus != AgentStatusApproved {
 		return
 	}
 
-	rate := agent.AgentCommissionRate
-	if rate <= 0 {
+	// Determine effective rate: per-user rate takes priority, otherwise use agent's global rate
+	effectiveRate := agent.AgentCommissionRate
+	if perUserRate != nil {
+		effectiveRate = *perUserRate
+	}
+
+	if effectiveRate <= 0 {
 		return
 	}
 
+	// Step 3: Create direct agent commission record
 	commission := &AgentCommission{
 		AgentID:          agentID,
 		UserID:           userID,
 		OrderID:          &orderID,
 		SourceType:       AgentCommissionSourcePayment,
 		SourceAmount:     paymentAmount,
-		CommissionRate:   rate,
-		CommissionAmount: paymentAmount * rate,
+		CommissionRate:   effectiveRate,
+		CommissionAmount: paymentAmount * effectiveRate,
 		Status:           AgentCommissionStatusPending,
 	}
 
@@ -186,6 +199,110 @@ func (s *AgentService) TriggerCommissionForPayment(ctx context.Context, userID i
 	}
 
 	log.Printf("[Agent] commission created: agent=%d user=%d order=%d amount=%.8f", agentID, userID, orderID, commission.CommissionAmount)
+
+	// Step 4: Find parent agent (the direct agent's inviter who is also an approved agent)
+	parentID, parentPerUserRate, err := s.agentRepo.GetParentAgent(ctx, agentID)
+	if err != nil || parentID == 0 {
+		return // no parent agent
+	}
+
+	// Step 5: Get parent agent's global rate
+	parentAgent, err := s.userRepo.GetByID(ctx, parentID)
+	if err != nil || !parentAgent.IsAgent || parentAgent.AgentStatus != AgentStatusApproved {
+		return
+	}
+
+	// Determine parent's effective rate for this child agent
+	parentEffectiveRate := parentAgent.AgentCommissionRate
+	if parentPerUserRate != nil {
+		parentEffectiveRate = *parentPerUserRate
+	}
+
+	// Step 6: Calculate differential = parent's rate for this child - child's effective rate
+	differential := parentEffectiveRate - effectiveRate
+	if differential <= 0 {
+		return
+	}
+
+	// Step 7: Create differential commission record for parent
+	diffCommission := &AgentCommission{
+		AgentID:          parentID,
+		UserID:           userID,
+		OrderID:          &orderID,
+		SourceType:       AgentCommissionSourceDifferential,
+		SourceAmount:     paymentAmount,
+		CommissionRate:   differential,
+		CommissionAmount: paymentAmount * differential,
+		Status:           AgentCommissionStatusPending,
+	}
+
+	if err := s.agentRepo.CreateCommission(ctx, diffCommission); err != nil {
+		log.Printf("[Agent] failed to create differential commission for parent=%d agent=%d order=%d: %v", parentID, agentID, orderID, err)
+		return
+	}
+
+	log.Printf("[Agent] differential commission created: parent=%d agent=%d order=%d amount=%.8f", parentID, agentID, orderID, diffCommission.CommissionAmount)
+}
+
+// SetSubUserCommissionRate sets a per-user commission rate for a sub-user.
+// The rate must not exceed the agent's own commission rate.
+func (s *AgentService) SetSubUserCommissionRate(ctx context.Context, agentID int64, subUserID int64, rate float64) error {
+	if err := s.requireApprovedAgent(ctx, agentID); err != nil {
+		return err
+	}
+
+	// Get the agent's own commission rate
+	agent, err := s.userRepo.GetByID(ctx, agentID)
+	if err != nil {
+		return err
+	}
+
+	if rate > agent.AgentCommissionRate {
+		return ErrRateExceedsOwn
+	}
+
+	if rate < 0 {
+		return infraerrors.BadRequest("INVALID_RATE", "commission rate must be non-negative")
+	}
+
+	// Verify the sub-user is indeed a sub-user of this agent
+	if err := s.agentRepo.UpdateReferralCommissionRate(ctx, agentID, subUserID, rate); err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return ErrReferralNotFound
+		}
+		return fmt.Errorf("update referral commission rate: %w", err)
+	}
+
+	log.Printf("[Agent] set commission rate for agent=%d sub-user=%d rate=%.4f", agentID, subUserID, rate)
+	return nil
+}
+
+// AdminUpdateParentAgent updates the parent agent (inviter) for a user.
+func (s *AgentService) AdminUpdateParentAgent(ctx context.Context, userID int64, newParentID int64) error {
+	if userID == newParentID {
+		return ErrSelfReference
+	}
+
+	// Verify the new parent exists and is an approved agent
+	parent, err := s.userRepo.GetByID(ctx, newParentID)
+	if err != nil {
+		return ErrAgentNotFound
+	}
+	if !parent.IsAgent || parent.AgentStatus != AgentStatusApproved {
+		return ErrAgentNotApproved
+	}
+
+	// Verify the target user exists
+	if _, err := s.userRepo.GetByID(ctx, userID); err != nil {
+		return infraerrors.NotFound("USER_NOT_FOUND", "user not found")
+	}
+
+	if err := s.agentRepo.UpdateReferralInviter(ctx, userID, newParentID); err != nil {
+		return fmt.Errorf("update referral inviter: %w", err)
+	}
+
+	log.Printf("[Agent] admin updated parent for user=%d to parent=%d", userID, newParentID)
+	return nil
 }
 
 // --- Admin operations ---

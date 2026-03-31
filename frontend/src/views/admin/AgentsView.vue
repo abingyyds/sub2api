@@ -49,6 +49,9 @@
               <button v-if="row.agent_status === 'approved' && row.pending_commission > 0" @click="handleSettle(row)" class="btn btn-xs btn-primary">
                 {{ t('admin.agents.settle') }}
               </button>
+              <button @click="openReassignParent(row)" class="btn btn-xs btn-secondary" :title="t('admin.agents.reassignParent')">
+                {{ t('admin.agents.parentAgent') }}
+              </button>
             </div>
           </template>
           <template #empty>
@@ -115,6 +118,27 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Reassign Parent Modal -->
+    <Teleport to="body">
+      <div v-if="showParentModal" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="fixed inset-0 bg-black/50" @click="showParentModal = false"></div>
+        <div class="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-dark-800">
+          <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">{{ t('admin.agents.reassignParentTitle') }}</h3>
+          <div class="space-y-4">
+            <p class="text-sm text-gray-500 dark:text-dark-400">{{ parentEditAgent?.email }}</p>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">{{ t('admin.agents.parentAgent') }} (ID)</label>
+              <input v-model.number="parentId" type="number" min="1" :placeholder="t('admin.agents.parentIdPlaceholder')" class="input w-full" />
+            </div>
+          </div>
+          <div class="mt-6 flex justify-end gap-3">
+            <button @click="showParentModal = false" class="btn btn-secondary">{{ t('common.cancel') }}</button>
+            <button @click="saveParent" :disabled="savingParent" class="btn btn-primary">{{ savingParent ? t('common.saving') : t('common.save') }}</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </AppLayout>
 </template>
 
@@ -151,6 +175,12 @@ const editingAgent = ref<AdminAgent | null>(null)
 // Detail modal
 const showDetailModal = ref(false)
 const detailAgent = ref<AdminAgent | null>(null)
+
+// Parent reassignment modal
+const showParentModal = ref(false)
+const parentId = ref(0)
+const savingParent = ref(false)
+const parentEditAgent = ref<AdminAgent | null>(null)
 
 const columns = computed<Column[]>(() => [
   { key: 'id', label: 'ID', sortable: false },
@@ -276,6 +306,27 @@ async function handleSettle(agent: AdminAgent) {
     loadData()
   } catch {
     appStore.showError(t('admin.agents.settleError'))
+  }
+}
+
+function openReassignParent(agent: AdminAgent) {
+  parentEditAgent.value = agent
+  parentId.value = 0
+  showParentModal.value = true
+}
+
+async function saveParent() {
+  if (!parentEditAgent.value || !parentId.value) return
+  savingParent.value = true
+  try {
+    await agentsAPI.updateParent(parentEditAgent.value.id, parentId.value)
+    appStore.showSuccess(t('admin.agents.parentUpdated'))
+    showParentModal.value = false
+    loadData()
+  } catch {
+    appStore.showError(t('admin.agents.parentUpdateError'))
+  } finally {
+    savingParent.value = false
   }
 }
 

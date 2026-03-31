@@ -16,6 +16,8 @@ export interface AgentDashboardStats {
   total_commission: number
   pending_commission: number
   settled_commission: number
+  direct_commission: number
+  differential_commission: number
 }
 
 export interface AgentSubUser {
@@ -25,6 +27,8 @@ export interface AgentSubUser {
   total_recharge: number
   total_consumed: number
   created_at: string
+  commission_rate: number | null
+  is_agent: boolean
 }
 
 export interface AgentFinancialLog {
@@ -127,6 +131,10 @@ export async function listCommissions(
   return data
 }
 
+export async function setSubUserRate(subUserId: number, rate: number): Promise<void> {
+  await apiClient.put(`/agent/sub-users/${subUserId}/rate`, { commission_rate: rate })
+}
+
 export const agentAPI = {
   getStatus,
   apply,
@@ -134,7 +142,8 @@ export const agentAPI = {
   getLink,
   listSubUsers,
   listFinancialLogs,
-  listCommissions
+  listCommissions,
+  setSubUserRate
 }
 
 export default agentAPI
