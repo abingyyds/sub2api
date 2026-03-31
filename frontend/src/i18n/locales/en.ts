@@ -189,11 +189,17 @@ export default {
 
   // Navigation
   nav: {
-    dashboard: 'Dashboard',
-    apiKeys: 'API Keys',
-    usage: 'Usage',
-    redeem: 'Redeem',
+    dashboard: 'Home',
+    apiKeys: 'API Key',
+    usage: 'Usage Stats',
+    redeem: 'Redeem Center',
     profile: 'Profile',
+    orderHistory: 'Order History',
+    invoice: 'Invoice',
+    contact: 'Contact Us',
+    sectionOverview: 'Overview',
+    sectionBilling: 'Billing & Services',
+    sectionHelp: 'Help & Support',
     users: 'Users',
     groups: 'Groups',
     subscriptions: 'Subscriptions',
@@ -203,7 +209,7 @@ export default {
     ops: 'Ops',
     promoCodes: 'Promo Codes',
     inviteCodes: 'Invite Codes',
-    referral: 'Referral',
+    referral: 'Referral Rewards',
     referrals: 'Referrals',
     settings: 'Settings',
     myAccount: 'My Account',
@@ -215,7 +221,7 @@ export default {
     github: 'GitHub',
     mySubscriptions: 'My Subscriptions',
     pricing: 'Pricing',
-    purchase: 'Purchase',
+    purchase: 'Pricing Plans',
     recharge: 'Balance Recharge',
     modelPlaza: 'Model Plaza',
     docs: 'Docs',
@@ -226,7 +232,7 @@ export default {
     projects: 'Projects',
     auditLogs: 'Audit Logs',
     orgManagement: 'Organization',
-    tutorial: 'Tutorial',
+    tutorial: 'Documentation',
     agent: 'Agent Center',
     agents: 'Agent Management',
     changelog: 'Changelog'
@@ -395,6 +401,25 @@ export default {
     startUsingApi: 'Start using the API to see your usage history here.',
     viewAllUsage: 'View all usage',
     quickActions: 'Quick Actions',
+    greeting: {
+      morning: 'Good morning',
+      afternoon: 'Good afternoon',
+      evening: 'Good evening',
+    },
+    welcomeBack: 'Welcome back to your workspace',
+    subscriptionQuota: 'Subscription Quota',
+    flexibleUser: 'Flexible User',
+    upgradePlan: 'Upgrade your plan to unlock full features',
+    viewPlans: 'View Plans',
+    flexibleBalance: 'Flexible Balance',
+    payAsYouGo: 'Pay-as-you-go balance, never expires',
+    buyBalance: 'Buy Balance',
+    recentAnnouncements: 'Recent Announcements',
+    viewAll: 'View All',
+    noAnnouncements: 'No announcements',
+    comingSoon: 'Coming Soon',
+    comingSoonDesc: 'We are working hard on this feature. Stay tuned.',
+    useRedeemCode: 'Use Redeem Code',
     createApiKey: 'Create API Key',
     generateNewKey: 'Generate a new API key',
     viewUsage: 'View Usage',
@@ -518,6 +543,14 @@ export default {
       geminiCli: 'Gemini CLI',
       geminiCliDesc: 'Import as Gemini CLI configuration',
     },
+    // Card-based creation area
+    newApiKey: 'Create API Key',
+    newApiKeyDesc: 'Select a model and rate, click the card to quickly create',
+    keysManagement: 'Keys Management',
+    keysCount: '{count} keys',
+    create: 'Create',
+    unavailable: 'Unavailable',
+    groupCount: '{count} groups',
   },
 
   // Usage
@@ -1097,7 +1130,19 @@ export default {
       planFeatures: 'Custom Feature List',
       addFeature: 'Add Feature',
       planFeaturesHint: 'Features shown on the pricing page. Leave empty to auto-generate from group settings',
-      featurePlaceholder: 'e.g. Daily quota $100'
+      featurePlaceholder: 'e.g. Daily quota $100',
+      cardDisplay: {
+        title: 'Card Display Settings',
+        description: 'Configure display info for group cards on the key management page',
+        displayPrice: 'Display Price',
+        displayPricePlaceholder: 'e.g. 6 CNY / 1 USD',
+        displayDiscount: 'Display Discount',
+        displayDiscountPlaceholder: 'e.g. 83% off',
+        tags: 'Tags',
+        addTag: 'Add Tag',
+        tagsHint: 'Tags shown on the card, e.g. "Official API", "Reverse", "Recommended", "Unavailable"',
+        tagPlaceholder: 'e.g. Official API'
+      }
     },
 
     // Subscriptions
@@ -3345,8 +3390,8 @@ export default {
   },
 
   pricing: {
-    title: 'Purchase',
-    subtitle: 'Choose the plan that fits your needs',
+    title: 'Pricing',
+    subtitle: 'Choose the payment plan that suits you. We support credit cards and WeChat Pay — secure, convenient, and instant.',
     tabSubscription: 'Subscription Plans',
     tabRecharge: 'Balance Recharge',
     recommended: 'Recommended',

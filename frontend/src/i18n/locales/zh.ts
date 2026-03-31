@@ -539,6 +539,14 @@ export default {
       geminiCli: 'Gemini CLI',
       geminiCliDesc: '导入为 Gemini CLI 配置',
     },
+    // 卡片式创建区域
+    newApiKey: '新建 API Key',
+    newApiKeyDesc: '选择模型与费率，点击卡片即可快速创建',
+    keysManagement: 'Keys 管理',
+    keysCount: '共 {count} 个',
+    create: '创建',
+    unavailable: '暂不可用',
+    groupCount: '{count} 个分组',
   },
 
   // Usage
@@ -3532,8 +3540,8 @@ export default {
   },
 
   pricing: {
-    title: '充值购买',
-    subtitle: '选择适合您的套餐方案',
+    title: '定价方案',
+    subtitle: '选择适合你的付费方式，支持信用卡和微信在线支付，安全便捷，即时生效。',
     tabSubscription: '订阅套餐',
     tabRecharge: '余额充值',
     recommended: '推荐',
