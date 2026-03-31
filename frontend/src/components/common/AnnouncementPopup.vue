@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import type { Announcement } from '@/types'
@@ -90,8 +90,9 @@ function formatDisplayDate(ann: Announcement): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-onMounted(() => {
-  if (isDismissedToday()) return
-  unreadAnnouncements.value = props.announcements.filter(ann => !isDismissedPermanently(ann.id))
-})
+watch(() => props.announcements, (newVal) => {
+  if (!newVal.length || isDismissedToday()) return
+  unreadAnnouncements.value = newVal.filter(ann => !isDismissedPermanently(ann.id))
+  currentIndex.value = 0
+}, { immediate: true })
 </script>
