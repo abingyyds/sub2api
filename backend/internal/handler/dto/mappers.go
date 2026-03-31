@@ -544,13 +544,16 @@ func AnnouncementFromService(a *service.Announcement) *Announcement {
 		return nil
 	}
 	return &Announcement{
-		ID:        a.ID,
-		Title:     a.Title,
-		Content:   a.Content,
-		Status:    a.Status,
-		Priority:  a.Priority,
-		CreatedAt: a.CreatedAt,
-		UpdatedAt: a.UpdatedAt,
+		ID:          a.ID,
+		Title:       a.Title,
+		Content:     a.Content,
+		Status:      a.Status,
+		Priority:    a.Priority,
+		Version:     a.Version,
+		Category:    a.Category,
+		PublishedAt: a.PublishedAt,
+		CreatedAt:   a.CreatedAt,
+		UpdatedAt:   a.UpdatedAt,
 	}
 }
 

@@ -302,6 +302,18 @@ const routes: RouteRecordRaw[] = [
       descriptionKey: 'agent.commissions.description'
     }
   },
+  {
+    path: '/changelog',
+    name: 'Changelog',
+    component: () => import('@/views/user/ChangelogView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Changelog',
+      titleKey: 'changelog.title',
+      descriptionKey: 'changelog.description'
+    }
+  },
 
   // ==================== Admin Routes ====================
   {

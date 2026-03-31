@@ -22,7 +22,7 @@ func (r *announcementRepository) List(ctx context.Context, params pagination.Pag
 		return nil, nil, err
 	}
 	rows, err := r.db.QueryContext(ctx,
-		`SELECT id, title, content, status, priority, created_at, updated_at FROM announcements ORDER BY priority DESC, id DESC LIMIT $1 OFFSET $2`,
+		`SELECT id, title, content, status, priority, version, category, published_at, created_at, updated_at FROM announcements ORDER BY priority DESC, id DESC LIMIT $1 OFFSET $2`,
 		params.Limit(), params.Offset())
 	if err != nil {
 		return nil, nil, err
@@ -31,7 +31,7 @@ func (r *announcementRepository) List(ctx context.Context, params pagination.Pag
 	var results []service.Announcement
 	for rows.Next() {
 		var a service.Announcement
-		if err := rows.Scan(&a.ID, &a.Title, &a.Content, &a.Status, &a.Priority, &a.CreatedAt, &a.UpdatedAt); err != nil {
+		if err := rows.Scan(&a.ID, &a.Title, &a.Content, &a.Status, &a.Priority, &a.Version, &a.Category, &a.PublishedAt, &a.CreatedAt, &a.UpdatedAt); err != nil {
 			return nil, nil, err
 		}
 		results = append(results, a)
@@ -42,8 +42,8 @@ func (r *announcementRepository) List(ctx context.Context, params pagination.Pag
 func (r *announcementRepository) GetByID(ctx context.Context, id int64) (*service.Announcement, error) {
 	a := &service.Announcement{}
 	err := r.db.QueryRowContext(ctx,
-		`SELECT id, title, content, status, priority, created_at, updated_at FROM announcements WHERE id = $1`, id).
-		Scan(&a.ID, &a.Title, &a.Content, &a.Status, &a.Priority, &a.CreatedAt, &a.UpdatedAt)
+		`SELECT id, title, content, status, priority, version, category, published_at, created_at, updated_at FROM announcements WHERE id = $1`, id).
+		Scan(&a.ID, &a.Title, &a.Content, &a.Status, &a.Priority, &a.Version, &a.Category, &a.PublishedAt, &a.CreatedAt, &a.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return nil, service.ErrAnnouncementNotFound
 	}
@@ -52,14 +52,14 @@ func (r *announcementRepository) GetByID(ctx context.Context, id int64) (*servic
 
 func (r *announcementRepository) Create(ctx context.Context, a *service.Announcement) error {
 	return r.db.QueryRowContext(ctx,
-		`INSERT INTO announcements (title, content, status, priority, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING id, created_at, updated_at`,
-		a.Title, a.Content, a.Status, a.Priority).Scan(&a.ID, &a.CreatedAt, &a.UpdatedAt)
+		`INSERT INTO announcements (title, content, status, priority, version, category, published_at, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) RETURNING id, created_at, updated_at`,
+		a.Title, a.Content, a.Status, a.Priority, a.Version, a.Category, a.PublishedAt).Scan(&a.ID, &a.CreatedAt, &a.UpdatedAt)
 }
 
 func (r *announcementRepository) Update(ctx context.Context, a *service.Announcement) error {
 	res, err := r.db.ExecContext(ctx,
-		`UPDATE announcements SET title=$1, content=$2, status=$3, priority=$4, updated_at=NOW() WHERE id=$5`,
-		a.Title, a.Content, a.Status, a.Priority, a.ID)
+		`UPDATE announcements SET title=$1, content=$2, status=$3, priority=$4, version=$5, category=$6, published_at=$7, updated_at=NOW() WHERE id=$8`,
+		a.Title, a.Content, a.Status, a.Priority, a.Version, a.Category, a.PublishedAt, a.ID)
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (r *announcementRepository) Delete(ctx context.Context, id int64) error {
 
 func (r *announcementRepository) ListActive(ctx context.Context) ([]service.Announcement, error) {
 	rows, err := r.db.QueryContext(ctx,
-		`SELECT id, title, content, status, priority, created_at, updated_at FROM announcements WHERE status = 'active' ORDER BY priority DESC, id DESC`)
+		`SELECT id, title, content, status, priority, version, category, published_at, created_at, updated_at FROM announcements WHERE status = 'active' ORDER BY COALESCE(published_at, created_at::date) DESC, priority DESC, id DESC`)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (r *announcementRepository) ListActive(ctx context.Context) ([]service.Anno
 	var results []service.Announcement
 	for rows.Next() {
 		var a service.Announcement
-		if err := rows.Scan(&a.ID, &a.Title, &a.Content, &a.Status, &a.Priority, &a.CreatedAt, &a.UpdatedAt); err != nil {
+		if err := rows.Scan(&a.ID, &a.Title, &a.Content, &a.Status, &a.Priority, &a.Version, &a.Category, &a.PublishedAt, &a.CreatedAt, &a.UpdatedAt); err != nil {
 			return nil, err
 		}
 		results = append(results, a)

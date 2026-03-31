@@ -1184,6 +1184,9 @@ export interface Announcement {
   content: string
   status: string
   priority: number
+  version: string
+  category: string
+  published_at: string | null
   created_at: string
   updated_at: string
 }

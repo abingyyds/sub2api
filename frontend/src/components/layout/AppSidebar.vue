@@ -568,6 +568,7 @@ const userNavItems = computed(() => {
       ? [{ path: '/referral', label: t('nav.referral'), icon: ShareIcon, hideInSimpleMode: true }]
       : []),
     { path: '/agent', label: t('nav.agent'), icon: UsersIcon, hideInSimpleMode: true },
+    { path: '/changelog', label: t('nav.changelog'), icon: MegaphoneIcon },
     { path: '/profile', label: t('nav.profile'), icon: UserIcon }
   ]
   return authStore.isSimpleMode ? items.filter(item => !item.hideInSimpleMode) : items
@@ -595,6 +596,7 @@ const personalNavItems = computed(() => {
       ? [{ path: '/referral', label: t('nav.referral'), icon: ShareIcon, hideInSimpleMode: true }]
       : []),
     { path: '/agent', label: t('nav.agent'), icon: UsersIcon, hideInSimpleMode: true },
+    { path: '/changelog', label: t('nav.changelog'), icon: MegaphoneIcon },
     { path: '/profile', label: t('nav.profile'), icon: UserIcon }
   ]
   return authStore.isSimpleMode ? items.filter(item => !item.hideInSimpleMode) : items

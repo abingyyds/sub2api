@@ -2,6 +2,7 @@ package admin
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/handler/dto"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
@@ -38,10 +39,13 @@ func (h *AnnouncementHandler) List(c *gin.Context) {
 // Create handles creating a new announcement
 func (h *AnnouncementHandler) Create(c *gin.Context) {
 	var req struct {
-		Title    string `json:"title" binding:"required"`
-		Content  string `json:"content"`
-		Status   string `json:"status"`
-		Priority int    `json:"priority"`
+		Title       string  `json:"title" binding:"required"`
+		Content     string  `json:"content"`
+		Status      string  `json:"status"`
+		Priority    int     `json:"priority"`
+		Version     string  `json:"version"`
+		Category    string  `json:"category"`
+		PublishedAt *string `json:"published_at"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -50,11 +54,22 @@ func (h *AnnouncementHandler) Create(c *gin.Context) {
 	if req.Status == "" {
 		req.Status = "active"
 	}
+	if req.Category == "" {
+		req.Category = "优化"
+	}
 	a := &service.Announcement{
 		Title:    req.Title,
 		Content:  req.Content,
 		Status:   req.Status,
 		Priority: req.Priority,
+		Version:  req.Version,
+		Category: req.Category,
+	}
+	if req.PublishedAt != nil && *req.PublishedAt != "" {
+		t, err := time.Parse("2006-01-02", *req.PublishedAt)
+		if err == nil {
+			a.PublishedAt = &t
+		}
 	}
 	if err := h.svc.Create(c.Request.Context(), a); err != nil {
 		response.ErrorFrom(c, err)
@@ -76,10 +91,13 @@ func (h *AnnouncementHandler) Update(c *gin.Context) {
 		return
 	}
 	var req struct {
-		Title    *string `json:"title"`
-		Content  *string `json:"content"`
-		Status   *string `json:"status"`
-		Priority *int    `json:"priority"`
+		Title       *string `json:"title"`
+		Content     *string `json:"content"`
+		Status      *string `json:"status"`
+		Priority    *int    `json:"priority"`
+		Version     *string `json:"version"`
+		Category    *string `json:"category"`
+		PublishedAt *string `json:"published_at"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -96,6 +114,22 @@ func (h *AnnouncementHandler) Update(c *gin.Context) {
 	}
 	if req.Priority != nil {
 		existing.Priority = *req.Priority
+	}
+	if req.Version != nil {
+		existing.Version = *req.Version
+	}
+	if req.Category != nil {
+		existing.Category = *req.Category
+	}
+	if req.PublishedAt != nil {
+		if *req.PublishedAt == "" {
+			existing.PublishedAt = nil
+		} else {
+			t, err := time.Parse("2006-01-02", *req.PublishedAt)
+			if err == nil {
+				existing.PublishedAt = &t
+			}
+		}
 	}
 	if err := h.svc.Update(c.Request.Context(), existing); err != nil {
 		response.ErrorFrom(c, err)

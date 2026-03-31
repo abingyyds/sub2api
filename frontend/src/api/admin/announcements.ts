@@ -6,12 +6,12 @@ export async function list(page = 1, pageSize = 20): Promise<BasePaginationRespo
   return data
 }
 
-export async function create(req: { title: string; content?: string; status?: string; priority?: number }): Promise<Announcement> {
+export async function create(req: { title: string; content?: string; status?: string; priority?: number; version?: string; category?: string; published_at?: string | null }): Promise<Announcement> {
   const { data } = await apiClient.post<Announcement>('/admin/announcements', req)
   return data
 }
 
-export async function update(id: number, req: Partial<{ title: string; content: string; status: string; priority: number }>): Promise<Announcement> {
+export async function update(id: number, req: Partial<{ title: string; content: string; status: string; priority: number; version: string; category: string; published_at: string | null }>): Promise<Announcement> {
   const { data } = await apiClient.put<Announcement>(`/admin/announcements/${id}`, req)
   return data
 }

@@ -20,6 +20,14 @@
               {{ value === 'active' ? t('common.active') : t('common.inactive') }}
             </span>
           </template>
+          <template #cell-category="{ value }">
+            <span :class="['badge', categoryBadgeClass(value)]">
+              {{ value }}
+            </span>
+          </template>
+          <template #cell-published_at="{ value }">
+            <span class="text-sm text-gray-500 dark:text-dark-400">{{ value ? formatDate(value) : '-' }}</span>
+          </template>
           <template #cell-created_at="{ value }">
             <span class="text-sm text-gray-500 dark:text-dark-400">{{ formatDateTime(value) }}</span>
           </template>
@@ -57,6 +65,16 @@
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
+            <label class="input-label">{{ t('admin.announcements.version') }}</label>
+            <input v-model="form.version" type="text" class="input" :placeholder="t('admin.announcements.versionPlaceholder')" />
+          </div>
+          <div>
+            <label class="input-label">{{ t('admin.announcements.category') }}</label>
+            <Select v-model="form.category" :options="categoryOptions" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
             <label class="input-label">{{ t('common.status') }}</label>
             <Select v-model="form.status" :options="statusOptions" />
           </div>
@@ -64,6 +82,10 @@
             <label class="input-label">{{ t('admin.announcements.priority') }}</label>
             <input v-model.number="form.priority" type="number" class="input" min="0" />
           </div>
+        </div>
+        <div>
+          <label class="input-label">{{ t('admin.announcements.publishedAt') }}</label>
+          <input v-model="form.published_at" type="date" class="input" />
         </div>
       </form>
       <template #footer>
@@ -110,13 +132,16 @@ const editing = ref<Announcement | null>(null)
 const deleting = ref<Announcement | null>(null)
 const pagination = ref({ page: 1, page_size: 20, total: 0 })
 
-const form = ref({ title: '', content: '', status: 'active', priority: 0 })
+const form = ref({ title: '', content: '', status: 'active', priority: 0, version: '', category: '优化', published_at: '' })
 
 const columns = computed<Column[]>(() => [
   { key: 'id', label: 'ID', sortable: true },
   { key: 'title', label: t('admin.announcements.titleLabel'), sortable: true },
+  { key: 'version', label: t('admin.announcements.version'), sortable: true },
+  { key: 'category', label: t('admin.announcements.category'), sortable: true },
   { key: 'status', label: t('common.status'), sortable: true },
   { key: 'priority', label: t('admin.announcements.priority'), sortable: true },
+  { key: 'published_at', label: t('admin.announcements.publishedAt'), sortable: true },
   { key: 'created_at', label: t('common.createdAt'), sortable: true },
   { key: 'actions', label: t('common.actions'), sortable: false }
 ])
@@ -125,6 +150,28 @@ const statusOptions = computed(() => [
   { value: 'active', label: t('common.active') },
   { value: 'inactive', label: t('common.inactive') }
 ])
+
+const categoryOptions = computed(() => [
+  { value: '优化', label: '优化' },
+  { value: '新功能', label: '新功能' },
+  { value: '修复', label: '修复' },
+  { value: '通知', label: '通知' }
+])
+
+function categoryBadgeClass(category: string): string {
+  switch (category) {
+    case '新功能': return 'badge-success'
+    case '修复': return 'badge-warning'
+    case '通知': return 'badge-purple'
+    default: return 'badge-info'
+  }
+}
+
+function formatDate(value: string): string {
+  if (!value) return '-'
+  const d = new Date(value)
+  return d.toLocaleDateString()
+}
 
 const loadData = async () => {
   loading.value = true
@@ -138,24 +185,36 @@ const loadData = async () => {
 
 const openCreate = () => {
   editing.value = null
-  form.value = { title: '', content: '', status: 'active', priority: 0 }
+  form.value = { title: '', content: '', status: 'active', priority: 0, version: '', category: '优化', published_at: '' }
   showDialog.value = true
 }
 
 const openEdit = (row: Announcement) => {
   editing.value = row
-  form.value = { title: row.title, content: row.content, status: row.status, priority: row.priority }
+  form.value = {
+    title: row.title,
+    content: row.content,
+    status: row.status,
+    priority: row.priority,
+    version: row.version || '',
+    category: row.category || '优化',
+    published_at: row.published_at ? row.published_at.substring(0, 10) : ''
+  }
   showDialog.value = true
 }
 
 const handleSubmit = async () => {
   submitting.value = true
   try {
+    const payload = {
+      ...form.value,
+      published_at: form.value.published_at || null
+    }
     if (editing.value) {
-      await announcementsAPI.update(editing.value.id, form.value)
+      await announcementsAPI.update(editing.value.id, payload)
       appStore.showSuccess(t('admin.announcements.updated'))
     } else {
-      await announcementsAPI.create(form.value)
+      await announcementsAPI.create(payload)
       appStore.showSuccess(t('admin.announcements.created'))
     }
     showDialog.value = false
