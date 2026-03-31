@@ -256,61 +256,61 @@
             </div>
           </StaggerContainer>
 
-          <!-- Custom Amount Input -->
-          <SlideIn direction="up" :delay="500">
-            <div class="mx-auto max-w-lg">
+          <!-- Custom Amount - inline as a card in the same grid -->
+          <StaggerContainer v-if="rechargePlans.length > 0" :stagger-delay="100" :delay="500">
+            <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               <GlowCard glow-color="rgb(99, 102, 241)">
-                <div class="rounded-2xl border-2 border-gray-200 bg-white p-6 space-y-5 dark:border-dark-700 dark:bg-dark-900 shadow-soft">
-                  <h3 class="text-center text-xl font-bold text-gray-900 dark:text-white">{{ t('pricing.customRecharge') }}</h3>
+                <div
+                  class="relative flex flex-col rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-600 dark:bg-dark-900 shadow-soft h-full"
+                >
+                  <div class="flex flex-1 flex-col p-5">
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-dark-400">{{ t('pricing.customRecharge') }}</h3>
 
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-2">
-                      {{ t('recharge.customAmount') }}
-                    </label>
-                    <div class="relative">
-                      <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-dark-400 font-bold text-lg">¥</span>
-                      <input
-                        v-model="customInput"
-                        type="number"
-                        min="1"
-                        step="1"
-                        :placeholder="rechargeMinAmount > 0 ? t('pricing.minAmountHint', { amount: rechargeMinAmount }) : t('recharge.inputPlaceholder')"
-                        class="w-full rounded-xl border-2 border-gray-200 bg-gray-50 py-3.5 pl-10 pr-4 text-lg font-bold text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20 dark:border-dark-600 dark:bg-dark-800 dark:text-white dark:placeholder-dark-500 dark:focus:bg-dark-700 transition-all"
-                      />
+                    <div class="mt-3">
+                      <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-dark-400 font-bold text-sm">¥</span>
+                        <input
+                          v-model="customInput"
+                          type="number"
+                          min="1"
+                          step="1"
+                          :placeholder="rechargeMinAmount > 0 ? t('pricing.minAmountHint', { amount: rechargeMinAmount }) : t('recharge.inputPlaceholder')"
+                          class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2.5 pl-8 pr-3 text-sm font-bold text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20 dark:border-dark-600 dark:bg-dark-800 dark:text-white dark:placeholder-dark-500 dark:focus:bg-dark-700 transition-all"
+                        />
+                      </div>
+                      <p v-if="rechargeMinAmount > 0" class="mt-1 text-xs text-gray-400 dark:text-dark-500">
+                        {{ t('pricing.minAmountNote', { amount: rechargeMinAmount }) }}
+                      </p>
                     </div>
-                    <p v-if="rechargeMinAmount > 0" class="mt-1.5 text-xs text-gray-400 dark:text-dark-500">
-                      {{ t('pricing.minAmountNote', { amount: rechargeMinAmount }) }}
-                    </p>
-                  </div>
 
-                  <!-- Amount Summary -->
-                  <div v-if="customFinalAmount > 0" class="rounded-xl bg-primary-50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-800/30 p-4">
-                    <div class="flex items-center justify-between">
-                      <span class="text-sm font-medium text-gray-600 dark:text-dark-400">{{ t('recharge.rechargeAmount') }}</span>
-                      <span class="text-xl font-extrabold text-primary-600">¥{{ customFinalAmount.toFixed(2) }}</span>
+                    <!-- Amount Summary -->
+                    <div v-if="customFinalAmount > 0" class="mt-3 rounded-lg bg-primary-50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-800/30 p-2.5">
+                      <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-600 dark:text-dark-400">{{ t('recharge.rechargeAmount') }}</span>
+                        <span class="text-sm font-extrabold text-primary-600">¥{{ customFinalAmount.toFixed(2) }}</span>
+                      </div>
+                    </div>
+
+                    <div class="mt-auto pt-4">
+                      <div
+                        class="flex items-center justify-center rounded-xl py-2.5 px-3 text-xs sm:text-sm font-bold text-white transition-all whitespace-nowrap overflow-hidden truncate bg-primary-600 hover:bg-primary-700 shadow-md cursor-pointer"
+                        :class="{ 'opacity-50 cursor-not-allowed': customFinalAmount <= 0 || (rechargeMinAmount > 0 && customFinalAmount < rechargeMinAmount) || creatingOrder }"
+                        @click="handleCustomRecharge"
+                      >
+                        <template v-if="creatingOrder">
+                          <div class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent mr-1.5"></div>
+                          {{ t('recharge.creating') }}
+                        </template>
+                        <template v-else>
+                          {{ customFinalAmount > 0 ? t('recharge.payNow', { amount: customFinalAmount.toFixed(2) }) : t('recharge.enterAmount') }}
+                        </template>
+                      </div>
                     </div>
                   </div>
-
-                  <!-- Submit -->
-                  <MagneticButton>
-                    <button
-                      class="w-full rounded-xl bg-primary-600 py-3.5 px-4 text-sm font-bold text-white transition-all hover:bg-primary-700 hover:-translate-y-0.5 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none overflow-hidden whitespace-nowrap truncate"
-                      :disabled="customFinalAmount <= 0 || (rechargeMinAmount > 0 && customFinalAmount < rechargeMinAmount) || creatingOrder"
-                      @click="handleCustomRecharge"
-                    >
-                      <span v-if="creatingOrder" class="flex items-center justify-center gap-2">
-                        <div class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                        {{ t('recharge.creating') }}
-                      </span>
-                      <span v-else>
-                        {{ customFinalAmount > 0 ? t('recharge.payNow', { amount: customFinalAmount.toFixed(2) }) : t('recharge.enterAmount') }}
-                      </span>
-                    </button>
-                  </MagneticButton>
                 </div>
               </GlowCard>
             </div>
-          </SlideIn>
+          </StaggerContainer>
 
           <!-- ==================== FAQ Section ==================== -->
           <SlideIn direction="up" :delay="500">

@@ -51,7 +51,6 @@ import DocSidebar from '@/components/docs/DocSidebar.vue'
 
 // Article components
 import DocsHome from '@/components/docs/articles/DocsHome.vue'
-import ConfigGenerator from '@/components/docs/articles/ConfigGenerator.vue'
 import QuickStartNodejs from '@/components/docs/articles/QuickStartNodejs.vue'
 import QuickStartClaudeCode from '@/components/docs/articles/QuickStartClaudeCode.vue'
 import QuickStartGeminiCli from '@/components/docs/articles/QuickStartGeminiCli.vue'
@@ -65,7 +64,6 @@ const showMobileSidebar = ref(false)
 
 const docComponents: Record<string, Component> = {
   'home': DocsHome,
-  'config-generator': ConfigGenerator,
   'nodejs': QuickStartNodejs,
   'claude-code': QuickStartClaudeCode,
   'gemini-cli': QuickStartGeminiCli,
