@@ -1,6 +1,5 @@
 <template>
   <AuthLayout>
-    <AnimatedBackground type="gradient-mesh" color="#3b82f6" />
 
     <FadeIn :delay="100">
       <SlideIn direction="up" :delay="200">
@@ -198,8 +197,7 @@ import type { TotpLoginResponse } from '@/types'
 import {
   FadeIn,
   SlideIn,
-  MagneticButton,
-  AnimatedBackground
+  MagneticButton
 } from '@/components/animations'
 
 const { t } = useI18n()

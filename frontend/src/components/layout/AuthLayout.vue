@@ -61,24 +61,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { getPublicSettings } from '@/api/auth'
+import { computed, onMounted } from 'vue'
+import { useAppStore } from '@/stores'
 import { sanitizeUrl } from '@/utils/url'
 
-const siteName = ref('SubRouter.ai')
-const siteLogo = ref('')
-const siteSubtitle = ref('AI API Routing & Billing Platform')
+const appStore = useAppStore()
+
+const siteName = computed(() => appStore.siteName || 'cCoder.me')
+const siteLogo = computed(() => sanitizeUrl(appStore.siteLogo || '', { allowRelative: true }))
+const siteSubtitle = computed(() => {
+  const settings = appStore.cachedPublicSettings
+  return settings?.site_subtitle || '新一代代码大师平台'
+})
 
 const currentYear = computed(() => new Date().getFullYear())
 
-onMounted(async () => {
-  try {
-    const settings = await getPublicSettings()
-    siteName.value = settings.site_name || 'SubRouter.ai'
-    siteLogo.value = sanitizeUrl(settings.site_logo || '', { allowRelative: true })
-    siteSubtitle.value = settings.site_subtitle || '新一代代码大师平台'
-  } catch (error) {
-    console.error('Failed to load public settings:', error)
+onMounted(() => {
+  // Ensure settings are loaded (uses cache if already fetched)
+  if (!appStore.publicSettingsLoaded) {
+    appStore.fetchPublicSettings()
   }
 })
 </script>

@@ -244,7 +244,7 @@ const registrationEnabled = ref<boolean>(true)
 const emailVerifyEnabled = ref<boolean>(false)
 const turnstileEnabled = ref<boolean>(false)
 const turnstileSiteKey = ref<string>('')
-const siteName = ref<string>('SubRouter.ai')
+const siteName = ref<string>('cCoder.me')
 const linuxdoOAuthEnabled = ref<boolean>(false)
 
 // Turnstile
@@ -274,7 +274,7 @@ onMounted(async () => {
     emailVerifyEnabled.value = settings.email_verify_enabled
     turnstileEnabled.value = settings.turnstile_enabled
     turnstileSiteKey.value = settings.turnstile_site_key || ''
-    siteName.value = settings.site_name || 'SubRouter.ai'
+    siteName.value = settings.site_name || 'cCoder.me'
     linuxdoOAuthEnabled.value = settings.linuxdo_oauth_enabled
 
     // Read invite code from URL parameter

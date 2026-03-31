@@ -40,8 +40,8 @@ export default {
 
   // Setup Wizard
   setup: {
-    title: 'SubRouter.ai 安装向导',
-    description: '配置您的 SubRouter.ai 实例',
+    title: 'cCoder.me 安装向导',
+    description: '配置您的 cCoder.me 实例',
     database: {
       title: '数据库配置',
       description: '连接到您的 PostgreSQL 数据库',
@@ -186,11 +186,17 @@ export default {
 
   // Navigation
   nav: {
-    dashboard: '仪表盘',
-    apiKeys: 'API 密钥',
-    usage: '使用记录',
-    redeem: '兑换',
+    dashboard: '主页',
+    apiKeys: 'API Key',
+    usage: '使用统计',
+    redeem: '兑换中心',
     profile: '个人资料',
+    orderHistory: '订单历史',
+    invoice: '开发票',
+    contact: '联系我们',
+    sectionOverview: '概览',
+    sectionBilling: '消费与服务',
+    sectionHelp: '帮助与支持',
     users: '用户管理',
     groups: '分组管理',
     subscriptions: '订阅管理',
@@ -200,7 +206,7 @@ export default {
     ops: '运维监控',
     promoCodes: '优惠码',
     inviteCodes: '邀请码',
-    referral: '邀请返利',
+    referral: '邀请奖励',
     referrals: '邀请管理',
     settings: '系统设置',
     myAccount: '我的账户',
@@ -212,7 +218,7 @@ export default {
     github: 'GitHub',
     mySubscriptions: '我的订阅',
     pricing: '购买订阅',
-    purchase: '充值购买',
+    purchase: '定价方案',
     recharge: '余额充值',
     modelPlaza: '模型广场',
     docs: '文档',
@@ -223,7 +229,7 @@ export default {
     projects: '项目管理',
     auditLogs: '审计日志',
     orgManagement: '企业',
-    tutorial: '使用教程',
+    tutorial: '文档中心',
     agent: '代理中心',
     agents: '代理管理',
     changelog: '更新公告'
@@ -397,7 +403,26 @@ export default {
     viewUsage: '查看使用记录',
     checkDetailedLogs: '查看详细的使用日志',
     redeemCode: '兑换码',
-    addBalanceWithCode: '使用兑换码充值'
+    addBalanceWithCode: '使用兑换码充值',
+    greeting: {
+      morning: '早上好',
+      afternoon: '下午好',
+      evening: '晚上好',
+    },
+    welcomeBack: '欢迎回到您的工作空间',
+    subscriptionQuota: '订阅额度',
+    flexibleUser: '灵活用户',
+    upgradePlan: '升级套餐解锁完整功能',
+    viewPlans: '查看套餐',
+    flexibleBalance: '灵活额度',
+    payAsYouGo: '按量付费额度，永久有效',
+    buyBalance: '购买额度',
+    recentAnnouncements: '最近公告',
+    viewAll: '查看全部',
+    noAnnouncements: '暂无公告',
+    comingSoon: '此功能即将推出',
+    comingSoonDesc: '我们正在努力开发中，敬请期待。',
+    useRedeemCode: '使用兑换码'
   },
 
   // Groups (shared)
@@ -1172,7 +1197,19 @@ export default {
       planFeatures: '自定义特性列表',
       addFeature: '添加特性',
       planFeaturesHint: '展示在购买页面的卖点特性，留空则自动根据分组配置生成',
-      featurePlaceholder: '例如：每日额度 $100'
+      featurePlaceholder: '例如：每日额度 $100',
+      cardDisplay: {
+        title: '卡片展示设置',
+        description: '配置密钥中心页面分组卡片的展示信息',
+        displayPrice: '展示价格',
+        displayPricePlaceholder: '例如：6 块 / 1 美元',
+        displayDiscount: '展示折扣',
+        displayDiscountPlaceholder: '例如：8.3折',
+        tags: '标签',
+        addTag: '添加标签',
+        tagsHint: '卡片上展示的标签，如「官方 API」「逆向」「推荐」「暂不可用」等',
+        tagPlaceholder: '例如：官方 API'
+      }
     },
 
     // Subscriptions Management
@@ -4004,8 +4041,8 @@ export default {
     // User tour steps
     user: {
       welcome: {
-        title: '👋 欢迎使用 SubRouter.ai',
-        description: '<div style="line-height: 1.8;"><p style="margin-bottom: 16px;">您好！欢迎来到 SubRouter.ai 新一代代码大师平台。</p><p style="margin-bottom: 12px;"><b>🎯 快速开始：</b></p><ul style="margin-left: 20px; margin-bottom: 16px;"><li>🔑 创建 API 密钥</li><li>📋 复制密钥到您的应用</li><li>🚀 开始使用 AI 服务</li></ul><p style="color: #10b981; font-weight: 600;">只需 1 分钟，让我们开始吧 →</p></div>',
+        title: '👋 欢迎使用 cCoder.me',
+        description: '<div style="line-height: 1.8;"><p style="margin-bottom: 16px;">您好！欢迎来到 cCoder.me 新一代代码大师平台。</p><p style="margin-bottom: 12px;"><b>🎯 快速开始：</b></p><ul style="margin-left: 20px; margin-bottom: 16px;"><li>🔑 创建 API 密钥</li><li>📋 复制密钥到您的应用</li><li>🚀 开始使用 AI 服务</li></ul><p style="color: #10b981; font-weight: 600;">只需 1 分钟，让我们开始吧 →</p></div>',
         nextBtn: '开始 🚀',
         prevBtn: '跳过'
       },

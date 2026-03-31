@@ -630,7 +630,7 @@ router.beforeEach((to, _from, next) => {
 
   // Set page title
   const appStore = useAppStore()
-  const siteName = appStore.siteName || 'SubRouter.ai'
+  const siteName = appStore.siteName || 'cCoder.me'
   if (to.meta.title) {
     document.title = `${to.meta.title} - ${siteName}`
   } else {
