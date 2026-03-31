@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -267,7 +269,7 @@ func (s *AgentService) SetSubUserCommissionRate(ctx context.Context, agentID int
 
 	// Verify the sub-user is indeed a sub-user of this agent
 	if err := s.agentRepo.UpdateReferralCommissionRate(ctx, agentID, subUserID, rate); err != nil {
-		if err.Error() == "sql: no rows in result set" {
+		if errors.Is(err, sql.ErrNoRows) {
 			return ErrReferralNotFound
 		}
 		return fmt.Errorf("update referral commission rate: %w", err)

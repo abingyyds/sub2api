@@ -40,7 +40,7 @@
                         {{ t('agent.noSubUsers') }}
                       </td>
                     </tr>
-                    <tr v-for="user in items" :key="user.user_id" class="hover:bg-gray-50 dark:hover:bg-dark-800/50 transition-colors">
+                    <tr v-for="user in items" :key="user.id" class="hover:bg-gray-50 dark:hover:bg-dark-800/50 transition-colors">
                       <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
                         {{ user.email }}
                         <span v-if="user.is_agent" class="ml-1 inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">{{ t('agent.isSubAgent') }}</span>
@@ -152,7 +152,7 @@ async function saveRate() {
   if (!editingUser.value) return
   saving.value = true
   try {
-    await agentAPI.setSubUserRate(editingUser.value.user_id, editRate.value / 100)
+    await agentAPI.setSubUserRate(editingUser.value.id, editRate.value / 100)
     appStore.showSuccess(t('agent.rateSaved'))
     showRateModal.value = false
     loadData(page.value)

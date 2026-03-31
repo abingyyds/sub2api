@@ -21,7 +21,7 @@ export interface AgentDashboardStats {
 }
 
 export interface AgentSubUser {
-  user_id: number
+  id: number
   email: string
   username: string
   total_recharge: number

@@ -192,14 +192,14 @@ func (h *AgentHandler) SetSubUserRate(c *gin.Context) {
 	}
 
 	var req struct {
-		CommissionRate float64 `json:"commission_rate" binding:"required"`
+		CommissionRate *float64 `json:"commission_rate"`
 	}
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil || req.CommissionRate == nil {
 		response.BadRequest(c, "commission_rate is required")
 		return
 	}
 
-	if err := h.agentService.SetSubUserCommissionRate(c.Request.Context(), subject.UserID, subUserID, req.CommissionRate); err != nil {
+	if err := h.agentService.SetSubUserCommissionRate(c.Request.Context(), subject.UserID, subUserID, *req.CommissionRate); err != nil {
 		response.ErrorFrom(c, err)
 		return
 	}
