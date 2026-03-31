@@ -338,6 +338,26 @@
           </div>
         </SlideIn>
 
+        <!-- Section 3: FAQ -->
+        <SlideIn direction="up" :delay="300">
+          <div>
+            <div class="mb-4">
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('keys.faq.title') }}</h2>
+            </div>
+            <div class="divide-y divide-gray-200 rounded-xl border border-gray-200 bg-white dark:divide-dark-700 dark:border-dark-700 dark:bg-dark-900">
+              <details v-for="(item, idx) in faqItems" :key="idx" class="group">
+                <summary class="flex cursor-pointer items-center justify-between px-5 py-4 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-50 dark:text-white dark:hover:bg-dark-800 [&::-webkit-details-marker]:hidden">
+                  {{ item.q }}
+                  <svg class="h-4 w-4 flex-shrink-0 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <div class="px-5 pb-4 text-sm leading-relaxed text-gray-600 dark:text-gray-400" v-html="item.a"></div>
+              </details>
+            </div>
+          </div>
+        </SlideIn>
+
       </div>
     </FadeIn>
 
@@ -349,12 +369,25 @@
       @close="closeModals"
     >
       <form id="key-form" @submit.prevent="handleSubmit" class="space-y-5">
+        <!-- Pre-selected Group Info (when creating from group card) -->
+        <div v-if="!showEditModal && preSelectedGroup" class="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-dark-600 dark:bg-dark-800/50">
+          <p class="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('keys.groupInfo') }}</p>
+          <div class="flex items-center gap-3">
+            <GroupBadge
+              :name="preSelectedGroup.name"
+              :platform="preSelectedGroup.platform"
+              :subscription-type="preSelectedGroup.subscription_type"
+              :rate-multiplier="preSelectedGroup.rate_multiplier"
+            />
+          </div>
+          <p v-if="preSelectedGroup.description" class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ preSelectedGroup.description }}</p>
+        </div>
+
         <div>
           <label class="input-label">{{ t('keys.nameLabel') }}</label>
           <input
             v-model="formData.name"
             type="text"
-            required
             class="input"
             :placeholder="t('keys.namePlaceholder')"
             data-tour="key-form-name"
@@ -772,6 +805,12 @@ const groupOptions = computed(() =>
 const platformOrder: GroupPlatform[] = ['anthropic', 'openai', 'gemini', 'antigravity', 'multi']
 const quickCreating = ref<number | null>(null)
 
+// Pre-selected group when creating from group card
+const preSelectedGroup = computed(() => {
+  if (showEditModal.value || !formData.value.group_id) return null
+  return groups.value.find(g => g.id === formData.value.group_id) || null
+})
+
 interface PlatformGrouping {
   platform: GroupPlatform
   groups: Group[]
@@ -818,19 +857,28 @@ const isGroupUnavailable = (group: Group) => {
   return tags.some(tag => tag === '暂不可用' || tag === 'Unavailable')
 }
 
-const quickCreateKey = async (group: Group) => {
-  quickCreating.value = group.id
-  try {
-    await keysAPI.create(group.name, group.id)
-    appStore.showSuccess(t('keys.keyCreatedSuccess'))
-    loadApiKeys()
-  } catch (error: any) {
-    const errorMsg = error.response?.data?.detail || t('keys.failedToSave')
-    appStore.showError(errorMsg)
-  } finally {
-    quickCreating.value = null
+const quickCreateKey = (group: Group) => {
+  formData.value = {
+    name: '',
+    group_id: group.id,
+    status: 'active',
+    use_custom_key: false,
+    custom_key: '',
+    enable_ip_restriction: false,
+    ip_whitelist: '',
+    ip_blacklist: ''
   }
+  showCreateModal.value = true
 }
+
+// FAQ items
+const faqItems = computed(() => [
+  { q: t('keys.faq.q1'), a: t('keys.faq.a1') },
+  { q: t('keys.faq.q2'), a: t('keys.faq.a2') },
+  { q: t('keys.faq.q3'), a: t('keys.faq.a3') },
+  { q: t('keys.faq.q4'), a: t('keys.faq.a4') },
+  { q: t('keys.faq.q5'), a: t('keys.faq.a5') }
+])
 
 const maskKey = (key: string): string => {
   if (key.length <= 12) return key
