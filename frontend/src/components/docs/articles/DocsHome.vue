@@ -5,11 +5,6 @@
       <p class="mt-2 text-gray-500 dark:text-dark-400">{{ t('tutorial.subtitle') }}</p>
     </div>
 
-    <!-- Config Generator (inline) -->
-    <section>
-      <ConfigGenerator />
-    </section>
-
     <!-- Quick Start -->
     <section>
       <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ t('tutorial.docs.quickStart') }}</h2>
@@ -54,6 +49,11 @@
           </div>
         </router-link>
       </div>
+    </section>
+
+    <!-- Config Generator (inline) -->
+    <section>
+      <ConfigGenerator />
     </section>
 
   </div>
