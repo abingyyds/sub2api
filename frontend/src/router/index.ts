@@ -327,25 +327,11 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/invoice',
-    name: 'Invoice',
-    component: () => import('@/views/user/InvoiceView.vue'),
-    meta: {
-      requiresAuth: true,
-      requiresAdmin: false,
-      title: 'Invoice',
-      titleKey: 'nav.invoice'
-    }
+    redirect: '/order-history'
   },
   {
     path: '/contact',
-    name: 'Contact',
-    component: () => import('@/views/user/ContactView.vue'),
-    meta: {
-      requiresAuth: true,
-      requiresAdmin: false,
-      title: 'Contact Us',
-      titleKey: 'nav.contact'
-    }
+    redirect: '/dashboard'
   },
 
   // ==================== Admin Routes ====================

@@ -139,8 +139,9 @@
 
               <!-- Contact Support (only show if configured) -->
               <div
-                v-if="contactInfo"
-                class="border-t border-gray-100 px-4 py-2.5 dark:border-dark-700"
+                v-if="contactDisplayText"
+                class="border-t border-gray-100 px-4 py-2.5 dark:border-dark-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-700"
+                @click="appStore.showContactModal = true; dropdownOpen = false"
               >
                 <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                   <svg
@@ -158,7 +159,7 @@
                   </svg>
                   <span>{{ t('common.contactSupport') }}:</span>
                   <span class="font-medium text-gray-700 dark:text-gray-300">{{
-                    contactInfo
+                    contactDisplayText
                   }}</span>
                 </div>
               </div>
@@ -222,7 +223,16 @@ const onboardingStore = useOnboardingStore()
 const user = computed(() => authStore.user)
 const dropdownOpen = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
-const contactInfo = computed(() => appStore.contactInfo)
+const contactDisplayText = computed(() => {
+  const raw = appStore.contactInfo
+  if (!raw) return ''
+  try {
+    const parsed = JSON.parse(raw)
+    return parsed.wechat_id || parsed.email || ''
+  } catch {
+    return raw
+  }
+})
 const docUrl = computed(() => appStore.docUrl)
 
 // 只在标准模式的管理员下显示新手引导按钮

@@ -3169,8 +3169,10 @@ export default {
         apiBaseUrlHint:
           'Used for "Use Key" and "Import to CC Switch" features. Leave empty to use current site URL.',
         contactInfo: 'Contact Info',
-        contactInfoPlaceholder: 'e.g., QQ: 123456789',
-        contactInfoHint: 'Customer support contact info, displayed on redeem page, profile, etc.',
+        contactWechatId: 'WeChat ID',
+        contactEmail: 'Support Email',
+        contactQrcode: 'WeChat QR Code Image URL',
+        contactQrcodeHint: 'Enter the URL of the WeChat QR code image, displayed in the Contact Us popup',
         docUrl: 'Documentation URL',
         docUrlPlaceholder: 'https://docs.example.com',
         docUrlHint: 'Link to your documentation site. Leave empty to hide the documentation link.',
@@ -3525,6 +3527,59 @@ export default {
     }
   },
 
+  // Order History Page
+  orderHistory: {
+    title: 'Order History',
+    subtitle: 'View all your recharge and subscription orders',
+    orderNo: 'Order No.',
+    type: 'Type',
+    typeRecharge: 'Recharge',
+    typeSubscription: 'Subscription',
+    amount: 'Amount',
+    status: 'Status',
+    statusPending: 'Pending',
+    statusPaid: 'Paid',
+    statusClosed: 'Closed',
+    statusRefunded: 'Refunded',
+    payMethod: 'Pay Method',
+    payMethodWechat: 'WeChat Pay',
+    payMethodAlipay: 'Alipay',
+    createdAt: 'Created',
+    paidAt: 'Paid At',
+    noOrders: 'No Orders',
+    noOrdersDesc: 'You don\'t have any orders yet.',
+    loadError: 'Failed to load orders',
+    invoice: 'Invoice',
+    selectOrders: 'Select Orders',
+    submitInvoice: 'Submit Invoice Request',
+    invoiceTitle: 'Invoice Information',
+    companyName: 'Company Name',
+    companyNamePlaceholder: 'Enter company name',
+    taxId: 'Tax ID',
+    taxIdPlaceholder: 'Enter taxpayer identification number',
+    email: 'Email',
+    emailPlaceholder: 'Enter email to receive invoice',
+    remark: 'Remark',
+    remarkPlaceholder: 'Optional, add special requirements here',
+    selectedAmount: 'Selected Order Amount',
+    selectedCount: '{count} orders selected',
+    invoiceSubmitted: 'Invoice request submitted',
+    invoiceError: 'Failed to submit invoice request',
+    noOrderSelected: 'Please select at least one paid order',
+    copyOrderNo: 'Copy Order No.',
+    copied: 'Copied',
+  },
+
+  // Contact Us
+  contactUs: {
+    title: 'Contact Us',
+    wechatId: 'WeChat ID',
+    email: 'Email',
+    scanQrcode: 'Scan to add on WeChat',
+    copySuccess: 'Copied to clipboard',
+    copyFailed: 'Copy failed',
+  },
+
   // Tutorial Page
   tutorial: {
     title: 'Tutorial',
@@ -3600,6 +3655,20 @@ export default {
       step2: 'Edit config file',
       step3: 'Edit or create file',
       authTip: 'If you see 401 error, run /auth in Gemini CLI and enter your API Key'
+    },
+    docs: {
+      home: 'Documentation',
+      navigation: 'Navigation',
+      quickStart: 'Quick Start',
+      advanced: 'Advanced',
+      tools: 'Tools',
+      nodejs: 'Node.js Installation',
+      claudeCode: 'Claude Code Setup',
+      geminiCli: 'Gemini CLI Setup',
+      codex: 'Codex (OpenAI) Setup',
+      openclaw: 'OpenClaw Deploy',
+      opencode: 'OpenCode Setup',
+      configGenerator: 'Config Export'
     }
   },
 

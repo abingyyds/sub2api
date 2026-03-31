@@ -997,20 +997,42 @@
               </p>
             </div>
 
-            <!-- Contact Info -->
-            <div>
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <!-- Contact Info (Structured) -->
+            <div class="space-y-4 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-dark-600 dark:bg-dark-800">
+              <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {{ t('admin.settings.site.contactInfo') }}
-              </label>
-              <input
-                v-model="form.contact_info"
-                type="text"
-                class="input"
-                :placeholder="t('admin.settings.site.contactInfoPlaceholder')"
-              />
-              <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                {{ t('admin.settings.site.contactInfoHint') }}
-              </p>
+              </h4>
+              <div>
+                <label class="mb-1 block text-xs text-gray-500 dark:text-gray-400">{{ t('admin.settings.site.contactWechatId') }}</label>
+                <input
+                  v-model="contactFields.wechat_id"
+                  type="text"
+                  class="input"
+                  placeholder="huajuan035"
+                  @input="syncContactInfo"
+                />
+              </div>
+              <div>
+                <label class="mb-1 block text-xs text-gray-500 dark:text-gray-400">{{ t('admin.settings.site.contactEmail') }}</label>
+                <input
+                  v-model="contactFields.email"
+                  type="email"
+                  class="input"
+                  placeholder="support@example.com"
+                  @input="syncContactInfo"
+                />
+              </div>
+              <div>
+                <label class="mb-1 block text-xs text-gray-500 dark:text-gray-400">{{ t('admin.settings.site.contactQrcode') }}</label>
+                <input
+                  v-model="contactFields.qrcode"
+                  type="url"
+                  class="input font-mono text-sm"
+                  placeholder="https://example.com/qrcode.png"
+                  @input="syncContactInfo"
+                />
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t('admin.settings.site.contactQrcodeHint') }}</p>
+              </div>
             </div>
 
             <!-- Doc URL -->
@@ -1507,6 +1529,35 @@ const linuxdoRedirectUrlSuggestion = computed(() => {
   return `${origin}/api/v1/auth/oauth/linuxdo/callback`
 })
 
+// Contact info structured fields
+const contactFields = reactive({
+  wechat_id: '',
+  email: '',
+  qrcode: '',
+})
+
+function parseContactInfo() {
+  try {
+    const parsed = JSON.parse(form.contact_info)
+    contactFields.wechat_id = parsed.wechat_id || ''
+    contactFields.email = parsed.email || ''
+    contactFields.qrcode = parsed.qrcode || ''
+  } catch {
+    // Old format: plain text, treat as wechat_id
+    contactFields.wechat_id = form.contact_info || ''
+    contactFields.email = ''
+    contactFields.qrcode = ''
+  }
+}
+
+function syncContactInfo() {
+  form.contact_info = JSON.stringify({
+    wechat_id: contactFields.wechat_id,
+    email: contactFields.email,
+    qrcode: contactFields.qrcode,
+  })
+}
+
 // Recharge plans visual editor
 interface RechargePlanForm {
   key: string
@@ -1623,6 +1674,7 @@ async function loadSettings() {
   try {
     const settings = await adminAPI.settings.getSettings()
     Object.assign(form, settings)
+    parseContactInfo()
     form.smtp_password = ''
     form.turnstile_secret_key = ''
     form.linuxdo_connect_client_secret = ''

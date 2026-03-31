@@ -43,10 +43,10 @@
           <ProfileInfoCard :user="user" />
         </SlideIn>
         <SlideIn direction="up" :delay="400">
-          <div v-if="contactInfo" class="rounded-2xl border-2 border-primary-200 bg-primary-50 dark:border-primary-800/30 dark:bg-primary-900/20 shadow-soft p-6">
+          <div v-if="contactDisplayText" class="rounded-2xl border-2 border-primary-200 bg-primary-50 dark:border-primary-800/30 dark:bg-primary-900/20 shadow-soft p-6 cursor-pointer" @click="appStore.showContactModal = true">
             <div class="flex items-center gap-4">
               <div class="p-3 bg-primary-100 rounded-xl text-primary-600"><Icon name="chat" size="lg" /></div>
-              <div><h3 class="font-semibold text-primary-800 dark:text-primary-200">{{ t('common.contactSupport') }}</h3><p class="text-sm font-medium">{{ contactInfo }}</p></div>
+              <div><h3 class="font-semibold text-primary-800 dark:text-primary-200">{{ t('common.contactSupport') }}</h3><p class="text-sm font-medium">{{ contactDisplayText }}</p></div>
             </div>
           </div>
         </SlideIn>
@@ -65,11 +65,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
+import { useAppStore } from '@/stores'
 import { formatDate } from '@/utils/format'
-import { authAPI } from '@/api'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import ProfileInfoCard from '@/components/user/profile/ProfileInfoCard.vue'
 import ProfileEditForm from '@/components/user/profile/ProfileEditForm.vue'
@@ -80,15 +80,17 @@ import { FadeIn, SlideIn, StaggerContainer, GlowCard } from '@/components/animat
 
 const { t } = useI18n()
 const authStore = useAuthStore()
+const appStore = useAppStore()
 const user = computed(() => authStore.user)
-const contactInfo = ref('')
 
-onMounted(async () => {
+const contactDisplayText = computed(() => {
+  const raw = appStore.contactInfo
+  if (!raw) return ''
   try {
-    const s = await authAPI.getPublicSettings()
-    contactInfo.value = s.contact_info || ''
-  } catch (error) {
-    console.error('Failed to load contact info:', error)
+    const parsed = JSON.parse(raw)
+    return parsed.wechat_id || parsed.email || ''
+  } catch {
+    return raw
   }
 })
 

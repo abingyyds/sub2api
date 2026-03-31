@@ -28,6 +28,9 @@ export const useAppStore = defineStore('app', () => {
   const cachedPublicSettings = ref<PublicSettings | null>(null)
   const referralEnabled = ref<boolean>(false)
 
+  // Contact modal state
+  const showContactModal = ref<boolean>(false)
+
   // Auto-incrementing ID for toasts
   let toastIdCounter = 0
 
@@ -350,6 +353,7 @@ export const useAppStore = defineStore('app', () => {
     fetchPublicSettings,
     clearPublicSettingsCache,
     initFromInjectedConfig,
-    referralEnabled
+    referralEnabled,
+    showContactModal
   }
 })

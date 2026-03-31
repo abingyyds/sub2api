@@ -61,21 +61,33 @@
           </div>
           <div v-else class="mx-3 my-3 h-px bg-gray-200 dark:bg-dark-700"></div>
 
-          <router-link
-            v-for="item in personalNavItems"
-            :key="item.path"
-            :to="item.path"
-            class="sidebar-link mb-1"
-            :class="{ 'sidebar-link-active': isActive(item.path) }"
-            :title="sidebarCollapsed ? item.label : undefined"
-            :data-tour="item.path === '/keys' ? 'sidebar-my-keys' : undefined"
-            @click="handleMenuItemClick(item.path)"
-          >
-            <component :is="item.icon" class="h-5 w-5 flex-shrink-0" />
-            <transition name="fade">
-              <span v-if="!sidebarCollapsed">{{ item.label }}</span>
-            </transition>
-          </router-link>
+          <template v-for="item in personalNavItems" :key="item.path">
+            <div
+              v-if="item.action"
+              class="sidebar-link mb-1 cursor-pointer"
+              :title="sidebarCollapsed ? item.label : undefined"
+              @click="item.action(); handleMenuItemClick(item.path)"
+            >
+              <component :is="item.icon" class="h-5 w-5 flex-shrink-0" />
+              <transition name="fade">
+                <span v-if="!sidebarCollapsed">{{ item.label }}</span>
+              </transition>
+            </div>
+            <router-link
+              v-else
+              :to="item.path"
+              class="sidebar-link mb-1"
+              :class="{ 'sidebar-link-active': isActive(item.path) }"
+              :title="sidebarCollapsed ? item.label : undefined"
+              :data-tour="item.path === '/keys' ? 'sidebar-my-keys' : undefined"
+              @click="handleMenuItemClick(item.path)"
+            >
+              <component :is="item.icon" class="h-5 w-5 flex-shrink-0" />
+              <transition name="fade">
+                <span v-if="!sidebarCollapsed">{{ item.label }}</span>
+              </transition>
+            </router-link>
+          </template>
         </div>
       </template>
 
@@ -88,21 +100,33 @@
             </div>
             <div v-else class="mx-3 my-3 h-px bg-gray-200 dark:bg-dark-700"></div>
           </template>
-          <router-link
-            v-for="item in group.items"
-            :key="item.path"
-            :to="item.path"
-            class="sidebar-link mb-1"
-            :class="{ 'sidebar-link-active': isActive(item.path) }"
-            :title="sidebarCollapsed ? item.label : undefined"
-            :data-tour="item.path === '/keys' ? 'sidebar-my-keys' : undefined"
-            @click="handleMenuItemClick(item.path)"
-          >
-            <component :is="item.icon" class="h-5 w-5 flex-shrink-0" />
-            <transition name="fade">
-              <span v-if="!sidebarCollapsed">{{ item.label }}</span>
-            </transition>
-          </router-link>
+          <template v-for="item in group.items" :key="item.path">
+            <div
+              v-if="item.action"
+              class="sidebar-link mb-1 cursor-pointer"
+              :title="sidebarCollapsed ? item.label : undefined"
+              @click="item.action(); handleMenuItemClick(item.path)"
+            >
+              <component :is="item.icon" class="h-5 w-5 flex-shrink-0" />
+              <transition name="fade">
+                <span v-if="!sidebarCollapsed">{{ item.label }}</span>
+              </transition>
+            </div>
+            <router-link
+              v-else
+              :to="item.path"
+              class="sidebar-link mb-1"
+              :class="{ 'sidebar-link-active': isActive(item.path) }"
+              :title="sidebarCollapsed ? item.label : undefined"
+              :data-tour="item.path === '/keys' ? 'sidebar-my-keys' : undefined"
+              @click="handleMenuItemClick(item.path)"
+            >
+              <component :is="item.icon" class="h-5 w-5 flex-shrink-0" />
+              <transition name="fade">
+                <span v-if="!sidebarCollapsed">{{ item.label }}</span>
+              </transition>
+            </router-link>
+          </template>
         </div>
       </template>
 
@@ -559,21 +583,6 @@ const ReceiptIcon = {
     )
 }
 
-const DocumentIcon = {
-  render: () =>
-    h(
-      'svg',
-      { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' },
-      [
-        h('path', {
-          'stroke-linecap': 'round',
-          'stroke-linejoin': 'round',
-          d: 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z'
-        })
-      ]
-    )
-}
-
 const ChatBubbleIcon = {
   render: () =>
     h(
@@ -605,7 +614,7 @@ const HomeIcon = {
 }
 
 // Grouped navigation type
-type NavItem = { path: string; label: string; icon: any; hideInSimpleMode?: boolean }
+type NavItem = { path: string; label: string; icon: any; hideInSimpleMode?: boolean; action?: () => void }
 type NavGroup = { title: string; items: NavItem[] }
 
 // User navigation items (for regular users) - grouped
@@ -633,7 +642,6 @@ const userNavGroups = computed(() => {
         { path: '/pricing', label: t('nav.purchase'), icon: ShoppingBagIcon },
         { path: '/order-history', label: t('nav.orderHistory'), icon: ReceiptIcon },
         { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
-        { path: '/invoice', label: t('nav.invoice'), icon: DocumentIcon },
       ]
     },
     {
@@ -641,7 +649,7 @@ const userNavGroups = computed(() => {
       items: [
         { path: '/changelog', label: t('nav.changelog'), icon: MegaphoneIcon },
         { path: '/tutorial', label: t('nav.tutorial'), icon: BookIcon },
-        { path: '/contact', label: t('nav.contact'), icon: ChatBubbleIcon },
+        { path: '/contact', label: t('nav.contact'), icon: ChatBubbleIcon, action: () => { appStore.showContactModal = true } },
       ]
     }
   ]
@@ -677,7 +685,6 @@ const personalNavItems = computed(() => {
     { path: '/pricing', label: t('nav.purchase'), icon: ShoppingBagIcon },
     { path: '/order-history', label: t('nav.orderHistory'), icon: ReceiptIcon },
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
-    { path: '/invoice', label: t('nav.invoice'), icon: DocumentIcon },
     { path: '/changelog', label: t('nav.changelog'), icon: MegaphoneIcon },
     { path: '/tutorial', label: t('nav.tutorial'), icon: BookIcon },
     { path: '/contact', label: t('nav.contact'), icon: ChatBubbleIcon },

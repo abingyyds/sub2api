@@ -3320,8 +3320,10 @@ export default {
         apiBaseUrlHint: '用于"使用密钥"和"导入到 CC Switch"功能，留空则使用当前站点地址',
         apiBaseUrlPlaceholder: 'https://api.example.com',
         contactInfo: '客服联系方式',
-        contactInfoPlaceholder: '例如：QQ: 123456789',
-        contactInfoHint: '填写客服联系方式，将展示在兑换页面、个人资料等位置',
+        contactWechatId: '微信号',
+        contactEmail: '客服邮箱',
+        contactQrcode: '微信二维码图片链接',
+        contactQrcodeHint: '填写微信二维码图片的URL地址，将在联系我们弹窗中展示',
         docUrl: '文档链接',
         docUrlHint: '文档网站的链接。留空则隐藏文档链接。',
         docUrlPlaceholder: 'https://docs.example.com',
@@ -3675,6 +3677,59 @@ export default {
     }
   },
 
+  // Order History Page
+  orderHistory: {
+    title: '订单历史',
+    subtitle: '查看您的所有充值和订阅订单',
+    orderNo: '订单号',
+    type: '类型',
+    typeRecharge: '充值',
+    typeSubscription: '订阅',
+    amount: '金额',
+    status: '状态',
+    statusPending: '待支付',
+    statusPaid: '已支付',
+    statusClosed: '已关闭',
+    statusRefunded: '已退款',
+    payMethod: '支付方式',
+    payMethodWechat: '微信支付',
+    payMethodAlipay: '支付宝',
+    createdAt: '创建时间',
+    paidAt: '支付时间',
+    noOrders: '暂无订单',
+    noOrdersDesc: '您还没有任何订单记录。',
+    loadError: '加载订单失败',
+    invoice: '开发票',
+    selectOrders: '选择订单',
+    submitInvoice: '提交开票申请',
+    invoiceTitle: '开票信息',
+    companyName: '公司名称',
+    companyNamePlaceholder: '请输入公司名称',
+    taxId: '税号',
+    taxIdPlaceholder: '请输入纳税人识别号',
+    email: '接收邮箱',
+    emailPlaceholder: '请输入接收发票的邮箱',
+    remark: '备注',
+    remarkPlaceholder: '选填，如有特殊要求请备注',
+    selectedAmount: '已选订单金额',
+    selectedCount: '已选 {count} 笔订单',
+    invoiceSubmitted: '开票申请已提交',
+    invoiceError: '提交开票申请失败',
+    noOrderSelected: '请至少选择一笔已支付的订单',
+    copyOrderNo: '复制订单号',
+    copied: '已复制',
+  },
+
+  // Contact Us
+  contactUs: {
+    title: '联系我们',
+    wechatId: '微信号',
+    email: '邮箱',
+    scanQrcode: '扫码添加微信',
+    copySuccess: '已复制到剪贴板',
+    copyFailed: '复制失败',
+  },
+
   // Tutorial Page
   tutorial: {
     title: '使用教程',
@@ -3750,6 +3805,20 @@ export default {
       step2: '编辑配置文件',
       step3: '编辑或创建文件',
       authTip: '若出现 401 错误，在 Gemini CLI 中输入 /auth，然后填入你的 API Key'
+    },
+    docs: {
+      home: '文档中心',
+      navigation: '文档导航',
+      quickStart: '快速开始',
+      advanced: '进阶玩法',
+      tools: '实用工具',
+      nodejs: 'Node.js 环境安装',
+      claudeCode: 'Claude Code 配置',
+      geminiCli: 'Gemini CLI 配置',
+      codex: 'Codex (OpenAI) 配置',
+      openclaw: 'OpenClaw 部署',
+      opencode: 'OpenCode 配置',
+      configGenerator: '配置文件导出'
     }
   },
 

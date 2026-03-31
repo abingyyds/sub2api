@@ -22,6 +22,9 @@
 
     <!-- Announcement Popup -->
     <AnnouncementPopup :announcements="announcements" />
+
+    <!-- Contact Modal -->
+    <ContactModal :show="appStore.showContactModal" @close="appStore.showContactModal = false" />
   </div>
 </template>
 
@@ -36,6 +39,7 @@ import { useOnboardingStore } from '@/stores/onboarding'
 import AppSidebar from './AppSidebar.vue'
 import AppHeader from './AppHeader.vue'
 import AnnouncementPopup from '@/components/common/AnnouncementPopup.vue'
+import ContactModal from '@/components/common/ContactModal.vue'
 import type { Announcement } from '@/types'
 
 const appStore = useAppStore()
