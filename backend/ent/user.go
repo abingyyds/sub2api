@@ -99,11 +99,15 @@ type UserEdges struct {
 	AdminInviteCodes []*AdminInviteCode `json:"admin_invite_codes,omitempty"`
 	// PaymentOrders holds the value of the payment_orders edge.
 	PaymentOrders []*PaymentOrder `json:"payment_orders,omitempty"`
+	// AgentCommissionsAsAgent holds the value of the agent_commissions_as_agent edge.
+	AgentCommissionsAsAgent []*AgentCommission `json:"agent_commissions_as_agent,omitempty"`
+	// AgentCommissionsAsUser holds the value of the agent_commissions_as_user edge.
+	AgentCommissionsAsUser []*AgentCommission `json:"agent_commissions_as_user,omitempty"`
 	// UserAllowedGroups holds the value of the user_allowed_groups edge.
 	UserAllowedGroups []*UserAllowedGroup `json:"user_allowed_groups,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [15]bool
+	loadedTypes [17]bool
 }
 
 // APIKeysOrErr returns the APIKeys value or an error if the edge
@@ -232,10 +236,28 @@ func (e UserEdges) PaymentOrdersOrErr() ([]*PaymentOrder, error) {
 	return nil, &NotLoadedError{edge: "payment_orders"}
 }
 
+// AgentCommissionsAsAgentOrErr returns the AgentCommissionsAsAgent value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AgentCommissionsAsAgentOrErr() ([]*AgentCommission, error) {
+	if e.loadedTypes[14] {
+		return e.AgentCommissionsAsAgent, nil
+	}
+	return nil, &NotLoadedError{edge: "agent_commissions_as_agent"}
+}
+
+// AgentCommissionsAsUserOrErr returns the AgentCommissionsAsUser value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) AgentCommissionsAsUserOrErr() ([]*AgentCommission, error) {
+	if e.loadedTypes[15] {
+		return e.AgentCommissionsAsUser, nil
+	}
+	return nil, &NotLoadedError{edge: "agent_commissions_as_user"}
+}
+
 // UserAllowedGroupsOrErr returns the UserAllowedGroups value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserAllowedGroupsOrErr() ([]*UserAllowedGroup, error) {
-	if e.loadedTypes[14] {
+	if e.loadedTypes[16] {
 		return e.UserAllowedGroups, nil
 	}
 	return nil, &NotLoadedError{edge: "user_allowed_groups"}
@@ -505,6 +527,16 @@ func (_m *User) QueryPaymentOrders() *PaymentOrderQuery {
 	return NewUserClient(_m.config).QueryPaymentOrders(_m)
 }
 
+// QueryAgentCommissionsAsAgent queries the "agent_commissions_as_agent" edge of the User entity.
+func (_m *User) QueryAgentCommissionsAsAgent() *AgentCommissionQuery {
+	return NewUserClient(_m.config).QueryAgentCommissionsAsAgent(_m)
+}
+
+// QueryAgentCommissionsAsUser queries the "agent_commissions_as_user" edge of the User entity.
+func (_m *User) QueryAgentCommissionsAsUser() *AgentCommissionQuery {
+	return NewUserClient(_m.config).QueryAgentCommissionsAsUser(_m)
+}
+
 // QueryUserAllowedGroups queries the "user_allowed_groups" edge of the User entity.
 func (_m *User) QueryUserAllowedGroups() *UserAllowedGroupQuery {
 	return NewUserClient(_m.config).QueryUserAllowedGroups(_m)
@@ -596,6 +628,23 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	if v := _m.InitialBalanceExpiresAt; v != nil {
 		builder.WriteString("initial_balance_expires_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("is_agent=")
+	builder.WriteString(fmt.Sprintf("%v", _m.IsAgent))
+	builder.WriteString(", ")
+	builder.WriteString("agent_status=")
+	builder.WriteString(_m.AgentStatus)
+	builder.WriteString(", ")
+	builder.WriteString("agent_commission_rate=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AgentCommissionRate))
+	builder.WriteString(", ")
+	builder.WriteString("agent_note=")
+	builder.WriteString(_m.AgentNote)
+	builder.WriteString(", ")
+	if v := _m.AgentApprovedAt; v != nil {
+		builder.WriteString("agent_approved_at=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteByte(')')

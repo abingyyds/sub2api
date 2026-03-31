@@ -18,6 +18,9 @@ type AccountGroup func(*sql.Selector)
 // AdminInviteCode is the predicate function for admininvitecode builders.
 type AdminInviteCode func(*sql.Selector)
 
+// AgentCommission is the predicate function for agentcommission builders.
+type AgentCommission func(*sql.Selector)
+
 // Group is the predicate function for group builders.
 type Group func(*sql.Selector)
 

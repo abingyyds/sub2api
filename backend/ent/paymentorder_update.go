@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Wei-Shaw/sub2api/ent/agentcommission"
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/user"
@@ -363,6 +364,21 @@ func (_u *PaymentOrderUpdate) SetUser(v *User) *PaymentOrderUpdate {
 	return _u.SetUserID(v.ID)
 }
 
+// AddAgentCommissionIDs adds the "agent_commissions" edge to the AgentCommission entity by IDs.
+func (_u *PaymentOrderUpdate) AddAgentCommissionIDs(ids ...int64) *PaymentOrderUpdate {
+	_u.mutation.AddAgentCommissionIDs(ids...)
+	return _u
+}
+
+// AddAgentCommissions adds the "agent_commissions" edges to the AgentCommission entity.
+func (_u *PaymentOrderUpdate) AddAgentCommissions(v ...*AgentCommission) *PaymentOrderUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAgentCommissionIDs(ids...)
+}
+
 // Mutation returns the PaymentOrderMutation object of the builder.
 func (_u *PaymentOrderUpdate) Mutation() *PaymentOrderMutation {
 	return _u.mutation
@@ -372,6 +388,27 @@ func (_u *PaymentOrderUpdate) Mutation() *PaymentOrderMutation {
 func (_u *PaymentOrderUpdate) ClearUser() *PaymentOrderUpdate {
 	_u.mutation.ClearUser()
 	return _u
+}
+
+// ClearAgentCommissions clears all "agent_commissions" edges to the AgentCommission entity.
+func (_u *PaymentOrderUpdate) ClearAgentCommissions() *PaymentOrderUpdate {
+	_u.mutation.ClearAgentCommissions()
+	return _u
+}
+
+// RemoveAgentCommissionIDs removes the "agent_commissions" edge to AgentCommission entities by IDs.
+func (_u *PaymentOrderUpdate) RemoveAgentCommissionIDs(ids ...int64) *PaymentOrderUpdate {
+	_u.mutation.RemoveAgentCommissionIDs(ids...)
+	return _u
+}
+
+// RemoveAgentCommissions removes "agent_commissions" edges to AgentCommission entities.
+func (_u *PaymentOrderUpdate) RemoveAgentCommissions(v ...*AgentCommission) *PaymentOrderUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAgentCommissionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -584,6 +621,51 @@ func (_u *PaymentOrderUpdate) sqlSave(ctx context.Context) (_node int, err error
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AgentCommissionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.AgentCommissionsTable,
+			Columns: []string{paymentorder.AgentCommissionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAgentCommissionsIDs(); len(nodes) > 0 && !_u.mutation.AgentCommissionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.AgentCommissionsTable,
+			Columns: []string{paymentorder.AgentCommissionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AgentCommissionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.AgentCommissionsTable,
+			Columns: []string{paymentorder.AgentCommissionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -945,6 +1027,21 @@ func (_u *PaymentOrderUpdateOne) SetUser(v *User) *PaymentOrderUpdateOne {
 	return _u.SetUserID(v.ID)
 }
 
+// AddAgentCommissionIDs adds the "agent_commissions" edge to the AgentCommission entity by IDs.
+func (_u *PaymentOrderUpdateOne) AddAgentCommissionIDs(ids ...int64) *PaymentOrderUpdateOne {
+	_u.mutation.AddAgentCommissionIDs(ids...)
+	return _u
+}
+
+// AddAgentCommissions adds the "agent_commissions" edges to the AgentCommission entity.
+func (_u *PaymentOrderUpdateOne) AddAgentCommissions(v ...*AgentCommission) *PaymentOrderUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAgentCommissionIDs(ids...)
+}
+
 // Mutation returns the PaymentOrderMutation object of the builder.
 func (_u *PaymentOrderUpdateOne) Mutation() *PaymentOrderMutation {
 	return _u.mutation
@@ -954,6 +1051,27 @@ func (_u *PaymentOrderUpdateOne) Mutation() *PaymentOrderMutation {
 func (_u *PaymentOrderUpdateOne) ClearUser() *PaymentOrderUpdateOne {
 	_u.mutation.ClearUser()
 	return _u
+}
+
+// ClearAgentCommissions clears all "agent_commissions" edges to the AgentCommission entity.
+func (_u *PaymentOrderUpdateOne) ClearAgentCommissions() *PaymentOrderUpdateOne {
+	_u.mutation.ClearAgentCommissions()
+	return _u
+}
+
+// RemoveAgentCommissionIDs removes the "agent_commissions" edge to AgentCommission entities by IDs.
+func (_u *PaymentOrderUpdateOne) RemoveAgentCommissionIDs(ids ...int64) *PaymentOrderUpdateOne {
+	_u.mutation.RemoveAgentCommissionIDs(ids...)
+	return _u
+}
+
+// RemoveAgentCommissions removes "agent_commissions" edges to AgentCommission entities.
+func (_u *PaymentOrderUpdateOne) RemoveAgentCommissions(v ...*AgentCommission) *PaymentOrderUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAgentCommissionIDs(ids...)
 }
 
 // Where appends a list predicates to the PaymentOrderUpdate builder.
@@ -1196,6 +1314,51 @@ func (_u *PaymentOrderUpdateOne) sqlSave(ctx context.Context) (_node *PaymentOrd
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AgentCommissionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.AgentCommissionsTable,
+			Columns: []string{paymentorder.AgentCommissionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAgentCommissionsIDs(); len(nodes) > 0 && !_u.mutation.AgentCommissionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.AgentCommissionsTable,
+			Columns: []string{paymentorder.AgentCommissionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AgentCommissionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.AgentCommissionsTable,
+			Columns: []string{paymentorder.AgentCommissionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

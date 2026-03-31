@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Wei-Shaw/sub2api/ent/agentcommission"
 	"github.com/Wei-Shaw/sub2api/ent/paymentorder"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 )
@@ -264,6 +265,21 @@ func (_c *PaymentOrderCreate) SetID(v int64) *PaymentOrderCreate {
 // SetUser sets the "user" edge to the User entity.
 func (_c *PaymentOrderCreate) SetUser(v *User) *PaymentOrderCreate {
 	return _c.SetUserID(v.ID)
+}
+
+// AddAgentCommissionIDs adds the "agent_commissions" edge to the AgentCommission entity by IDs.
+func (_c *PaymentOrderCreate) AddAgentCommissionIDs(ids ...int64) *PaymentOrderCreate {
+	_c.mutation.AddAgentCommissionIDs(ids...)
+	return _c
+}
+
+// AddAgentCommissions adds the "agent_commissions" edges to the AgentCommission entity.
+func (_c *PaymentOrderCreate) AddAgentCommissions(v ...*AgentCommission) *PaymentOrderCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAgentCommissionIDs(ids...)
 }
 
 // Mutation returns the PaymentOrderMutation object of the builder.
@@ -555,6 +571,22 @@ func (_c *PaymentOrderCreate) createSpec() (*PaymentOrder, *sqlgraph.CreateSpec)
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.UserID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AgentCommissionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   paymentorder.AgentCommissionsTable,
+			Columns: []string{paymentorder.AgentCommissionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

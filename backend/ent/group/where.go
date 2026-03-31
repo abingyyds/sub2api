@@ -165,6 +165,16 @@ func Listed(v bool) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldListed, v))
 }
 
+// DisplayPrice applies equality check predicate on the "display_price" field. It's identical to DisplayPriceEQ.
+func DisplayPrice(v string) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldDisplayPrice, v))
+}
+
+// DisplayDiscount applies equality check predicate on the "display_discount" field. It's identical to DisplayDiscountEQ.
+func DisplayDiscount(v string) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldDisplayDiscount, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldCreatedAt, v))
@@ -1158,6 +1168,146 @@ func PlanFeaturesIsNil() predicate.Group {
 // PlanFeaturesNotNil applies the NotNil predicate on the "plan_features" field.
 func PlanFeaturesNotNil() predicate.Group {
 	return predicate.Group(sql.FieldNotNull(FieldPlanFeatures))
+}
+
+// TagsIsNil applies the IsNil predicate on the "tags" field.
+func TagsIsNil() predicate.Group {
+	return predicate.Group(sql.FieldIsNull(FieldTags))
+}
+
+// TagsNotNil applies the NotNil predicate on the "tags" field.
+func TagsNotNil() predicate.Group {
+	return predicate.Group(sql.FieldNotNull(FieldTags))
+}
+
+// DisplayPriceEQ applies the EQ predicate on the "display_price" field.
+func DisplayPriceEQ(v string) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldDisplayPrice, v))
+}
+
+// DisplayPriceNEQ applies the NEQ predicate on the "display_price" field.
+func DisplayPriceNEQ(v string) predicate.Group {
+	return predicate.Group(sql.FieldNEQ(FieldDisplayPrice, v))
+}
+
+// DisplayPriceIn applies the In predicate on the "display_price" field.
+func DisplayPriceIn(vs ...string) predicate.Group {
+	return predicate.Group(sql.FieldIn(FieldDisplayPrice, vs...))
+}
+
+// DisplayPriceNotIn applies the NotIn predicate on the "display_price" field.
+func DisplayPriceNotIn(vs ...string) predicate.Group {
+	return predicate.Group(sql.FieldNotIn(FieldDisplayPrice, vs...))
+}
+
+// DisplayPriceGT applies the GT predicate on the "display_price" field.
+func DisplayPriceGT(v string) predicate.Group {
+	return predicate.Group(sql.FieldGT(FieldDisplayPrice, v))
+}
+
+// DisplayPriceGTE applies the GTE predicate on the "display_price" field.
+func DisplayPriceGTE(v string) predicate.Group {
+	return predicate.Group(sql.FieldGTE(FieldDisplayPrice, v))
+}
+
+// DisplayPriceLT applies the LT predicate on the "display_price" field.
+func DisplayPriceLT(v string) predicate.Group {
+	return predicate.Group(sql.FieldLT(FieldDisplayPrice, v))
+}
+
+// DisplayPriceLTE applies the LTE predicate on the "display_price" field.
+func DisplayPriceLTE(v string) predicate.Group {
+	return predicate.Group(sql.FieldLTE(FieldDisplayPrice, v))
+}
+
+// DisplayPriceContains applies the Contains predicate on the "display_price" field.
+func DisplayPriceContains(v string) predicate.Group {
+	return predicate.Group(sql.FieldContains(FieldDisplayPrice, v))
+}
+
+// DisplayPriceHasPrefix applies the HasPrefix predicate on the "display_price" field.
+func DisplayPriceHasPrefix(v string) predicate.Group {
+	return predicate.Group(sql.FieldHasPrefix(FieldDisplayPrice, v))
+}
+
+// DisplayPriceHasSuffix applies the HasSuffix predicate on the "display_price" field.
+func DisplayPriceHasSuffix(v string) predicate.Group {
+	return predicate.Group(sql.FieldHasSuffix(FieldDisplayPrice, v))
+}
+
+// DisplayPriceEqualFold applies the EqualFold predicate on the "display_price" field.
+func DisplayPriceEqualFold(v string) predicate.Group {
+	return predicate.Group(sql.FieldEqualFold(FieldDisplayPrice, v))
+}
+
+// DisplayPriceContainsFold applies the ContainsFold predicate on the "display_price" field.
+func DisplayPriceContainsFold(v string) predicate.Group {
+	return predicate.Group(sql.FieldContainsFold(FieldDisplayPrice, v))
+}
+
+// DisplayDiscountEQ applies the EQ predicate on the "display_discount" field.
+func DisplayDiscountEQ(v string) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldDisplayDiscount, v))
+}
+
+// DisplayDiscountNEQ applies the NEQ predicate on the "display_discount" field.
+func DisplayDiscountNEQ(v string) predicate.Group {
+	return predicate.Group(sql.FieldNEQ(FieldDisplayDiscount, v))
+}
+
+// DisplayDiscountIn applies the In predicate on the "display_discount" field.
+func DisplayDiscountIn(vs ...string) predicate.Group {
+	return predicate.Group(sql.FieldIn(FieldDisplayDiscount, vs...))
+}
+
+// DisplayDiscountNotIn applies the NotIn predicate on the "display_discount" field.
+func DisplayDiscountNotIn(vs ...string) predicate.Group {
+	return predicate.Group(sql.FieldNotIn(FieldDisplayDiscount, vs...))
+}
+
+// DisplayDiscountGT applies the GT predicate on the "display_discount" field.
+func DisplayDiscountGT(v string) predicate.Group {
+	return predicate.Group(sql.FieldGT(FieldDisplayDiscount, v))
+}
+
+// DisplayDiscountGTE applies the GTE predicate on the "display_discount" field.
+func DisplayDiscountGTE(v string) predicate.Group {
+	return predicate.Group(sql.FieldGTE(FieldDisplayDiscount, v))
+}
+
+// DisplayDiscountLT applies the LT predicate on the "display_discount" field.
+func DisplayDiscountLT(v string) predicate.Group {
+	return predicate.Group(sql.FieldLT(FieldDisplayDiscount, v))
+}
+
+// DisplayDiscountLTE applies the LTE predicate on the "display_discount" field.
+func DisplayDiscountLTE(v string) predicate.Group {
+	return predicate.Group(sql.FieldLTE(FieldDisplayDiscount, v))
+}
+
+// DisplayDiscountContains applies the Contains predicate on the "display_discount" field.
+func DisplayDiscountContains(v string) predicate.Group {
+	return predicate.Group(sql.FieldContains(FieldDisplayDiscount, v))
+}
+
+// DisplayDiscountHasPrefix applies the HasPrefix predicate on the "display_discount" field.
+func DisplayDiscountHasPrefix(v string) predicate.Group {
+	return predicate.Group(sql.FieldHasPrefix(FieldDisplayDiscount, v))
+}
+
+// DisplayDiscountHasSuffix applies the HasSuffix predicate on the "display_discount" field.
+func DisplayDiscountHasSuffix(v string) predicate.Group {
+	return predicate.Group(sql.FieldHasSuffix(FieldDisplayDiscount, v))
+}
+
+// DisplayDiscountEqualFold applies the EqualFold predicate on the "display_discount" field.
+func DisplayDiscountEqualFold(v string) predicate.Group {
+	return predicate.Group(sql.FieldEqualFold(FieldDisplayDiscount, v))
+}
+
+// DisplayDiscountContainsFold applies the ContainsFold predicate on the "display_discount" field.
+func DisplayDiscountContainsFold(v string) predicate.Group {
+	return predicate.Group(sql.FieldContainsFold(FieldDisplayDiscount, v))
 }
 
 // HasAPIKeys applies the HasEdge predicate on the "api_keys" edge.

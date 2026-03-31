@@ -18,6 +18,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/account"
 	"github.com/Wei-Shaw/sub2api/ent/accountgroup"
 	"github.com/Wei-Shaw/sub2api/ent/admininvitecode"
+	"github.com/Wei-Shaw/sub2api/ent/agentcommission"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/organization"
@@ -56,6 +57,8 @@ type Client struct {
 	AccountGroup *AccountGroupClient
 	// AdminInviteCode is the client for interacting with the AdminInviteCode builders.
 	AdminInviteCode *AdminInviteCodeClient
+	// AgentCommission is the client for interacting with the AgentCommission builders.
+	AgentCommission *AgentCommissionClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
 	// OrgAuditLog is the client for interacting with the OrgAuditLog builders.
@@ -111,6 +114,7 @@ func (c *Client) init() {
 	c.Account = NewAccountClient(c.config)
 	c.AccountGroup = NewAccountGroupClient(c.config)
 	c.AdminInviteCode = NewAdminInviteCodeClient(c.config)
+	c.AgentCommission = NewAgentCommissionClient(c.config)
 	c.Group = NewGroupClient(c.config)
 	c.OrgAuditLog = NewOrgAuditLogClient(c.config)
 	c.OrgMember = NewOrgMemberClient(c.config)
@@ -227,6 +231,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Account:                 NewAccountClient(cfg),
 		AccountGroup:            NewAccountGroupClient(cfg),
 		AdminInviteCode:         NewAdminInviteCodeClient(cfg),
+		AgentCommission:         NewAgentCommissionClient(cfg),
 		Group:                   NewGroupClient(cfg),
 		OrgAuditLog:             NewOrgAuditLogClient(cfg),
 		OrgMember:               NewOrgMemberClient(cfg),
@@ -270,6 +275,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Account:                 NewAccountClient(cfg),
 		AccountGroup:            NewAccountGroupClient(cfg),
 		AdminInviteCode:         NewAdminInviteCodeClient(cfg),
+		AgentCommission:         NewAgentCommissionClient(cfg),
 		Group:                   NewGroupClient(cfg),
 		OrgAuditLog:             NewOrgAuditLogClient(cfg),
 		OrgMember:               NewOrgMemberClient(cfg),
@@ -319,11 +325,12 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.APIKey, c.Account, c.AccountGroup, c.AdminInviteCode, c.Group, c.OrgAuditLog,
-		c.OrgMember, c.OrgProject, c.OrgSubscription, c.Organization, c.PaymentOrder,
-		c.PromoCode, c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.Referral, c.Setting,
-		c.UsageCleanupTask, c.UsageLog, c.User, c.UserAllowedGroup,
-		c.UserAttributeDefinition, c.UserAttributeValue, c.UserSubscription,
+		c.APIKey, c.Account, c.AccountGroup, c.AdminInviteCode, c.AgentCommission,
+		c.Group, c.OrgAuditLog, c.OrgMember, c.OrgProject, c.OrgSubscription,
+		c.Organization, c.PaymentOrder, c.PromoCode, c.PromoCodeUsage, c.Proxy,
+		c.RedeemCode, c.Referral, c.Setting, c.UsageCleanupTask, c.UsageLog, c.User,
+		c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
+		c.UserSubscription,
 	} {
 		n.Use(hooks...)
 	}
@@ -333,11 +340,12 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.APIKey, c.Account, c.AccountGroup, c.AdminInviteCode, c.Group, c.OrgAuditLog,
-		c.OrgMember, c.OrgProject, c.OrgSubscription, c.Organization, c.PaymentOrder,
-		c.PromoCode, c.PromoCodeUsage, c.Proxy, c.RedeemCode, c.Referral, c.Setting,
-		c.UsageCleanupTask, c.UsageLog, c.User, c.UserAllowedGroup,
-		c.UserAttributeDefinition, c.UserAttributeValue, c.UserSubscription,
+		c.APIKey, c.Account, c.AccountGroup, c.AdminInviteCode, c.AgentCommission,
+		c.Group, c.OrgAuditLog, c.OrgMember, c.OrgProject, c.OrgSubscription,
+		c.Organization, c.PaymentOrder, c.PromoCode, c.PromoCodeUsage, c.Proxy,
+		c.RedeemCode, c.Referral, c.Setting, c.UsageCleanupTask, c.UsageLog, c.User,
+		c.UserAllowedGroup, c.UserAttributeDefinition, c.UserAttributeValue,
+		c.UserSubscription,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -354,6 +362,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.AccountGroup.mutate(ctx, m)
 	case *AdminInviteCodeMutation:
 		return c.AdminInviteCode.mutate(ctx, m)
+	case *AgentCommissionMutation:
+		return c.AgentCommission.mutate(ctx, m)
 	case *GroupMutation:
 		return c.Group.mutate(ctx, m)
 	case *OrgAuditLogMutation:
@@ -1075,6 +1085,187 @@ func (c *AdminInviteCodeClient) mutate(ctx context.Context, m *AdminInviteCodeMu
 		return (&AdminInviteCodeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown AdminInviteCode mutation op: %q", m.Op())
+	}
+}
+
+// AgentCommissionClient is a client for the AgentCommission schema.
+type AgentCommissionClient struct {
+	config
+}
+
+// NewAgentCommissionClient returns a client for the AgentCommission from the given config.
+func NewAgentCommissionClient(c config) *AgentCommissionClient {
+	return &AgentCommissionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `agentcommission.Hooks(f(g(h())))`.
+func (c *AgentCommissionClient) Use(hooks ...Hook) {
+	c.hooks.AgentCommission = append(c.hooks.AgentCommission, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `agentcommission.Intercept(f(g(h())))`.
+func (c *AgentCommissionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AgentCommission = append(c.inters.AgentCommission, interceptors...)
+}
+
+// Create returns a builder for creating a AgentCommission entity.
+func (c *AgentCommissionClient) Create() *AgentCommissionCreate {
+	mutation := newAgentCommissionMutation(c.config, OpCreate)
+	return &AgentCommissionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AgentCommission entities.
+func (c *AgentCommissionClient) CreateBulk(builders ...*AgentCommissionCreate) *AgentCommissionCreateBulk {
+	return &AgentCommissionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AgentCommissionClient) MapCreateBulk(slice any, setFunc func(*AgentCommissionCreate, int)) *AgentCommissionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AgentCommissionCreateBulk{err: fmt.Errorf("calling to AgentCommissionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AgentCommissionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AgentCommissionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AgentCommission.
+func (c *AgentCommissionClient) Update() *AgentCommissionUpdate {
+	mutation := newAgentCommissionMutation(c.config, OpUpdate)
+	return &AgentCommissionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AgentCommissionClient) UpdateOne(_m *AgentCommission) *AgentCommissionUpdateOne {
+	mutation := newAgentCommissionMutation(c.config, OpUpdateOne, withAgentCommission(_m))
+	return &AgentCommissionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AgentCommissionClient) UpdateOneID(id int64) *AgentCommissionUpdateOne {
+	mutation := newAgentCommissionMutation(c.config, OpUpdateOne, withAgentCommissionID(id))
+	return &AgentCommissionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AgentCommission.
+func (c *AgentCommissionClient) Delete() *AgentCommissionDelete {
+	mutation := newAgentCommissionMutation(c.config, OpDelete)
+	return &AgentCommissionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AgentCommissionClient) DeleteOne(_m *AgentCommission) *AgentCommissionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AgentCommissionClient) DeleteOneID(id int64) *AgentCommissionDeleteOne {
+	builder := c.Delete().Where(agentcommission.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AgentCommissionDeleteOne{builder}
+}
+
+// Query returns a query builder for AgentCommission.
+func (c *AgentCommissionClient) Query() *AgentCommissionQuery {
+	return &AgentCommissionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAgentCommission},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AgentCommission entity by its id.
+func (c *AgentCommissionClient) Get(ctx context.Context, id int64) (*AgentCommission, error) {
+	return c.Query().Where(agentcommission.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AgentCommissionClient) GetX(ctx context.Context, id int64) *AgentCommission {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryAgent queries the agent edge of a AgentCommission.
+func (c *AgentCommissionClient) QueryAgent(_m *AgentCommission) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(agentcommission.Table, agentcommission.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, agentcommission.AgentTable, agentcommission.AgentColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUser queries the user edge of a AgentCommission.
+func (c *AgentCommissionClient) QueryUser(_m *AgentCommission) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(agentcommission.Table, agentcommission.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, agentcommission.UserTable, agentcommission.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryOrder queries the order edge of a AgentCommission.
+func (c *AgentCommissionClient) QueryOrder(_m *AgentCommission) *PaymentOrderQuery {
+	query := (&PaymentOrderClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(agentcommission.Table, agentcommission.FieldID, id),
+			sqlgraph.To(paymentorder.Table, paymentorder.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, agentcommission.OrderTable, agentcommission.OrderColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AgentCommissionClient) Hooks() []Hook {
+	return c.hooks.AgentCommission
+}
+
+// Interceptors returns the client interceptors.
+func (c *AgentCommissionClient) Interceptors() []Interceptor {
+	return c.inters.AgentCommission
+}
+
+func (c *AgentCommissionClient) mutate(ctx context.Context, m *AgentCommissionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AgentCommissionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AgentCommissionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AgentCommissionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AgentCommissionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AgentCommission mutation op: %q", m.Op())
 	}
 }
 
@@ -2371,6 +2562,22 @@ func (c *PaymentOrderClient) QueryUser(_m *PaymentOrder) *UserQuery {
 			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, paymentorder.UserTable, paymentorder.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAgentCommissions queries the agent_commissions edge of a PaymentOrder.
+func (c *PaymentOrderClient) QueryAgentCommissions(_m *PaymentOrder) *AgentCommissionQuery {
+	query := (&AgentCommissionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, id),
+			sqlgraph.To(agentcommission.Table, agentcommission.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, paymentorder.AgentCommissionsTable, paymentorder.AgentCommissionsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -4009,6 +4216,38 @@ func (c *UserClient) QueryPaymentOrders(_m *User) *PaymentOrderQuery {
 	return query
 }
 
+// QueryAgentCommissionsAsAgent queries the agent_commissions_as_agent edge of a User.
+func (c *UserClient) QueryAgentCommissionsAsAgent(_m *User) *AgentCommissionQuery {
+	query := (&AgentCommissionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(agentcommission.Table, agentcommission.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AgentCommissionsAsAgentTable, user.AgentCommissionsAsAgentColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAgentCommissionsAsUser queries the agent_commissions_as_user edge of a User.
+func (c *UserClient) QueryAgentCommissionsAsUser(_m *User) *AgentCommissionQuery {
+	query := (&AgentCommissionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(agentcommission.Table, agentcommission.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AgentCommissionsAsUserTable, user.AgentCommissionsAsUserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryUserAllowedGroups queries the user_allowed_groups edge of a User.
 func (c *UserClient) QueryUserAllowedGroups(_m *User) *UserAllowedGroupQuery {
 	query := (&UserAllowedGroupClient{config: c.config}).Query()
@@ -4686,18 +4925,18 @@ func (c *UserSubscriptionClient) mutate(ctx context.Context, m *UserSubscription
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		APIKey, Account, AccountGroup, AdminInviteCode, Group, OrgAuditLog, OrgMember,
-		OrgProject, OrgSubscription, Organization, PaymentOrder, PromoCode,
-		PromoCodeUsage, Proxy, RedeemCode, Referral, Setting, UsageCleanupTask,
-		UsageLog, User, UserAllowedGroup, UserAttributeDefinition, UserAttributeValue,
-		UserSubscription []ent.Hook
+		APIKey, Account, AccountGroup, AdminInviteCode, AgentCommission, Group,
+		OrgAuditLog, OrgMember, OrgProject, OrgSubscription, Organization,
+		PaymentOrder, PromoCode, PromoCodeUsage, Proxy, RedeemCode, Referral, Setting,
+		UsageCleanupTask, UsageLog, User, UserAllowedGroup, UserAttributeDefinition,
+		UserAttributeValue, UserSubscription []ent.Hook
 	}
 	inters struct {
-		APIKey, Account, AccountGroup, AdminInviteCode, Group, OrgAuditLog, OrgMember,
-		OrgProject, OrgSubscription, Organization, PaymentOrder, PromoCode,
-		PromoCodeUsage, Proxy, RedeemCode, Referral, Setting, UsageCleanupTask,
-		UsageLog, User, UserAllowedGroup, UserAttributeDefinition, UserAttributeValue,
-		UserSubscription []ent.Interceptor
+		APIKey, Account, AccountGroup, AdminInviteCode, AgentCommission, Group,
+		OrgAuditLog, OrgMember, OrgProject, OrgSubscription, Organization,
+		PaymentOrder, PromoCode, PromoCodeUsage, Proxy, RedeemCode, Referral, Setting,
+		UsageCleanupTask, UsageLog, User, UserAllowedGroup, UserAttributeDefinition,
+		UserAttributeValue, UserSubscription []ent.Interceptor
 	}
 )
 

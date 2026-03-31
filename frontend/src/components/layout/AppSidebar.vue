@@ -79,11 +79,17 @@
         </div>
       </template>
 
-      <!-- Regular User View -->
+      <!-- Regular User View - Grouped Navigation -->
       <template v-else-if="!isOrgAdmin">
-        <div class="sidebar-section">
+        <div v-for="(group, gIdx) in userNavGroups" :key="gIdx" class="sidebar-section">
+          <template v-if="group.title">
+            <div v-if="!sidebarCollapsed" class="sidebar-section-title">
+              {{ group.title }}
+            </div>
+            <div v-else class="mx-3 my-3 h-px bg-gray-200 dark:bg-dark-700"></div>
+          </template>
           <router-link
-            v-for="item in userNavItems"
+            v-for="item in group.items"
             :key="item.path"
             :to="item.path"
             class="sidebar-link mb-1"
@@ -433,21 +439,6 @@ const CogIcon = {
     )
 }
 
-const CubeIcon = {
-  render: () =>
-    h(
-      'svg',
-      { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' },
-      [
-        h('path', {
-          'stroke-linecap': 'round',
-          'stroke-linejoin': 'round',
-          d: 'm21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9'
-        })
-      ]
-    )
-}
-
 const BookIcon = {
   render: () =>
     h(
@@ -553,26 +544,119 @@ const ChevronDoubleRightIcon = {
     )
 }
 
-// User navigation items (for regular users)
-const userNavItems = computed(() => {
-  const items = [
-    { path: '/dashboard', label: t('nav.dashboard'), icon: DashboardIcon },
-    { path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon },
-    { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
-    { path: '/pricing', label: t('nav.purchase'), icon: ShoppingBagIcon },
-    { path: '/tutorial', label: t('nav.tutorial'), icon: BookIcon },
-    { path: '/model-plaza', label: t('nav.modelPlaza'), icon: CubeIcon },
-    { path: '/subscriptions', label: t('nav.mySubscriptions'), icon: CreditCardIcon, hideInSimpleMode: true },
-    { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
-    ...(appStore.referralEnabled
-      ? [{ path: '/referral', label: t('nav.referral'), icon: ShareIcon, hideInSimpleMode: true }]
-      : []),
-    { path: '/agent', label: t('nav.agent'), icon: UsersIcon, hideInSimpleMode: true },
-    { path: '/changelog', label: t('nav.changelog'), icon: MegaphoneIcon },
-    { path: '/profile', label: t('nav.profile'), icon: UserIcon }
+const ReceiptIcon = {
+  render: () =>
+    h(
+      'svg',
+      { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' },
+      [
+        h('path', {
+          'stroke-linecap': 'round',
+          'stroke-linejoin': 'round',
+          d: 'M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185zM9.75 9h.008v.008H9.75V9zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 4.5h.008v.008h-.008V13.5zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z'
+        })
+      ]
+    )
+}
+
+const DocumentIcon = {
+  render: () =>
+    h(
+      'svg',
+      { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' },
+      [
+        h('path', {
+          'stroke-linecap': 'round',
+          'stroke-linejoin': 'round',
+          d: 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z'
+        })
+      ]
+    )
+}
+
+const ChatBubbleIcon = {
+  render: () =>
+    h(
+      'svg',
+      { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' },
+      [
+        h('path', {
+          'stroke-linecap': 'round',
+          'stroke-linejoin': 'round',
+          d: 'M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z'
+        })
+      ]
+    )
+}
+
+const HomeIcon = {
+  render: () =>
+    h(
+      'svg',
+      { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' },
+      [
+        h('path', {
+          'stroke-linecap': 'round',
+          'stroke-linejoin': 'round',
+          d: 'm2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25'
+        })
+      ]
+    )
+}
+
+// Grouped navigation type
+type NavItem = { path: string; label: string; icon: any; hideInSimpleMode?: boolean }
+type NavGroup = { title: string; items: NavItem[] }
+
+// User navigation items (for regular users) - grouped
+const userNavGroups = computed(() => {
+  const groups: NavGroup[] = [
+    {
+      title: '',
+      items: [
+        { path: '/dashboard', label: t('nav.dashboard'), icon: HomeIcon },
+      ]
+    },
+    {
+      title: t('nav.sectionOverview'),
+      items: [
+        { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
+        { path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon },
+        ...(appStore.referralEnabled
+          ? [{ path: '/referral', label: t('nav.referral'), icon: ShareIcon, hideInSimpleMode: true }]
+          : []),
+      ]
+    },
+    {
+      title: t('nav.sectionBilling'),
+      items: [
+        { path: '/pricing', label: t('nav.purchase'), icon: ShoppingBagIcon },
+        { path: '/order-history', label: t('nav.orderHistory'), icon: ReceiptIcon },
+        { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
+        { path: '/invoice', label: t('nav.invoice'), icon: DocumentIcon },
+      ]
+    },
+    {
+      title: t('nav.sectionHelp'),
+      items: [
+        { path: '/changelog', label: t('nav.changelog'), icon: MegaphoneIcon },
+        { path: '/tutorial', label: t('nav.tutorial'), icon: BookIcon },
+        { path: '/contact', label: t('nav.contact'), icon: ChatBubbleIcon },
+      ]
+    }
   ]
-  return authStore.isSimpleMode ? items.filter(item => !item.hideInSimpleMode) : items
+
+  if (authStore.isSimpleMode) {
+    return groups.map(g => ({
+      ...g,
+      items: g.items.filter(item => !item.hideInSimpleMode)
+    })).filter(g => g.items.length > 0)
+  }
+  return groups
 })
+
+// Flat list for backwards compat (admin personal section etc.)
+// Note: userNavGroups is used for the regular user sidebar template
 
 // Org admin navigation items
 const orgNavItems = computed(() => [
@@ -584,19 +668,19 @@ const orgNavItems = computed(() => [
 
 // Personal navigation items (for admin's "My Account" section, without Dashboard)
 const personalNavItems = computed(() => {
-  const items = [
-    { path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon },
+  const items: NavItem[] = [
     { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
-    { path: '/pricing', label: t('nav.purchase'), icon: ShoppingBagIcon },
-    { path: '/tutorial', label: t('nav.tutorial'), icon: BookIcon },
-    { path: '/model-plaza', label: t('nav.modelPlaza'), icon: CubeIcon },
-    { path: '/subscriptions', label: t('nav.mySubscriptions'), icon: CreditCardIcon, hideInSimpleMode: true },
-    { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
+    { path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon },
     ...(appStore.referralEnabled
       ? [{ path: '/referral', label: t('nav.referral'), icon: ShareIcon, hideInSimpleMode: true }]
       : []),
-    { path: '/agent', label: t('nav.agent'), icon: UsersIcon, hideInSimpleMode: true },
+    { path: '/pricing', label: t('nav.purchase'), icon: ShoppingBagIcon },
+    { path: '/order-history', label: t('nav.orderHistory'), icon: ReceiptIcon },
+    { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
+    { path: '/invoice', label: t('nav.invoice'), icon: DocumentIcon },
     { path: '/changelog', label: t('nav.changelog'), icon: MegaphoneIcon },
+    { path: '/tutorial', label: t('nav.tutorial'), icon: BookIcon },
+    { path: '/contact', label: t('nav.contact'), icon: ChatBubbleIcon },
     { path: '/profile', label: t('nav.profile'), icon: UserIcon }
   ]
   return authStore.isSimpleMode ? items.filter(item => !item.hideInSimpleMode) : items

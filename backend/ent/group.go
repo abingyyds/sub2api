@@ -66,6 +66,12 @@ type Group struct {
 	Listed bool `json:"listed,omitempty"`
 	// 套餐自定义特性列表，上架时展示在购买页面
 	PlanFeatures []string `json:"plan_features,omitempty"`
+	// 自定义标签列表，如「官方 API」「逆向」「推荐」「暂不可用」等
+	Tags []string `json:"tags,omitempty"`
+	// 展示价格文案，如「6 块 / 1 美元」
+	DisplayPrice string `json:"display_price,omitempty"`
+	// 展示折扣文案，如「8.3折」
+	DisplayDiscount string `json:"display_discount,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the GroupQuery when eager-loading is set.
 	Edges        GroupEdges `json:"edges"`
@@ -194,7 +200,7 @@ func (*Group) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case group.FieldModelRouting, group.FieldPlanFeatures:
+		case group.FieldModelRouting, group.FieldPlanFeatures, group.FieldTags:
 			values[i] = new([]byte)
 		case group.FieldIsExclusive, group.FieldClaudeCodeOnly, group.FieldModelRoutingEnabled, group.FieldListed:
 			values[i] = new(sql.NullBool)
@@ -202,7 +208,7 @@ func (*Group) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullFloat64)
 		case group.FieldID, group.FieldDefaultValidityDays, group.FieldFallbackGroupID, group.FieldPriceFen:
 			values[i] = new(sql.NullInt64)
-		case group.FieldName, group.FieldDescription, group.FieldStatus, group.FieldPlatform, group.FieldSubscriptionType:
+		case group.FieldName, group.FieldDescription, group.FieldStatus, group.FieldPlatform, group.FieldSubscriptionType, group.FieldDisplayPrice, group.FieldDisplayDiscount:
 			values[i] = new(sql.NullString)
 		case group.FieldCreatedAt, group.FieldUpdatedAt, group.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -384,6 +390,26 @@ func (_m *Group) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field plan_features: %w", err)
 				}
 			}
+		case group.FieldTags:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field tags", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.Tags); err != nil {
+					return fmt.Errorf("unmarshal field tags: %w", err)
+				}
+			}
+		case group.FieldDisplayPrice:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field display_price", values[i])
+			} else if value.Valid {
+				_m.DisplayPrice = value.String
+			}
+		case group.FieldDisplayDiscount:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field display_discount", values[i])
+			} else if value.Valid {
+				_m.DisplayDiscount = value.String
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -559,6 +585,15 @@ func (_m *Group) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("plan_features=")
 	builder.WriteString(fmt.Sprintf("%v", _m.PlanFeatures))
+	builder.WriteString(", ")
+	builder.WriteString("tags=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Tags))
+	builder.WriteString(", ")
+	builder.WriteString("display_price=")
+	builder.WriteString(_m.DisplayPrice)
+	builder.WriteString(", ")
+	builder.WriteString("display_discount=")
+	builder.WriteString(_m.DisplayDiscount)
 	builder.WriteByte(')')
 	return builder.String()
 }

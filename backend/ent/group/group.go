@@ -63,6 +63,12 @@ const (
 	FieldListed = "listed"
 	// FieldPlanFeatures holds the string denoting the plan_features field in the database.
 	FieldPlanFeatures = "plan_features"
+	// FieldTags holds the string denoting the tags field in the database.
+	FieldTags = "tags"
+	// FieldDisplayPrice holds the string denoting the display_price field in the database.
+	FieldDisplayPrice = "display_price"
+	// FieldDisplayDiscount holds the string denoting the display_discount field in the database.
+	FieldDisplayDiscount = "display_discount"
 	// EdgeAPIKeys holds the string denoting the api_keys edge name in mutations.
 	EdgeAPIKeys = "api_keys"
 	// EdgeRedeemCodes holds the string denoting the redeem_codes edge name in mutations.
@@ -180,6 +186,9 @@ var Columns = []string{
 	FieldPriceFen,
 	FieldListed,
 	FieldPlanFeatures,
+	FieldTags,
+	FieldDisplayPrice,
+	FieldDisplayDiscount,
 }
 
 var (
@@ -243,6 +252,10 @@ var (
 	DefaultPriceFen int
 	// DefaultListed holds the default value on creation for the "listed" field.
 	DefaultListed bool
+	// DefaultDisplayPrice holds the default value on creation for the "display_price" field.
+	DefaultDisplayPrice string
+	// DefaultDisplayDiscount holds the default value on creation for the "display_discount" field.
+	DefaultDisplayDiscount string
 )
 
 // OrderOption defines the ordering options for the Group queries.
@@ -361,6 +374,16 @@ func ByPriceFen(opts ...sql.OrderTermOption) OrderOption {
 // ByListed orders the results by the listed field.
 func ByListed(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldListed, opts...).ToFunc()
+}
+
+// ByDisplayPrice orders the results by the display_price field.
+func ByDisplayPrice(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDisplayPrice, opts...).ToFunc()
+}
+
+// ByDisplayDiscount orders the results by the display_discount field.
+func ByDisplayDiscount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDisplayDiscount, opts...).ToFunc()
 }
 
 // ByAPIKeysCount orders the results by api_keys count.

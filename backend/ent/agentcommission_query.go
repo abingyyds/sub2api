@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -19,54 +18,55 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/user"
 )
 
-// PaymentOrderQuery is the builder for querying PaymentOrder entities.
-type PaymentOrderQuery struct {
+// AgentCommissionQuery is the builder for querying AgentCommission entities.
+type AgentCommissionQuery struct {
 	config
-	ctx                  *QueryContext
-	order                []paymentorder.OrderOption
-	inters               []Interceptor
-	predicates           []predicate.PaymentOrder
-	withUser             *UserQuery
-	withAgentCommissions *AgentCommissionQuery
-	modifiers            []func(*sql.Selector)
+	ctx        *QueryContext
+	order      []agentcommission.OrderOption
+	inters     []Interceptor
+	predicates []predicate.AgentCommission
+	withAgent  *UserQuery
+	withUser   *UserQuery
+	withOrder  *PaymentOrderQuery
+	modifiers  []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the PaymentOrderQuery builder.
-func (_q *PaymentOrderQuery) Where(ps ...predicate.PaymentOrder) *PaymentOrderQuery {
+// Where adds a new predicate for the AgentCommissionQuery builder.
+func (_q *AgentCommissionQuery) Where(ps ...predicate.AgentCommission) *AgentCommissionQuery {
 	_q.predicates = append(_q.predicates, ps...)
 	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (_q *PaymentOrderQuery) Limit(limit int) *PaymentOrderQuery {
+func (_q *AgentCommissionQuery) Limit(limit int) *AgentCommissionQuery {
 	_q.ctx.Limit = &limit
 	return _q
 }
 
 // Offset to start from.
-func (_q *PaymentOrderQuery) Offset(offset int) *PaymentOrderQuery {
+func (_q *AgentCommissionQuery) Offset(offset int) *AgentCommissionQuery {
 	_q.ctx.Offset = &offset
 	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (_q *PaymentOrderQuery) Unique(unique bool) *PaymentOrderQuery {
+func (_q *AgentCommissionQuery) Unique(unique bool) *AgentCommissionQuery {
 	_q.ctx.Unique = &unique
 	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (_q *PaymentOrderQuery) Order(o ...paymentorder.OrderOption) *PaymentOrderQuery {
+func (_q *AgentCommissionQuery) Order(o ...agentcommission.OrderOption) *AgentCommissionQuery {
 	_q.order = append(_q.order, o...)
 	return _q
 }
 
-// QueryUser chains the current query on the "user" edge.
-func (_q *PaymentOrderQuery) QueryUser() *UserQuery {
+// QueryAgent chains the current query on the "agent" edge.
+func (_q *AgentCommissionQuery) QueryAgent() *UserQuery {
 	query := (&UserClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
@@ -77,9 +77,9 @@ func (_q *PaymentOrderQuery) QueryUser() *UserQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, selector),
+			sqlgraph.From(agentcommission.Table, agentcommission.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, paymentorder.UserTable, paymentorder.UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, agentcommission.AgentTable, agentcommission.AgentColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -87,9 +87,9 @@ func (_q *PaymentOrderQuery) QueryUser() *UserQuery {
 	return query
 }
 
-// QueryAgentCommissions chains the current query on the "agent_commissions" edge.
-func (_q *PaymentOrderQuery) QueryAgentCommissions() *AgentCommissionQuery {
-	query := (&AgentCommissionClient{config: _q.config}).Query()
+// QueryUser chains the current query on the "user" edge.
+func (_q *AgentCommissionQuery) QueryUser() *UserQuery {
+	query := (&UserClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -99,9 +99,9 @@ func (_q *PaymentOrderQuery) QueryAgentCommissions() *AgentCommissionQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(paymentorder.Table, paymentorder.FieldID, selector),
-			sqlgraph.To(agentcommission.Table, agentcommission.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, paymentorder.AgentCommissionsTable, paymentorder.AgentCommissionsColumn),
+			sqlgraph.From(agentcommission.Table, agentcommission.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, agentcommission.UserTable, agentcommission.UserColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -109,21 +109,43 @@ func (_q *PaymentOrderQuery) QueryAgentCommissions() *AgentCommissionQuery {
 	return query
 }
 
-// First returns the first PaymentOrder entity from the query.
-// Returns a *NotFoundError when no PaymentOrder was found.
-func (_q *PaymentOrderQuery) First(ctx context.Context) (*PaymentOrder, error) {
+// QueryOrder chains the current query on the "order" edge.
+func (_q *AgentCommissionQuery) QueryOrder() *PaymentOrderQuery {
+	query := (&PaymentOrderClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(agentcommission.Table, agentcommission.FieldID, selector),
+			sqlgraph.To(paymentorder.Table, paymentorder.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, agentcommission.OrderTable, agentcommission.OrderColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// First returns the first AgentCommission entity from the query.
+// Returns a *NotFoundError when no AgentCommission was found.
+func (_q *AgentCommissionQuery) First(ctx context.Context) (*AgentCommission, error) {
 	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{paymentorder.Label}
+		return nil, &NotFoundError{agentcommission.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (_q *PaymentOrderQuery) FirstX(ctx context.Context) *PaymentOrder {
+func (_q *AgentCommissionQuery) FirstX(ctx context.Context) *AgentCommission {
 	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -131,22 +153,22 @@ func (_q *PaymentOrderQuery) FirstX(ctx context.Context) *PaymentOrder {
 	return node
 }
 
-// FirstID returns the first PaymentOrder ID from the query.
-// Returns a *NotFoundError when no PaymentOrder ID was found.
-func (_q *PaymentOrderQuery) FirstID(ctx context.Context) (id int64, err error) {
+// FirstID returns the first AgentCommission ID from the query.
+// Returns a *NotFoundError when no AgentCommission ID was found.
+func (_q *AgentCommissionQuery) FirstID(ctx context.Context) (id int64, err error) {
 	var ids []int64
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{paymentorder.Label}
+		err = &NotFoundError{agentcommission.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *PaymentOrderQuery) FirstIDX(ctx context.Context) int64 {
+func (_q *AgentCommissionQuery) FirstIDX(ctx context.Context) int64 {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -154,10 +176,10 @@ func (_q *PaymentOrderQuery) FirstIDX(ctx context.Context) int64 {
 	return id
 }
 
-// Only returns a single PaymentOrder entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when more than one PaymentOrder entity is found.
-// Returns a *NotFoundError when no PaymentOrder entities are found.
-func (_q *PaymentOrderQuery) Only(ctx context.Context) (*PaymentOrder, error) {
+// Only returns a single AgentCommission entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when more than one AgentCommission entity is found.
+// Returns a *NotFoundError when no AgentCommission entities are found.
+func (_q *AgentCommissionQuery) Only(ctx context.Context) (*AgentCommission, error) {
 	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
@@ -166,14 +188,14 @@ func (_q *PaymentOrderQuery) Only(ctx context.Context) (*PaymentOrder, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{paymentorder.Label}
+		return nil, &NotFoundError{agentcommission.Label}
 	default:
-		return nil, &NotSingularError{paymentorder.Label}
+		return nil, &NotSingularError{agentcommission.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (_q *PaymentOrderQuery) OnlyX(ctx context.Context) *PaymentOrder {
+func (_q *AgentCommissionQuery) OnlyX(ctx context.Context) *AgentCommission {
 	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -181,10 +203,10 @@ func (_q *PaymentOrderQuery) OnlyX(ctx context.Context) *PaymentOrder {
 	return node
 }
 
-// OnlyID is like Only, but returns the only PaymentOrder ID in the query.
-// Returns a *NotSingularError when more than one PaymentOrder ID is found.
+// OnlyID is like Only, but returns the only AgentCommission ID in the query.
+// Returns a *NotSingularError when more than one AgentCommission ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *PaymentOrderQuery) OnlyID(ctx context.Context) (id int64, err error) {
+func (_q *AgentCommissionQuery) OnlyID(ctx context.Context) (id int64, err error) {
 	var ids []int64
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
@@ -193,15 +215,15 @@ func (_q *PaymentOrderQuery) OnlyID(ctx context.Context) (id int64, err error) {
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{paymentorder.Label}
+		err = &NotFoundError{agentcommission.Label}
 	default:
-		err = &NotSingularError{paymentorder.Label}
+		err = &NotSingularError{agentcommission.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *PaymentOrderQuery) OnlyIDX(ctx context.Context) int64 {
+func (_q *AgentCommissionQuery) OnlyIDX(ctx context.Context) int64 {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -209,18 +231,18 @@ func (_q *PaymentOrderQuery) OnlyIDX(ctx context.Context) int64 {
 	return id
 }
 
-// All executes the query and returns a list of PaymentOrders.
-func (_q *PaymentOrderQuery) All(ctx context.Context) ([]*PaymentOrder, error) {
+// All executes the query and returns a list of AgentCommissions.
+func (_q *AgentCommissionQuery) All(ctx context.Context) ([]*AgentCommission, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	qr := querierAll[[]*PaymentOrder, *PaymentOrderQuery]()
-	return withInterceptors[[]*PaymentOrder](ctx, _q, qr, _q.inters)
+	qr := querierAll[[]*AgentCommission, *AgentCommissionQuery]()
+	return withInterceptors[[]*AgentCommission](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (_q *PaymentOrderQuery) AllX(ctx context.Context) []*PaymentOrder {
+func (_q *AgentCommissionQuery) AllX(ctx context.Context) []*AgentCommission {
 	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
@@ -228,20 +250,20 @@ func (_q *PaymentOrderQuery) AllX(ctx context.Context) []*PaymentOrder {
 	return nodes
 }
 
-// IDs executes the query and returns a list of PaymentOrder IDs.
-func (_q *PaymentOrderQuery) IDs(ctx context.Context) (ids []int64, err error) {
+// IDs executes the query and returns a list of AgentCommission IDs.
+func (_q *AgentCommissionQuery) IDs(ctx context.Context) (ids []int64, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
-	if err = _q.Select(paymentorder.FieldID).Scan(ctx, &ids); err != nil {
+	if err = _q.Select(agentcommission.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *PaymentOrderQuery) IDsX(ctx context.Context) []int64 {
+func (_q *AgentCommissionQuery) IDsX(ctx context.Context) []int64 {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -250,16 +272,16 @@ func (_q *PaymentOrderQuery) IDsX(ctx context.Context) []int64 {
 }
 
 // Count returns the count of the given query.
-func (_q *PaymentOrderQuery) Count(ctx context.Context) (int, error) {
+func (_q *AgentCommissionQuery) Count(ctx context.Context) (int, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, _q, querierCount[*PaymentOrderQuery](), _q.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*AgentCommissionQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (_q *PaymentOrderQuery) CountX(ctx context.Context) int {
+func (_q *AgentCommissionQuery) CountX(ctx context.Context) int {
 	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -268,7 +290,7 @@ func (_q *PaymentOrderQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (_q *PaymentOrderQuery) Exist(ctx context.Context) (bool, error) {
+func (_q *AgentCommissionQuery) Exist(ctx context.Context) (bool, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
 	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
@@ -281,7 +303,7 @@ func (_q *PaymentOrderQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (_q *PaymentOrderQuery) ExistX(ctx context.Context) bool {
+func (_q *AgentCommissionQuery) ExistX(ctx context.Context) bool {
 	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -289,29 +311,41 @@ func (_q *PaymentOrderQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the PaymentOrderQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the AgentCommissionQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (_q *PaymentOrderQuery) Clone() *PaymentOrderQuery {
+func (_q *AgentCommissionQuery) Clone() *AgentCommissionQuery {
 	if _q == nil {
 		return nil
 	}
-	return &PaymentOrderQuery{
-		config:               _q.config,
-		ctx:                  _q.ctx.Clone(),
-		order:                append([]paymentorder.OrderOption{}, _q.order...),
-		inters:               append([]Interceptor{}, _q.inters...),
-		predicates:           append([]predicate.PaymentOrder{}, _q.predicates...),
-		withUser:             _q.withUser.Clone(),
-		withAgentCommissions: _q.withAgentCommissions.Clone(),
+	return &AgentCommissionQuery{
+		config:     _q.config,
+		ctx:        _q.ctx.Clone(),
+		order:      append([]agentcommission.OrderOption{}, _q.order...),
+		inters:     append([]Interceptor{}, _q.inters...),
+		predicates: append([]predicate.AgentCommission{}, _q.predicates...),
+		withAgent:  _q.withAgent.Clone(),
+		withUser:   _q.withUser.Clone(),
+		withOrder:  _q.withOrder.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
 }
 
+// WithAgent tells the query-builder to eager-load the nodes that are connected to
+// the "agent" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *AgentCommissionQuery) WithAgent(opts ...func(*UserQuery)) *AgentCommissionQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAgent = query
+	return _q
+}
+
 // WithUser tells the query-builder to eager-load the nodes that are connected to
 // the "user" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *PaymentOrderQuery) WithUser(opts ...func(*UserQuery)) *PaymentOrderQuery {
+func (_q *AgentCommissionQuery) WithUser(opts ...func(*UserQuery)) *AgentCommissionQuery {
 	query := (&UserClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
@@ -320,14 +354,14 @@ func (_q *PaymentOrderQuery) WithUser(opts ...func(*UserQuery)) *PaymentOrderQue
 	return _q
 }
 
-// WithAgentCommissions tells the query-builder to eager-load the nodes that are connected to
-// the "agent_commissions" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *PaymentOrderQuery) WithAgentCommissions(opts ...func(*AgentCommissionQuery)) *PaymentOrderQuery {
-	query := (&AgentCommissionClient{config: _q.config}).Query()
+// WithOrder tells the query-builder to eager-load the nodes that are connected to
+// the "order" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *AgentCommissionQuery) WithOrder(opts ...func(*PaymentOrderQuery)) *AgentCommissionQuery {
+	query := (&PaymentOrderClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withAgentCommissions = query
+	_q.withOrder = query
 	return _q
 }
 
@@ -337,19 +371,19 @@ func (_q *PaymentOrderQuery) WithAgentCommissions(opts ...func(*AgentCommissionQ
 // Example:
 //
 //	var v []struct {
-//		OrderNo string `json:"order_no,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.PaymentOrder.Query().
-//		GroupBy(paymentorder.FieldOrderNo).
+//	client.AgentCommission.Query().
+//		GroupBy(agentcommission.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (_q *PaymentOrderQuery) GroupBy(field string, fields ...string) *PaymentOrderGroupBy {
+func (_q *AgentCommissionQuery) GroupBy(field string, fields ...string) *AgentCommissionGroupBy {
 	_q.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &PaymentOrderGroupBy{build: _q}
+	grbuild := &AgentCommissionGroupBy{build: _q}
 	grbuild.flds = &_q.ctx.Fields
-	grbuild.label = paymentorder.Label
+	grbuild.label = agentcommission.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -360,26 +394,26 @@ func (_q *PaymentOrderQuery) GroupBy(field string, fields ...string) *PaymentOrd
 // Example:
 //
 //	var v []struct {
-//		OrderNo string `json:"order_no,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
-//	client.PaymentOrder.Query().
-//		Select(paymentorder.FieldOrderNo).
+//	client.AgentCommission.Query().
+//		Select(agentcommission.FieldCreatedAt).
 //		Scan(ctx, &v)
-func (_q *PaymentOrderQuery) Select(fields ...string) *PaymentOrderSelect {
+func (_q *AgentCommissionQuery) Select(fields ...string) *AgentCommissionSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
-	sbuild := &PaymentOrderSelect{PaymentOrderQuery: _q}
-	sbuild.label = paymentorder.Label
+	sbuild := &AgentCommissionSelect{AgentCommissionQuery: _q}
+	sbuild.label = agentcommission.Label
 	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
-// Aggregate returns a PaymentOrderSelect configured with the given aggregations.
-func (_q *PaymentOrderQuery) Aggregate(fns ...AggregateFunc) *PaymentOrderSelect {
+// Aggregate returns a AgentCommissionSelect configured with the given aggregations.
+func (_q *AgentCommissionQuery) Aggregate(fns ...AggregateFunc) *AgentCommissionSelect {
 	return _q.Select().Aggregate(fns...)
 }
 
-func (_q *PaymentOrderQuery) prepareQuery(ctx context.Context) error {
+func (_q *AgentCommissionQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
@@ -391,7 +425,7 @@ func (_q *PaymentOrderQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range _q.ctx.Fields {
-		if !paymentorder.ValidColumn(f) {
+		if !agentcommission.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -405,20 +439,21 @@ func (_q *PaymentOrderQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (_q *PaymentOrderQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*PaymentOrder, error) {
+func (_q *AgentCommissionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*AgentCommission, error) {
 	var (
-		nodes       = []*PaymentOrder{}
+		nodes       = []*AgentCommission{}
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
+			_q.withAgent != nil,
 			_q.withUser != nil,
-			_q.withAgentCommissions != nil,
+			_q.withOrder != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
-		return (*PaymentOrder).scanValues(nil, columns)
+		return (*AgentCommission).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &PaymentOrder{config: _q.config}
+		node := &AgentCommission{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -435,27 +470,59 @@ func (_q *PaymentOrderQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withUser; query != nil {
-		if err := _q.loadUser(ctx, query, nodes, nil,
-			func(n *PaymentOrder, e *User) { n.Edges.User = e }); err != nil {
+	if query := _q.withAgent; query != nil {
+		if err := _q.loadAgent(ctx, query, nodes, nil,
+			func(n *AgentCommission, e *User) { n.Edges.Agent = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := _q.withAgentCommissions; query != nil {
-		if err := _q.loadAgentCommissions(ctx, query, nodes,
-			func(n *PaymentOrder) { n.Edges.AgentCommissions = []*AgentCommission{} },
-			func(n *PaymentOrder, e *AgentCommission) {
-				n.Edges.AgentCommissions = append(n.Edges.AgentCommissions, e)
-			}); err != nil {
+	if query := _q.withUser; query != nil {
+		if err := _q.loadUser(ctx, query, nodes, nil,
+			func(n *AgentCommission, e *User) { n.Edges.User = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withOrder; query != nil {
+		if err := _q.loadOrder(ctx, query, nodes, nil,
+			func(n *AgentCommission, e *PaymentOrder) { n.Edges.Order = e }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (_q *PaymentOrderQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*PaymentOrder, init func(*PaymentOrder), assign func(*PaymentOrder, *User)) error {
+func (_q *AgentCommissionQuery) loadAgent(ctx context.Context, query *UserQuery, nodes []*AgentCommission, init func(*AgentCommission), assign func(*AgentCommission, *User)) error {
 	ids := make([]int64, 0, len(nodes))
-	nodeids := make(map[int64][]*PaymentOrder)
+	nodeids := make(map[int64][]*AgentCommission)
+	for i := range nodes {
+		fk := nodes[i].AgentID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(user.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "agent_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (_q *AgentCommissionQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*AgentCommission, init func(*AgentCommission), assign func(*AgentCommission, *User)) error {
+	ids := make([]int64, 0, len(nodes))
+	nodeids := make(map[int64][]*AgentCommission)
 	for i := range nodes {
 		fk := nodes[i].UserID
 		if _, ok := nodeids[fk]; !ok {
@@ -482,41 +549,40 @@ func (_q *PaymentOrderQuery) loadUser(ctx context.Context, query *UserQuery, nod
 	}
 	return nil
 }
-func (_q *PaymentOrderQuery) loadAgentCommissions(ctx context.Context, query *AgentCommissionQuery, nodes []*PaymentOrder, init func(*PaymentOrder), assign func(*PaymentOrder, *AgentCommission)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int64]*PaymentOrder)
+func (_q *AgentCommissionQuery) loadOrder(ctx context.Context, query *PaymentOrderQuery, nodes []*AgentCommission, init func(*AgentCommission), assign func(*AgentCommission, *PaymentOrder)) error {
+	ids := make([]int64, 0, len(nodes))
+	nodeids := make(map[int64][]*AgentCommission)
 	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
+		if nodes[i].OrderID == nil {
+			continue
 		}
+		fk := *nodes[i].OrderID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(agentcommission.FieldOrderID)
+	if len(ids) == 0 {
+		return nil
 	}
-	query.Where(predicate.AgentCommission(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(paymentorder.AgentCommissionsColumn), fks...))
-	}))
+	query.Where(paymentorder.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.OrderID
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "order_id" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "order_id" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "order_id" returned %v`, n.ID)
 		}
-		assign(node, n)
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
 	}
 	return nil
 }
 
-func (_q *PaymentOrderQuery) sqlCount(ctx context.Context) (int, error) {
+func (_q *AgentCommissionQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
 	if len(_q.modifiers) > 0 {
 		_spec.Modifiers = _q.modifiers
@@ -528,8 +594,8 @@ func (_q *PaymentOrderQuery) sqlCount(ctx context.Context) (int, error) {
 	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (_q *PaymentOrderQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(paymentorder.Table, paymentorder.Columns, sqlgraph.NewFieldSpec(paymentorder.FieldID, field.TypeInt64))
+func (_q *AgentCommissionQuery) querySpec() *sqlgraph.QuerySpec {
+	_spec := sqlgraph.NewQuerySpec(agentcommission.Table, agentcommission.Columns, sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -538,14 +604,20 @@ func (_q *PaymentOrderQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, paymentorder.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, agentcommission.FieldID)
 		for i := range fields {
-			if fields[i] != paymentorder.FieldID {
+			if fields[i] != agentcommission.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
+		if _q.withAgent != nil {
+			_spec.Node.AddColumnOnce(agentcommission.FieldAgentID)
+		}
 		if _q.withUser != nil {
-			_spec.Node.AddColumnOnce(paymentorder.FieldUserID)
+			_spec.Node.AddColumnOnce(agentcommission.FieldUserID)
+		}
+		if _q.withOrder != nil {
+			_spec.Node.AddColumnOnce(agentcommission.FieldOrderID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {
@@ -571,12 +643,12 @@ func (_q *PaymentOrderQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (_q *PaymentOrderQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (_q *AgentCommissionQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(_q.driver.Dialect())
-	t1 := builder.Table(paymentorder.Table)
+	t1 := builder.Table(agentcommission.Table)
 	columns := _q.ctx.Fields
 	if len(columns) == 0 {
-		columns = paymentorder.Columns
+		columns = agentcommission.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if _q.sql != nil {
@@ -609,7 +681,7 @@ func (_q *PaymentOrderQuery) sqlQuery(ctx context.Context) *sql.Selector {
 // ForUpdate locks the selected rows against concurrent updates, and prevent them from being
 // updated, deleted or "selected ... for update" by other sessions, until the transaction is
 // either committed or rolled-back.
-func (_q *PaymentOrderQuery) ForUpdate(opts ...sql.LockOption) *PaymentOrderQuery {
+func (_q *AgentCommissionQuery) ForUpdate(opts ...sql.LockOption) *AgentCommissionQuery {
 	if _q.driver.Dialect() == dialect.Postgres {
 		_q.Unique(false)
 	}
@@ -622,7 +694,7 @@ func (_q *PaymentOrderQuery) ForUpdate(opts ...sql.LockOption) *PaymentOrderQuer
 // ForShare behaves similarly to ForUpdate, except that it acquires a shared mode lock
 // on any rows that are read. Other sessions can read the rows, but cannot modify them
 // until your transaction commits.
-func (_q *PaymentOrderQuery) ForShare(opts ...sql.LockOption) *PaymentOrderQuery {
+func (_q *AgentCommissionQuery) ForShare(opts ...sql.LockOption) *AgentCommissionQuery {
 	if _q.driver.Dialect() == dialect.Postgres {
 		_q.Unique(false)
 	}
@@ -632,28 +704,28 @@ func (_q *PaymentOrderQuery) ForShare(opts ...sql.LockOption) *PaymentOrderQuery
 	return _q
 }
 
-// PaymentOrderGroupBy is the group-by builder for PaymentOrder entities.
-type PaymentOrderGroupBy struct {
+// AgentCommissionGroupBy is the group-by builder for AgentCommission entities.
+type AgentCommissionGroupBy struct {
 	selector
-	build *PaymentOrderQuery
+	build *AgentCommissionQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (_g *PaymentOrderGroupBy) Aggregate(fns ...AggregateFunc) *PaymentOrderGroupBy {
+func (_g *AgentCommissionGroupBy) Aggregate(fns ...AggregateFunc) *AgentCommissionGroupBy {
 	_g.fns = append(_g.fns, fns...)
 	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_g *PaymentOrderGroupBy) Scan(ctx context.Context, v any) error {
+func (_g *AgentCommissionGroupBy) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
 	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*PaymentOrderQuery, *PaymentOrderGroupBy](ctx, _g.build, _g, _g.build.inters, v)
+	return scanWithInterceptors[*AgentCommissionQuery, *AgentCommissionGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (_g *PaymentOrderGroupBy) sqlScan(ctx context.Context, root *PaymentOrderQuery, v any) error {
+func (_g *AgentCommissionGroupBy) sqlScan(ctx context.Context, root *AgentCommissionQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
 	aggregation := make([]string, 0, len(_g.fns))
 	for _, fn := range _g.fns {
@@ -680,28 +752,28 @@ func (_g *PaymentOrderGroupBy) sqlScan(ctx context.Context, root *PaymentOrderQu
 	return sql.ScanSlice(rows, v)
 }
 
-// PaymentOrderSelect is the builder for selecting fields of PaymentOrder entities.
-type PaymentOrderSelect struct {
-	*PaymentOrderQuery
+// AgentCommissionSelect is the builder for selecting fields of AgentCommission entities.
+type AgentCommissionSelect struct {
+	*AgentCommissionQuery
 	selector
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (_s *PaymentOrderSelect) Aggregate(fns ...AggregateFunc) *PaymentOrderSelect {
+func (_s *AgentCommissionSelect) Aggregate(fns ...AggregateFunc) *AgentCommissionSelect {
 	_s.fns = append(_s.fns, fns...)
 	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_s *PaymentOrderSelect) Scan(ctx context.Context, v any) error {
+func (_s *AgentCommissionSelect) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
 	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*PaymentOrderQuery, *PaymentOrderSelect](ctx, _s.PaymentOrderQuery, _s, _s.inters, v)
+	return scanWithInterceptors[*AgentCommissionQuery, *AgentCommissionSelect](ctx, _s.AgentCommissionQuery, _s, _s.inters, v)
 }
 
-func (_s *PaymentOrderSelect) sqlScan(ctx context.Context, root *PaymentOrderQuery, v any) error {
+func (_s *AgentCommissionSelect) sqlScan(ctx context.Context, root *AgentCommissionQuery, v any) error {
 	selector := root.sqlQuery(ctx)
 	aggregation := make([]string, 0, len(_s.fns))
 	for _, fn := range _s.fns {

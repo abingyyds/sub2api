@@ -15,6 +15,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/account"
 	"github.com/Wei-Shaw/sub2api/ent/accountgroup"
 	"github.com/Wei-Shaw/sub2api/ent/admininvitecode"
+	"github.com/Wei-Shaw/sub2api/ent/agentcommission"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/organization"
@@ -100,6 +101,7 @@ func checkColumn(t, c string) error {
 			account.Table:                 account.ValidColumn,
 			accountgroup.Table:            accountgroup.ValidColumn,
 			admininvitecode.Table:         admininvitecode.ValidColumn,
+			agentcommission.Table:         agentcommission.ValidColumn,
 			group.Table:                   group.ValidColumn,
 			orgauditlog.Table:             orgauditlog.ValidColumn,
 			orgmember.Table:               orgmember.ValidColumn,

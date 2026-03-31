@@ -436,6 +436,60 @@
           </div>
         </div>
 
+        <!-- 卡片展示设置 -->
+        <div class="border-t pt-4">
+          <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
+            {{ t('admin.groups.cardDisplay.title') }}
+          </label>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ t('admin.groups.cardDisplay.description') }}</p>
+
+          <div class="space-y-3">
+            <!-- 展示价格 -->
+            <div>
+              <label class="input-label">{{ t('admin.groups.cardDisplay.displayPrice') }}</label>
+              <input
+                v-model="createForm.display_price"
+                type="text"
+                class="input"
+                :placeholder="t('admin.groups.cardDisplay.displayPricePlaceholder')"
+              />
+            </div>
+
+            <!-- 展示折扣 -->
+            <div>
+              <label class="input-label">{{ t('admin.groups.cardDisplay.displayDiscount') }}</label>
+              <input
+                v-model="createForm.display_discount"
+                type="text"
+                class="input"
+                :placeholder="t('admin.groups.cardDisplay.displayDiscountPlaceholder')"
+              />
+            </div>
+
+            <!-- 标签列表 -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="input-label mb-0">{{ t('admin.groups.cardDisplay.tags') }}</label>
+                <button type="button" class="text-xs text-primary-600 hover:text-primary-700" @click="createTags.push('')">
+                  + {{ t('admin.groups.cardDisplay.addTag') }}
+                </button>
+              </div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">{{ t('admin.groups.cardDisplay.tagsHint') }}</p>
+              <div v-for="(_, ti) in createTags" :key="ti" class="flex items-center gap-2 mb-1.5">
+                <input
+                  v-model="createTags[ti]"
+                  type="text"
+                  class="input text-sm flex-1"
+                  :placeholder="t('admin.groups.cardDisplay.tagPlaceholder')"
+                />
+                <button type="button" class="text-gray-400 hover:text-red-500" @click="createTags.splice(ti, 1)">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- 图片生成计费配置（antigravity 和 gemini 平台） -->
         <div v-if="createForm.platform === 'antigravity' || createForm.platform === 'gemini'" class="border-t pt-4">
           <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
@@ -957,6 +1011,60 @@
           </div>
         </div>
 
+        <!-- 卡片展示设置 -->
+        <div class="border-t pt-4">
+          <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
+            {{ t('admin.groups.cardDisplay.title') }}
+          </label>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ t('admin.groups.cardDisplay.description') }}</p>
+
+          <div class="space-y-3">
+            <!-- 展示价格 -->
+            <div>
+              <label class="input-label">{{ t('admin.groups.cardDisplay.displayPrice') }}</label>
+              <input
+                v-model="editForm.display_price"
+                type="text"
+                class="input"
+                :placeholder="t('admin.groups.cardDisplay.displayPricePlaceholder')"
+              />
+            </div>
+
+            <!-- 展示折扣 -->
+            <div>
+              <label class="input-label">{{ t('admin.groups.cardDisplay.displayDiscount') }}</label>
+              <input
+                v-model="editForm.display_discount"
+                type="text"
+                class="input"
+                :placeholder="t('admin.groups.cardDisplay.displayDiscountPlaceholder')"
+              />
+            </div>
+
+            <!-- 标签列表 -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="input-label mb-0">{{ t('admin.groups.cardDisplay.tags') }}</label>
+                <button type="button" class="text-xs text-primary-600 hover:text-primary-700" @click="editTags.push('')">
+                  + {{ t('admin.groups.cardDisplay.addTag') }}
+                </button>
+              </div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">{{ t('admin.groups.cardDisplay.tagsHint') }}</p>
+              <div v-for="(_, ti) in editTags" :key="ti" class="flex items-center gap-2 mb-1.5">
+                <input
+                  v-model="editTags[ti]"
+                  type="text"
+                  class="input text-sm flex-1"
+                  :placeholder="t('admin.groups.cardDisplay.tagPlaceholder')"
+                />
+                <button type="button" class="text-gray-400 hover:text-red-500" @click="editTags.splice(ti, 1)">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- 图片生成计费配置（antigravity 和 gemini 平台） -->
         <div v-if="editForm.platform === 'antigravity' || editForm.platform === 'gemini'" class="border-t pt-4">
           <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
@@ -1406,7 +1514,11 @@ const createForm = reactive({
   // 是否上架
   listed: false,
   // 有效期天数
-  default_validity_days: 30
+  default_validity_days: 30,
+  // 分组卡片展示字段
+  tags: [] as string[],
+  display_price: '',
+  display_discount: ''
 })
 
 // 简单账号类型（用于模型路由选择）
@@ -1431,7 +1543,9 @@ const editModelRoutingRules = ref<ModelRoutingRule[]>([])
 const createPlanFeatures = ref<string[]>([])
 const editPlanFeatures = ref<string[]>([])
 
-// 账号搜索相关状态
+// 分组卡片标签列表
+const createTags = ref<string[]>([])
+const editTags = ref<string[]>([])
 const accountSearchKeyword = ref<Record<string, string>>({}) // 每个规则的搜索关键词 (key: "create-0" 或 "edit-0")
 const accountSearchResults = ref<Record<string, SimpleAccount[]>>({}) // 每个规则的搜索结果
 const showAccountDropdown = ref<Record<string, boolean>>({}) // 每个规则的下拉框显示状态
@@ -1587,7 +1701,11 @@ const editForm = reactive({
   // 是否上架
   listed: false,
   // 有效期天数
-  default_validity_days: 30
+  default_validity_days: 30,
+  // 分组卡片展示字段
+  tags: [] as string[],
+  display_price: '',
+  display_discount: ''
 })
 
 // 根据分组类型返回不同的删除确认消息
@@ -1672,8 +1790,12 @@ const closeCreateModal = () => {
   createForm.price_fen = 0
   createForm.listed = false
   createForm.default_validity_days = 30
+  createForm.tags = []
+  createForm.display_price = ''
+  createForm.display_discount = ''
   createModelRoutingRules.value = []
   createPlanFeatures.value = []
+  createTags.value = []
 }
 
 const handleCreateGroup = async () => {
@@ -1687,7 +1809,8 @@ const handleCreateGroup = async () => {
     const requestData = {
       ...createForm,
       model_routing: convertRoutingRulesToApiFormat(createModelRoutingRules.value),
-      plan_features: createPlanFeatures.value.filter(f => f.trim() !== '')
+      plan_features: createPlanFeatures.value.filter(f => f.trim() !== ''),
+      tags: createTags.value.filter(t => t.trim() !== '')
     }
     await adminAPI.groups.create(requestData)
     appStore.showSuccess(t('admin.groups.groupCreated'))
@@ -1727,7 +1850,11 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.price_fen = group.price_fen || 0
   editForm.listed = group.listed || false
   editForm.default_validity_days = group.default_validity_days || 30
+  editForm.tags = group.tags ? [...group.tags] : []
+  editForm.display_price = group.display_price || ''
+  editForm.display_discount = group.display_discount || ''
   editPlanFeatures.value = group.plan_features ? [...group.plan_features] : []
+  editTags.value = group.tags ? [...group.tags] : []
   // 加载模型路由规则（异步加载账号名称）
   editModelRoutingRules.value = await convertApiFormatToRoutingRules(group.model_routing)
   showEditModal.value = true
@@ -1738,6 +1865,7 @@ const closeEditModal = () => {
   editingGroup.value = null
   editModelRoutingRules.value = []
   editPlanFeatures.value = []
+  editTags.value = []
 }
 
 const handleUpdateGroup = async () => {
@@ -1754,7 +1882,8 @@ const handleUpdateGroup = async () => {
       ...editForm,
       fallback_group_id: editForm.fallback_group_id === null ? 0 : editForm.fallback_group_id,
       model_routing: convertRoutingRulesToApiFormat(editModelRoutingRules.value),
-      plan_features: editPlanFeatures.value.filter(f => f.trim() !== '')
+      plan_features: editPlanFeatures.value.filter(f => f.trim() !== ''),
+      tags: editTags.value.filter(t => t.trim() !== '')
     }
     await adminAPI.groups.update(editingGroup.value.id, payload)
     appStore.showSuccess(t('admin.groups.groupUpdated'))

@@ -122,6 +122,10 @@ type CreateGroupInput struct {
 	DefaultValidityDays int
 	// 套餐自定义特性列表
 	PlanFeatures []string
+	// 分组卡片展示字段
+	Tags            []string
+	DisplayPrice    string
+	DisplayDiscount string
 }
 
 type UpdateGroupInput struct {
@@ -152,6 +156,10 @@ type UpdateGroupInput struct {
 	DefaultValidityDays *int
 	// 套餐自定义特性列表
 	PlanFeatures []string
+	// 分组卡片展示字段
+	Tags            []string
+	DisplayPrice    string
+	DisplayDiscount string
 }
 
 type CreateAccountInput struct {
@@ -628,6 +636,9 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 		Listed:           input.Listed,
 		DefaultValidityDays: input.DefaultValidityDays,
 		PlanFeatures:     input.PlanFeatures,
+		Tags:             input.Tags,
+		DisplayPrice:     input.DisplayPrice,
+		DisplayDiscount:  input.DisplayDiscount,
 	}
 	if err := s.groupRepo.Create(ctx, group); err != nil {
 		return nil, err
@@ -781,6 +792,11 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 
 	// 套餐自定义特性列表（始终更新，空数组清除自定义特性）
 	group.PlanFeatures = input.PlanFeatures
+
+	// 分组卡片展示字段（始终更新）
+	group.Tags = input.Tags
+	group.DisplayPrice = input.DisplayPrice
+	group.DisplayDiscount = input.DisplayDiscount
 
 	if err := s.groupRepo.Update(ctx, group); err != nil {
 		return nil, err

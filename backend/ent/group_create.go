@@ -342,6 +342,40 @@ func (_c *GroupCreate) SetPlanFeatures(v []string) *GroupCreate {
 	return _c
 }
 
+// SetTags sets the "tags" field.
+func (_c *GroupCreate) SetTags(v []string) *GroupCreate {
+	_c.mutation.SetTags(v)
+	return _c
+}
+
+// SetDisplayPrice sets the "display_price" field.
+func (_c *GroupCreate) SetDisplayPrice(v string) *GroupCreate {
+	_c.mutation.SetDisplayPrice(v)
+	return _c
+}
+
+// SetNillableDisplayPrice sets the "display_price" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableDisplayPrice(v *string) *GroupCreate {
+	if v != nil {
+		_c.SetDisplayPrice(*v)
+	}
+	return _c
+}
+
+// SetDisplayDiscount sets the "display_discount" field.
+func (_c *GroupCreate) SetDisplayDiscount(v string) *GroupCreate {
+	_c.mutation.SetDisplayDiscount(v)
+	return _c
+}
+
+// SetNillableDisplayDiscount sets the "display_discount" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableDisplayDiscount(v *string) *GroupCreate {
+	if v != nil {
+		_c.SetDisplayDiscount(*v)
+	}
+	return _c
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_c *GroupCreate) AddAPIKeyIDs(ids ...int64) *GroupCreate {
 	_c.mutation.AddAPIKeyIDs(ids...)
@@ -553,6 +587,14 @@ func (_c *GroupCreate) defaults() error {
 		v := group.DefaultListed
 		_c.mutation.SetListed(v)
 	}
+	if _, ok := _c.mutation.DisplayPrice(); !ok {
+		v := group.DefaultDisplayPrice
+		_c.mutation.SetDisplayPrice(v)
+	}
+	if _, ok := _c.mutation.DisplayDiscount(); !ok {
+		v := group.DefaultDisplayDiscount
+		_c.mutation.SetDisplayDiscount(v)
+	}
 	return nil
 }
 
@@ -616,6 +658,12 @@ func (_c *GroupCreate) check() error {
 	}
 	if _, ok := _c.mutation.Listed(); !ok {
 		return &ValidationError{Name: "listed", err: errors.New(`ent: missing required field "Group.listed"`)}
+	}
+	if _, ok := _c.mutation.DisplayPrice(); !ok {
+		return &ValidationError{Name: "display_price", err: errors.New(`ent: missing required field "Group.display_price"`)}
+	}
+	if _, ok := _c.mutation.DisplayDiscount(); !ok {
+		return &ValidationError{Name: "display_discount", err: errors.New(`ent: missing required field "Group.display_discount"`)}
 	}
 	return nil
 }
@@ -739,6 +787,18 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.PlanFeatures(); ok {
 		_spec.SetField(group.FieldPlanFeatures, field.TypeJSON, value)
 		_node.PlanFeatures = value
+	}
+	if value, ok := _c.mutation.Tags(); ok {
+		_spec.SetField(group.FieldTags, field.TypeJSON, value)
+		_node.Tags = value
+	}
+	if value, ok := _c.mutation.DisplayPrice(); ok {
+		_spec.SetField(group.FieldDisplayPrice, field.TypeString, value)
+		_node.DisplayPrice = value
+	}
+	if value, ok := _c.mutation.DisplayDiscount(); ok {
+		_spec.SetField(group.FieldDisplayDiscount, field.TypeString, value)
+		_node.DisplayDiscount = value
 	}
 	if nodes := _c.mutation.APIKeysIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -1330,6 +1390,48 @@ func (u *GroupUpsert) ClearPlanFeatures() *GroupUpsert {
 	return u
 }
 
+// SetTags sets the "tags" field.
+func (u *GroupUpsert) SetTags(v []string) *GroupUpsert {
+	u.Set(group.FieldTags, v)
+	return u
+}
+
+// UpdateTags sets the "tags" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateTags() *GroupUpsert {
+	u.SetExcluded(group.FieldTags)
+	return u
+}
+
+// ClearTags clears the value of the "tags" field.
+func (u *GroupUpsert) ClearTags() *GroupUpsert {
+	u.SetNull(group.FieldTags)
+	return u
+}
+
+// SetDisplayPrice sets the "display_price" field.
+func (u *GroupUpsert) SetDisplayPrice(v string) *GroupUpsert {
+	u.Set(group.FieldDisplayPrice, v)
+	return u
+}
+
+// UpdateDisplayPrice sets the "display_price" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateDisplayPrice() *GroupUpsert {
+	u.SetExcluded(group.FieldDisplayPrice)
+	return u
+}
+
+// SetDisplayDiscount sets the "display_discount" field.
+func (u *GroupUpsert) SetDisplayDiscount(v string) *GroupUpsert {
+	u.Set(group.FieldDisplayDiscount, v)
+	return u
+}
+
+// UpdateDisplayDiscount sets the "display_discount" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateDisplayDiscount() *GroupUpsert {
+	u.SetExcluded(group.FieldDisplayDiscount)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -1841,6 +1943,55 @@ func (u *GroupUpsertOne) UpdatePlanFeatures() *GroupUpsertOne {
 func (u *GroupUpsertOne) ClearPlanFeatures() *GroupUpsertOne {
 	return u.Update(func(s *GroupUpsert) {
 		s.ClearPlanFeatures()
+	})
+}
+
+// SetTags sets the "tags" field.
+func (u *GroupUpsertOne) SetTags(v []string) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetTags(v)
+	})
+}
+
+// UpdateTags sets the "tags" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateTags() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateTags()
+	})
+}
+
+// ClearTags clears the value of the "tags" field.
+func (u *GroupUpsertOne) ClearTags() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.ClearTags()
+	})
+}
+
+// SetDisplayPrice sets the "display_price" field.
+func (u *GroupUpsertOne) SetDisplayPrice(v string) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetDisplayPrice(v)
+	})
+}
+
+// UpdateDisplayPrice sets the "display_price" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateDisplayPrice() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateDisplayPrice()
+	})
+}
+
+// SetDisplayDiscount sets the "display_discount" field.
+func (u *GroupUpsertOne) SetDisplayDiscount(v string) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetDisplayDiscount(v)
+	})
+}
+
+// UpdateDisplayDiscount sets the "display_discount" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateDisplayDiscount() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateDisplayDiscount()
 	})
 }
 
@@ -2521,6 +2672,55 @@ func (u *GroupUpsertBulk) UpdatePlanFeatures() *GroupUpsertBulk {
 func (u *GroupUpsertBulk) ClearPlanFeatures() *GroupUpsertBulk {
 	return u.Update(func(s *GroupUpsert) {
 		s.ClearPlanFeatures()
+	})
+}
+
+// SetTags sets the "tags" field.
+func (u *GroupUpsertBulk) SetTags(v []string) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetTags(v)
+	})
+}
+
+// UpdateTags sets the "tags" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateTags() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateTags()
+	})
+}
+
+// ClearTags clears the value of the "tags" field.
+func (u *GroupUpsertBulk) ClearTags() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.ClearTags()
+	})
+}
+
+// SetDisplayPrice sets the "display_price" field.
+func (u *GroupUpsertBulk) SetDisplayPrice(v string) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetDisplayPrice(v)
+	})
+}
+
+// UpdateDisplayPrice sets the "display_price" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateDisplayPrice() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateDisplayPrice()
+	})
+}
+
+// SetDisplayDiscount sets the "display_discount" field.
+func (u *GroupUpsertBulk) SetDisplayDiscount(v string) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetDisplayDiscount(v)
+	})
+}
+
+// UpdateDisplayDiscount sets the "display_discount" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateDisplayDiscount() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateDisplayDiscount()
 	})
 }
 

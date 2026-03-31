@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/Wei-Shaw/sub2api/ent/admininvitecode"
+	"github.com/Wei-Shaw/sub2api/ent/agentcommission"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/organization"
@@ -270,6 +271,76 @@ func (_c *UserCreate) SetNillableInitialBalanceExpiresAt(v *time.Time) *UserCrea
 	return _c
 }
 
+// SetIsAgent sets the "is_agent" field.
+func (_c *UserCreate) SetIsAgent(v bool) *UserCreate {
+	_c.mutation.SetIsAgent(v)
+	return _c
+}
+
+// SetNillableIsAgent sets the "is_agent" field if the given value is not nil.
+func (_c *UserCreate) SetNillableIsAgent(v *bool) *UserCreate {
+	if v != nil {
+		_c.SetIsAgent(*v)
+	}
+	return _c
+}
+
+// SetAgentStatus sets the "agent_status" field.
+func (_c *UserCreate) SetAgentStatus(v string) *UserCreate {
+	_c.mutation.SetAgentStatus(v)
+	return _c
+}
+
+// SetNillableAgentStatus sets the "agent_status" field if the given value is not nil.
+func (_c *UserCreate) SetNillableAgentStatus(v *string) *UserCreate {
+	if v != nil {
+		_c.SetAgentStatus(*v)
+	}
+	return _c
+}
+
+// SetAgentCommissionRate sets the "agent_commission_rate" field.
+func (_c *UserCreate) SetAgentCommissionRate(v float64) *UserCreate {
+	_c.mutation.SetAgentCommissionRate(v)
+	return _c
+}
+
+// SetNillableAgentCommissionRate sets the "agent_commission_rate" field if the given value is not nil.
+func (_c *UserCreate) SetNillableAgentCommissionRate(v *float64) *UserCreate {
+	if v != nil {
+		_c.SetAgentCommissionRate(*v)
+	}
+	return _c
+}
+
+// SetAgentNote sets the "agent_note" field.
+func (_c *UserCreate) SetAgentNote(v string) *UserCreate {
+	_c.mutation.SetAgentNote(v)
+	return _c
+}
+
+// SetNillableAgentNote sets the "agent_note" field if the given value is not nil.
+func (_c *UserCreate) SetNillableAgentNote(v *string) *UserCreate {
+	if v != nil {
+		_c.SetAgentNote(*v)
+	}
+	return _c
+}
+
+// SetAgentApprovedAt sets the "agent_approved_at" field.
+func (_c *UserCreate) SetAgentApprovedAt(v time.Time) *UserCreate {
+	_c.mutation.SetAgentApprovedAt(v)
+	return _c
+}
+
+// SetNillableAgentApprovedAt sets the "agent_approved_at" field if the given value is not nil.
+func (_c *UserCreate) SetNillableAgentApprovedAt(v *time.Time) *UserCreate {
+	if v != nil {
+		_c.SetAgentApprovedAt(*v)
+	}
+	return _c
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_c *UserCreate) AddAPIKeyIDs(ids ...int64) *UserCreate {
 	_c.mutation.AddAPIKeyIDs(ids...)
@@ -480,6 +551,36 @@ func (_c *UserCreate) AddPaymentOrders(v ...*PaymentOrder) *UserCreate {
 	return _c.AddPaymentOrderIDs(ids...)
 }
 
+// AddAgentCommissionsAsAgentIDs adds the "agent_commissions_as_agent" edge to the AgentCommission entity by IDs.
+func (_c *UserCreate) AddAgentCommissionsAsAgentIDs(ids ...int64) *UserCreate {
+	_c.mutation.AddAgentCommissionsAsAgentIDs(ids...)
+	return _c
+}
+
+// AddAgentCommissionsAsAgent adds the "agent_commissions_as_agent" edges to the AgentCommission entity.
+func (_c *UserCreate) AddAgentCommissionsAsAgent(v ...*AgentCommission) *UserCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAgentCommissionsAsAgentIDs(ids...)
+}
+
+// AddAgentCommissionsAsUserIDs adds the "agent_commissions_as_user" edge to the AgentCommission entity by IDs.
+func (_c *UserCreate) AddAgentCommissionsAsUserIDs(ids ...int64) *UserCreate {
+	_c.mutation.AddAgentCommissionsAsUserIDs(ids...)
+	return _c
+}
+
+// AddAgentCommissionsAsUser adds the "agent_commissions_as_user" edges to the AgentCommission entity.
+func (_c *UserCreate) AddAgentCommissionsAsUser(v ...*AgentCommission) *UserCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAgentCommissionsAsUserIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_c *UserCreate) Mutation() *UserMutation {
 	return _c.mutation
@@ -563,6 +664,22 @@ func (_c *UserCreate) defaults() error {
 		v := user.DefaultInitialBalance
 		_c.mutation.SetInitialBalance(v)
 	}
+	if _, ok := _c.mutation.IsAgent(); !ok {
+		v := user.DefaultIsAgent
+		_c.mutation.SetIsAgent(v)
+	}
+	if _, ok := _c.mutation.AgentStatus(); !ok {
+		v := user.DefaultAgentStatus
+		_c.mutation.SetAgentStatus(v)
+	}
+	if _, ok := _c.mutation.AgentCommissionRate(); !ok {
+		v := user.DefaultAgentCommissionRate
+		_c.mutation.SetAgentCommissionRate(v)
+	}
+	if _, ok := _c.mutation.AgentNote(); !ok {
+		v := user.DefaultAgentNote
+		_c.mutation.SetAgentNote(v)
+	}
 	return nil
 }
 
@@ -638,6 +755,23 @@ func (_c *UserCreate) check() error {
 	}
 	if _, ok := _c.mutation.InitialBalance(); !ok {
 		return &ValidationError{Name: "initial_balance", err: errors.New(`ent: missing required field "User.initial_balance"`)}
+	}
+	if _, ok := _c.mutation.IsAgent(); !ok {
+		return &ValidationError{Name: "is_agent", err: errors.New(`ent: missing required field "User.is_agent"`)}
+	}
+	if _, ok := _c.mutation.AgentStatus(); !ok {
+		return &ValidationError{Name: "agent_status", err: errors.New(`ent: missing required field "User.agent_status"`)}
+	}
+	if v, ok := _c.mutation.AgentStatus(); ok {
+		if err := user.AgentStatusValidator(v); err != nil {
+			return &ValidationError{Name: "agent_status", err: fmt.Errorf(`ent: validator failed for field "User.agent_status": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.AgentCommissionRate(); !ok {
+		return &ValidationError{Name: "agent_commission_rate", err: errors.New(`ent: missing required field "User.agent_commission_rate"`)}
+	}
+	if _, ok := _c.mutation.AgentNote(); !ok {
+		return &ValidationError{Name: "agent_note", err: errors.New(`ent: missing required field "User.agent_note"`)}
 	}
 	return nil
 }
@@ -737,6 +871,26 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.InitialBalanceExpiresAt(); ok {
 		_spec.SetField(user.FieldInitialBalanceExpiresAt, field.TypeTime, value)
 		_node.InitialBalanceExpiresAt = &value
+	}
+	if value, ok := _c.mutation.IsAgent(); ok {
+		_spec.SetField(user.FieldIsAgent, field.TypeBool, value)
+		_node.IsAgent = value
+	}
+	if value, ok := _c.mutation.AgentStatus(); ok {
+		_spec.SetField(user.FieldAgentStatus, field.TypeString, value)
+		_node.AgentStatus = value
+	}
+	if value, ok := _c.mutation.AgentCommissionRate(); ok {
+		_spec.SetField(user.FieldAgentCommissionRate, field.TypeFloat64, value)
+		_node.AgentCommissionRate = value
+	}
+	if value, ok := _c.mutation.AgentNote(); ok {
+		_spec.SetField(user.FieldAgentNote, field.TypeString, value)
+		_node.AgentNote = value
+	}
+	if value, ok := _c.mutation.AgentApprovedAt(); ok {
+		_spec.SetField(user.FieldAgentApprovedAt, field.TypeTime, value)
+		_node.AgentApprovedAt = &value
 	}
 	if nodes := _c.mutation.APIKeysIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -959,6 +1113,38 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(paymentorder.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AgentCommissionsAsAgentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AgentCommissionsAsAgentTable,
+			Columns: []string{user.AgentCommissionsAsAgentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AgentCommissionsAsUserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AgentCommissionsAsUserTable,
+			Columns: []string{user.AgentCommissionsAsUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -1273,6 +1459,78 @@ func (u *UserUpsert) UpdateInitialBalanceExpiresAt() *UserUpsert {
 // ClearInitialBalanceExpiresAt clears the value of the "initial_balance_expires_at" field.
 func (u *UserUpsert) ClearInitialBalanceExpiresAt() *UserUpsert {
 	u.SetNull(user.FieldInitialBalanceExpiresAt)
+	return u
+}
+
+// SetIsAgent sets the "is_agent" field.
+func (u *UserUpsert) SetIsAgent(v bool) *UserUpsert {
+	u.Set(user.FieldIsAgent, v)
+	return u
+}
+
+// UpdateIsAgent sets the "is_agent" field to the value that was provided on create.
+func (u *UserUpsert) UpdateIsAgent() *UserUpsert {
+	u.SetExcluded(user.FieldIsAgent)
+	return u
+}
+
+// SetAgentStatus sets the "agent_status" field.
+func (u *UserUpsert) SetAgentStatus(v string) *UserUpsert {
+	u.Set(user.FieldAgentStatus, v)
+	return u
+}
+
+// UpdateAgentStatus sets the "agent_status" field to the value that was provided on create.
+func (u *UserUpsert) UpdateAgentStatus() *UserUpsert {
+	u.SetExcluded(user.FieldAgentStatus)
+	return u
+}
+
+// SetAgentCommissionRate sets the "agent_commission_rate" field.
+func (u *UserUpsert) SetAgentCommissionRate(v float64) *UserUpsert {
+	u.Set(user.FieldAgentCommissionRate, v)
+	return u
+}
+
+// UpdateAgentCommissionRate sets the "agent_commission_rate" field to the value that was provided on create.
+func (u *UserUpsert) UpdateAgentCommissionRate() *UserUpsert {
+	u.SetExcluded(user.FieldAgentCommissionRate)
+	return u
+}
+
+// AddAgentCommissionRate adds v to the "agent_commission_rate" field.
+func (u *UserUpsert) AddAgentCommissionRate(v float64) *UserUpsert {
+	u.Add(user.FieldAgentCommissionRate, v)
+	return u
+}
+
+// SetAgentNote sets the "agent_note" field.
+func (u *UserUpsert) SetAgentNote(v string) *UserUpsert {
+	u.Set(user.FieldAgentNote, v)
+	return u
+}
+
+// UpdateAgentNote sets the "agent_note" field to the value that was provided on create.
+func (u *UserUpsert) UpdateAgentNote() *UserUpsert {
+	u.SetExcluded(user.FieldAgentNote)
+	return u
+}
+
+// SetAgentApprovedAt sets the "agent_approved_at" field.
+func (u *UserUpsert) SetAgentApprovedAt(v time.Time) *UserUpsert {
+	u.Set(user.FieldAgentApprovedAt, v)
+	return u
+}
+
+// UpdateAgentApprovedAt sets the "agent_approved_at" field to the value that was provided on create.
+func (u *UserUpsert) UpdateAgentApprovedAt() *UserUpsert {
+	u.SetExcluded(user.FieldAgentApprovedAt)
+	return u
+}
+
+// ClearAgentApprovedAt clears the value of the "agent_approved_at" field.
+func (u *UserUpsert) ClearAgentApprovedAt() *UserUpsert {
+	u.SetNull(user.FieldAgentApprovedAt)
 	return u
 }
 
@@ -1619,6 +1877,90 @@ func (u *UserUpsertOne) UpdateInitialBalanceExpiresAt() *UserUpsertOne {
 func (u *UserUpsertOne) ClearInitialBalanceExpiresAt() *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
 		s.ClearInitialBalanceExpiresAt()
+	})
+}
+
+// SetIsAgent sets the "is_agent" field.
+func (u *UserUpsertOne) SetIsAgent(v bool) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetIsAgent(v)
+	})
+}
+
+// UpdateIsAgent sets the "is_agent" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateIsAgent() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateIsAgent()
+	})
+}
+
+// SetAgentStatus sets the "agent_status" field.
+func (u *UserUpsertOne) SetAgentStatus(v string) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetAgentStatus(v)
+	})
+}
+
+// UpdateAgentStatus sets the "agent_status" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateAgentStatus() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateAgentStatus()
+	})
+}
+
+// SetAgentCommissionRate sets the "agent_commission_rate" field.
+func (u *UserUpsertOne) SetAgentCommissionRate(v float64) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetAgentCommissionRate(v)
+	})
+}
+
+// AddAgentCommissionRate adds v to the "agent_commission_rate" field.
+func (u *UserUpsertOne) AddAgentCommissionRate(v float64) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.AddAgentCommissionRate(v)
+	})
+}
+
+// UpdateAgentCommissionRate sets the "agent_commission_rate" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateAgentCommissionRate() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateAgentCommissionRate()
+	})
+}
+
+// SetAgentNote sets the "agent_note" field.
+func (u *UserUpsertOne) SetAgentNote(v string) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetAgentNote(v)
+	})
+}
+
+// UpdateAgentNote sets the "agent_note" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateAgentNote() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateAgentNote()
+	})
+}
+
+// SetAgentApprovedAt sets the "agent_approved_at" field.
+func (u *UserUpsertOne) SetAgentApprovedAt(v time.Time) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetAgentApprovedAt(v)
+	})
+}
+
+// UpdateAgentApprovedAt sets the "agent_approved_at" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateAgentApprovedAt() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateAgentApprovedAt()
+	})
+}
+
+// ClearAgentApprovedAt clears the value of the "agent_approved_at" field.
+func (u *UserUpsertOne) ClearAgentApprovedAt() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearAgentApprovedAt()
 	})
 }
 
@@ -2131,6 +2473,90 @@ func (u *UserUpsertBulk) UpdateInitialBalanceExpiresAt() *UserUpsertBulk {
 func (u *UserUpsertBulk) ClearInitialBalanceExpiresAt() *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
 		s.ClearInitialBalanceExpiresAt()
+	})
+}
+
+// SetIsAgent sets the "is_agent" field.
+func (u *UserUpsertBulk) SetIsAgent(v bool) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetIsAgent(v)
+	})
+}
+
+// UpdateIsAgent sets the "is_agent" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateIsAgent() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateIsAgent()
+	})
+}
+
+// SetAgentStatus sets the "agent_status" field.
+func (u *UserUpsertBulk) SetAgentStatus(v string) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetAgentStatus(v)
+	})
+}
+
+// UpdateAgentStatus sets the "agent_status" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateAgentStatus() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateAgentStatus()
+	})
+}
+
+// SetAgentCommissionRate sets the "agent_commission_rate" field.
+func (u *UserUpsertBulk) SetAgentCommissionRate(v float64) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetAgentCommissionRate(v)
+	})
+}
+
+// AddAgentCommissionRate adds v to the "agent_commission_rate" field.
+func (u *UserUpsertBulk) AddAgentCommissionRate(v float64) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.AddAgentCommissionRate(v)
+	})
+}
+
+// UpdateAgentCommissionRate sets the "agent_commission_rate" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateAgentCommissionRate() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateAgentCommissionRate()
+	})
+}
+
+// SetAgentNote sets the "agent_note" field.
+func (u *UserUpsertBulk) SetAgentNote(v string) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetAgentNote(v)
+	})
+}
+
+// UpdateAgentNote sets the "agent_note" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateAgentNote() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateAgentNote()
+	})
+}
+
+// SetAgentApprovedAt sets the "agent_approved_at" field.
+func (u *UserUpsertBulk) SetAgentApprovedAt(v time.Time) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetAgentApprovedAt(v)
+	})
+}
+
+// UpdateAgentApprovedAt sets the "agent_approved_at" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateAgentApprovedAt() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateAgentApprovedAt()
+	})
+}
+
+// ClearAgentApprovedAt clears the value of the "agent_approved_at" field.
+func (u *UserUpsertBulk) ClearAgentApprovedAt() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearAgentApprovedAt()
 	})
 }
 

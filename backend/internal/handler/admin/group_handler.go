@@ -51,6 +51,10 @@ type CreateGroupRequest struct {
 	DefaultValidityDays int `json:"default_validity_days"`
 	// 套餐自定义特性列表
 	PlanFeatures []string `json:"plan_features"`
+	// 分组卡片展示字段
+	Tags            []string `json:"tags"`
+	DisplayPrice    string   `json:"display_price"`
+	DisplayDiscount string   `json:"display_discount"`
 }
 
 // UpdateGroupRequest represents update group request
@@ -82,6 +86,10 @@ type UpdateGroupRequest struct {
 	DefaultValidityDays *int `json:"default_validity_days"`
 	// 套餐自定义特性列表
 	PlanFeatures []string `json:"plan_features"`
+	// 分组卡片展示字段
+	Tags            []string `json:"tags"`
+	DisplayPrice    string   `json:"display_price"`
+	DisplayDiscount string   `json:"display_discount"`
 }
 
 // List handles listing all groups with pagination
@@ -191,6 +199,9 @@ func (h *GroupHandler) Create(c *gin.Context) {
 		Listed:              req.Listed,
 		DefaultValidityDays: req.DefaultValidityDays,
 		PlanFeatures:        req.PlanFeatures,
+		Tags:                req.Tags,
+		DisplayPrice:        req.DisplayPrice,
+		DisplayDiscount:     req.DisplayDiscount,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)
@@ -237,6 +248,9 @@ func (h *GroupHandler) Update(c *gin.Context) {
 		Listed:              req.Listed,
 		DefaultValidityDays: req.DefaultValidityDays,
 		PlanFeatures:        req.PlanFeatures,
+		Tags:                req.Tags,
+		DisplayPrice:        req.DisplayPrice,
+		DisplayDiscount:     req.DisplayDiscount,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)

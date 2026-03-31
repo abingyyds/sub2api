@@ -314,6 +314,39 @@ const routes: RouteRecordRaw[] = [
       descriptionKey: 'changelog.description'
     }
   },
+  {
+    path: '/order-history',
+    name: 'OrderHistory',
+    component: () => import('@/views/user/OrderHistoryView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Order History',
+      titleKey: 'nav.orderHistory'
+    }
+  },
+  {
+    path: '/invoice',
+    name: 'Invoice',
+    component: () => import('@/views/user/InvoiceView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Invoice',
+      titleKey: 'nav.invoice'
+    }
+  },
+  {
+    path: '/contact',
+    name: 'Contact',
+    component: () => import('@/views/user/ContactView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Contact Us',
+      titleKey: 'nav.contact'
+    }
+  },
 
   // ==================== Admin Routes ====================
   {

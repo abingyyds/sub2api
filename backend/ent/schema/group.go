@@ -122,6 +122,20 @@ func (Group) Fields() []ent.Field {
 			Optional().
 			SchemaType(map[string]string{dialect.Postgres: "jsonb"}).
 			Comment("套餐自定义特性列表，上架时展示在购买页面"),
+
+		// 分组卡片展示字段 (added by migration 073)
+		field.JSON("tags", []string{}).
+			Optional().
+			SchemaType(map[string]string{dialect.Postgres: "jsonb"}).
+			Comment("自定义标签列表，如「官方 API」「逆向」「推荐」「暂不可用」等"),
+		field.String("display_price").
+			Default("").
+			SchemaType(map[string]string{dialect.Postgres: "text"}).
+			Comment("展示价格文案，如「6 块 / 1 美元」"),
+		field.String("display_discount").
+			Default("").
+			SchemaType(map[string]string{dialect.Postgres: "text"}).
+			Comment("展示折扣文案，如「8.3折」"),
 	}
 }
 

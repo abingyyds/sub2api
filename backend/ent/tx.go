@@ -22,6 +22,8 @@ type Tx struct {
 	AccountGroup *AccountGroupClient
 	// AdminInviteCode is the client for interacting with the AdminInviteCode builders.
 	AdminInviteCode *AdminInviteCodeClient
+	// AgentCommission is the client for interacting with the AgentCommission builders.
+	AgentCommission *AgentCommissionClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
 	// OrgAuditLog is the client for interacting with the OrgAuditLog builders.
@@ -197,6 +199,7 @@ func (tx *Tx) init() {
 	tx.Account = NewAccountClient(tx.config)
 	tx.AccountGroup = NewAccountGroupClient(tx.config)
 	tx.AdminInviteCode = NewAdminInviteCodeClient(tx.config)
+	tx.AgentCommission = NewAgentCommissionClient(tx.config)
 	tx.Group = NewGroupClient(tx.config)
 	tx.OrgAuditLog = NewOrgAuditLogClient(tx.config)
 	tx.OrgMember = NewOrgMemberClient(tx.config)

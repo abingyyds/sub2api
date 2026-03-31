@@ -286,6 +286,10 @@ export interface Group {
   default_validity_days: number
   // 套餐自定义特性列表
   plan_features: string[]
+  // 分组卡片展示字段
+  tags: string[]
+  display_price: string
+  display_discount: string
   created_at: string
   updated_at: string
 }

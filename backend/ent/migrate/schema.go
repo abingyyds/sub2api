@@ -272,6 +272,74 @@ var (
 			},
 		},
 	}
+	// AgentCommissionsColumns holds the columns for the "agent_commissions" table.
+	AgentCommissionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "source_type", Type: field.TypeString, Size: 20},
+		{Name: "source_amount", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "commission_rate", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(5,4)"}},
+		{Name: "commission_amount", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "status", Type: field.TypeString, Size: 20, Default: "pending"},
+		{Name: "settled_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "order_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "agent_id", Type: field.TypeInt64},
+		{Name: "user_id", Type: field.TypeInt64},
+	}
+	// AgentCommissionsTable holds the schema information for the "agent_commissions" table.
+	AgentCommissionsTable = &schema.Table{
+		Name:       "agent_commissions",
+		Columns:    AgentCommissionsColumns,
+		PrimaryKey: []*schema.Column{AgentCommissionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "agent_commissions_payment_orders_agent_commissions",
+				Columns:    []*schema.Column{AgentCommissionsColumns[9]},
+				RefColumns: []*schema.Column{PaymentOrdersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "agent_commissions_users_agent_commissions_as_agent",
+				Columns:    []*schema.Column{AgentCommissionsColumns[10]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "agent_commissions_users_agent_commissions_as_user",
+				Columns:    []*schema.Column{AgentCommissionsColumns[11]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "agentcommission_agent_id",
+				Unique:  false,
+				Columns: []*schema.Column{AgentCommissionsColumns[10]},
+			},
+			{
+				Name:    "agentcommission_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{AgentCommissionsColumns[11]},
+			},
+			{
+				Name:    "agentcommission_order_id",
+				Unique:  false,
+				Columns: []*schema.Column{AgentCommissionsColumns[9]},
+			},
+			{
+				Name:    "agentcommission_status",
+				Unique:  false,
+				Columns: []*schema.Column{AgentCommissionsColumns[7]},
+			},
+			{
+				Name:    "agentcommission_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AgentCommissionsColumns[1]},
+			},
+		},
+	}
 	// GroupsColumns holds the columns for the "groups" table.
 	GroupsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -299,6 +367,9 @@ var (
 		{Name: "price_fen", Type: field.TypeInt, Default: 0},
 		{Name: "listed", Type: field.TypeBool, Default: false},
 		{Name: "plan_features", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "tags", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "display_price", Type: field.TypeString, Default: "", SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "display_discount", Type: field.TypeString, Default: "", SchemaType: map[string]string{"postgres": "text"}},
 	}
 	// GroupsTable holds the schema information for the "groups" table.
 	GroupsTable = &schema.Table{
@@ -1103,6 +1174,11 @@ var (
 		{Name: "discovery_source", Type: field.TypeString, Nullable: true, Size: 50},
 		{Name: "initial_balance", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
 		{Name: "initial_balance_expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "is_agent", Type: field.TypeBool, Default: false},
+		{Name: "agent_status", Type: field.TypeString, Size: 20, Default: ""},
+		{Name: "agent_commission_rate", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(5,4)"}},
+		{Name: "agent_note", Type: field.TypeString, Default: "", SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "agent_approved_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -1331,6 +1407,7 @@ var (
 		AccountsTable,
 		AccountGroupsTable,
 		AdminInviteCodesTable,
+		AgentCommissionsTable,
 		GroupsTable,
 		OrgAuditLogsTable,
 		OrgMembersTable,
@@ -1372,6 +1449,12 @@ func init() {
 		Table: "account_groups",
 	}
 	AdminInviteCodesTable.ForeignKeys[0].RefTable = UsersTable
+	AgentCommissionsTable.ForeignKeys[0].RefTable = PaymentOrdersTable
+	AgentCommissionsTable.ForeignKeys[1].RefTable = UsersTable
+	AgentCommissionsTable.ForeignKeys[2].RefTable = UsersTable
+	AgentCommissionsTable.Annotation = &entsql.Annotation{
+		Table: "agent_commissions",
+	}
 	GroupsTable.Annotation = &entsql.Annotation{
 		Table: "groups",
 	}

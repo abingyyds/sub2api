@@ -145,6 +145,31 @@ func InitialBalanceExpiresAt(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldInitialBalanceExpiresAt, v))
 }
 
+// IsAgent applies equality check predicate on the "is_agent" field. It's identical to IsAgentEQ.
+func IsAgent(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldIsAgent, v))
+}
+
+// AgentStatus applies equality check predicate on the "agent_status" field. It's identical to AgentStatusEQ.
+func AgentStatus(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldAgentStatus, v))
+}
+
+// AgentCommissionRate applies equality check predicate on the "agent_commission_rate" field. It's identical to AgentCommissionRateEQ.
+func AgentCommissionRate(v float64) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldAgentCommissionRate, v))
+}
+
+// AgentNote applies equality check predicate on the "agent_note" field. It's identical to AgentNoteEQ.
+func AgentNote(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldAgentNote, v))
+}
+
+// AgentApprovedAt applies equality check predicate on the "agent_approved_at" field. It's identical to AgentApprovedAtEQ.
+func AgentApprovedAt(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldAgentApprovedAt, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldCreatedAt, v))
@@ -1120,6 +1145,236 @@ func InitialBalanceExpiresAtNotNil() predicate.User {
 	return predicate.User(sql.FieldNotNull(FieldInitialBalanceExpiresAt))
 }
 
+// IsAgentEQ applies the EQ predicate on the "is_agent" field.
+func IsAgentEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldIsAgent, v))
+}
+
+// IsAgentNEQ applies the NEQ predicate on the "is_agent" field.
+func IsAgentNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldIsAgent, v))
+}
+
+// AgentStatusEQ applies the EQ predicate on the "agent_status" field.
+func AgentStatusEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldAgentStatus, v))
+}
+
+// AgentStatusNEQ applies the NEQ predicate on the "agent_status" field.
+func AgentStatusNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldAgentStatus, v))
+}
+
+// AgentStatusIn applies the In predicate on the "agent_status" field.
+func AgentStatusIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldAgentStatus, vs...))
+}
+
+// AgentStatusNotIn applies the NotIn predicate on the "agent_status" field.
+func AgentStatusNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldAgentStatus, vs...))
+}
+
+// AgentStatusGT applies the GT predicate on the "agent_status" field.
+func AgentStatusGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldAgentStatus, v))
+}
+
+// AgentStatusGTE applies the GTE predicate on the "agent_status" field.
+func AgentStatusGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldAgentStatus, v))
+}
+
+// AgentStatusLT applies the LT predicate on the "agent_status" field.
+func AgentStatusLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldAgentStatus, v))
+}
+
+// AgentStatusLTE applies the LTE predicate on the "agent_status" field.
+func AgentStatusLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldAgentStatus, v))
+}
+
+// AgentStatusContains applies the Contains predicate on the "agent_status" field.
+func AgentStatusContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldAgentStatus, v))
+}
+
+// AgentStatusHasPrefix applies the HasPrefix predicate on the "agent_status" field.
+func AgentStatusHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldAgentStatus, v))
+}
+
+// AgentStatusHasSuffix applies the HasSuffix predicate on the "agent_status" field.
+func AgentStatusHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldAgentStatus, v))
+}
+
+// AgentStatusEqualFold applies the EqualFold predicate on the "agent_status" field.
+func AgentStatusEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldAgentStatus, v))
+}
+
+// AgentStatusContainsFold applies the ContainsFold predicate on the "agent_status" field.
+func AgentStatusContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldAgentStatus, v))
+}
+
+// AgentCommissionRateEQ applies the EQ predicate on the "agent_commission_rate" field.
+func AgentCommissionRateEQ(v float64) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldAgentCommissionRate, v))
+}
+
+// AgentCommissionRateNEQ applies the NEQ predicate on the "agent_commission_rate" field.
+func AgentCommissionRateNEQ(v float64) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldAgentCommissionRate, v))
+}
+
+// AgentCommissionRateIn applies the In predicate on the "agent_commission_rate" field.
+func AgentCommissionRateIn(vs ...float64) predicate.User {
+	return predicate.User(sql.FieldIn(FieldAgentCommissionRate, vs...))
+}
+
+// AgentCommissionRateNotIn applies the NotIn predicate on the "agent_commission_rate" field.
+func AgentCommissionRateNotIn(vs ...float64) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldAgentCommissionRate, vs...))
+}
+
+// AgentCommissionRateGT applies the GT predicate on the "agent_commission_rate" field.
+func AgentCommissionRateGT(v float64) predicate.User {
+	return predicate.User(sql.FieldGT(FieldAgentCommissionRate, v))
+}
+
+// AgentCommissionRateGTE applies the GTE predicate on the "agent_commission_rate" field.
+func AgentCommissionRateGTE(v float64) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldAgentCommissionRate, v))
+}
+
+// AgentCommissionRateLT applies the LT predicate on the "agent_commission_rate" field.
+func AgentCommissionRateLT(v float64) predicate.User {
+	return predicate.User(sql.FieldLT(FieldAgentCommissionRate, v))
+}
+
+// AgentCommissionRateLTE applies the LTE predicate on the "agent_commission_rate" field.
+func AgentCommissionRateLTE(v float64) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldAgentCommissionRate, v))
+}
+
+// AgentNoteEQ applies the EQ predicate on the "agent_note" field.
+func AgentNoteEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldAgentNote, v))
+}
+
+// AgentNoteNEQ applies the NEQ predicate on the "agent_note" field.
+func AgentNoteNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldAgentNote, v))
+}
+
+// AgentNoteIn applies the In predicate on the "agent_note" field.
+func AgentNoteIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldAgentNote, vs...))
+}
+
+// AgentNoteNotIn applies the NotIn predicate on the "agent_note" field.
+func AgentNoteNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldAgentNote, vs...))
+}
+
+// AgentNoteGT applies the GT predicate on the "agent_note" field.
+func AgentNoteGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldAgentNote, v))
+}
+
+// AgentNoteGTE applies the GTE predicate on the "agent_note" field.
+func AgentNoteGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldAgentNote, v))
+}
+
+// AgentNoteLT applies the LT predicate on the "agent_note" field.
+func AgentNoteLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldAgentNote, v))
+}
+
+// AgentNoteLTE applies the LTE predicate on the "agent_note" field.
+func AgentNoteLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldAgentNote, v))
+}
+
+// AgentNoteContains applies the Contains predicate on the "agent_note" field.
+func AgentNoteContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldAgentNote, v))
+}
+
+// AgentNoteHasPrefix applies the HasPrefix predicate on the "agent_note" field.
+func AgentNoteHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldAgentNote, v))
+}
+
+// AgentNoteHasSuffix applies the HasSuffix predicate on the "agent_note" field.
+func AgentNoteHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldAgentNote, v))
+}
+
+// AgentNoteEqualFold applies the EqualFold predicate on the "agent_note" field.
+func AgentNoteEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldAgentNote, v))
+}
+
+// AgentNoteContainsFold applies the ContainsFold predicate on the "agent_note" field.
+func AgentNoteContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldAgentNote, v))
+}
+
+// AgentApprovedAtEQ applies the EQ predicate on the "agent_approved_at" field.
+func AgentApprovedAtEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldAgentApprovedAt, v))
+}
+
+// AgentApprovedAtNEQ applies the NEQ predicate on the "agent_approved_at" field.
+func AgentApprovedAtNEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldAgentApprovedAt, v))
+}
+
+// AgentApprovedAtIn applies the In predicate on the "agent_approved_at" field.
+func AgentApprovedAtIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldIn(FieldAgentApprovedAt, vs...))
+}
+
+// AgentApprovedAtNotIn applies the NotIn predicate on the "agent_approved_at" field.
+func AgentApprovedAtNotIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldAgentApprovedAt, vs...))
+}
+
+// AgentApprovedAtGT applies the GT predicate on the "agent_approved_at" field.
+func AgentApprovedAtGT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGT(FieldAgentApprovedAt, v))
+}
+
+// AgentApprovedAtGTE applies the GTE predicate on the "agent_approved_at" field.
+func AgentApprovedAtGTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldAgentApprovedAt, v))
+}
+
+// AgentApprovedAtLT applies the LT predicate on the "agent_approved_at" field.
+func AgentApprovedAtLT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLT(FieldAgentApprovedAt, v))
+}
+
+// AgentApprovedAtLTE applies the LTE predicate on the "agent_approved_at" field.
+func AgentApprovedAtLTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldAgentApprovedAt, v))
+}
+
+// AgentApprovedAtIsNil applies the IsNil predicate on the "agent_approved_at" field.
+func AgentApprovedAtIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldAgentApprovedAt))
+}
+
+// AgentApprovedAtNotNil applies the NotNil predicate on the "agent_approved_at" field.
+func AgentApprovedAtNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldAgentApprovedAt))
+}
+
 // HasAPIKeys applies the HasEdge predicate on the "api_keys" edge.
 func HasAPIKeys() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
@@ -1434,6 +1689,52 @@ func HasPaymentOrders() predicate.User {
 func HasPaymentOrdersWith(preds ...predicate.PaymentOrder) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := newPaymentOrdersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAgentCommissionsAsAgent applies the HasEdge predicate on the "agent_commissions_as_agent" edge.
+func HasAgentCommissionsAsAgent() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AgentCommissionsAsAgentTable, AgentCommissionsAsAgentColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAgentCommissionsAsAgentWith applies the HasEdge predicate on the "agent_commissions_as_agent" edge with a given conditions (other predicates).
+func HasAgentCommissionsAsAgentWith(preds ...predicate.AgentCommission) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newAgentCommissionsAsAgentStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAgentCommissionsAsUser applies the HasEdge predicate on the "agent_commissions_as_user" edge.
+func HasAgentCommissionsAsUser() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AgentCommissionsAsUserTable, AgentCommissionsAsUserColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAgentCommissionsAsUserWith applies the HasEdge predicate on the "agent_commissions_as_user" edge with a given conditions (other predicates).
+func HasAgentCommissionsAsUserWith(preds ...predicate.AgentCommission) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newAgentCommissionsAsUserStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

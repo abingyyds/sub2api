@@ -89,6 +89,10 @@ const (
 	EdgeAdminInviteCodes = "admin_invite_codes"
 	// EdgePaymentOrders holds the string denoting the payment_orders edge name in mutations.
 	EdgePaymentOrders = "payment_orders"
+	// EdgeAgentCommissionsAsAgent holds the string denoting the agent_commissions_as_agent edge name in mutations.
+	EdgeAgentCommissionsAsAgent = "agent_commissions_as_agent"
+	// EdgeAgentCommissionsAsUser holds the string denoting the agent_commissions_as_user edge name in mutations.
+	EdgeAgentCommissionsAsUser = "agent_commissions_as_user"
 	// EdgeUserAllowedGroups holds the string denoting the user_allowed_groups edge name in mutations.
 	EdgeUserAllowedGroups = "user_allowed_groups"
 	// Table holds the table name of the user in the database.
@@ -189,6 +193,20 @@ const (
 	PaymentOrdersInverseTable = "payment_orders"
 	// PaymentOrdersColumn is the table column denoting the payment_orders relation/edge.
 	PaymentOrdersColumn = "user_id"
+	// AgentCommissionsAsAgentTable is the table that holds the agent_commissions_as_agent relation/edge.
+	AgentCommissionsAsAgentTable = "agent_commissions"
+	// AgentCommissionsAsAgentInverseTable is the table name for the AgentCommission entity.
+	// It exists in this package in order to avoid circular dependency with the "agentcommission" package.
+	AgentCommissionsAsAgentInverseTable = "agent_commissions"
+	// AgentCommissionsAsAgentColumn is the table column denoting the agent_commissions_as_agent relation/edge.
+	AgentCommissionsAsAgentColumn = "agent_id"
+	// AgentCommissionsAsUserTable is the table that holds the agent_commissions_as_user relation/edge.
+	AgentCommissionsAsUserTable = "agent_commissions"
+	// AgentCommissionsAsUserInverseTable is the table name for the AgentCommission entity.
+	// It exists in this package in order to avoid circular dependency with the "agentcommission" package.
+	AgentCommissionsAsUserInverseTable = "agent_commissions"
+	// AgentCommissionsAsUserColumn is the table column denoting the agent_commissions_as_user relation/edge.
+	AgentCommissionsAsUserColumn = "user_id"
 	// UserAllowedGroupsTable is the table that holds the user_allowed_groups relation/edge.
 	UserAllowedGroupsTable = "user_allowed_groups"
 	// UserAllowedGroupsInverseTable is the table name for the UserAllowedGroup entity.
@@ -286,6 +304,16 @@ var (
 	DiscoverySourceValidator func(string) error
 	// DefaultInitialBalance holds the default value on creation for the "initial_balance" field.
 	DefaultInitialBalance float64
+	// DefaultIsAgent holds the default value on creation for the "is_agent" field.
+	DefaultIsAgent bool
+	// DefaultAgentStatus holds the default value on creation for the "agent_status" field.
+	DefaultAgentStatus string
+	// AgentStatusValidator is a validator for the "agent_status" field. It is called by the builders before save.
+	AgentStatusValidator func(string) error
+	// DefaultAgentCommissionRate holds the default value on creation for the "agent_commission_rate" field.
+	DefaultAgentCommissionRate float64
+	// DefaultAgentNote holds the default value on creation for the "agent_note" field.
+	DefaultAgentNote string
 )
 
 // OrderOption defines the ordering options for the User queries.
@@ -384,6 +412,31 @@ func ByInitialBalance(opts ...sql.OrderTermOption) OrderOption {
 // ByInitialBalanceExpiresAt orders the results by the initial_balance_expires_at field.
 func ByInitialBalanceExpiresAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldInitialBalanceExpiresAt, opts...).ToFunc()
+}
+
+// ByIsAgent orders the results by the is_agent field.
+func ByIsAgent(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldIsAgent, opts...).ToFunc()
+}
+
+// ByAgentStatus orders the results by the agent_status field.
+func ByAgentStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAgentStatus, opts...).ToFunc()
+}
+
+// ByAgentCommissionRate orders the results by the agent_commission_rate field.
+func ByAgentCommissionRate(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAgentCommissionRate, opts...).ToFunc()
+}
+
+// ByAgentNote orders the results by the agent_note field.
+func ByAgentNote(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAgentNote, opts...).ToFunc()
+}
+
+// ByAgentApprovedAt orders the results by the agent_approved_at field.
+func ByAgentApprovedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAgentApprovedAt, opts...).ToFunc()
 }
 
 // ByAPIKeysCount orders the results by api_keys count.
@@ -582,6 +635,34 @@ func ByPaymentOrders(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByAgentCommissionsAsAgentCount orders the results by agent_commissions_as_agent count.
+func ByAgentCommissionsAsAgentCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAgentCommissionsAsAgentStep(), opts...)
+	}
+}
+
+// ByAgentCommissionsAsAgent orders the results by agent_commissions_as_agent terms.
+func ByAgentCommissionsAsAgent(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAgentCommissionsAsAgentStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAgentCommissionsAsUserCount orders the results by agent_commissions_as_user count.
+func ByAgentCommissionsAsUserCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAgentCommissionsAsUserStep(), opts...)
+	}
+}
+
+// ByAgentCommissionsAsUser orders the results by agent_commissions_as_user terms.
+func ByAgentCommissionsAsUser(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAgentCommissionsAsUserStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByUserAllowedGroupsCount orders the results by user_allowed_groups count.
 func ByUserAllowedGroupsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -691,6 +772,20 @@ func newPaymentOrdersStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PaymentOrdersInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PaymentOrdersTable, PaymentOrdersColumn),
+	)
+}
+func newAgentCommissionsAsAgentStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AgentCommissionsAsAgentInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AgentCommissionsAsAgentTable, AgentCommissionsAsAgentColumn),
+	)
+}
+func newAgentCommissionsAsUserStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AgentCommissionsAsUserInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AgentCommissionsAsUserTable, AgentCommissionsAsUserColumn),
 	)
 }
 func newUserAllowedGroupsStep() *sqlgraph.Step {

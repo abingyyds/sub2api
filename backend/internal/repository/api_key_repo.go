@@ -446,6 +446,9 @@ func groupEntityToService(g *dbent.Group) *service.Group {
 		PriceFen:            g.PriceFen,
 		Listed:              g.Listed,
 		PlanFeatures:        g.PlanFeatures,
+		Tags:                g.Tags,
+		DisplayPrice:        g.DisplayPrice,
+		DisplayDiscount:     g.DisplayDiscount,
 		CreatedAt:           g.CreatedAt,
 		UpdatedAt:           g.UpdatedAt,
 	}

@@ -477,6 +477,52 @@ func (_u *GroupUpdate) ClearPlanFeatures() *GroupUpdate {
 	return _u
 }
 
+// SetTags sets the "tags" field.
+func (_u *GroupUpdate) SetTags(v []string) *GroupUpdate {
+	_u.mutation.SetTags(v)
+	return _u
+}
+
+// AppendTags appends value to the "tags" field.
+func (_u *GroupUpdate) AppendTags(v []string) *GroupUpdate {
+	_u.mutation.AppendTags(v)
+	return _u
+}
+
+// ClearTags clears the value of the "tags" field.
+func (_u *GroupUpdate) ClearTags() *GroupUpdate {
+	_u.mutation.ClearTags()
+	return _u
+}
+
+// SetDisplayPrice sets the "display_price" field.
+func (_u *GroupUpdate) SetDisplayPrice(v string) *GroupUpdate {
+	_u.mutation.SetDisplayPrice(v)
+	return _u
+}
+
+// SetNillableDisplayPrice sets the "display_price" field if the given value is not nil.
+func (_u *GroupUpdate) SetNillableDisplayPrice(v *string) *GroupUpdate {
+	if v != nil {
+		_u.SetDisplayPrice(*v)
+	}
+	return _u
+}
+
+// SetDisplayDiscount sets the "display_discount" field.
+func (_u *GroupUpdate) SetDisplayDiscount(v string) *GroupUpdate {
+	_u.mutation.SetDisplayDiscount(v)
+	return _u
+}
+
+// SetNillableDisplayDiscount sets the "display_discount" field if the given value is not nil.
+func (_u *GroupUpdate) SetNillableDisplayDiscount(v *string) *GroupUpdate {
+	if v != nil {
+		_u.SetDisplayDiscount(*v)
+	}
+	return _u
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *GroupUpdate) AddAPIKeyIDs(ids ...int64) *GroupUpdate {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -985,6 +1031,23 @@ func (_u *GroupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.PlanFeaturesCleared() {
 		_spec.ClearField(group.FieldPlanFeatures, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.Tags(); ok {
+		_spec.SetField(group.FieldTags, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedTags(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, group.FieldTags, value)
+		})
+	}
+	if _u.mutation.TagsCleared() {
+		_spec.ClearField(group.FieldTags, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.DisplayPrice(); ok {
+		_spec.SetField(group.FieldDisplayPrice, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.DisplayDiscount(); ok {
+		_spec.SetField(group.FieldDisplayDiscount, field.TypeString, value)
 	}
 	if _u.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1830,6 +1893,52 @@ func (_u *GroupUpdateOne) ClearPlanFeatures() *GroupUpdateOne {
 	return _u
 }
 
+// SetTags sets the "tags" field.
+func (_u *GroupUpdateOne) SetTags(v []string) *GroupUpdateOne {
+	_u.mutation.SetTags(v)
+	return _u
+}
+
+// AppendTags appends value to the "tags" field.
+func (_u *GroupUpdateOne) AppendTags(v []string) *GroupUpdateOne {
+	_u.mutation.AppendTags(v)
+	return _u
+}
+
+// ClearTags clears the value of the "tags" field.
+func (_u *GroupUpdateOne) ClearTags() *GroupUpdateOne {
+	_u.mutation.ClearTags()
+	return _u
+}
+
+// SetDisplayPrice sets the "display_price" field.
+func (_u *GroupUpdateOne) SetDisplayPrice(v string) *GroupUpdateOne {
+	_u.mutation.SetDisplayPrice(v)
+	return _u
+}
+
+// SetNillableDisplayPrice sets the "display_price" field if the given value is not nil.
+func (_u *GroupUpdateOne) SetNillableDisplayPrice(v *string) *GroupUpdateOne {
+	if v != nil {
+		_u.SetDisplayPrice(*v)
+	}
+	return _u
+}
+
+// SetDisplayDiscount sets the "display_discount" field.
+func (_u *GroupUpdateOne) SetDisplayDiscount(v string) *GroupUpdateOne {
+	_u.mutation.SetDisplayDiscount(v)
+	return _u
+}
+
+// SetNillableDisplayDiscount sets the "display_discount" field if the given value is not nil.
+func (_u *GroupUpdateOne) SetNillableDisplayDiscount(v *string) *GroupUpdateOne {
+	if v != nil {
+		_u.SetDisplayDiscount(*v)
+	}
+	return _u
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *GroupUpdateOne) AddAPIKeyIDs(ids ...int64) *GroupUpdateOne {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -2368,6 +2477,23 @@ func (_u *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error)
 	}
 	if _u.mutation.PlanFeaturesCleared() {
 		_spec.ClearField(group.FieldPlanFeatures, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.Tags(); ok {
+		_spec.SetField(group.FieldTags, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedTags(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, group.FieldTags, value)
+		})
+	}
+	if _u.mutation.TagsCleared() {
+		_spec.ClearField(group.FieldTags, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.DisplayPrice(); ok {
+		_spec.SetField(group.FieldDisplayPrice, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.DisplayDiscount(); ok {
+		_spec.SetField(group.FieldDisplayDiscount, field.TypeString, value)
 	}
 	if _u.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{

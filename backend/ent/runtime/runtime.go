@@ -8,6 +8,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/account"
 	"github.com/Wei-Shaw/sub2api/ent/accountgroup"
 	"github.com/Wei-Shaw/sub2api/ent/admininvitecode"
+	"github.com/Wei-Shaw/sub2api/ent/agentcommission"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/organization"
@@ -280,6 +281,57 @@ func init() {
 	admininvitecode.DefaultUpdatedAt = admininvitecodeDescUpdatedAt.Default.(func() time.Time)
 	// admininvitecode.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	admininvitecode.UpdateDefaultUpdatedAt = admininvitecodeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	agentcommissionMixin := schema.AgentCommission{}.Mixin()
+	agentcommissionMixinFields0 := agentcommissionMixin[0].Fields()
+	_ = agentcommissionMixinFields0
+	agentcommissionFields := schema.AgentCommission{}.Fields()
+	_ = agentcommissionFields
+	// agentcommissionDescCreatedAt is the schema descriptor for created_at field.
+	agentcommissionDescCreatedAt := agentcommissionMixinFields0[0].Descriptor()
+	// agentcommission.DefaultCreatedAt holds the default value on creation for the created_at field.
+	agentcommission.DefaultCreatedAt = agentcommissionDescCreatedAt.Default.(func() time.Time)
+	// agentcommissionDescUpdatedAt is the schema descriptor for updated_at field.
+	agentcommissionDescUpdatedAt := agentcommissionMixinFields0[1].Descriptor()
+	// agentcommission.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	agentcommission.DefaultUpdatedAt = agentcommissionDescUpdatedAt.Default.(func() time.Time)
+	// agentcommission.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	agentcommission.UpdateDefaultUpdatedAt = agentcommissionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// agentcommissionDescSourceType is the schema descriptor for source_type field.
+	agentcommissionDescSourceType := agentcommissionFields[3].Descriptor()
+	// agentcommission.SourceTypeValidator is a validator for the "source_type" field. It is called by the builders before save.
+	agentcommission.SourceTypeValidator = func() func(string) error {
+		validators := agentcommissionDescSourceType.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(source_type string) error {
+			for _, fn := range fns {
+				if err := fn(source_type); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// agentcommissionDescSourceAmount is the schema descriptor for source_amount field.
+	agentcommissionDescSourceAmount := agentcommissionFields[4].Descriptor()
+	// agentcommission.DefaultSourceAmount holds the default value on creation for the source_amount field.
+	agentcommission.DefaultSourceAmount = agentcommissionDescSourceAmount.Default.(float64)
+	// agentcommissionDescCommissionRate is the schema descriptor for commission_rate field.
+	agentcommissionDescCommissionRate := agentcommissionFields[5].Descriptor()
+	// agentcommission.DefaultCommissionRate holds the default value on creation for the commission_rate field.
+	agentcommission.DefaultCommissionRate = agentcommissionDescCommissionRate.Default.(float64)
+	// agentcommissionDescCommissionAmount is the schema descriptor for commission_amount field.
+	agentcommissionDescCommissionAmount := agentcommissionFields[6].Descriptor()
+	// agentcommission.DefaultCommissionAmount holds the default value on creation for the commission_amount field.
+	agentcommission.DefaultCommissionAmount = agentcommissionDescCommissionAmount.Default.(float64)
+	// agentcommissionDescStatus is the schema descriptor for status field.
+	agentcommissionDescStatus := agentcommissionFields[7].Descriptor()
+	// agentcommission.DefaultStatus holds the default value on creation for the status field.
+	agentcommission.DefaultStatus = agentcommissionDescStatus.Default.(string)
+	// agentcommission.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	agentcommission.StatusValidator = agentcommissionDescStatus.Validators[0].(func(string) error)
 	groupMixin := schema.Group{}.Mixin()
 	groupMixinHooks1 := groupMixin[1].Hooks()
 	group.Hooks[0] = groupMixinHooks1[0]
@@ -363,6 +415,14 @@ func init() {
 	groupDescListed := groupFields[19].Descriptor()
 	// group.DefaultListed holds the default value on creation for the listed field.
 	group.DefaultListed = groupDescListed.Default.(bool)
+	// groupDescDisplayPrice is the schema descriptor for display_price field.
+	groupDescDisplayPrice := groupFields[22].Descriptor()
+	// group.DefaultDisplayPrice holds the default value on creation for the display_price field.
+	group.DefaultDisplayPrice = groupDescDisplayPrice.Default.(string)
+	// groupDescDisplayDiscount is the schema descriptor for display_discount field.
+	groupDescDisplayDiscount := groupFields[23].Descriptor()
+	// group.DefaultDisplayDiscount holds the default value on creation for the display_discount field.
+	group.DefaultDisplayDiscount = groupDescDisplayDiscount.Default.(string)
 	orgauditlogFields := schema.OrgAuditLog{}.Fields()
 	_ = orgauditlogFields
 	// orgauditlogDescAction is the schema descriptor for action field.
@@ -1225,6 +1285,24 @@ func init() {
 	userDescInitialBalance := userFields[13].Descriptor()
 	// user.DefaultInitialBalance holds the default value on creation for the initial_balance field.
 	user.DefaultInitialBalance = userDescInitialBalance.Default.(float64)
+	// userDescIsAgent is the schema descriptor for is_agent field.
+	userDescIsAgent := userFields[15].Descriptor()
+	// user.DefaultIsAgent holds the default value on creation for the is_agent field.
+	user.DefaultIsAgent = userDescIsAgent.Default.(bool)
+	// userDescAgentStatus is the schema descriptor for agent_status field.
+	userDescAgentStatus := userFields[16].Descriptor()
+	// user.DefaultAgentStatus holds the default value on creation for the agent_status field.
+	user.DefaultAgentStatus = userDescAgentStatus.Default.(string)
+	// user.AgentStatusValidator is a validator for the "agent_status" field. It is called by the builders before save.
+	user.AgentStatusValidator = userDescAgentStatus.Validators[0].(func(string) error)
+	// userDescAgentCommissionRate is the schema descriptor for agent_commission_rate field.
+	userDescAgentCommissionRate := userFields[17].Descriptor()
+	// user.DefaultAgentCommissionRate holds the default value on creation for the agent_commission_rate field.
+	user.DefaultAgentCommissionRate = userDescAgentCommissionRate.Default.(float64)
+	// userDescAgentNote is the schema descriptor for agent_note field.
+	userDescAgentNote := userFields[18].Descriptor()
+	// user.DefaultAgentNote holds the default value on creation for the agent_note field.
+	user.DefaultAgentNote = userDescAgentNote.Default.(string)
 	userallowedgroupFields := schema.UserAllowedGroup{}.Fields()
 	_ = userallowedgroupFields
 	// userallowedgroupDescCreatedAt is the schema descriptor for created_at field.

@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/Wei-Shaw/sub2api/ent/admininvitecode"
+	"github.com/Wei-Shaw/sub2api/ent/agentcommission"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/organization"
@@ -327,6 +328,89 @@ func (_u *UserUpdate) ClearInitialBalanceExpiresAt() *UserUpdate {
 	return _u
 }
 
+// SetIsAgent sets the "is_agent" field.
+func (_u *UserUpdate) SetIsAgent(v bool) *UserUpdate {
+	_u.mutation.SetIsAgent(v)
+	return _u
+}
+
+// SetNillableIsAgent sets the "is_agent" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableIsAgent(v *bool) *UserUpdate {
+	if v != nil {
+		_u.SetIsAgent(*v)
+	}
+	return _u
+}
+
+// SetAgentStatus sets the "agent_status" field.
+func (_u *UserUpdate) SetAgentStatus(v string) *UserUpdate {
+	_u.mutation.SetAgentStatus(v)
+	return _u
+}
+
+// SetNillableAgentStatus sets the "agent_status" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableAgentStatus(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetAgentStatus(*v)
+	}
+	return _u
+}
+
+// SetAgentCommissionRate sets the "agent_commission_rate" field.
+func (_u *UserUpdate) SetAgentCommissionRate(v float64) *UserUpdate {
+	_u.mutation.ResetAgentCommissionRate()
+	_u.mutation.SetAgentCommissionRate(v)
+	return _u
+}
+
+// SetNillableAgentCommissionRate sets the "agent_commission_rate" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableAgentCommissionRate(v *float64) *UserUpdate {
+	if v != nil {
+		_u.SetAgentCommissionRate(*v)
+	}
+	return _u
+}
+
+// AddAgentCommissionRate adds value to the "agent_commission_rate" field.
+func (_u *UserUpdate) AddAgentCommissionRate(v float64) *UserUpdate {
+	_u.mutation.AddAgentCommissionRate(v)
+	return _u
+}
+
+// SetAgentNote sets the "agent_note" field.
+func (_u *UserUpdate) SetAgentNote(v string) *UserUpdate {
+	_u.mutation.SetAgentNote(v)
+	return _u
+}
+
+// SetNillableAgentNote sets the "agent_note" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableAgentNote(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetAgentNote(*v)
+	}
+	return _u
+}
+
+// SetAgentApprovedAt sets the "agent_approved_at" field.
+func (_u *UserUpdate) SetAgentApprovedAt(v time.Time) *UserUpdate {
+	_u.mutation.SetAgentApprovedAt(v)
+	return _u
+}
+
+// SetNillableAgentApprovedAt sets the "agent_approved_at" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableAgentApprovedAt(v *time.Time) *UserUpdate {
+	if v != nil {
+		_u.SetAgentApprovedAt(*v)
+	}
+	return _u
+}
+
+// ClearAgentApprovedAt clears the value of the "agent_approved_at" field.
+func (_u *UserUpdate) ClearAgentApprovedAt() *UserUpdate {
+	_u.mutation.ClearAgentApprovedAt()
+	return _u
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *UserUpdate) AddAPIKeyIDs(ids ...int64) *UserUpdate {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -535,6 +619,36 @@ func (_u *UserUpdate) AddPaymentOrders(v ...*PaymentOrder) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.AddPaymentOrderIDs(ids...)
+}
+
+// AddAgentCommissionsAsAgentIDs adds the "agent_commissions_as_agent" edge to the AgentCommission entity by IDs.
+func (_u *UserUpdate) AddAgentCommissionsAsAgentIDs(ids ...int64) *UserUpdate {
+	_u.mutation.AddAgentCommissionsAsAgentIDs(ids...)
+	return _u
+}
+
+// AddAgentCommissionsAsAgent adds the "agent_commissions_as_agent" edges to the AgentCommission entity.
+func (_u *UserUpdate) AddAgentCommissionsAsAgent(v ...*AgentCommission) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAgentCommissionsAsAgentIDs(ids...)
+}
+
+// AddAgentCommissionsAsUserIDs adds the "agent_commissions_as_user" edge to the AgentCommission entity by IDs.
+func (_u *UserUpdate) AddAgentCommissionsAsUserIDs(ids ...int64) *UserUpdate {
+	_u.mutation.AddAgentCommissionsAsUserIDs(ids...)
+	return _u
+}
+
+// AddAgentCommissionsAsUser adds the "agent_commissions_as_user" edges to the AgentCommission entity.
+func (_u *UserUpdate) AddAgentCommissionsAsUser(v ...*AgentCommission) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAgentCommissionsAsUserIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -836,6 +950,48 @@ func (_u *UserUpdate) RemovePaymentOrders(v ...*PaymentOrder) *UserUpdate {
 	return _u.RemovePaymentOrderIDs(ids...)
 }
 
+// ClearAgentCommissionsAsAgent clears all "agent_commissions_as_agent" edges to the AgentCommission entity.
+func (_u *UserUpdate) ClearAgentCommissionsAsAgent() *UserUpdate {
+	_u.mutation.ClearAgentCommissionsAsAgent()
+	return _u
+}
+
+// RemoveAgentCommissionsAsAgentIDs removes the "agent_commissions_as_agent" edge to AgentCommission entities by IDs.
+func (_u *UserUpdate) RemoveAgentCommissionsAsAgentIDs(ids ...int64) *UserUpdate {
+	_u.mutation.RemoveAgentCommissionsAsAgentIDs(ids...)
+	return _u
+}
+
+// RemoveAgentCommissionsAsAgent removes "agent_commissions_as_agent" edges to AgentCommission entities.
+func (_u *UserUpdate) RemoveAgentCommissionsAsAgent(v ...*AgentCommission) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAgentCommissionsAsAgentIDs(ids...)
+}
+
+// ClearAgentCommissionsAsUser clears all "agent_commissions_as_user" edges to the AgentCommission entity.
+func (_u *UserUpdate) ClearAgentCommissionsAsUser() *UserUpdate {
+	_u.mutation.ClearAgentCommissionsAsUser()
+	return _u
+}
+
+// RemoveAgentCommissionsAsUserIDs removes the "agent_commissions_as_user" edge to AgentCommission entities by IDs.
+func (_u *UserUpdate) RemoveAgentCommissionsAsUserIDs(ids ...int64) *UserUpdate {
+	_u.mutation.RemoveAgentCommissionsAsUserIDs(ids...)
+	return _u
+}
+
+// RemoveAgentCommissionsAsUser removes "agent_commissions_as_user" edges to AgentCommission entities.
+func (_u *UserUpdate) RemoveAgentCommissionsAsUser(v ...*AgentCommission) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAgentCommissionsAsUserIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *UserUpdate) Save(ctx context.Context) (int, error) {
 	if err := _u.defaults(); err != nil {
@@ -913,6 +1069,11 @@ func (_u *UserUpdate) check() error {
 	if v, ok := _u.mutation.DiscoverySource(); ok {
 		if err := user.DiscoverySourceValidator(v); err != nil {
 			return &ValidationError{Name: "discovery_source", err: fmt.Errorf(`ent: validator failed for field "User.discovery_source": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.AgentStatus(); ok {
+		if err := user.AgentStatusValidator(v); err != nil {
+			return &ValidationError{Name: "agent_status", err: fmt.Errorf(`ent: validator failed for field "User.agent_status": %w`, err)}
 		}
 	}
 	return nil
@@ -1007,6 +1168,27 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.InitialBalanceExpiresAtCleared() {
 		_spec.ClearField(user.FieldInitialBalanceExpiresAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.IsAgent(); ok {
+		_spec.SetField(user.FieldIsAgent, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.AgentStatus(); ok {
+		_spec.SetField(user.FieldAgentStatus, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.AgentCommissionRate(); ok {
+		_spec.SetField(user.FieldAgentCommissionRate, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedAgentCommissionRate(); ok {
+		_spec.AddField(user.FieldAgentCommissionRate, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AgentNote(); ok {
+		_spec.SetField(user.FieldAgentNote, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.AgentApprovedAt(); ok {
+		_spec.SetField(user.FieldAgentApprovedAt, field.TypeTime, value)
+	}
+	if _u.mutation.AgentApprovedAtCleared() {
+		_spec.ClearField(user.FieldAgentApprovedAt, field.TypeTime)
 	}
 	if _u.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1643,6 +1825,96 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(paymentorder.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AgentCommissionsAsAgentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AgentCommissionsAsAgentTable,
+			Columns: []string{user.AgentCommissionsAsAgentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAgentCommissionsAsAgentIDs(); len(nodes) > 0 && !_u.mutation.AgentCommissionsAsAgentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AgentCommissionsAsAgentTable,
+			Columns: []string{user.AgentCommissionsAsAgentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AgentCommissionsAsAgentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AgentCommissionsAsAgentTable,
+			Columns: []string{user.AgentCommissionsAsAgentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AgentCommissionsAsUserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AgentCommissionsAsUserTable,
+			Columns: []string{user.AgentCommissionsAsUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAgentCommissionsAsUserIDs(); len(nodes) > 0 && !_u.mutation.AgentCommissionsAsUserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AgentCommissionsAsUserTable,
+			Columns: []string{user.AgentCommissionsAsUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AgentCommissionsAsUserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AgentCommissionsAsUserTable,
+			Columns: []string{user.AgentCommissionsAsUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -1957,6 +2229,89 @@ func (_u *UserUpdateOne) ClearInitialBalanceExpiresAt() *UserUpdateOne {
 	return _u
 }
 
+// SetIsAgent sets the "is_agent" field.
+func (_u *UserUpdateOne) SetIsAgent(v bool) *UserUpdateOne {
+	_u.mutation.SetIsAgent(v)
+	return _u
+}
+
+// SetNillableIsAgent sets the "is_agent" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableIsAgent(v *bool) *UserUpdateOne {
+	if v != nil {
+		_u.SetIsAgent(*v)
+	}
+	return _u
+}
+
+// SetAgentStatus sets the "agent_status" field.
+func (_u *UserUpdateOne) SetAgentStatus(v string) *UserUpdateOne {
+	_u.mutation.SetAgentStatus(v)
+	return _u
+}
+
+// SetNillableAgentStatus sets the "agent_status" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableAgentStatus(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetAgentStatus(*v)
+	}
+	return _u
+}
+
+// SetAgentCommissionRate sets the "agent_commission_rate" field.
+func (_u *UserUpdateOne) SetAgentCommissionRate(v float64) *UserUpdateOne {
+	_u.mutation.ResetAgentCommissionRate()
+	_u.mutation.SetAgentCommissionRate(v)
+	return _u
+}
+
+// SetNillableAgentCommissionRate sets the "agent_commission_rate" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableAgentCommissionRate(v *float64) *UserUpdateOne {
+	if v != nil {
+		_u.SetAgentCommissionRate(*v)
+	}
+	return _u
+}
+
+// AddAgentCommissionRate adds value to the "agent_commission_rate" field.
+func (_u *UserUpdateOne) AddAgentCommissionRate(v float64) *UserUpdateOne {
+	_u.mutation.AddAgentCommissionRate(v)
+	return _u
+}
+
+// SetAgentNote sets the "agent_note" field.
+func (_u *UserUpdateOne) SetAgentNote(v string) *UserUpdateOne {
+	_u.mutation.SetAgentNote(v)
+	return _u
+}
+
+// SetNillableAgentNote sets the "agent_note" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableAgentNote(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetAgentNote(*v)
+	}
+	return _u
+}
+
+// SetAgentApprovedAt sets the "agent_approved_at" field.
+func (_u *UserUpdateOne) SetAgentApprovedAt(v time.Time) *UserUpdateOne {
+	_u.mutation.SetAgentApprovedAt(v)
+	return _u
+}
+
+// SetNillableAgentApprovedAt sets the "agent_approved_at" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableAgentApprovedAt(v *time.Time) *UserUpdateOne {
+	if v != nil {
+		_u.SetAgentApprovedAt(*v)
+	}
+	return _u
+}
+
+// ClearAgentApprovedAt clears the value of the "agent_approved_at" field.
+func (_u *UserUpdateOne) ClearAgentApprovedAt() *UserUpdateOne {
+	_u.mutation.ClearAgentApprovedAt()
+	return _u
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *UserUpdateOne) AddAPIKeyIDs(ids ...int64) *UserUpdateOne {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -2165,6 +2520,36 @@ func (_u *UserUpdateOne) AddPaymentOrders(v ...*PaymentOrder) *UserUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.AddPaymentOrderIDs(ids...)
+}
+
+// AddAgentCommissionsAsAgentIDs adds the "agent_commissions_as_agent" edge to the AgentCommission entity by IDs.
+func (_u *UserUpdateOne) AddAgentCommissionsAsAgentIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.AddAgentCommissionsAsAgentIDs(ids...)
+	return _u
+}
+
+// AddAgentCommissionsAsAgent adds the "agent_commissions_as_agent" edges to the AgentCommission entity.
+func (_u *UserUpdateOne) AddAgentCommissionsAsAgent(v ...*AgentCommission) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAgentCommissionsAsAgentIDs(ids...)
+}
+
+// AddAgentCommissionsAsUserIDs adds the "agent_commissions_as_user" edge to the AgentCommission entity by IDs.
+func (_u *UserUpdateOne) AddAgentCommissionsAsUserIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.AddAgentCommissionsAsUserIDs(ids...)
+	return _u
+}
+
+// AddAgentCommissionsAsUser adds the "agent_commissions_as_user" edges to the AgentCommission entity.
+func (_u *UserUpdateOne) AddAgentCommissionsAsUser(v ...*AgentCommission) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAgentCommissionsAsUserIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -2466,6 +2851,48 @@ func (_u *UserUpdateOne) RemovePaymentOrders(v ...*PaymentOrder) *UserUpdateOne 
 	return _u.RemovePaymentOrderIDs(ids...)
 }
 
+// ClearAgentCommissionsAsAgent clears all "agent_commissions_as_agent" edges to the AgentCommission entity.
+func (_u *UserUpdateOne) ClearAgentCommissionsAsAgent() *UserUpdateOne {
+	_u.mutation.ClearAgentCommissionsAsAgent()
+	return _u
+}
+
+// RemoveAgentCommissionsAsAgentIDs removes the "agent_commissions_as_agent" edge to AgentCommission entities by IDs.
+func (_u *UserUpdateOne) RemoveAgentCommissionsAsAgentIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.RemoveAgentCommissionsAsAgentIDs(ids...)
+	return _u
+}
+
+// RemoveAgentCommissionsAsAgent removes "agent_commissions_as_agent" edges to AgentCommission entities.
+func (_u *UserUpdateOne) RemoveAgentCommissionsAsAgent(v ...*AgentCommission) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAgentCommissionsAsAgentIDs(ids...)
+}
+
+// ClearAgentCommissionsAsUser clears all "agent_commissions_as_user" edges to the AgentCommission entity.
+func (_u *UserUpdateOne) ClearAgentCommissionsAsUser() *UserUpdateOne {
+	_u.mutation.ClearAgentCommissionsAsUser()
+	return _u
+}
+
+// RemoveAgentCommissionsAsUserIDs removes the "agent_commissions_as_user" edge to AgentCommission entities by IDs.
+func (_u *UserUpdateOne) RemoveAgentCommissionsAsUserIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.RemoveAgentCommissionsAsUserIDs(ids...)
+	return _u
+}
+
+// RemoveAgentCommissionsAsUser removes "agent_commissions_as_user" edges to AgentCommission entities.
+func (_u *UserUpdateOne) RemoveAgentCommissionsAsUser(v ...*AgentCommission) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAgentCommissionsAsUserIDs(ids...)
+}
+
 // Where appends a list predicates to the UserUpdate builder.
 func (_u *UserUpdateOne) Where(ps ...predicate.User) *UserUpdateOne {
 	_u.mutation.Where(ps...)
@@ -2556,6 +2983,11 @@ func (_u *UserUpdateOne) check() error {
 	if v, ok := _u.mutation.DiscoverySource(); ok {
 		if err := user.DiscoverySourceValidator(v); err != nil {
 			return &ValidationError{Name: "discovery_source", err: fmt.Errorf(`ent: validator failed for field "User.discovery_source": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.AgentStatus(); ok {
+		if err := user.AgentStatusValidator(v); err != nil {
+			return &ValidationError{Name: "agent_status", err: fmt.Errorf(`ent: validator failed for field "User.agent_status": %w`, err)}
 		}
 	}
 	return nil
@@ -2667,6 +3099,27 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if _u.mutation.InitialBalanceExpiresAtCleared() {
 		_spec.ClearField(user.FieldInitialBalanceExpiresAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.IsAgent(); ok {
+		_spec.SetField(user.FieldIsAgent, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.AgentStatus(); ok {
+		_spec.SetField(user.FieldAgentStatus, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.AgentCommissionRate(); ok {
+		_spec.SetField(user.FieldAgentCommissionRate, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedAgentCommissionRate(); ok {
+		_spec.AddField(user.FieldAgentCommissionRate, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AgentNote(); ok {
+		_spec.SetField(user.FieldAgentNote, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.AgentApprovedAt(); ok {
+		_spec.SetField(user.FieldAgentApprovedAt, field.TypeTime, value)
+	}
+	if _u.mutation.AgentApprovedAtCleared() {
+		_spec.ClearField(user.FieldAgentApprovedAt, field.TypeTime)
 	}
 	if _u.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -3303,6 +3756,96 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(paymentorder.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AgentCommissionsAsAgentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AgentCommissionsAsAgentTable,
+			Columns: []string{user.AgentCommissionsAsAgentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAgentCommissionsAsAgentIDs(); len(nodes) > 0 && !_u.mutation.AgentCommissionsAsAgentCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AgentCommissionsAsAgentTable,
+			Columns: []string{user.AgentCommissionsAsAgentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AgentCommissionsAsAgentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AgentCommissionsAsAgentTable,
+			Columns: []string{user.AgentCommissionsAsAgentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AgentCommissionsAsUserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AgentCommissionsAsUserTable,
+			Columns: []string{user.AgentCommissionsAsUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAgentCommissionsAsUserIDs(); len(nodes) > 0 && !_u.mutation.AgentCommissionsAsUserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AgentCommissionsAsUserTable,
+			Columns: []string{user.AgentCommissionsAsUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AgentCommissionsAsUserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AgentCommissionsAsUserTable,
+			Columns: []string{user.AgentCommissionsAsUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(agentcommission.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

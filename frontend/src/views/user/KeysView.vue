@@ -1,32 +1,143 @@
 <template>
   <AppLayout>
     <FadeIn>
-      <TablePageLayout>
-        <template #actions>
-          <SlideIn direction="left" :delay="100">
-            <div class="flex justify-end gap-3">
-              <MagneticButton>
-                <button
-                  @click="loadApiKeys"
-                  :disabled="loading"
-                  class="btn btn-secondary"
-                  :title="t('common.refresh')"
-                >
-                  <Icon name="refresh" size="md" :class="loading ? 'animate-spin' : ''" />
-                </button>
-              </MagneticButton>
-              <MagneticButton>
-                <button @click="showCreateModal = true" class="btn btn-primary" data-tour="keys-create-btn">
-                  <Icon name="plus" size="md" class="mr-2" />
-                  {{ t('keys.createKey') }}
-                </button>
-              </MagneticButton>
-            </div>
-          </SlideIn>
-        </template>
+      <div class="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
 
-        <template #table>
-          <SlideIn direction="up" :delay="200">
+        <!-- Section 1: 新建 API Key - Group Cards -->
+        <SlideIn direction="up" :delay="100">
+          <div>
+            <div class="mb-4">
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('keys.newApiKey') }}</h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('keys.newApiKeyDesc') }}</p>
+            </div>
+
+            <!-- Groups by Platform -->
+            <div v-for="platformGroup in groupedByPlatform" :key="platformGroup.platform" class="mb-6">
+              <div class="mb-3 flex items-center gap-2">
+                <PlatformIcon :platform="platformGroup.platform" size="md" />
+                <h3 class="font-medium text-gray-800 dark:text-gray-200">
+                  {{ t('admin.groups.platforms.' + platformGroup.platform) }}
+                </h3>
+                <span class="text-xs text-gray-400 dark:text-gray-500">
+                  {{ t('keys.groupCount', { count: platformGroup.groups.length }) }}
+                </span>
+              </div>
+
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div
+                  v-for="group in platformGroup.groups"
+                  :key="group.id"
+                  :class="[
+                    'relative flex flex-col rounded-xl border p-4 transition-all duration-200',
+                    isGroupUnavailable(group)
+                      ? 'cursor-not-allowed border-gray-200 bg-gray-50 opacity-60 dark:border-dark-600 dark:bg-dark-800/50'
+                      : 'cursor-pointer border-gray-200 bg-white hover:border-primary-300 hover:shadow-md dark:border-dark-600 dark:bg-dark-800 dark:hover:border-primary-600'
+                  ]"
+                >
+                  <!-- Header: Name + Tags -->
+                  <div class="mb-2 flex flex-wrap items-start gap-1.5">
+                    <span class="font-medium text-gray-900 dark:text-white">{{ group.name }}</span>
+                    <span
+                      v-for="tag in getGroupSpecialTags(group)"
+                      :key="tag.text"
+                      :class="[
+                        'rounded px-1.5 py-0.5 text-[10px] font-medium',
+                        tag.class
+                      ]"
+                    >
+                      {{ tag.text }}
+                    </span>
+                  </div>
+
+                  <!-- Price & Discount -->
+                  <div v-if="group.display_price" class="mb-2">
+                    <span class="text-lg font-bold text-gray-900 dark:text-white">{{ group.display_price }}</span>
+                    <span v-if="group.display_discount" class="ml-2 text-sm font-medium text-green-600 dark:text-green-400">
+                      {{ group.display_discount }}
+                    </span>
+                  </div>
+
+                  <!-- Regular Tags -->
+                  <div v-if="getGroupRegularTags(group).length > 0" class="mb-2 flex flex-wrap gap-1">
+                    <span
+                      v-for="tag in getGroupRegularTags(group)"
+                      :key="tag"
+                      class="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] text-gray-600 dark:bg-dark-600 dark:text-gray-400"
+                    >
+                      {{ tag }}
+                    </span>
+                  </div>
+
+                  <!-- Description -->
+                  <p v-if="group.description" class="mb-3 line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
+                    {{ group.description }}
+                  </p>
+                  <div class="flex-1"></div>
+
+                  <!-- Create Button -->
+                  <div class="mt-2 flex items-center justify-end">
+                    <button
+                      v-if="!isGroupUnavailable(group)"
+                      @click="quickCreateKey(group)"
+                      :disabled="quickCreating === group.id"
+                      class="flex items-center gap-1 rounded-lg bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700 transition-colors hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/40"
+                    >
+                      <template v-if="quickCreating === group.id">
+                        <svg class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      </template>
+                      <template v-else>
+                        {{ t('keys.create') }}
+                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
+                      </template>
+                    </button>
+                    <span v-else class="text-xs font-medium text-gray-400 dark:text-gray-500">
+                      {{ t('keys.unavailable') }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty state when no groups -->
+            <div v-if="groupedByPlatform.length === 0 && !loading" class="rounded-xl border border-dashed border-gray-300 p-8 text-center dark:border-dark-600">
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('keys.noGroup') }}</p>
+            </div>
+          </div>
+        </SlideIn>
+
+        <!-- Section 2: Keys 管理 -->
+        <SlideIn direction="up" :delay="200">
+          <div>
+            <div class="mb-4 flex items-center justify-between">
+              <div>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('keys.keysManagement') }}</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('keys.keysCount', { count: pagination.total }) }}</p>
+              </div>
+              <div class="flex gap-2">
+                <MagneticButton>
+                  <button
+                    @click="loadApiKeys"
+                    :disabled="loading"
+                    class="btn btn-secondary"
+                    :title="t('common.refresh')"
+                  >
+                    <Icon name="refresh" size="md" :class="loading ? 'animate-spin' : ''" />
+                  </button>
+                </MagneticButton>
+                <MagneticButton>
+                  <button @click="showCreateModal = true" class="btn btn-primary" data-tour="keys-create-btn">
+                    <Icon name="plus" size="md" class="mr-2" />
+                    {{ t('keys.createKey') }}
+                  </button>
+                </MagneticButton>
+              </div>
+            </div>
+
         <DataTable :columns="columns" :data="apiKeys" :loading="loading">
           <template #cell-key="{ value, row }">
             <div class="flex items-center gap-2">
@@ -190,10 +301,7 @@
             />
           </template>
         </DataTable>
-      </SlideIn>
-      </template>
 
-      <template #pagination>
         <Pagination
           v-if="pagination.total > 0"
           :page="pagination.page"
@@ -201,10 +309,13 @@
           :page-size="pagination.page_size"
           @update:page="handlePageChange"
           @update:pageSize="handlePageSizeChange"
+          class="mt-4"
         />
-      </template>
-    </TablePageLayout>
-  </FadeIn>
+          </div>
+        </SlideIn>
+
+      </div>
+    </FadeIn>
 
     <!-- Create/Edit Modal -->
     <BaseDialog
@@ -507,7 +618,6 @@
 const { t } = useI18n()
 import { keysAPI, authAPI, usageAPI, userGroupsAPI } from '@/api'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import TablePageLayout from '@/components/layout/TablePageLayout.vue'
 	import DataTable from '@/components/common/DataTable.vue'
 	import Pagination from '@/components/common/Pagination.vue'
 	import BaseDialog from '@/components/common/BaseDialog.vue'
@@ -518,6 +628,7 @@ import TablePageLayout from '@/components/layout/TablePageLayout.vue'
 	import UseKeyModal from '@/components/keys/UseKeyModal.vue'
 	import GroupBadge from '@/components/common/GroupBadge.vue'
 	import GroupOptionItem from '@/components/common/GroupOptionItem.vue'
+	import PlatformIcon from '@/components/common/PlatformIcon.vue'
 	import { FadeIn, SlideIn, MagneticButton } from '@/components/animations'
 	import type { ApiKey, Group, PublicSettings, SubscriptionType, GroupPlatform } from '@/types'
 import type { Column } from '@/components/common/types'
@@ -632,6 +743,70 @@ const groupOptions = computed(() =>
     platform: group.platform
   }))
 )
+
+// Group cards organized by platform
+const platformOrder: GroupPlatform[] = ['anthropic', 'openai', 'gemini', 'antigravity', 'multi']
+const quickCreating = ref<number | null>(null)
+
+interface PlatformGrouping {
+  platform: GroupPlatform
+  groups: Group[]
+}
+
+const groupedByPlatform = computed<PlatformGrouping[]>(() => {
+  const platformMap = new Map<GroupPlatform, Group[]>()
+  for (const group of groups.value) {
+    const platform = group.platform || 'anthropic'
+    if (!platformMap.has(platform)) {
+      platformMap.set(platform, [])
+    }
+    platformMap.get(platform)!.push(group)
+  }
+  return platformOrder
+    .filter(p => platformMap.has(p))
+    .map(p => ({ platform: p, groups: platformMap.get(p)! }))
+})
+
+// Special tags that get highlighted styling (推荐, 暂不可用, 备用)
+const specialTagKeywords: Record<string, string> = {
+  '推荐': 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+  'Recommended': 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+  '暂不可用': 'bg-gray-200 text-gray-500 dark:bg-dark-500 dark:text-gray-400',
+  'Unavailable': 'bg-gray-200 text-gray-500 dark:bg-dark-500 dark:text-gray-400',
+  '备用': 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+  'Backup': 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+}
+
+const getGroupSpecialTags = (group: Group) => {
+  const tags = group.tags || []
+  return tags
+    .filter(tag => specialTagKeywords[tag])
+    .map(tag => ({ text: tag, class: specialTagKeywords[tag] }))
+}
+
+const getGroupRegularTags = (group: Group) => {
+  const tags = group.tags || []
+  return tags.filter(tag => !specialTagKeywords[tag])
+}
+
+const isGroupUnavailable = (group: Group) => {
+  const tags = group.tags || []
+  return tags.some(tag => tag === '暂不可用' || tag === 'Unavailable')
+}
+
+const quickCreateKey = async (group: Group) => {
+  quickCreating.value = group.id
+  try {
+    await keysAPI.create(group.name, group.id)
+    appStore.showSuccess(t('keys.keyCreatedSuccess'))
+    loadApiKeys()
+  } catch (error: any) {
+    const errorMsg = error.response?.data?.detail || t('keys.failedToSave')
+    appStore.showError(errorMsg)
+  } finally {
+    quickCreating.value = null
+  }
+}
 
 const maskKey = (key: string): string => {
   if (key.length <= 12) return key

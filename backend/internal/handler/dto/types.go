@@ -79,6 +79,11 @@ type Group struct {
 	// 套餐自定义特性列表
 	PlanFeatures []string `json:"plan_features"`
 
+	// 分组卡片展示字段
+	Tags            []string `json:"tags"`
+	DisplayPrice    string   `json:"display_price"`
+	DisplayDiscount string   `json:"display_discount"`
+
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

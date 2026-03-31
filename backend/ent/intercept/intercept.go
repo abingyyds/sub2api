@@ -11,6 +11,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/account"
 	"github.com/Wei-Shaw/sub2api/ent/accountgroup"
 	"github.com/Wei-Shaw/sub2api/ent/admininvitecode"
+	"github.com/Wei-Shaw/sub2api/ent/agentcommission"
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/organization"
@@ -197,6 +198,33 @@ func (f TraverseAdminInviteCode) Traverse(ctx context.Context, q ent.Query) erro
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.AdminInviteCodeQuery", q)
+}
+
+// The AgentCommissionFunc type is an adapter to allow the use of ordinary function as a Querier.
+type AgentCommissionFunc func(context.Context, *ent.AgentCommissionQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f AgentCommissionFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.AgentCommissionQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.AgentCommissionQuery", q)
+}
+
+// The TraverseAgentCommission type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseAgentCommission func(context.Context, *ent.AgentCommissionQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseAgentCommission) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseAgentCommission) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.AgentCommissionQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.AgentCommissionQuery", q)
 }
 
 // The GroupFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -750,6 +778,8 @@ func NewQuery(q ent.Query) (Query, error) {
 		return &query[*ent.AccountGroupQuery, predicate.AccountGroup, accountgroup.OrderOption]{typ: ent.TypeAccountGroup, tq: q}, nil
 	case *ent.AdminInviteCodeQuery:
 		return &query[*ent.AdminInviteCodeQuery, predicate.AdminInviteCode, admininvitecode.OrderOption]{typ: ent.TypeAdminInviteCode, tq: q}, nil
+	case *ent.AgentCommissionQuery:
+		return &query[*ent.AgentCommissionQuery, predicate.AgentCommission, agentcommission.OrderOption]{typ: ent.TypeAgentCommission, tq: q}, nil
 	case *ent.GroupQuery:
 		return &query[*ent.GroupQuery, predicate.Group, group.OrderOption]{typ: ent.TypeGroup, tq: q}, nil
 	case *ent.OrgAuditLogQuery:
