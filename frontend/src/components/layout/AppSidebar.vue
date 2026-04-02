@@ -631,6 +631,7 @@ const userNavGroups = computed(() => {
       items: [
         { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
         { path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon },
+        { path: '/model-plaza', label: t('nav.modelPlaza'), icon: GlobeIcon },
         ...(appStore.referralEnabled
           ? [{ path: '/referral', label: t('nav.referral'), icon: ShareIcon, hideInSimpleMode: true }]
           : []),
@@ -680,6 +681,7 @@ const personalNavItems = computed(() => {
   const items: NavItem[] = [
     { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
     { path: '/keys', label: t('nav.apiKeys'), icon: KeyIcon },
+    { path: '/model-plaza', label: t('nav.modelPlaza'), icon: GlobeIcon },
     ...(appStore.referralEnabled
       ? [{ path: '/referral', label: t('nav.referral'), icon: ShareIcon, hideInSimpleMode: true }]
       : []),
