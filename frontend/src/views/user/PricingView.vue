@@ -116,7 +116,7 @@
           <!-- ==================== Newcomer Section ==================== -->
           <template v-if="activeTab === 'newcomer'">
             <SlideIn direction="up" :delay="250">
-              <div class="mb-2">
+              <div class="mb-6 text-center">
                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('pricing.newcomerSection') }}</h2>
                 <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">{{ t('pricing.newcomerSectionDesc') }}</p>
               </div>
@@ -124,45 +124,98 @@
 
             <!-- Newcomer Plans -->
             <StaggerContainer v-if="newcomerPlans.length > 0" :stagger-delay="100" :delay="300">
-              <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div class="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
                 <GlowCard
                   v-for="rp in newcomerPlans"
                   :key="rp.key"
-                  glow-color="rgb(34, 197, 94)"
+                  :glow-color="rp.pay_amount_fen >= 5000 ? 'rgb(99, 102, 241)' : 'rgb(34, 197, 94)'"
                 >
                   <div
-                    class="relative flex flex-col rounded-2xl border-2 bg-white dark:bg-dark-900 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer h-full border-green-400 dark:border-green-500/60 shadow-lg shadow-green-500/10"
+                    class="relative flex flex-col rounded-2xl border-2 bg-white dark:bg-dark-900 transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer h-full"
+                    :class="rp.pay_amount_fen >= 5000
+                      ? 'border-indigo-400 dark:border-indigo-500/60 shadow-lg shadow-indigo-500/10'
+                      : 'border-green-400 dark:border-green-500/60 shadow-lg shadow-green-500/10'"
                     @click="handleRechargePreset(rp)"
                   >
-                    <!-- Newcomer badge -->
+                    <!-- Badge -->
                     <div class="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <span class="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-4 py-1 rounded-full shadow-md whitespace-nowrap">
-                        {{ t('pricing.newcomerBadge') }}
+                      <span class="text-white text-xs font-bold px-4 py-1 rounded-full shadow-md whitespace-nowrap"
+                        :class="rp.pay_amount_fen >= 5000
+                          ? 'bg-gradient-to-r from-indigo-500 to-purple-500'
+                          : 'bg-gradient-to-r from-green-500 to-emerald-500'"
+                      >
+                        {{ rp.pay_amount_fen >= 5000 ? '🚀 技术指导 · 手把手带飞' : '🎉 上手即用 · 零门槛' }}
                       </span>
                     </div>
 
-                    <div class="flex flex-1 flex-col p-6">
+                    <div class="flex flex-1 flex-col p-8">
                       <!-- Title -->
-                      <h3 class="text-sm font-medium text-gray-500 dark:text-dark-400">{{ rp.name || t('pricing.purchaseQuota') }}</h3>
+                      <h3 class="text-sm font-medium text-gray-500 dark:text-dark-400 mt-2">{{ rp.name || t('pricing.purchaseQuota') }}</h3>
                       <!-- Balance amount (USD) -->
                       <div class="mt-2 flex items-baseline gap-1">
-                        <span class="text-3xl font-extrabold text-gray-900 dark:text-white">${{ rp.balance_amount.toFixed(2) }}</span>
+                        <span class="text-4xl font-extrabold text-gray-900 dark:text-white">${{ rp.balance_amount.toFixed(2) }}</span>
                         <span class="text-sm text-gray-500 dark:text-dark-400">USD</span>
                       </div>
                       <!-- Special price label -->
-                      <p v-if="rp.pay_amount_fen !== rp.balance_amount * 100" class="mt-1 text-xs font-semibold text-green-600 dark:text-green-400">
+                      <p v-if="rp.pay_amount_fen !== rp.balance_amount * 100" class="mt-1 text-xs font-semibold"
+                        :class="rp.pay_amount_fen >= 5000 ? 'text-indigo-600 dark:text-indigo-400' : 'text-green-600 dark:text-green-400'"
+                      >
                         {{ t('pricing.newcomerSpecialPrice') }}
                       </p>
-                      <!-- Description -->
-                      <p v-if="rp.description" class="mt-2 text-sm text-gray-500 dark:text-dark-400">{{ rp.description }}</p>
+
+                      <!-- Equivalent value -->
+                      <div class="mt-2 text-xs font-bold text-green-600 dark:text-green-400">
+                        ≈ 官方 ${{ (rp.balance_amount * 2).toFixed(2) }} 等效算力
+                      </div>
+
+                      <!-- Feature highlights -->
+                      <ul class="mt-5 space-y-3 text-sm text-gray-600 dark:text-dark-400 flex-grow">
+                        <template v-if="rp.pay_amount_fen >= 5000">
+                          <li class="flex items-start gap-2.5">
+                            <Icon name="check" size="sm" class="text-indigo-500 mt-0.5 flex-shrink-0" />
+                            <span><strong class="text-gray-900 dark:text-white">1 对 1 远程技术指导：</strong>专人手把手帮你配置 Claude Code 开发环境</span>
+                          </li>
+                          <li class="flex items-start gap-2.5">
+                            <Icon name="check" size="sm" class="text-indigo-500 mt-0.5 flex-shrink-0" />
+                            <span><strong class="text-gray-900 dark:text-white">环境搭建全包：</strong>API 密钥配置、IDE 插件安装、代理设置一步到位</span>
+                          </li>
+                          <li class="flex items-start gap-2.5">
+                            <Icon name="check" size="sm" class="text-indigo-500 mt-0.5 flex-shrink-0" />
+                            <span><strong class="text-gray-900 dark:text-white">$79.9 充足额度：</strong>≈ 官方 ${{ (rp.balance_amount * 2).toFixed(0) }} 等效算力，足够深度体验</span>
+                          </li>
+                          <li class="flex items-start gap-2.5">
+                            <Icon name="check" size="sm" class="text-indigo-500 mt-0.5 flex-shrink-0" />
+                            <span><strong class="text-gray-900 dark:text-white">新手零压力：</strong>不会配置？不会用？全程带你搞定，确保跑通</span>
+                          </li>
+                        </template>
+                        <template v-else>
+                          <li class="flex items-start gap-2.5">
+                            <Icon name="check" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
+                            <span><strong class="text-gray-900 dark:text-white">零门槛体验：</strong>注册即买，立刻接入 Claude / Codex / Gemini</span>
+                          </li>
+                          <li class="flex items-start gap-2.5">
+                            <Icon name="check" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
+                            <span><strong class="text-gray-900 dark:text-white">超值性价比：</strong>¥9.99 即享 ${{ rp.balance_amount.toFixed(2) }} 额度，先用再说</span>
+                          </li>
+                          <li class="flex items-start gap-2.5">
+                            <Icon name="check" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
+                            <span><strong class="text-gray-900 dark:text-white">即刻生效：</strong>支付后秒级到账，无需等待审核</span>
+                          </li>
+                        </template>
+                      </ul>
 
                       <div class="mt-auto pt-5">
                         <!-- CTA button -->
-                        <div
-                          class="flex items-center justify-center rounded-xl py-2.5 text-sm font-bold text-white transition-all bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-md"
-                        >
-                          {{ t('pricing.newcomerCta') }} ¥{{ (rp.pay_amount_fen / 100).toFixed(rp.pay_amount_fen % 100 === 0 ? 0 : 2) }}
-                        </div>
+                        <MagneticButton>
+                          <div
+                            class="flex items-center justify-center rounded-xl py-3.5 text-base font-bold text-white transition-all shadow-lg"
+                            :class="rp.pay_amount_fen >= 5000
+                              ? 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 shadow-indigo-500/30'
+                              : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-green-500/30'"
+                          >
+                            {{ t('pricing.newcomerCta') }} ¥{{ (rp.pay_amount_fen / 100).toFixed(rp.pay_amount_fen % 100 === 0 ? 0 : 2) }}
+                          </div>
+                        </MagneticButton>
                         <!-- Purchase limit note -->
                         <p v-if="rp.max_purchases && rp.max_purchases > 0" class="mt-2 text-center text-xs text-gray-400 dark:text-dark-500">
                           {{ t('pricing.purchaseLimitNote', { count: rp.max_purchases }) }}
