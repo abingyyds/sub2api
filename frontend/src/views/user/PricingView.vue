@@ -238,7 +238,7 @@
                       <span class="font-extrabold text-gray-900 dark:text-white">¥{{ (dp.plan.amount_fen / 100).toFixed(0) }}</span>
                     </div>
 
-                    <!-- Quota info -->
+                    <!-- Quota info with equivalent -->
                     <div class="text-sm text-gray-500 dark:text-dark-400 mb-1">
                       {{ dp.highlight }}
                     </div>
@@ -728,33 +728,42 @@ const planDecorations: Record<string, Omit<DecoratedPlan, 'plan'>> = {
 // Chinese decoration text (hardcoded)
 const planDecoZh: Record<string, Omit<DecoratedPlan, 'plan'>> = {
   '29900': {
-    badge: '',
-    audience: '',
+    badge: '🔥 个人首选 / 火爆热销',
+    audience: '[适合：独立开发者 / 个人项目]',
     highlight: '每月额度 $360',
     features: [
-      '微信扫码支付',
+      '<strong class="text-gray-900 dark:text-white">每周 $90 高速配额：</strong>专属通道，响应丝滑无卡顿',
+      '<strong class="text-gray-900 dark:text-white">总额 $360/月：</strong>充足算力，轻松覆盖日常开发',
+      '<strong class="text-gray-900 dark:text-white">永不掉线保障：</strong>额度用尽自动转按量，业务 7x24 在线',
+      '<strong class="text-gray-900 dark:text-white">超高性价比：</strong>个人开发首选，一次付费全月无忧',
     ],
-    cta: '立即购买',
+    cta: '购买开发者版',
     featured: false,
   },
   '49900': {
-    badge: '',
-    audience: '',
+    badge: '👑 生产环境推荐 / 主推套餐',
+    audience: '[适合：全职开发 / 生产级应用]',
     highlight: '每月额度 $650',
     features: [
-      '微信扫码支付',
+      '<strong class="text-gray-900 dark:text-white text-base">总额 $650：</strong>充足算力储备，应对高频调用',
+      '<strong class="text-gray-900 dark:text-white text-base">每周 $162.5 高速配额：</strong>生产级优先级，拒绝排队等待',
+      '<strong class="text-gray-900 dark:text-white text-base">无损计费机制：</strong>拒绝倍率陷阱，每一分实打实可用',
+      '<strong class="text-gray-900 dark:text-white text-base">熔断智能防护：</strong>异常流量自动隔离，生产环境稳定如磐石',
     ],
-    cta: '立即购买',
+    cta: '立即购买，释放生产力',
     featured: true,
   },
   '99900': {
-    badge: '',
-    audience: '',
-    highlight: '每月额度 $1400',
+    badge: '💎 团队专属 / SLA 保障',
+    audience: '[适合：开发团队 / AI 产品项目]',
+    highlight: '每月额度 $1,400',
     features: [
-      '微信扫码支付',
+      '<strong class="text-gray-900 dark:text-white">总额 $1,400/月：</strong>顶配算力，满足团队级高频需求',
+      '<strong class="text-gray-900 dark:text-white">每周 $350 高速配额：</strong>团队级 VIP 优先级调度，秒级响应',
+      '<strong class="text-gray-900 dark:text-white">高可用服务保障：</strong>极致架构，满足企业级稳定运营标准',
+      '<strong class="text-gray-900 dark:text-white">无感溢出续航：</strong>额度海量储备，确保 AI 工作流永不断供',
     ],
-    cta: '立即购买',
+    cta: '购买旗舰版',
     featured: false,
   },
 }
