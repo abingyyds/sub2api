@@ -183,10 +183,11 @@ export async function getUserUsageStats(
  * @returns List of agent users
  */
 export async function getAgents(): Promise<AdminUser[]> {
+  // Fetch all users with a large page size and sort by ID ascending to get older users (agents)
   const { data } = await apiClient.get<PaginatedResponse<AdminUser>>('/admin/users', {
     params: {
       page: 1,
-      page_size: 1000,
+      page_size: 10000, // Increase to get all users
       // Note: Backend needs to support filtering by is_agent, for now we get all and filter client-side
     }
   })
