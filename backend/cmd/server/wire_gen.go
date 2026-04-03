@@ -100,7 +100,7 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	proxyRepository := repository.NewProxyRepository(client, db)
 	proxyExitInfoProber := repository.NewProxyExitInfoProber(configConfig)
 	proxyLatencyCache := repository.NewProxyLatencyCache(redisClient)
-	adminService := service.NewAdminService(userRepository, groupRepository, accountRepository, proxyRepository, apiKeyRepository, redeemCodeRepository, billingCacheService, proxyExitInfoProber, proxyLatencyCache, apiKeyAuthCacheInvalidator)
+	adminService := service.NewAdminService(userRepository, groupRepository, accountRepository, proxyRepository, apiKeyRepository, redeemCodeRepository, referralRepository, billingCacheService, proxyExitInfoProber, proxyLatencyCache, apiKeyAuthCacheInvalidator)
 	adminUserHandler := admin.NewUserHandler(adminService)
 	groupHandler := admin.NewGroupHandler(adminService)
 	claudeOAuthClient := repository.NewClaudeOAuthClient()
@@ -183,9 +183,12 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	adminInviteCodeHandler := admin.NewAdminInviteCodeHandler(adminInviteCodeService)
 	discoverySourceStatsHandler := admin.NewDiscoverySourceStatsHandler(userService)
 	paymentOrderRepository := repository.NewPaymentOrderRepo(client)
-	paymentService := service.NewPaymentService(paymentOrderRepository, settingService, subscriptionService, billingCacheService, userRepository, groupRepository, promoService)
+	agentRepository := repository.NewAgentRepository(db)
+	agentService := service.NewAgentService(agentRepository, userRepository, referralService, settingService)
+	paymentService := service.NewPaymentService(paymentOrderRepository, settingService, subscriptionService, billingCacheService, userRepository, groupRepository, promoService, agentService)
 	paymentOrderHandler := admin.NewPaymentOrderHandler(paymentService)
-	adminHandlers := handler.ProvideAdminHandlers(dashboardHandler, adminUserHandler, groupHandler, accountHandler, oAuthHandler, openAIOAuthHandler, geminiOAuthHandler, antigravityOAuthHandler, proxyHandler, adminRedeemHandler, promoHandler, settingHandler, opsHandler, systemHandler, adminSubscriptionHandler, adminUsageHandler, userAttributeHandler, referralHandler, announcementHandler, organizationHandler, adminInviteCodeHandler, discoverySourceStatsHandler, paymentOrderHandler)
+	agentHandler := admin.NewAgentHandler(agentService)
+	adminHandlers := handler.ProvideAdminHandlers(dashboardHandler, adminUserHandler, groupHandler, accountHandler, oAuthHandler, openAIOAuthHandler, geminiOAuthHandler, antigravityOAuthHandler, proxyHandler, adminRedeemHandler, promoHandler, settingHandler, opsHandler, systemHandler, adminSubscriptionHandler, adminUsageHandler, userAttributeHandler, referralHandler, announcementHandler, organizationHandler, adminInviteCodeHandler, discoverySourceStatsHandler, paymentOrderHandler, agentHandler)
 	orgDashboardHandler := org.NewDashboardHandler(organizationService)
 	orgMemberService := service.NewOrgMemberService(orgMemberRepository, organizationRepository, userRepository)
 	memberHandler := org.NewMemberHandler(orgMemberService)
@@ -201,7 +204,8 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	handlerReferralHandler := handler.NewReferralHandler(referralService)
 	handlerAnnouncementHandler := handler.NewAnnouncementHandler(announcementService)
 	paymentHandler := handler.NewPaymentHandler(paymentService)
-	handlers := handler.ProvideHandlers(authHandler, userHandler, apiKeyHandler, usageHandler, redeemHandler, subscriptionHandler, adminHandlers, orgHandlers, gatewayHandler, openAIGatewayHandler, handlerSettingHandler, totpHandler, modelPlazaHandler, handlerReferralHandler, handlerAnnouncementHandler, paymentHandler)
+	handlerAgentHandler := handler.NewAgentHandler(agentService)
+	handlers := handler.ProvideHandlers(authHandler, userHandler, apiKeyHandler, usageHandler, redeemHandler, subscriptionHandler, adminHandlers, orgHandlers, gatewayHandler, openAIGatewayHandler, handlerSettingHandler, totpHandler, modelPlazaHandler, handlerReferralHandler, handlerAnnouncementHandler, paymentHandler, handlerAgentHandler)
 	jwtAuthMiddleware := middleware.NewJWTAuthMiddleware(authService, userService)
 	adminAuthMiddleware := middleware.NewAdminAuthMiddleware(authService, userService, settingService)
 	apiKeyAuthMiddleware := middleware.NewAPIKeyAuthMiddleware(apiKeyService, subscriptionService, organizationService, orgMemberService, orgProjectService, configConfig)
@@ -219,8 +223,9 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	balanceExpiryService := service.ProvideBalanceExpiryService(userRepository, billingCacheService)
 	v := provideCleanup(client, redisClient, opsMetricsCollector, opsAggregationService, opsAlertEvaluatorService, opsCleanupService, opsScheduledReportService, schedulerSnapshotService, tokenRefreshService, accountExpiryService, subscriptionExpiryService, balanceExpiryService, usageCleanupService, pricingService, emailQueueService, billingCacheService, oAuthService, openAIOAuthService, geminiOAuthService, antigravityOAuthService)
 	application := &Application{
-		Server:  httpServer,
-		Cleanup: v,
+		Server:    httpServer,
+		EntClient: client,
+		Cleanup:   v,
 	}
 	return application, nil
 }
@@ -228,8 +233,9 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 // wire.go:
 
 type Application struct {
-	Server  *http.Server
-	Cleanup func()
+	Server    *http.Server
+	EntClient *ent.Client
+	Cleanup   func()
 }
 
 func provideCleanup(

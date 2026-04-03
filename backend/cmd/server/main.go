@@ -22,6 +22,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/server/middleware"
 	"github.com/Wei-Shaw/sub2api/internal/setup"
 	"github.com/Wei-Shaw/sub2api/internal/web"
+	"github.com/Wei-Shaw/sub2api/ent"
 
 	"github.com/gin-gonic/gin"
 )
@@ -147,6 +148,11 @@ func runMainServer() {
 	}
 	defer app.Cleanup()
 
+	// Run database migrations automatically
+	if err := runMigrations(app.EntClient); err != nil {
+		log.Printf("⚠️  Warning: Failed to run migrations: %v", err)
+	}
+
 	// 启动服务器
 	go func() {
 		if err := app.Server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -171,4 +177,27 @@ func runMainServer() {
 	}
 
 	log.Println("Server exited")
+}
+
+// runMigrations executes database migrations automatically on startup
+func runMigrations(client *ent.Client) error {
+	ctx := context.Background()
+
+	log.Println("Running database migrations...")
+
+	// Execute raw SQL migrations
+	migrations := []string{
+		`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS usage_limit DOUBLE PRECISION`,
+	}
+
+	for i, migration := range migrations {
+		_, err := client.ExecContext(ctx, migration)
+		if err != nil {
+			log.Printf("Migration %d failed: %v", i+1, err)
+			return err
+		}
+	}
+
+	log.Println("✓ Database migrations completed successfully")
+	return nil
 }
