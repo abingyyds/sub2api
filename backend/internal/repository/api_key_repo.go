@@ -33,7 +33,8 @@ func (r *apiKeyRepository) Create(ctx context.Context, key *service.APIKey) erro
 		SetKey(key.Key).
 		SetName(key.Name).
 		SetStatus(key.Status).
-		SetNillableGroupID(key.GroupID)
+		SetNillableGroupID(key.GroupID).
+		SetNillableUsageLimit(key.UsageLimit)
 
 	if len(key.IPWhitelist) > 0 {
 		builder.SetIPWhitelist(key.IPWhitelist)
@@ -178,6 +179,13 @@ func (r *apiKeyRepository) Update(ctx context.Context, key *service.APIKey) erro
 		builder.SetIPBlacklist(key.IPBlacklist)
 	} else {
 		builder.ClearIPBlacklist()
+	}
+
+	// 用量上限字段
+	if key.UsageLimit != nil {
+		builder.SetUsageLimit(*key.UsageLimit)
+	} else {
+		builder.ClearUsageLimit()
 	}
 
 	affected, err := builder.Save(ctx)
@@ -369,6 +377,7 @@ func apiKeyEntityToService(m *dbent.APIKey) *service.APIKey {
 		Status:       m.Status,
 		IPWhitelist:  m.IPWhitelist,
 		IPBlacklist:  m.IPBlacklist,
+		UsageLimit:   m.UsageLimit,
 		CreatedAt:    m.CreatedAt,
 		UpdatedAt:    m.UpdatedAt,
 		GroupID:      m.GroupID,

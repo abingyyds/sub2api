@@ -32,6 +32,7 @@ type CreateAPIKeyRequest struct {
 	CustomKey   *string  `json:"custom_key"`   // 可选的自定义key
 	IPWhitelist []string `json:"ip_whitelist"` // IP 白名单
 	IPBlacklist []string `json:"ip_blacklist"` // IP 黑名单
+	UsageLimit  *float64 `json:"usage_limit"`  // 用量上限（USD），null表示无限制
 }
 
 // UpdateAPIKeyRequest represents the update API key request payload
@@ -41,6 +42,7 @@ type UpdateAPIKeyRequest struct {
 	Status      string   `json:"status" binding:"omitempty,oneof=active inactive"`
 	IPWhitelist []string `json:"ip_whitelist"` // IP 白名单
 	IPBlacklist []string `json:"ip_blacklist"` // IP 黑名单
+	UsageLimit  *float64 `json:"usage_limit"`  // 用量上限（USD），null表示无限制
 }
 
 // List handles listing user's API keys with pagination
@@ -119,6 +121,7 @@ func (h *APIKeyHandler) Create(c *gin.Context) {
 		CustomKey:   req.CustomKey,
 		IPWhitelist: req.IPWhitelist,
 		IPBlacklist: req.IPBlacklist,
+		UsageLimit:  req.UsageLimit,
 	}
 	key, err := h.apiKeyService.Create(c.Request.Context(), subject.UserID, svcReq)
 	if err != nil {
@@ -153,6 +156,7 @@ func (h *APIKeyHandler) Update(c *gin.Context) {
 	svcReq := service.UpdateAPIKeyRequest{
 		IPWhitelist: req.IPWhitelist,
 		IPBlacklist: req.IPBlacklist,
+		UsageLimit:  req.UsageLimit,
 	}
 	if req.Name != "" {
 		svcReq.Name = &req.Name

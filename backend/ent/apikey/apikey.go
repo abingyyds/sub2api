@@ -35,6 +35,8 @@ const (
 	FieldIPWhitelist = "ip_whitelist"
 	// FieldIPBlacklist holds the string denoting the ip_blacklist field in the database.
 	FieldIPBlacklist = "ip_blacklist"
+	// FieldUsageLimit holds the string denoting the usage_limit field in the database.
+	FieldUsageLimit = "usage_limit"
 	// FieldOrgID holds the string denoting the org_id field in the database.
 	FieldOrgID = "org_id"
 	// FieldOrgProjectID holds the string denoting the org_project_id field in the database.
@@ -101,6 +103,7 @@ var Columns = []string{
 	FieldStatus,
 	FieldIPWhitelist,
 	FieldIPBlacklist,
+	FieldUsageLimit,
 	FieldOrgID,
 	FieldOrgProjectID,
 }
@@ -185,6 +188,11 @@ func ByGroupID(opts ...sql.OrderTermOption) OrderOption {
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByUsageLimit orders the results by the usage_limit field.
+func ByUsageLimit(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUsageLimit, opts...).ToFunc()
 }
 
 // ByOrgID orders the results by the org_id field.

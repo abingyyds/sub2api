@@ -13,6 +13,7 @@ type APIKey struct {
 	Status      string
 	IPWhitelist []string
 	IPBlacklist []string
+	UsageLimit  *float64
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	User        *User

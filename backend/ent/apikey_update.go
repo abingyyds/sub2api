@@ -172,6 +172,33 @@ func (_u *APIKeyUpdate) ClearIPBlacklist() *APIKeyUpdate {
 	return _u
 }
 
+// SetUsageLimit sets the "usage_limit" field.
+func (_u *APIKeyUpdate) SetUsageLimit(v float64) *APIKeyUpdate {
+	_u.mutation.ResetUsageLimit()
+	_u.mutation.SetUsageLimit(v)
+	return _u
+}
+
+// SetNillableUsageLimit sets the "usage_limit" field if the given value is not nil.
+func (_u *APIKeyUpdate) SetNillableUsageLimit(v *float64) *APIKeyUpdate {
+	if v != nil {
+		_u.SetUsageLimit(*v)
+	}
+	return _u
+}
+
+// AddUsageLimit adds value to the "usage_limit" field.
+func (_u *APIKeyUpdate) AddUsageLimit(v float64) *APIKeyUpdate {
+	_u.mutation.AddUsageLimit(v)
+	return _u
+}
+
+// ClearUsageLimit clears the value of the "usage_limit" field.
+func (_u *APIKeyUpdate) ClearUsageLimit() *APIKeyUpdate {
+	_u.mutation.ClearUsageLimit()
+	return _u
+}
+
 // SetOrgID sets the "org_id" field.
 func (_u *APIKeyUpdate) SetOrgID(v int64) *APIKeyUpdate {
 	_u.mutation.SetOrgID(v)
@@ -427,6 +454,15 @@ func (_u *APIKeyUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.IPBlacklistCleared() {
 		_spec.ClearField(apikey.FieldIPBlacklist, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.UsageLimit(); ok {
+		_spec.SetField(apikey.FieldUsageLimit, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedUsageLimit(); ok {
+		_spec.AddField(apikey.FieldUsageLimit, field.TypeFloat64, value)
+	}
+	if _u.mutation.UsageLimitCleared() {
+		_spec.ClearField(apikey.FieldUsageLimit, field.TypeFloat64)
 	}
 	if _u.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -747,6 +783,33 @@ func (_u *APIKeyUpdateOne) ClearIPBlacklist() *APIKeyUpdateOne {
 	return _u
 }
 
+// SetUsageLimit sets the "usage_limit" field.
+func (_u *APIKeyUpdateOne) SetUsageLimit(v float64) *APIKeyUpdateOne {
+	_u.mutation.ResetUsageLimit()
+	_u.mutation.SetUsageLimit(v)
+	return _u
+}
+
+// SetNillableUsageLimit sets the "usage_limit" field if the given value is not nil.
+func (_u *APIKeyUpdateOne) SetNillableUsageLimit(v *float64) *APIKeyUpdateOne {
+	if v != nil {
+		_u.SetUsageLimit(*v)
+	}
+	return _u
+}
+
+// AddUsageLimit adds value to the "usage_limit" field.
+func (_u *APIKeyUpdateOne) AddUsageLimit(v float64) *APIKeyUpdateOne {
+	_u.mutation.AddUsageLimit(v)
+	return _u
+}
+
+// ClearUsageLimit clears the value of the "usage_limit" field.
+func (_u *APIKeyUpdateOne) ClearUsageLimit() *APIKeyUpdateOne {
+	_u.mutation.ClearUsageLimit()
+	return _u
+}
+
 // SetOrgID sets the "org_id" field.
 func (_u *APIKeyUpdateOne) SetOrgID(v int64) *APIKeyUpdateOne {
 	_u.mutation.SetOrgID(v)
@@ -1032,6 +1095,15 @@ func (_u *APIKeyUpdateOne) sqlSave(ctx context.Context) (_node *APIKey, err erro
 	}
 	if _u.mutation.IPBlacklistCleared() {
 		_spec.ClearField(apikey.FieldIPBlacklist, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.UsageLimit(); ok {
+		_spec.SetField(apikey.FieldUsageLimit, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedUsageLimit(); ok {
+		_spec.AddField(apikey.FieldUsageLimit, field.TypeFloat64, value)
+	}
+	if _u.mutation.UsageLimitCleared() {
+		_spec.ClearField(apikey.FieldUsageLimit, field.TypeFloat64)
 	}
 	if _u.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{

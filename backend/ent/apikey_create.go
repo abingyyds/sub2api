@@ -127,6 +127,20 @@ func (_c *APIKeyCreate) SetIPBlacklist(v []string) *APIKeyCreate {
 	return _c
 }
 
+// SetUsageLimit sets the "usage_limit" field.
+func (_c *APIKeyCreate) SetUsageLimit(v float64) *APIKeyCreate {
+	_c.mutation.SetUsageLimit(v)
+	return _c
+}
+
+// SetNillableUsageLimit sets the "usage_limit" field if the given value is not nil.
+func (_c *APIKeyCreate) SetNillableUsageLimit(v *float64) *APIKeyCreate {
+	if v != nil {
+		_c.SetUsageLimit(*v)
+	}
+	return _c
+}
+
 // SetOrgID sets the "org_id" field.
 func (_c *APIKeyCreate) SetOrgID(v int64) *APIKeyCreate {
 	_c.mutation.SetOrgID(v)
@@ -358,6 +372,10 @@ func (_c *APIKeyCreate) createSpec() (*APIKey, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.IPBlacklist(); ok {
 		_spec.SetField(apikey.FieldIPBlacklist, field.TypeJSON, value)
 		_node.IPBlacklist = value
+	}
+	if value, ok := _c.mutation.UsageLimit(); ok {
+		_spec.SetField(apikey.FieldUsageLimit, field.TypeFloat64, value)
+		_node.UsageLimit = &value
 	}
 	if nodes := _c.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -627,6 +645,30 @@ func (u *APIKeyUpsert) ClearIPBlacklist() *APIKeyUpsert {
 	return u
 }
 
+// SetUsageLimit sets the "usage_limit" field.
+func (u *APIKeyUpsert) SetUsageLimit(v float64) *APIKeyUpsert {
+	u.Set(apikey.FieldUsageLimit, v)
+	return u
+}
+
+// UpdateUsageLimit sets the "usage_limit" field to the value that was provided on create.
+func (u *APIKeyUpsert) UpdateUsageLimit() *APIKeyUpsert {
+	u.SetExcluded(apikey.FieldUsageLimit)
+	return u
+}
+
+// AddUsageLimit adds v to the "usage_limit" field.
+func (u *APIKeyUpsert) AddUsageLimit(v float64) *APIKeyUpsert {
+	u.Add(apikey.FieldUsageLimit, v)
+	return u
+}
+
+// ClearUsageLimit clears the value of the "usage_limit" field.
+func (u *APIKeyUpsert) ClearUsageLimit() *APIKeyUpsert {
+	u.SetNull(apikey.FieldUsageLimit)
+	return u
+}
+
 // SetOrgID sets the "org_id" field.
 func (u *APIKeyUpsert) SetOrgID(v int64) *APIKeyUpsert {
 	u.Set(apikey.FieldOrgID, v)
@@ -859,6 +901,34 @@ func (u *APIKeyUpsertOne) UpdateIPBlacklist() *APIKeyUpsertOne {
 func (u *APIKeyUpsertOne) ClearIPBlacklist() *APIKeyUpsertOne {
 	return u.Update(func(s *APIKeyUpsert) {
 		s.ClearIPBlacklist()
+	})
+}
+
+// SetUsageLimit sets the "usage_limit" field.
+func (u *APIKeyUpsertOne) SetUsageLimit(v float64) *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.SetUsageLimit(v)
+	})
+}
+
+// AddUsageLimit adds v to the "usage_limit" field.
+func (u *APIKeyUpsertOne) AddUsageLimit(v float64) *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.AddUsageLimit(v)
+	})
+}
+
+// UpdateUsageLimit sets the "usage_limit" field to the value that was provided on create.
+func (u *APIKeyUpsertOne) UpdateUsageLimit() *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.UpdateUsageLimit()
+	})
+}
+
+// ClearUsageLimit clears the value of the "usage_limit" field.
+func (u *APIKeyUpsertOne) ClearUsageLimit() *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.ClearUsageLimit()
 	})
 }
 
@@ -1266,6 +1336,34 @@ func (u *APIKeyUpsertBulk) UpdateIPBlacklist() *APIKeyUpsertBulk {
 func (u *APIKeyUpsertBulk) ClearIPBlacklist() *APIKeyUpsertBulk {
 	return u.Update(func(s *APIKeyUpsert) {
 		s.ClearIPBlacklist()
+	})
+}
+
+// SetUsageLimit sets the "usage_limit" field.
+func (u *APIKeyUpsertBulk) SetUsageLimit(v float64) *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.SetUsageLimit(v)
+	})
+}
+
+// AddUsageLimit adds v to the "usage_limit" field.
+func (u *APIKeyUpsertBulk) AddUsageLimit(v float64) *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.AddUsageLimit(v)
+	})
+}
+
+// UpdateUsageLimit sets the "usage_limit" field to the value that was provided on create.
+func (u *APIKeyUpsertBulk) UpdateUsageLimit() *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.UpdateUsageLimit()
+	})
+}
+
+// ClearUsageLimit clears the value of the "usage_limit" field.
+func (u *APIKeyUpsertBulk) ClearUsageLimit() *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.ClearUsageLimit()
 	})
 }
 

@@ -467,6 +467,20 @@
           />
         </div>
 
+        <!-- Usage Limit Section -->
+        <div>
+          <label class="input-label">{{ t('keys.usageLimitLabel') }}</label>
+          <input
+            v-model.number="formData.usage_limit"
+            type="number"
+            min="0"
+            step="0.01"
+            class="input"
+            :placeholder="t('keys.usageLimitPlaceholder')"
+          />
+          <p class="input-hint">{{ t('keys.usageLimitHint') }}</p>
+        </div>
+
         <!-- IP Restriction Section -->
         <div class="space-y-3">
           <div class="flex items-center justify-between">
@@ -765,7 +779,8 @@ const formData = ref({
   custom_key: '',
   enable_ip_restriction: false,
   ip_whitelist: '',
-  ip_blacklist: ''
+  ip_blacklist: '',
+  usage_limit: null as number | null
 })
 
 // 自定义Key验证
@@ -866,7 +881,8 @@ const quickCreateKey = (group: Group) => {
     custom_key: '',
     enable_ip_restriction: false,
     ip_whitelist: '',
-    ip_blacklist: ''
+    ip_blacklist: '',
+    usage_limit: null
   }
   showCreateModal.value = true
 }
@@ -989,7 +1005,8 @@ const editKey = (key: ApiKey) => {
     custom_key: '',
     enable_ip_restriction: hasIPRestriction,
     ip_whitelist: (key.ip_whitelist || []).join('\n'),
-    ip_blacklist: (key.ip_blacklist || []).join('\n')
+    ip_blacklist: (key.ip_blacklist || []).join('\n'),
+    usage_limit: key.usage_limit
   }
   showEditModal.value = true
 }
@@ -1085,12 +1102,20 @@ const handleSubmit = async () => {
         group_id: formData.value.group_id,
         status: formData.value.status,
         ip_whitelist: ipWhitelist,
-        ip_blacklist: ipBlacklist
+        ip_blacklist: ipBlacklist,
+        usage_limit: formData.value.usage_limit
       })
       appStore.showSuccess(t('keys.keyUpdatedSuccess'))
     } else {
       const customKey = formData.value.use_custom_key ? formData.value.custom_key : undefined
-      await keysAPI.create(formData.value.name, formData.value.group_id, customKey, ipWhitelist, ipBlacklist)
+      await keysAPI.create(
+        formData.value.name,
+        formData.value.group_id,
+        customKey,
+        ipWhitelist,
+        ipBlacklist,
+        formData.value.usage_limit
+      )
       appStore.showSuccess(t('keys.keyCreatedSuccess'))
       // Only advance tour if active, on submit step, and creation succeeded
       if (onboardingStore.isCurrentStep('[data-tour="key-form-submit"]')) {
@@ -1140,7 +1165,8 @@ const closeModals = () => {
     custom_key: '',
     enable_ip_restriction: false,
     ip_whitelist: '',
-    ip_blacklist: ''
+    ip_blacklist: '',
+    usage_limit: null
   }
 }
 

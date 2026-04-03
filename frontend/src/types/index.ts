@@ -312,6 +312,7 @@ export interface ApiKey {
   status: 'active' | 'inactive'
   ip_whitelist: string[]
   ip_blacklist: string[]
+  usage_limit: number | null
   created_at: string
   updated_at: string
   group?: Group
@@ -323,6 +324,7 @@ export interface CreateApiKeyRequest {
   custom_key?: string // Optional custom API Key
   ip_whitelist?: string[]
   ip_blacklist?: string[]
+  usage_limit?: number | null
 }
 
 export interface UpdateApiKeyRequest {
@@ -331,6 +333,7 @@ export interface UpdateApiKeyRequest {
   status?: 'active' | 'inactive'
   ip_whitelist?: string[]
   ip_blacklist?: string[]
+  usage_limit?: number | null
 }
 
 export interface CreateGroupRequest {

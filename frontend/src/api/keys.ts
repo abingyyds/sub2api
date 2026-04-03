@@ -44,6 +44,7 @@ export async function getById(id: number): Promise<ApiKey> {
  * @param customKey - Optional custom key value
  * @param ipWhitelist - Optional IP whitelist
  * @param ipBlacklist - Optional IP blacklist
+ * @param usageLimit - Optional usage limit in USD
  * @returns Created API key
  */
 export async function create(
@@ -51,7 +52,8 @@ export async function create(
   groupId?: number | null,
   customKey?: string,
   ipWhitelist?: string[],
-  ipBlacklist?: string[]
+  ipBlacklist?: string[],
+  usageLimit?: number | null
 ): Promise<ApiKey> {
   const payload: CreateApiKeyRequest = { name }
   if (groupId !== undefined) {
@@ -65,6 +67,9 @@ export async function create(
   }
   if (ipBlacklist && ipBlacklist.length > 0) {
     payload.ip_blacklist = ipBlacklist
+  }
+  if (usageLimit !== undefined && usageLimit !== null) {
+    payload.usage_limit = usageLimit
   }
 
   const { data } = await apiClient.post<ApiKey>('/keys', payload)

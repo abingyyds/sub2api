@@ -95,6 +95,11 @@ func Status(v string) predicate.APIKey {
 	return predicate.APIKey(sql.FieldEQ(FieldStatus, v))
 }
 
+// UsageLimit applies equality check predicate on the "usage_limit" field. It's identical to UsageLimitEQ.
+func UsageLimit(v float64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldEQ(FieldUsageLimit, v))
+}
+
 // OrgID applies equality check predicate on the "org_id" field. It's identical to OrgIDEQ.
 func OrgID(v int64) predicate.APIKey {
 	return predicate.APIKey(sql.FieldEQ(FieldOrgID, v))
@@ -498,6 +503,56 @@ func IPBlacklistIsNil() predicate.APIKey {
 // IPBlacklistNotNil applies the NotNil predicate on the "ip_blacklist" field.
 func IPBlacklistNotNil() predicate.APIKey {
 	return predicate.APIKey(sql.FieldNotNull(FieldIPBlacklist))
+}
+
+// UsageLimitEQ applies the EQ predicate on the "usage_limit" field.
+func UsageLimitEQ(v float64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldEQ(FieldUsageLimit, v))
+}
+
+// UsageLimitNEQ applies the NEQ predicate on the "usage_limit" field.
+func UsageLimitNEQ(v float64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldNEQ(FieldUsageLimit, v))
+}
+
+// UsageLimitIn applies the In predicate on the "usage_limit" field.
+func UsageLimitIn(vs ...float64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldIn(FieldUsageLimit, vs...))
+}
+
+// UsageLimitNotIn applies the NotIn predicate on the "usage_limit" field.
+func UsageLimitNotIn(vs ...float64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldNotIn(FieldUsageLimit, vs...))
+}
+
+// UsageLimitGT applies the GT predicate on the "usage_limit" field.
+func UsageLimitGT(v float64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldGT(FieldUsageLimit, v))
+}
+
+// UsageLimitGTE applies the GTE predicate on the "usage_limit" field.
+func UsageLimitGTE(v float64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldGTE(FieldUsageLimit, v))
+}
+
+// UsageLimitLT applies the LT predicate on the "usage_limit" field.
+func UsageLimitLT(v float64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldLT(FieldUsageLimit, v))
+}
+
+// UsageLimitLTE applies the LTE predicate on the "usage_limit" field.
+func UsageLimitLTE(v float64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldLTE(FieldUsageLimit, v))
+}
+
+// UsageLimitIsNil applies the IsNil predicate on the "usage_limit" field.
+func UsageLimitIsNil() predicate.APIKey {
+	return predicate.APIKey(sql.FieldIsNull(FieldUsageLimit))
+}
+
+// UsageLimitNotNil applies the NotNil predicate on the "usage_limit" field.
+func UsageLimitNotNil() predicate.APIKey {
+	return predicate.APIKey(sql.FieldNotNull(FieldUsageLimit))
 }
 
 // OrgIDEQ applies the EQ predicate on the "org_id" field.

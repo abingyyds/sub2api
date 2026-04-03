@@ -42,6 +42,8 @@ type APIKey struct {
 	IPWhitelist []string `json:"ip_whitelist,omitempty"`
 	// Blocked IPs/CIDRs
 	IPBlacklist []string `json:"ip_blacklist,omitempty"`
+	// Usage limit in USD, null means unlimited
+	UsageLimit *float64 `json:"usage_limit,omitempty"`
 	// OrgID holds the value of the "org_id" field.
 	OrgID *int64 `json:"org_id,omitempty"`
 	// OrgProjectID holds the value of the "org_project_id" field.
@@ -129,6 +131,8 @@ func (*APIKey) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case apikey.FieldIPWhitelist, apikey.FieldIPBlacklist:
 			values[i] = new([]byte)
+		case apikey.FieldUsageLimit:
+			values[i] = new(sql.NullFloat64)
 		case apikey.FieldID, apikey.FieldUserID, apikey.FieldGroupID, apikey.FieldOrgID, apikey.FieldOrgProjectID:
 			values[i] = new(sql.NullInt64)
 		case apikey.FieldKey, apikey.FieldName, apikey.FieldStatus:
@@ -221,6 +225,13 @@ func (_m *APIKey) assignValues(columns []string, values []any) error {
 				if err := json.Unmarshal(*value, &_m.IPBlacklist); err != nil {
 					return fmt.Errorf("unmarshal field ip_blacklist: %w", err)
 				}
+			}
+		case apikey.FieldUsageLimit:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field usage_limit", values[i])
+			} else if value.Valid {
+				_m.UsageLimit = new(float64)
+				*_m.UsageLimit = value.Float64
 			}
 		case apikey.FieldOrgID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -330,6 +341,11 @@ func (_m *APIKey) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("ip_blacklist=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IPBlacklist))
+	builder.WriteString(", ")
+	if v := _m.UsageLimit; v != nil {
+		builder.WriteString("usage_limit=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteString(", ")
 	if v := _m.OrgID; v != nil {
 		builder.WriteString("org_id=")
