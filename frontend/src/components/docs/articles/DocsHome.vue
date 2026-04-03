@@ -5,6 +5,31 @@
       <p class="mt-2 text-gray-500 dark:text-dark-400">{{ t('tutorial.subtitle') }}</p>
     </div>
 
+    <!-- Full Docs Banner -->
+    <a
+      href="https://ccoder-doc.vercel.app/"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="block rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white shadow-lg transition-all hover:shadow-xl hover:scale-[1.02] dark:from-primary-600 dark:to-primary-700"
+    >
+      <div class="flex items-center gap-4">
+        <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+          </svg>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center gap-2">
+            <h3 class="text-lg font-semibold">完整知识文档中心</h3>
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+            </svg>
+          </div>
+          <p class="mt-1 text-sm text-white/90">访问 ccoder-doc.vercel.app 查看更全面的教程、API 文档和最佳实践</p>
+        </div>
+      </div>
+    </a>
+
     <!-- Quick Start -->
     <section>
       <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ t('tutorial.docs.quickStart') }}</h2>
