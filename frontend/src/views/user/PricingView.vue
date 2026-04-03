@@ -205,6 +205,20 @@
                       </ul>
 
                       <div class="mt-auto pt-5">
+                        <!-- Price comparison -->
+                        <div class="mb-3 text-center">
+                          <div class="text-xs text-gray-500 dark:text-dark-400 line-through">
+                            原价 ¥{{ (rp.balance_amount * 7.2).toFixed(0) }}
+                          </div>
+                          <div class="text-2xl font-extrabold text-gray-900 dark:text-white">
+                            ¥{{ (rp.pay_amount_fen / 100).toFixed(rp.pay_amount_fen % 100 === 0 ? 0 : 2) }}
+                          </div>
+                          <div class="text-xs font-bold mt-1"
+                            :class="rp.pay_amount_fen >= 5000 ? 'text-indigo-600 dark:text-indigo-400' : 'text-green-600 dark:text-green-400'"
+                          >
+                            立省 ¥{{ ((rp.balance_amount * 7.2) - (rp.pay_amount_fen / 100)).toFixed(0) }}，仅需 {{ ((rp.pay_amount_fen / 100) / (rp.balance_amount * 7.2) * 100).toFixed(0) }}% 价格！
+                          </div>
+                        </div>
                         <!-- CTA button -->
                         <MagneticButton>
                           <div
@@ -213,7 +227,7 @@
                               ? 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 shadow-indigo-500/30'
                               : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-green-500/30'"
                           >
-                            {{ t('pricing.newcomerCta') }} ¥{{ (rp.pay_amount_fen / 100).toFixed(rp.pay_amount_fen % 100 === 0 ? 0 : 2) }}
+                            {{ rp.pay_amount_fen >= 5000 ? '立即抢购 + 赠技术指导' : '立即抢购' }}
                           </div>
                         </MagneticButton>
                         <!-- Purchase limit note -->
