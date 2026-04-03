@@ -11,6 +11,7 @@ type User struct {
 	Concurrency   int       `json:"concurrency"`
 	Status        string    `json:"status"`
 	AllowedGroups []int64   `json:"allowed_groups"`
+	IsAgent       bool      `json:"is_agent"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 

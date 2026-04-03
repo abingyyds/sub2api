@@ -35,6 +35,7 @@ export interface User {
   allowed_groups: number[] | null // Allowed group IDs (null = all non-exclusive groups)
   discovery_source?: string | null // How the user discovered the platform
   subscriptions?: UserSubscription[] // User's active subscriptions
+  is_agent?: boolean // Whether user is an agent
   created_at: string
   updated_at: string
 }
