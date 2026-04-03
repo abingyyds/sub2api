@@ -39,12 +39,13 @@
       </div>
       <div>
         <label class="input-label">{{ t('admin.users.inviter') }}</label>
-        <select v-model="form.inviter_id" class="input">
-          <option :value="null">{{ t('admin.users.noInviter') }}</option>
-          <option v-for="agent in agents" :key="agent.id" :value="agent.id">
-            {{ agent.username || agent.email }} (ID: {{ agent.id }})
-          </option>
-        </select>
+        <input
+          v-model.number="form.inviter_id"
+          type="number"
+          class="input"
+          :placeholder="t('admin.users.inviterIdPlaceholder')"
+        />
+        <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">{{ t('admin.users.inviterIdHint') }}</p>
       </div>
       <div>
         <label class="input-label">{{ t('admin.users.columns.discoverySource') }}</label>

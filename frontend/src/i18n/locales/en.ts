@@ -872,6 +872,8 @@ export default {
       copyPassword: 'Copy password',
       inviter: 'Inviter/Agent',
       noInviter: 'No inviter',
+      inviterIdPlaceholder: 'Enter agent user ID, leave empty for no inviter',
+      inviterIdHint: 'Enter the agent user ID (check in agent management page), leave empty or 0 to remove inviter',
       creating: 'Creating...',
       updating: 'Updating...',
       columns: {

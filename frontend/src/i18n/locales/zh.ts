@@ -890,6 +890,8 @@ export default {
       copyPassword: '复制密码',
       inviter: '上级代理',
       noInviter: '无上级',
+      inviterIdPlaceholder: '输入代理用户ID，留空表示无上级',
+      inviterIdHint: '输入代理用户的ID（可在代理管理页面查看），留空或输入0表示移除上级',
       creating: '创建中...',
       updating: '更新中...',
       columns: {
