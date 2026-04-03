@@ -192,8 +192,10 @@ export async function getAgents(): Promise<AdminUser[]> {
   })
   console.log('All users:', data.items.length)
   console.log('Sample user:', data.items[0])
-  // Filter agents client-side (backend should ideally support this filter)
-  const agents = data.items.filter((u: any) => u.is_agent === true)
+  // Filter agents: check both is_agent=true OR agent_status='approved'
+  const agents = data.items.filter((u: any) =>
+    u.is_agent === true || u.agent_status === 'approved'
+  )
   console.log('Filtered agents:', agents.length, agents)
   return agents
 }

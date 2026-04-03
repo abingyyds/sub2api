@@ -12,6 +12,7 @@ type User struct {
 	Status        string    `json:"status"`
 	AllowedGroups []int64   `json:"allowed_groups"`
 	IsAgent       bool      `json:"is_agent"`
+	AgentStatus   string    `json:"agent_status"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 

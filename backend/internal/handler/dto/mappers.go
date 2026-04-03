@@ -21,6 +21,7 @@ func UserFromServiceShallow(u *service.User) *User {
 		Status:          u.Status,
 		AllowedGroups:   u.AllowedGroups,
 		IsAgent:         u.IsAgent,
+		AgentStatus:     u.AgentStatus,
 		DiscoverySource: u.DiscoverySource,
 		CreatedAt:       u.CreatedAt,
 		UpdatedAt:       u.UpdatedAt,

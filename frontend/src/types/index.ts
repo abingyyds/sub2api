@@ -36,6 +36,7 @@ export interface User {
   discovery_source?: string | null // How the user discovered the platform
   subscriptions?: UserSubscription[] // User's active subscriptions
   is_agent?: boolean // Whether user is an agent
+  agent_status?: string // Agent status: 'pending', 'approved', 'rejected'
   created_at: string
   updated_at: string
 }
