@@ -130,8 +130,8 @@
     <section id="pricing" class="pb-24 max-w-7xl mx-auto px-6 relative">
       <SlideIn direction="up" :delay="100">
         <div class="text-center mb-16">
-          <h2 class="text-3xl md:text-4xl font-extrabold mb-4 text-gray-900 dark:text-white">选择您的生产力阶梯</h2>
-          <p class="text-gray-500 dark:text-dark-400">根据您的调用频率与并发需求，选择最匹配的性能方案</p>
+          <h2 class="text-3xl md:text-4xl font-extrabold mb-4 text-gray-900 dark:text-white">套餐订阅</h2>
+          <p class="text-gray-500 dark:text-dark-400">周额度每周重置，套餐内有效，过期不补</p>
         </div>
       </SlideIn>
 
@@ -140,123 +140,73 @@
 
           <!-- 开发者版 ¥299 -->
           <GlowCard glow-color="rgb(234, 179, 8)">
-            <div class="bg-white dark:bg-dark-900 p-8 rounded-3xl border-2 border-orange-100 dark:border-orange-800/30 shadow-soft relative flex flex-col hover:shadow-lg transition h-full">
-              <div class="absolute -top-3 left-8 bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs font-bold px-3 py-1 rounded-full border border-orange-200 dark:border-orange-700 shadow-sm">
-                🔥 个人首选 / 火爆热销
-              </div>
-              <div class="text-gray-500 dark:text-dark-400 text-sm font-semibold mb-2 mt-2">[适合：独立开发者 / 个人项目]</div>
+            <div class="bg-white dark:bg-dark-900 p-8 rounded-3xl border-2 border-gray-200 dark:border-dark-700 shadow-soft relative flex flex-col hover:shadow-lg transition h-full">
               <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">开发者版</h3>
-              <div class="text-4xl font-extrabold text-gray-900 dark:text-white mb-8">¥299</div>
+              <div class="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">¥299</div>
+              <p class="text-gray-600 dark:text-dark-400 mb-8">每月额度 $360</p>
 
-              <ul class="space-y-5 mb-8 text-sm text-gray-600 dark:text-dark-400 flex-grow">
-                <li class="flex items-start gap-3">
-                  <Icon name="check" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white">总额 $900：</strong>官方价格体系，无需复杂换算</div>
-                </li>
-                <li class="flex items-start gap-3">
-                  <Icon name="check" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white">每日 $30 高速配额：</strong>专属通道，响应丝滑无卡顿</div>
-                </li>
-                <li class="flex items-start gap-3">
-                  <Icon name="check" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white">永不掉线保障：</strong>额度用尽自动转按量，业务 7x24 在线</div>
-                </li>
-                <li class="flex items-start gap-3">
-                  <Icon name="check" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white">超高性价比：</strong>个人开发首选，一次付费全月无忧</div>
-                </li>
-              </ul>
               <MagneticButton>
                 <button
                   @click="selectPlan('dev')"
-                  class="w-full py-3.5 rounded-xl bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-700 transition font-bold mt-auto"
+                  class="w-full py-3.5 rounded-xl bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 text-white dark:text-gray-900 transition font-bold mt-auto flex items-center justify-center gap-2"
                 >
-                  购买开发者版
+                  <Icon name="qrCode" size="sm" /> 微信扫码支付
                 </button>
               </MagneticButton>
+              <button
+                @click="selectPlan('dev')"
+                class="w-full mt-3 py-3.5 rounded-xl bg-white dark:bg-dark-800 hover:bg-gray-50 dark:hover:bg-dark-700 text-gray-900 dark:text-white border-2 border-gray-200 dark:border-dark-600 transition font-bold"
+              >
+                立即购买
+              </button>
             </div>
           </GlowCard>
 
-          <!-- 专业生产版 ¥589 (主推) -->
+          <!-- 专业生产版 ¥499 -->
           <GlowCard glow-color="rgb(217, 119, 87)">
-            <div class="bg-white dark:bg-dark-900 p-8 rounded-3xl border-[3px] border-primary-500/80 dark:border-primary-400/60 transform lg:scale-105 shadow-2xl shadow-primary-500/20 relative z-10 flex flex-col h-full">
-              <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-5 py-1.5 rounded-full shadow-lg whitespace-nowrap tracking-wide">
-                👑 生产环境推荐 / 主推套餐
-              </div>
+            <div class="bg-white dark:bg-dark-900 p-8 rounded-3xl border-2 border-gray-200 dark:border-dark-700 shadow-soft relative flex flex-col hover:shadow-lg transition h-full">
+              <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">专业生产版</h3>
+              <div class="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">¥499</div>
+              <p class="text-gray-600 dark:text-dark-400 mb-8">每月额度 $650</p>
 
-              <div class="text-primary-600 dark:text-primary-400 text-sm font-semibold mb-2 mt-2">[适合：全职开发 / 生产级应用]</div>
-              <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">专业生产版</h3>
-              <div class="text-5xl font-extrabold text-gray-900 dark:text-white mb-4">¥589</div>
-
-              <div class="bg-primary-500/10 dark:bg-primary-400/10 border border-primary-500/20 dark:border-primary-400/20 rounded-xl p-2.5 mb-6 text-sm text-primary-600 dark:text-primary-400 text-center font-bold">
-                折合 $1 = ¥0.33，立省 67% 成本！
-              </div>
-
-              <ul class="space-y-5 mb-8 text-sm text-gray-600 dark:text-dark-400 flex-grow">
-                <li class="flex items-start gap-3">
-                  <Icon name="database" size="sm" class="text-primary-600 dark:text-primary-400 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white text-base">总额 $1800：</strong>充足算力储备，应对高频调用</div>
-                </li>
-                <li class="flex items-start gap-3">
-                  <Icon name="bolt" size="sm" class="text-yellow-500 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white text-base">每日 $60 高速配额：</strong>生产级优先级，拒绝排队等待</div>
-                </li>
-                <li class="flex items-start gap-3">
-                  <Icon name="dollar" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white text-base">无损计费机制：</strong>拒绝倍率陷阱，每一分实打实可用</div>
-                </li>
-                <li class="flex items-start gap-3">
-                  <Icon name="shield" size="sm" class="text-blue-500 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white text-base">熔断智能防护：</strong>异常流量自动隔离，生产环境稳定如磐石</div>
-                </li>
-              </ul>
               <MagneticButton>
                 <button
                   @click="selectPlan('pro')"
-                  class="w-full py-4 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-lg shadow-[0_4px_14px_0_rgba(217,119,87,0.39)] transform hover:-translate-y-0.5 transition duration-200 mt-auto"
+                  class="w-full py-3.5 rounded-xl bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 text-white dark:text-gray-900 transition font-bold mt-auto flex items-center justify-center gap-2"
                 >
-                  立即购买，释放生产力
+                  <Icon name="qrCode" size="sm" /> 微信扫码支付
                 </button>
               </MagneticButton>
+              <button
+                @click="selectPlan('pro')"
+                class="w-full mt-3 py-3.5 rounded-xl bg-white dark:bg-dark-800 hover:bg-gray-50 dark:hover:bg-dark-700 text-gray-900 dark:text-white border-2 border-gray-200 dark:border-dark-600 transition font-bold"
+              >
+                立即购买
+              </button>
             </div>
           </GlowCard>
 
-          <!-- 旗舰团队版 ¥1189 -->
+          <!-- 旗舰团队版 ¥999 -->
           <GlowCard glow-color="rgb(168, 85, 247)">
-            <div class="bg-white dark:bg-dark-900 p-8 rounded-3xl border-2 border-purple-100 dark:border-purple-800/30 shadow-soft relative flex flex-col hover:shadow-lg transition h-full">
-              <div class="absolute -top-3 right-8 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-xs font-bold px-3 py-1 rounded-full border border-purple-200 dark:border-purple-700 shadow-sm">
-                💎 团队专属 / SLA 保障
-              </div>
-              <div class="text-gray-500 dark:text-dark-400 text-sm font-semibold mb-2 mt-2">[适合：开发团队 / AI 产品项目]</div>
+            <div class="bg-white dark:bg-dark-900 p-8 rounded-3xl border-2 border-gray-200 dark:border-dark-700 shadow-soft relative flex flex-col hover:shadow-lg transition h-full">
               <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">旗舰团队版</h3>
-              <div class="text-4xl font-extrabold text-gray-900 dark:text-white mb-8">¥1189</div>
+              <div class="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">¥999</div>
+              <p class="text-gray-600 dark:text-dark-400 mb-8">每月额度 $1400</p>
 
-              <ul class="space-y-5 mb-8 text-sm text-gray-600 dark:text-dark-400 flex-grow">
-                <li class="flex items-start gap-3">
-                  <Icon name="server" size="sm" class="text-gray-700 dark:text-dark-300 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white">总额 $3600：</strong>顶配储备，支撑海量高并发接入</div>
-                </li>
-                <li class="flex items-start gap-3">
-                  <Icon name="badge" size="sm" class="text-gray-700 dark:text-dark-300 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white">每日 $120 高速配额：</strong>团队级 VIP 优先级调度，秒级响应</div>
-                </li>
-                <li class="flex items-start gap-3">
-                  <Icon name="document" size="sm" class="text-gray-400 dark:text-dark-500 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white">高可用服务保障：</strong>极致架构，满足企业级稳定运营标准</div>
-                </li>
-                <li class="flex items-start gap-3">
-                  <Icon name="refresh" size="sm" class="text-gray-400 dark:text-dark-500 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white">无感溢出续航：</strong>额度海量储备，确保 AI 工作流永不断供</div>
-                </li>
-              </ul>
               <MagneticButton>
                 <button
                   @click="selectPlan('team')"
-                  class="w-full py-3.5 rounded-xl bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-700 transition font-bold mt-auto"
+                  class="w-full py-3.5 rounded-xl bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 text-white dark:text-gray-900 transition font-bold mt-auto flex items-center justify-center gap-2"
                 >
-                  购买旗舰版
+                  <Icon name="qrCode" size="sm" /> 微信扫码支付
                 </button>
               </MagneticButton>
+              <button
+                @click="selectPlan('team')"
+                class="w-full mt-3 py-3.5 rounded-xl bg-white dark:bg-dark-800 hover:bg-gray-50 dark:hover:bg-dark-700 text-gray-900 dark:text-white border-2 border-gray-200 dark:border-dark-600 transition font-bold"
+              >
+                立即购买
+              </button>
             </div>
           </GlowCard>
 
