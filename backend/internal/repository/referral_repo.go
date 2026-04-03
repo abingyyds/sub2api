@@ -54,6 +54,25 @@ func (r *referralRepository) UpdateRewardStatus(ctx context.Context, id int64, s
 	return nil
 }
 
+func (r *referralRepository) UpdateInviter(ctx context.Context, inviteeID int64, inviterID int64) error {
+	query := `UPDATE referrals SET inviter_id = $1, updated_at = NOW() WHERE invitee_id = $2`
+	res, err := r.db.ExecContext(ctx, query, inviterID, inviteeID)
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return service.ErrReferralNotFound
+	}
+	return nil
+}
+
+func (r *referralRepository) DeleteByInviteeID(ctx context.Context, inviteeID int64) error {
+	query := `DELETE FROM referrals WHERE invitee_id = $1`
+	_, err := r.db.ExecContext(ctx, query, inviteeID)
+	return err
+}
+
 func (r *referralRepository) ListByInviterID(ctx context.Context, inviterID int64, params pagination.PaginationParams) ([]service.Referral, *pagination.PaginationResult, error) {
 	var total int64
 	if err := r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM referrals WHERE inviter_id = $1`, inviterID).Scan(&total); err != nil {

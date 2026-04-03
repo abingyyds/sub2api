@@ -25,6 +25,8 @@ type ReferralRepository interface {
 	Create(ctx context.Context, referral *Referral) error
 	GetByInviteeID(ctx context.Context, inviteeID int64) (*Referral, error)
 	UpdateRewardStatus(ctx context.Context, id int64, status string, amount float64) error
+	UpdateInviter(ctx context.Context, inviteeID int64, inviterID int64) error
+	DeleteByInviteeID(ctx context.Context, inviteeID int64) error
 	ListByInviterID(ctx context.Context, inviterID int64, params pagination.PaginationParams) ([]Referral, *pagination.PaginationResult, error)
 	ListAll(ctx context.Context, params pagination.PaginationParams, search string) ([]Referral, *pagination.PaginationResult, error)
 	GetStatsByInviterID(ctx context.Context, inviterID int64) (*ReferralStats, error)

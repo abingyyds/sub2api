@@ -48,6 +48,7 @@ type UpdateUserRequest struct {
 	Role            string   `json:"role" binding:"omitempty,oneof=admin sub_admin user"`
 	AllowedGroups   *[]int64 `json:"allowed_groups"`
 	DiscoverySource *string  `json:"discovery_source"`
+	InviterID       *int64   `json:"inviter_id"` // 上级代理ID，null表示移除关系
 }
 
 // UpdateBalanceRequest represents balance update request
@@ -75,10 +76,12 @@ func (h *UserHandler) List(c *gin.Context) {
 	}
 
 	filters := service.UserListFilters{
-		Status:     c.Query("status"),
-		Role:       c.Query("role"),
-		Search:     search,
-		Attributes: parseAttributeFilters(c),
+		Status:        c.Query("status"),
+		Role:          c.Query("role"),
+		Search:        search,
+		Attributes:    parseAttributeFilters(c),
+		CreatedAfter:  c.Query("created_after"),
+		CreatedBefore: c.Query("created_before"),
 	}
 
 	users, total, err := h.adminService.ListUsers(c.Request.Context(), page, pageSize, filters)
@@ -194,6 +197,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 		CallerID:        callerSubject.UserID,
 		AllowedGroups:   req.AllowedGroups,
 		DiscoverySource: req.DiscoverySource,
+		InviterID:       req.InviterID,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)

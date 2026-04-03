@@ -864,6 +864,8 @@ export default {
       leaveEmptyToKeep: 'Leave empty to keep current password',
       generatePassword: 'Generate random password',
       copyPassword: 'Copy password',
+      inviter: 'Inviter/Agent',
+      noInviter: 'No inviter',
       creating: 'Creating...',
       updating: 'Updating...',
       columns: {

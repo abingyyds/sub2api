@@ -38,6 +38,15 @@
         <input v-model.number="form.concurrency" type="number" class="input" />
       </div>
       <div>
+        <label class="input-label">{{ t('admin.users.inviter') }}</label>
+        <select v-model="form.inviter_id" class="input">
+          <option :value="null">{{ t('admin.users.noInviter') }}</option>
+          <option v-for="agent in agents" :key="agent.id" :value="agent.id">
+            {{ agent.username || agent.email }} (ID: {{ agent.id }})
+          </option>
+        </select>
+      </div>
+      <div>
         <label class="input-label">{{ t('admin.users.columns.discoverySource') }}</label>
         <div class="flex gap-2">
           <select v-model="form.discovery_source" class="input flex-1">
@@ -91,7 +100,9 @@ const emit = defineEmits(['close', 'success'])
 const { t } = useI18n(); const appStore = useAppStore(); const authStore = useAuthStore(); const { copyToClipboard } = useClipboard()
 
 const submitting = ref(false); const passwordCopied = ref(false)
-const form = reactive({ email: '', password: '', username: '', notes: '', concurrency: 1, role: 'user' as string, discovery_source: '' as string, custom_discovery_source: '', customAttributes: {} as UserAttributeValuesMap })
+const form = reactive({ email: '', password: '', username: '', notes: '', concurrency: 1, role: 'user' as string, discovery_source: '' as string, custom_discovery_source: '', customAttributes: {} as UserAttributeValuesMap, inviter_id: null as number | null })
+const agents = ref<AdminUser[]>([])
+const loadingAgents = ref(false)
 
 const discoverySourceOptions = computed(() => [
   { value: 'douyin', label: t('auth.discoverySource.douyin') },
@@ -117,11 +128,30 @@ watch(() => props.user, (u) => {
       concurrency: u.concurrency, role: u.role || 'user',
       discovery_source: isKnown ? (src === 'skip' ? '' : src) : '__custom__',
       custom_discovery_source: isKnown ? '' : src,
-      customAttributes: {}
+      customAttributes: {},
+      inviter_id: null
     })
     passwordCopied.value = false
+    // Load current inviter
+    if (u.id) {
+      adminAPI.users.getUserInviter(u.id).then(inviter => {
+        if (inviter) form.inviter_id = inviter.id
+      }).catch(() => {})
+    }
   }
 }, { immediate: true })
+
+// Load agents list when modal opens
+watch(() => props.show, (show) => {
+  if (show && agents.value.length === 0) {
+    loadingAgents.value = true
+    adminAPI.users.getAgents().then(list => {
+      agents.value = list
+    }).catch(() => {}).finally(() => {
+      loadingAgents.value = false
+    })
+  }
+})
 
 const generatePassword = () => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%^&*'
@@ -151,6 +181,10 @@ const handleUpdateUser = async () => {
     // Set discovery_source: custom text if __custom__, selected value otherwise, null to clear
     const resolvedSource = form.discovery_source === '__custom__' ? (form.custom_discovery_source.trim() || null) : (form.discovery_source || null)
     data.discovery_source = resolvedSource
+    // Set inviter_id: null to remove, number to set/update
+    if (form.inviter_id !== undefined) {
+      data.inviter_id = form.inviter_id === null ? 0 : form.inviter_id
+    }
     await adminAPI.users.update(props.user.id, data)
     if (Object.keys(form.customAttributes).length > 0) await adminAPI.userAttributes.updateUserAttributeValues(props.user.id, form.customAttributes)
     appStore.showSuccess(t('admin.users.userUpdated'))

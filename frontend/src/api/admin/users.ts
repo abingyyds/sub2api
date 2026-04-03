@@ -22,6 +22,8 @@ export async function list(
     role?: 'admin' | 'user'
     search?: string
     attributes?: Record<number, string>  // attributeId -> value
+    created_after?: string  // YYYY-MM-DD
+    created_before?: string // YYYY-MM-DD
   },
   options?: {
     signal?: AbortSignal
@@ -33,7 +35,9 @@ export async function list(
     page_size: pageSize,
     status: filters?.status,
     role: filters?.role,
-    search: filters?.search
+    search: filters?.search,
+    created_after: filters?.created_after,
+    created_before: filters?.created_before
   }
 
   // Add attribute filters as attr[id]=value
@@ -174,6 +178,36 @@ export async function getUserUsageStats(
   return data
 }
 
+/**
+ * Get list of agents (users with is_agent=true)
+ * @returns List of agent users
+ */
+export async function getAgents(): Promise<AdminUser[]> {
+  const { data } = await apiClient.get<PaginatedResponse<AdminUser>>('/admin/users', {
+    params: {
+      page: 1,
+      page_size: 1000,
+      // Note: Backend needs to support filtering by is_agent, for now we get all and filter client-side
+    }
+  })
+  // Filter agents client-side (backend should ideally support this filter)
+  return data.items.filter((u: any) => u.is_agent === true)
+}
+
+/**
+ * Get user's current inviter/referrer
+ * @param id - User ID
+ * @returns Inviter user or null
+ */
+export async function getUserInviter(id: number): Promise<AdminUser | null> {
+  try {
+    const { data } = await apiClient.get<{ inviter: AdminUser | null }>(`/admin/users/${id}/inviter`)
+    return data.inviter
+  } catch {
+    return null
+  }
+}
+
 export const usersAPI = {
   list,
   getById,
@@ -184,7 +218,9 @@ export const usersAPI = {
   updateConcurrency,
   toggleStatus,
   getUserApiKeys,
-  getUserUsageStats
+  getUserUsageStats,
+  getAgents,
+  getUserInviter
 }
 
 export default usersAPI

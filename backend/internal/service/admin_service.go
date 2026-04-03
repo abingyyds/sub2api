@@ -93,6 +93,7 @@ type UpdateUserInput struct {
 	CallerID        int64  // 调用者用户ID
 	AllowedGroups   *[]int64 // 使用指针区分"未提供"和"设置为空数组"
 	DiscoverySource *string  // 来源渠道
+	InviterID       *int64   // 上级代理ID，nil表示不修改，指向0表示移除关系
 }
 
 type CreateGroupInput struct {
@@ -303,6 +304,7 @@ type adminServiceImpl struct {
 	proxyRepo            ProxyRepository
 	apiKeyRepo           APIKeyRepository
 	redeemCodeRepo       RedeemCodeRepository
+	referralRepo         ReferralRepository
 	billingCacheService  *BillingCacheService
 	proxyProber          ProxyExitInfoProber
 	proxyLatencyCache    ProxyLatencyCache
@@ -317,6 +319,7 @@ func NewAdminService(
 	proxyRepo ProxyRepository,
 	apiKeyRepo APIKeyRepository,
 	redeemCodeRepo RedeemCodeRepository,
+	referralRepo ReferralRepository,
 	billingCacheService *BillingCacheService,
 	proxyProber ProxyExitInfoProber,
 	proxyLatencyCache ProxyLatencyCache,
@@ -329,6 +332,7 @@ func NewAdminService(
 		proxyRepo:            proxyRepo,
 		apiKeyRepo:           apiKeyRepo,
 		redeemCodeRepo:       redeemCodeRepo,
+		referralRepo:         referralRepo,
 		billingCacheService:  billingCacheService,
 		proxyProber:          proxyProber,
 		proxyLatencyCache:    proxyLatencyCache,
@@ -426,6 +430,51 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 
 	if input.DiscoverySource != nil {
 		user.DiscoverySource = input.DiscoverySource
+	}
+
+	// 处理上级代理关系
+	if input.InviterID != nil {
+		inviterID := *input.InviterID
+		if inviterID == 0 {
+			// 移除 referral 关系
+			if err := s.referralRepo.DeleteByInviteeID(ctx, user.ID); err != nil {
+				log.Printf("failed to delete referral for user %d: %v", user.ID, err)
+			}
+		} else {
+			// 设置或更新 referral 关系
+			if inviterID == user.ID {
+				return nil, errors.New("cannot set self as inviter")
+			}
+			// 检查 inviter 是否存在
+			inviter, err := s.userRepo.GetByID(ctx, inviterID)
+			if err != nil {
+				return nil, fmt.Errorf("inviter not found: %w", err)
+			}
+			// 可选：检查 inviter 是否是代理
+			if !inviter.IsAgent {
+				return nil, errors.New("inviter must be an agent")
+			}
+
+			// 检查是否已有 referral 记录
+			existingRef, err := s.referralRepo.GetByInviteeID(ctx, user.ID)
+			if err == nil && existingRef != nil {
+				// 更新现有记录
+				if err := s.referralRepo.UpdateInviter(ctx, user.ID, inviterID); err != nil {
+					return nil, fmt.Errorf("failed to update inviter: %w", err)
+				}
+			} else {
+				// 创建新记录
+				newRef := &Referral{
+					InviterID:    inviterID,
+					InviteeID:    user.ID,
+					RewardStatus: ReferralRewardPending,
+					RewardAmount: 0,
+				}
+				if err := s.referralRepo.Create(ctx, newRef); err != nil {
+					return nil, fmt.Errorf("failed to create referral: %w", err)
+				}
+			}
+		}
 	}
 
 	if err := s.userRepo.Update(ctx, user); err != nil {

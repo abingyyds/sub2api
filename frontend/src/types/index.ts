@@ -872,6 +872,7 @@ export interface UpdateUserRequest {
   status?: 'active' | 'disabled'
   allowed_groups?: number[] | null
   discovery_source?: string | null
+  inviter_id?: number | null // 上级代理ID，null表示移除关系
 }
 
 export interface ChangePasswordRequest {
