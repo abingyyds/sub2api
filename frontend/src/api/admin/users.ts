@@ -200,10 +200,10 @@ export async function getAgents(): Promise<AdminUser[]> {
 
 /**
  * Get user's current inviter/referrer
- * @param id - User ID
+ * @param _id - User ID (unused for now)
  * @returns Inviter user or null
  */
-export async function getUserInviter(id: number): Promise<AdminUser | null> {
+export async function getUserInviter(_id: number): Promise<AdminUser | null> {
   // TODO: Backend needs to implement /admin/users/:id/inviter endpoint
   // For now, we'll need to get this from the referral API or user details
   // Returning null as a temporary workaround
