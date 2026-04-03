@@ -181,9 +181,13 @@
           <!-- ==================== Subscription Section (套餐订阅) ==================== -->
           <template v-if="activeTab === 'subscription'">
           <SlideIn direction="up" :delay="250">
-            <div class="mb-2">
+            <div class="mb-6 text-center">
               <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('pricing.subscriptionSection') }}</h2>
               <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">{{ t('pricing.subscriptionSectionDesc') }}</p>
+              <div class="mt-4 inline-block bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-bold px-6 py-2.5 rounded-full shadow-lg">
+                🔥 特价 Claude Code API：¥0.28 = 官方 $1，仅官方价格 3.9%！
+              </div>
+              <p class="text-xs text-gray-400 dark:text-dark-500 mt-2">套餐 $1 = 官方 $2.5 算力 × 80% 性能 = 官方 $2 等效算力</p>
             </div>
           </SlideIn>
 
@@ -228,20 +232,18 @@
                     >{{ dp.plan.name }}</h3>
 
                     <!-- Price -->
-                    <div class="mb-4"
+                    <div class="mb-2"
                       :class="dp.featured ? 'text-5xl' : 'text-4xl'"
                     >
                       <span class="font-extrabold text-gray-900 dark:text-white">¥{{ (dp.plan.amount_fen / 100).toFixed(0) }}</span>
                     </div>
 
-                    <!-- Highlight text -->
-                    <div v-if="dp.highlight"
-                      class="rounded-xl p-2.5 mb-6 text-sm text-center font-bold"
-                      :class="dp.featured
-                        ? 'bg-primary-500/10 dark:bg-primary-400/10 border border-primary-500/20 dark:border-primary-400/20 text-primary-600 dark:text-primary-400'
-                        : 'bg-gray-50 dark:bg-dark-800 border border-gray-100 dark:border-dark-700 text-gray-600 dark:text-dark-400'"
-                    >
+                    <!-- Quota info -->
+                    <div class="text-sm text-gray-500 dark:text-dark-400 mb-1">
                       {{ dp.highlight }}
+                    </div>
+                    <div class="text-xs font-bold text-green-600 dark:text-green-400 mb-6">
+                      ≈ 官方 ${{ getEquivalentQuota(dp.plan.amount_fen) }} 等效算力
                     </div>
 
                     <!-- Feature list -->
@@ -782,6 +784,20 @@ const decoratedPlans = computed<DecoratedPlan[]>(() => {
     }
   })
 })
+
+// Calculate equivalent official quota
+function getEquivalentQuota(amountFen: number): string {
+  // Map amount to monthly quota
+  const quotaMap: Record<number, number> = {
+    29900: 360,
+    49900: 650,
+    99900: 1400,
+  }
+  const quota = quotaMap[amountFen] || 0
+  // $1 套餐 = 官方 $2.5 × 80% = 官方 $2 等效
+  const equivalent = quota * 2
+  return equivalent.toLocaleString()
+}
 
 // === Promo Code Validation ===
 function resetPromoValidation() {

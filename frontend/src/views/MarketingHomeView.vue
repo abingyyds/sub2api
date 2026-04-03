@@ -131,7 +131,11 @@
       <SlideIn direction="up" :delay="100">
         <div class="text-center mb-16">
           <h2 class="text-3xl md:text-4xl font-extrabold mb-4 text-gray-900 dark:text-white">套餐订阅</h2>
-          <p class="text-gray-500 dark:text-dark-400">周额度每周重置，套餐内有效，过期不补</p>
+          <p class="text-gray-500 dark:text-dark-400 mb-3">周额度每周重置，套餐内有效，过期不补</p>
+          <div class="inline-block bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-bold px-6 py-2.5 rounded-full shadow-lg">
+            🔥 特价 Claude Code API：¥0.28 = 官方 $1，仅官方价格 3.9%！
+          </div>
+          <p class="text-xs text-gray-400 dark:text-dark-500 mt-2">套餐 $1 = 官方 $2.5 算力 × 80% 性能 = 官方 $2 等效算力</p>
         </div>
       </SlideIn>
 
@@ -142,8 +146,9 @@
           <GlowCard glow-color="rgb(234, 179, 8)">
             <div class="bg-white dark:bg-dark-900 p-8 rounded-3xl border-2 border-gray-200 dark:border-dark-700 shadow-soft relative flex flex-col hover:shadow-lg transition h-full">
               <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">开发者版</h3>
-              <div class="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">¥299</div>
-              <p class="text-gray-600 dark:text-dark-400 mb-8">每月额度 $360</p>
+              <div class="text-4xl font-extrabold text-gray-900 dark:text-white mb-2">¥299</div>
+              <div class="text-sm text-gray-500 dark:text-dark-400 mb-1">每月额度 $360</div>
+              <div class="text-xs font-bold text-green-600 dark:text-green-400 mb-6">≈ 官方 $720 等效算力</div>
 
               <MagneticButton>
                 <button
@@ -164,10 +169,14 @@
 
           <!-- 专业生产版 ¥499 -->
           <GlowCard glow-color="rgb(217, 119, 87)">
-            <div class="bg-white dark:bg-dark-900 p-8 rounded-3xl border-2 border-gray-200 dark:border-dark-700 shadow-soft relative flex flex-col hover:shadow-lg transition h-full">
-              <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">专业生产版</h3>
-              <div class="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">¥499</div>
-              <p class="text-gray-600 dark:text-dark-400 mb-8">每月额度 $650</p>
+            <div class="bg-white dark:bg-dark-900 p-8 rounded-3xl border-2 border-primary-500/50 dark:border-primary-400/40 shadow-soft relative flex flex-col hover:shadow-lg transition h-full transform lg:scale-105">
+              <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-4 py-1 rounded-full shadow-md whitespace-nowrap">
+                🔥 最超值
+              </div>
+              <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2 mt-2">专业生产版</h3>
+              <div class="text-4xl font-extrabold text-gray-900 dark:text-white mb-2">¥499</div>
+              <div class="text-sm text-gray-500 dark:text-dark-400 mb-1">每月额度 $650</div>
+              <div class="text-xs font-bold text-green-600 dark:text-green-400 mb-6">≈ 官方 $1,300 等效算力</div>
 
               <MagneticButton>
                 <button
@@ -190,8 +199,9 @@
           <GlowCard glow-color="rgb(168, 85, 247)">
             <div class="bg-white dark:bg-dark-900 p-8 rounded-3xl border-2 border-gray-200 dark:border-dark-700 shadow-soft relative flex flex-col hover:shadow-lg transition h-full">
               <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">旗舰团队版</h3>
-              <div class="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">¥999</div>
-              <p class="text-gray-600 dark:text-dark-400 mb-8">每月额度 $1400</p>
+              <div class="text-4xl font-extrabold text-gray-900 dark:text-white mb-2">¥999</div>
+              <div class="text-sm text-gray-500 dark:text-dark-400 mb-1">每月额度 $1400</div>
+              <div class="text-xs font-bold text-green-600 dark:text-green-400 mb-6">≈ 官方 $2,800 等效算力</div>
 
               <MagneticButton>
                 <button
