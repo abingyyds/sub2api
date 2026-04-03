@@ -48,6 +48,24 @@
               />
             </div>
 
+            <!-- Created Date Filters -->
+            <div v-if="visibleFilters.has('created_date')" class="flex gap-2 w-full sm:w-auto">
+              <input
+                v-model="filters.created_after"
+                type="date"
+                :placeholder="t('admin.users.createdAfter')"
+                class="input w-full sm:w-36"
+                @change="applyFilter"
+              />
+              <input
+                v-model="filters.created_before"
+                type="date"
+                :placeholder="t('admin.users.createdBefore')"
+                class="input w-full sm:w-36"
+                @change="applyFilter"
+              />
+            </div>
+
             <!-- Dynamic Attribute Filters -->
             <template v-for="(value, attrId) in activeAttributeFilters" :key="attrId">
               <div
@@ -650,7 +668,9 @@ const searchQuery = ref('')
 // Filter values (role, status, and custom attributes)
 const filters = reactive({
   role: '',
-  status: ''
+  status: '',
+  created_after: '',
+  created_before: ''
 })
 const activeAttributeFilters = reactive<Record<number, string>>({})
 
@@ -678,7 +698,8 @@ const filterableAttributes = computed(() =>
 // Built-in filter definitions
 const builtInFilters = computed(() => [
   { key: 'role', name: t('admin.users.columns.role'), type: 'select' as const },
-  { key: 'status', name: t('admin.users.columns.status'), type: 'select' as const }
+  { key: 'status', name: t('admin.users.columns.status'), type: 'select' as const },
+  { key: 'created_date', name: t('admin.users.createdDate'), type: 'date' as const }
 ])
 
 // Load saved filters from localStorage
@@ -879,7 +900,9 @@ const loadUsers = async () => {
         role: filters.role as any,
         status: filters.status as any,
         search: searchQuery.value || undefined,
-        attributes: Object.keys(attrFilters).length > 0 ? attrFilters : undefined
+        attributes: Object.keys(attrFilters).length > 0 ? attrFilters : undefined,
+        created_after: filters.created_after || undefined,
+        created_before: filters.created_before || undefined
       },
       { signal }
     )
@@ -965,12 +988,16 @@ const getAttributeDefinitionName = (attrId: number): string => {
   return def?.name || String(attrId)
 }
 
-// Toggle a built-in filter (role/status)
+// Toggle a built-in filter (role/status/created_date)
 const toggleBuiltInFilter = (key: string) => {
   if (visibleFilters.has(key)) {
     visibleFilters.delete(key)
     if (key === 'role') filters.role = ''
     if (key === 'status') filters.status = ''
+    if (key === 'created_date') {
+      filters.created_after = ''
+      filters.created_before = ''
+    }
   } else {
     visibleFilters.add(key)
   }

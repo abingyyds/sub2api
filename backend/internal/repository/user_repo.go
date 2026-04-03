@@ -228,6 +228,20 @@ func (r *userRepository) ListWithFilters(ctx context.Context, params pagination.
 		)
 	}
 
+	// Date range filters
+	if filters.CreatedAfter != "" {
+		if t, err := time.Parse("2006-01-02", filters.CreatedAfter); err == nil {
+			q = q.Where(dbuser.CreatedAtGTE(t))
+		}
+	}
+	if filters.CreatedBefore != "" {
+		if t, err := time.Parse("2006-01-02", filters.CreatedBefore); err == nil {
+			// Add 1 day to include the entire day
+			endOfDay := t.Add(24 * time.Hour)
+			q = q.Where(dbuser.CreatedAtLT(endOfDay))
+		}
+	}
+
 	// If attribute filters are specified, we need to filter by user IDs first
 	var allowedUserIDs []int64
 	if len(filters.Attributes) > 0 {
