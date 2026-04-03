@@ -102,8 +102,6 @@ const { t } = useI18n(); const appStore = useAppStore(); const authStore = useAu
 
 const submitting = ref(false); const passwordCopied = ref(false)
 const form = reactive({ email: '', password: '', username: '', notes: '', concurrency: 1, role: 'user' as string, discovery_source: '' as string, custom_discovery_source: '', customAttributes: {} as UserAttributeValuesMap, inviter_id: null as number | null })
-const agents = ref<AdminUser[]>([])
-const loadingAgents = ref(false)
 
 const discoverySourceOptions = computed(() => [
   { value: 'douyin', label: t('auth.discoverySource.douyin') },
@@ -141,18 +139,6 @@ watch(() => props.user, (u) => {
     }
   }
 }, { immediate: true })
-
-// Load agents list when modal opens
-watch(() => props.show, (show) => {
-  if (show && agents.value.length === 0) {
-    loadingAgents.value = true
-    adminAPI.users.getAgents().then(list => {
-      agents.value = list
-    }).catch(() => {}).finally(() => {
-      loadingAgents.value = false
-    })
-  }
-})
 
 const generatePassword = () => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%^&*'
