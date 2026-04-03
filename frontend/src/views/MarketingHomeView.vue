@@ -2,7 +2,7 @@
   <div class="relative min-h-screen bg-[#FAFAFA] dark:bg-dark-950 overflow-x-hidden antialiased">
     <!-- 顶部公告栏 -->
     <div class="fixed top-0 left-0 w-full bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-center py-2.5 text-sm font-medium z-50 transition-all hover:bg-indigo-100 dark:hover:bg-indigo-900/30">
-      <span class="mr-2">🎉</span> 新一代企业级多节点路由已上线 | 新用户注册即送 <strong>$10 无门槛纯净体验金</strong>
+      <span class="mr-2">🎉</span> 新一代企业级多节点路由已上线 | <strong>新人特惠 ¥9.9 = $19.9 额度</strong>
     </div>
 
     <!-- 导航栏 -->
@@ -47,7 +47,7 @@
               :to="isAuthenticated ? dashboardPath : '/register'"
               class="bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 text-white dark:text-gray-900 text-lg font-bold py-4 px-10 rounded-full shadow-xl transform hover:-translate-y-1 transition duration-300 flex items-center gap-3"
             >
-              <Icon name="sparkles" size="md" /> 领取 $10 体验金，即刻接入
+              <Icon name="sparkles" size="md" /> 新人特惠 ¥9.9 = $19.9，即刻接入
             </router-link>
           </MagneticButton>
         </div>
