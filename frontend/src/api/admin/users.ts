@@ -192,6 +192,7 @@ export async function getAgents(): Promise<AdminUser[]> {
   })
   console.log('All users:', data.items.length)
   console.log('Sample user:', data.items[0])
+  console.log('All agent_status values:', data.items.map((u: any) => ({ id: u.id, email: u.email, agent_status: u.agent_status, is_agent: u.is_agent })))
   // Filter agents: check both is_agent=true OR agent_status='approved'
   const agents = data.items.filter((u: any) =>
     u.is_agent === true || u.agent_status === 'approved'
