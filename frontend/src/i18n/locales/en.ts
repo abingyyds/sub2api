@@ -3417,6 +3417,14 @@ export default {
   pricing: {
     title: 'Pricing',
     subtitle: 'Choose the payment plan that suits you. We support credit cards and WeChat Pay — secure, convenient, and instant.',
+    tabs: {
+      newcomer: 'New User Offer',
+      subscription: 'Subscription Plans',
+      recharge: 'Flexible Balance'
+    },
+    newcomerSection: 'Exclusive Newcomer Offers',
+    newcomerSectionDesc: 'First-time recharge exclusive deals, one-time opportunity only',
+    noNewcomerPlans: 'No newcomer offers available',
     tabSubscription: 'Subscription Plans',
     tabRecharge: 'Balance Recharge',
     recommended: 'Recommended',

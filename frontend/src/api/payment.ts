@@ -131,6 +131,14 @@ export async function listOrders(params?: {
   return data
 }
 
+/**
+ * Check if user is eligible for newcomer plans
+ */
+export async function getNewcomerStatus(): Promise<{ eligible: boolean }> {
+  const { data } = await apiClient.get<{ eligible: boolean }>('/payment/newcomer-status')
+  return data
+}
+
 export const paymentAPI = {
   getPlans,
   getRechargeInfo,
@@ -139,6 +147,7 @@ export const paymentAPI = {
   createRechargeOrder,
   queryOrder,
   listOrders,
+  getNewcomerStatus,
 }
 
 export default paymentAPI

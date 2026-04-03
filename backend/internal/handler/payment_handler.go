@@ -47,6 +47,25 @@ func (h *PaymentHandler) GetRechargeInfo(c *gin.Context) {
 	response.Success(c, info)
 }
 
+// GetNewcomerStatus checks if the current user is eligible for newcomer plans
+// GET /api/v1/payment/newcomer-status
+func (h *PaymentHandler) GetNewcomerStatus(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "User not found in context")
+		return
+	}
+
+	eligible, err := h.paymentService.CheckNewcomerEligibility(c.Request.Context(), subject.UserID)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, gin.H{
+		"eligible": eligible,
+	})
+}
+
 // GetPayMethods returns currently enabled payment methods
 // GET /api/v1/payment/methods
 func (h *PaymentHandler) GetPayMethods(c *gin.Context) {

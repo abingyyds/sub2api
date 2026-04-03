@@ -114,6 +114,7 @@ func RegisterUserRoutes(
 			authPayment.POST("/recharge", h.Payment.CreateRecharge)
 			authPayment.GET("/orders", h.Payment.ListOrders)
 			authPayment.GET("/orders/:orderNo", h.Payment.QueryOrder)
+			authPayment.GET("/newcomer-status", h.Payment.GetNewcomerStatus)
 		}
 
 		// 代理中心

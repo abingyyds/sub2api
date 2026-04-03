@@ -882,6 +882,8 @@ export default {
       leaveEmptyToKeep: '留空则保持原密码不变',
       generatePassword: '生成随机密码',
       copyPassword: '复制密码',
+      inviter: '上级代理',
+      noInviter: '无上级',
       creating: '创建中...',
       updating: '更新中...',
       columns: {
@@ -3567,6 +3569,14 @@ export default {
   pricing: {
     title: '定价方案',
     subtitle: '选择适合你的付费方式，支持信用卡和微信在线支付，安全便捷，即时生效。',
+    tabs: {
+      newcomer: '新人特惠',
+      subscription: '套餐订阅',
+      recharge: '灵活额度'
+    },
+    newcomerSection: '新人专享优惠',
+    newcomerSectionDesc: '首次充值专享超值优惠，仅限一次机会',
+    noNewcomerPlans: '暂无新人优惠套餐',
     tabSubscription: '订阅套餐',
     tabRecharge: '余额充值',
     recommended: '推荐',

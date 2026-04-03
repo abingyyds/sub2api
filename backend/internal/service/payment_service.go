@@ -261,6 +261,32 @@ func (s *PaymentService) GetRechargeInfo(ctx context.Context) (*RechargeInfo, er
 	return info, nil
 }
 
+// CheckNewcomerEligibility 检查用户是否有资格购买新人专享套餐
+func (s *PaymentService) CheckNewcomerEligibility(ctx context.Context, userID int64) (bool, error) {
+	// 获取所有充值套餐
+	info, err := s.GetRechargeInfo(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	// 检查每个新人套餐
+	for _, rp := range info.Plans {
+		if !rp.IsNewcomer {
+			continue
+		}
+		if rp.MaxPurchases > 0 {
+			count, err := s.orderRepo.CountPaidByUserAndPlanKey(ctx, userID, rp.Key)
+			if err != nil {
+				return false, err
+			}
+			if count >= rp.MaxPurchases {
+				return false, nil // 已用完
+			}
+		}
+	}
+	return true, nil
+}
+
 // enrichPlansFromGroups 从分组信息自动填充套餐的描述和特性
 func (s *PaymentService) enrichPlansFromGroups(ctx context.Context, plans []PaymentPlan) {
 	for i := range plans {

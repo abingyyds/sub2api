@@ -17,6 +17,53 @@
           <div class="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"></div>
         </div>
 
+        <!-- Tab Switcher -->
+        <SlideIn v-if="!loading" direction="up" :delay="150">
+          <div class="flex justify-center">
+            <div class="inline-flex rounded-xl bg-gray-100 dark:bg-dark-800 p-1 gap-1">
+              <!-- Newcomer Tab (hidden if not eligible) -->
+              <button
+                v-if="newcomerEligible"
+                class="relative px-6 py-2.5 rounded-lg text-sm font-semibold transition-all"
+                :class="activeTab === 'newcomer'
+                  ? 'bg-white dark:bg-dark-700 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-600 dark:text-dark-400 hover:text-gray-900 dark:hover:text-white'"
+                @click="activeTab = 'newcomer'"
+              >
+                {{ t('pricing.tabs.newcomer') }}
+                <span class="absolute -top-1 -right-1 flex h-5 w-5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-5 w-5 bg-green-500 items-center justify-center">
+                    <svg class="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  </span>
+                </span>
+              </button>
+              <!-- Subscription Tab -->
+              <button
+                class="px-6 py-2.5 rounded-lg text-sm font-semibold transition-all"
+                :class="activeTab === 'subscription'
+                  ? 'bg-white dark:bg-dark-700 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-600 dark:text-dark-400 hover:text-gray-900 dark:hover:text-white'"
+                @click="activeTab = 'subscription'"
+              >
+                {{ t('pricing.tabs.subscription') }}
+              </button>
+              <!-- Recharge Tab -->
+              <button
+                class="px-6 py-2.5 rounded-lg text-sm font-semibold transition-all"
+                :class="activeTab === 'recharge'
+                  ? 'bg-white dark:bg-dark-700 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-600 dark:text-dark-400 hover:text-gray-900 dark:hover:text-white'"
+                @click="activeTab = 'recharge'"
+              >
+                {{ t('pricing.tabs.recharge') }}
+              </button>
+            </div>
+          </div>
+        </SlideIn>
+
         <!-- Promo Code Input -->
         <SlideIn v-if="!loading" direction="up" :delay="200">
           <div class="mx-auto max-w-lg">
@@ -66,7 +113,73 @@
         </SlideIn>
 
         <template v-if="!loading">
+          <!-- ==================== Newcomer Section ==================== -->
+          <template v-if="activeTab === 'newcomer'">
+            <SlideIn direction="up" :delay="250">
+              <div class="mb-2">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('pricing.newcomerSection') }}</h2>
+                <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">{{ t('pricing.newcomerSectionDesc') }}</p>
+              </div>
+            </SlideIn>
+
+            <!-- Newcomer Plans -->
+            <StaggerContainer v-if="newcomerPlans.length > 0" :stagger-delay="100" :delay="300">
+              <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <GlowCard
+                  v-for="rp in newcomerPlans"
+                  :key="rp.key"
+                  glow-color="rgb(34, 197, 94)"
+                >
+                  <div
+                    class="relative flex flex-col rounded-2xl border-2 bg-white dark:bg-dark-900 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer h-full border-green-400 dark:border-green-500/60 shadow-lg shadow-green-500/10"
+                    @click="handleRechargePreset(rp)"
+                  >
+                    <!-- Newcomer badge -->
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <span class="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-4 py-1 rounded-full shadow-md whitespace-nowrap">
+                        {{ t('pricing.newcomerBadge') }}
+                      </span>
+                    </div>
+
+                    <div class="flex flex-1 flex-col p-6">
+                      <!-- Title -->
+                      <h3 class="text-sm font-medium text-gray-500 dark:text-dark-400">{{ rp.name || t('pricing.purchaseQuota') }}</h3>
+                      <!-- Balance amount (USD) -->
+                      <div class="mt-2 flex items-baseline gap-1">
+                        <span class="text-3xl font-extrabold text-gray-900 dark:text-white">${{ rp.balance_amount.toFixed(2) }}</span>
+                        <span class="text-sm text-gray-500 dark:text-dark-400">USD</span>
+                      </div>
+                      <!-- Special price label -->
+                      <p v-if="rp.pay_amount_fen !== rp.balance_amount * 100" class="mt-1 text-xs font-semibold text-green-600 dark:text-green-400">
+                        {{ t('pricing.newcomerSpecialPrice') }}
+                      </p>
+                      <!-- Description -->
+                      <p v-if="rp.description" class="mt-2 text-sm text-gray-500 dark:text-dark-400">{{ rp.description }}</p>
+
+                      <div class="mt-auto pt-5">
+                        <!-- CTA button -->
+                        <div
+                          class="flex items-center justify-center rounded-xl py-2.5 text-sm font-bold text-white transition-all bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-md"
+                        >
+                          {{ t('pricing.newcomerCta') }} ¥{{ (rp.pay_amount_fen / 100).toFixed(rp.pay_amount_fen % 100 === 0 ? 0 : 2) }}
+                        </div>
+                        <!-- Purchase limit note -->
+                        <p v-if="rp.max_purchases && rp.max_purchases > 0" class="mt-2 text-center text-xs text-gray-400 dark:text-dark-500">
+                          {{ t('pricing.purchaseLimitNote', { count: rp.max_purchases }) }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </GlowCard>
+              </div>
+            </StaggerContainer>
+            <div v-else class="text-center py-12 text-gray-500 dark:text-dark-400">
+              {{ t('pricing.noNewcomerPlans') }}
+            </div>
+          </template>
+
           <!-- ==================== Subscription Section (套餐订阅) ==================== -->
+          <template v-if="activeTab === 'subscription'">
           <SlideIn direction="up" :delay="250">
             <div class="mb-2">
               <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('pricing.subscriptionSection') }}</h2>
@@ -175,7 +288,10 @@
             {{ t('pricing.stackable') }}
           </p>
 
+          </template>
+
           <!-- ==================== Recharge Section (灵活额度) ==================== -->
+          <template v-if="activeTab === 'recharge'">
           <SlideIn direction="up" :delay="400">
             <div class="mb-2 mt-4">
               <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('pricing.balanceSection') }}</h2>
@@ -184,30 +300,22 @@
           </SlideIn>
 
           <!-- Recharge Plans -->
-          <StaggerContainer v-if="rechargePlans.length > 0" :stagger-delay="100" :delay="450">
+          <StaggerContainer v-if="regularRechargePlans.length > 0" :stagger-delay="100" :delay="450">
             <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               <GlowCard
-                v-for="rp in rechargePlans"
+                v-for="rp in regularRechargePlans"
                 :key="rp.key"
-                :glow-color="rp.is_newcomer ? 'rgb(34, 197, 94)' : rp.popular ? 'rgb(217, 119, 87)' : 'rgb(59, 130, 246)'"
+                :glow-color="rp.popular ? 'rgb(217, 119, 87)' : 'rgb(59, 130, 246)'"
               >
                 <div
                   class="relative flex flex-col rounded-2xl border-2 bg-white dark:bg-dark-900 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer h-full"
-                  :class="rp.is_newcomer
-                    ? 'border-green-400 dark:border-green-500/60 shadow-lg shadow-green-500/10'
-                    : rp.popular
-                      ? 'border-primary-500/80 dark:border-primary-400/60 shadow-lg shadow-primary-500/10'
-                      : 'border-gray-200 dark:border-dark-600 shadow-soft'"
+                  :class="rp.popular
+                    ? 'border-primary-500/80 dark:border-primary-400/60 shadow-lg shadow-primary-500/10'
+                    : 'border-gray-200 dark:border-dark-600 shadow-soft'"
                   @click="handleRechargePreset(rp)"
                 >
-                  <!-- Newcomer badge -->
-                  <div v-if="rp.is_newcomer" class="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span class="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-4 py-1 rounded-full shadow-md whitespace-nowrap">
-                      {{ t('pricing.newcomerBadge') }}
-                    </span>
-                  </div>
                   <!-- Popular badge -->
-                  <div v-else-if="rp.popular" class="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <div v-if="rp.popular" class="absolute -top-3 left-1/2 -translate-x-1/2">
                     <span class="bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-4 py-1 rounded-full shadow-md whitespace-nowrap">
                       {{ t('pricing.mostPopular') }}
                     </span>
@@ -221,10 +329,6 @@
                       <span class="text-2xl font-extrabold text-gray-900 dark:text-white">${{ rp.balance_amount.toFixed(2) }}</span>
                       <span class="text-sm text-gray-500 dark:text-dark-400">USD</span>
                     </div>
-                    <!-- Newcomer special price label -->
-                    <p v-if="rp.is_newcomer && rp.pay_amount_fen !== rp.balance_amount * 100" class="mt-1 text-xs font-semibold text-green-600 dark:text-green-400">
-                      {{ t('pricing.newcomerSpecialPrice') }}
-                    </p>
                     <!-- Description -->
                     <p v-if="rp.description" class="mt-2 text-sm text-gray-500 dark:text-dark-400">{{ rp.description }}</p>
 
@@ -232,18 +336,11 @@
                       <!-- CTA button -->
                       <div
                         class="flex items-center justify-center rounded-xl py-2.5 px-3 text-xs sm:text-sm font-bold text-white transition-all whitespace-nowrap overflow-hidden truncate"
-                        :class="rp.is_newcomer
-                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-md'
-                          : rp.popular
-                            ? 'bg-primary-600 hover:bg-primary-700 shadow-md'
-                            : 'bg-gray-900 hover:bg-gray-800 dark:bg-dark-500 dark:hover:bg-dark-400'"
+                        :class="rp.popular
+                          ? 'bg-primary-600 hover:bg-primary-700 shadow-md'
+                          : 'bg-gray-900 hover:bg-gray-800 dark:bg-dark-500 dark:hover:bg-dark-400'"
                       >
-                        <template v-if="rp.is_newcomer">
-                          {{ t('pricing.newcomerCta') }} ¥{{ (rp.pay_amount_fen / 100).toFixed(rp.pay_amount_fen % 100 === 0 ? 0 : 2) }}
-                        </template>
-                        <template v-else>
-                          {{ t('pricing.rechargePayBtn') }} ¥{{ (rp.pay_amount_fen / 100).toFixed(rp.pay_amount_fen % 100 === 0 ? 0 : 2) }}
-                        </template>
+                        {{ t('pricing.rechargePayBtn') }} ¥{{ (rp.pay_amount_fen / 100).toFixed(rp.pay_amount_fen % 100 === 0 ? 0 : 2) }}
                       </div>
                       <!-- Purchase limit note -->
                       <p v-if="rp.max_purchases && rp.max_purchases > 0" class="mt-2 text-center text-xs text-gray-400 dark:text-dark-500">
@@ -310,6 +407,9 @@
           </StaggerContainer>
 
           <!-- ==================== FAQ Section ==================== -->
+          </template>
+
+          <!-- FAQ Section (shown on all tabs) -->
           <SlideIn direction="up" :delay="500">
             <div class="mt-8">
               <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">{{ t('pricing.faq.title') }}</h2>
@@ -497,6 +597,14 @@ const currentOrderNo = ref('')
 const currentOrderAmount = ref('')
 const countdown = ref(0)
 const customInput = ref('')
+
+// Tab state
+const activeTab = ref<'newcomer' | 'subscription' | 'recharge'>('subscription')
+const newcomerEligible = ref(false)
+
+// Computed: filter newcomer plans
+const newcomerPlans = computed(() => rechargePlans.value.filter(p => p.is_newcomer))
+const regularRechargePlans = computed(() => rechargePlans.value.filter(p => !p.is_newcomer))
 
 // Promo code state
 const promoCode = ref('')
@@ -797,10 +905,11 @@ function formatDiscountText(): string {
 
 onMounted(async () => {
   try {
-    const [allPlans, rechargeInfo, methods] = await Promise.all([
+    const [allPlans, rechargeInfo, methods, newcomerStatus] = await Promise.all([
       paymentAPI.getPlans(),
       paymentAPI.getRechargeInfo(),
-      paymentAPI.getPayMethods()
+      paymentAPI.getPayMethods(),
+      paymentAPI.getNewcomerStatus()
     ])
     plans.value = allPlans.filter(p => (p.type || 'subscription') === 'subscription')
     rechargePlans.value = rechargeInfo.plans || []
@@ -808,6 +917,14 @@ onMounted(async () => {
     availablePayMethods.value = methods || []
     if (methods.length > 0) {
       selectedPayMethod.value = methods[0]
+    }
+    newcomerEligible.value = newcomerStatus.eligible
+
+    // Set initial tab: newcomer if eligible and has plans, otherwise subscription
+    if (newcomerEligible.value && rechargePlans.value.some(p => p.is_newcomer)) {
+      activeTab.value = 'newcomer'
+    } else {
+      activeTab.value = 'subscription'
     }
   } catch {
     // silently fail
