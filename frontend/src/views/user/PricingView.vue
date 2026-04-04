@@ -637,7 +637,6 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import QRCode from 'qrcode'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { paymentAPI } from '@/api/payment'
@@ -1144,6 +1143,7 @@ async function showQRModal(order: { order_no: string; code_url: string | null; a
     qrLoading.value = false
     await nextTick()
     if (qrCanvas.value) {
+      const QRCode = (await import('qrcode')).default
       await QRCode.toCanvas(qrCanvas.value, order.code_url, {
         width: 192,
         margin: 2,

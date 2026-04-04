@@ -5,9 +5,57 @@
     <link rel="icon" type="image/png" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>cCoder.me - 新一代 AI 代码工作平台</title>
+    <!-- DNS 预解析：加速后续 API 请求 -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
+    <!-- 骨架屏样式：在 JS 加载前显示，消除白屏 -->
+    <style>
+      #app-skeleton {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background: #f9fafb;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+      @media (prefers-color-scheme: dark) {
+        #app-skeleton { background: #111827; }
+        #app-skeleton .sk-bar { background: #374151; }
+      }
+      .sk-loader {
+        width: 280px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        align-items: center;
+      }
+      .sk-bar {
+        height: 10px;
+        border-radius: 5px;
+        background: #e5e7eb;
+        animation: sk-pulse 1.2s ease-in-out infinite;
+      }
+      .sk-bar:nth-child(1) { width: 60%; animation-delay: 0s; }
+      .sk-bar:nth-child(2) { width: 85%; animation-delay: 0.15s; }
+      .sk-bar:nth-child(3) { width: 70%; animation-delay: 0.3s; }
+      @keyframes sk-pulse {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 1; }
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <!-- 骨架屏：Vue 挂载后自动被替换 -->
+      <div id="app-skeleton">
+        <div class="sk-loader">
+          <div class="sk-bar"></div>
+          <div class="sk-bar"></div>
+          <div class="sk-bar"></div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

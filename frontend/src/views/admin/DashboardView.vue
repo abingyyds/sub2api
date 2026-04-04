@@ -345,7 +345,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, defineAsyncComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 
@@ -358,32 +358,22 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import Icon from '@/components/icons/Icon.vue'
 import DateRangePicker from '@/components/common/DateRangePicker.vue'
 import Select from '@/components/common/Select.vue'
-import ModelDistributionChart from '@/components/charts/ModelDistributionChart.vue'
-import TokenUsageTrend from '@/components/charts/TokenUsageTrend.vue'
 
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-} from 'chart.js'
-import { Line } from 'vue-chartjs'
-
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
+// 图表组件异步加载，避免 chart.js (~200KB) 阻塞首屏渲染
+const ModelDistributionChart = defineAsyncComponent(() =>
+  import('@/components/charts/ModelDistributionChart.vue')
+)
+const TokenUsageTrend = defineAsyncComponent(() =>
+  import('@/components/charts/TokenUsageTrend.vue')
+)
+const Line = defineAsyncComponent(() =>
+  import('vue-chartjs').then((m) => {
+    // 注册 chart.js 组件（仅在首次加载时执行）
+    return import('chart.js').then(({ Chart, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler }) => {
+      Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
+      return { default: m.Line }
+    })
+  })
 )
 
 const appStore = useAppStore()

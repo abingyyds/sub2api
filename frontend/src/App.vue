@@ -76,26 +76,32 @@ watch(
   { immediate: true }
 )
 
-onMounted(async () => {
-  // Check if setup is needed
-  try {
-    const status = await getSetupStatus()
-    if (status.needs_setup && route.path !== '/setup') {
-      router.replace('/setup')
-      return
-    }
-  } catch {
-    // If setup endpoint fails, assume normal mode and continue
-  }
+onMounted(() => {
+  // 异步检查 setup 状态，不阻塞渲染
+  getSetupStatus()
+    .then((status) => {
+      if (status.needs_setup && route.path !== '/setup') {
+        router.replace('/setup')
+      }
+    })
+    .catch(() => {
+      // If setup endpoint fails, assume normal mode and continue
+    })
 
-  // Load public settings into appStore (will be cached for other components)
-  await appStore.fetchPublicSettings()
+  // 异步加载公开设置，不阻塞渲染（已有缓存机制）
+  appStore.fetchPublicSettings().catch((error) => {
+    console.error('Failed to load public settings:', error)
+  })
 })
 </script>
 
 <template>
   <NavigationProgress />
-  <RouterView />
+  <RouterView v-slot="{ Component }">
+    <Transition name="page" mode="out-in">
+      <component :is="Component" />
+    </Transition>
+  </RouterView>
   <Toast />
   <DiscoverySourceModal :show="showDiscoverySource" @close="showDiscoverySource = false" />
 </template>

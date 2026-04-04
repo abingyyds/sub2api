@@ -2,7 +2,63 @@
   <AppLayout>
     <FadeIn>
       <div class="space-y-6">
-        <div v-if="loading" class="flex items-center justify-center py-12"><LoadingSpinner /></div>
+        <div v-if="loading" class="space-y-6">
+          <!-- Greeting skeleton -->
+          <div>
+            <div class="h-7 w-48 animate-pulse rounded-lg bg-gray-200 dark:bg-dark-700"></div>
+            <div class="mt-2 h-4 w-32 animate-pulse rounded bg-gray-100 dark:bg-dark-700/70"></div>
+          </div>
+          <!-- Cards skeleton -->
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 p-6">
+              <div class="flex items-center justify-between">
+                <div class="space-y-2">
+                  <div class="h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-dark-700"></div>
+                  <div class="h-5 w-32 animate-pulse rounded bg-gray-200 dark:bg-dark-700"></div>
+                </div>
+                <div class="h-10 w-10 animate-pulse rounded-xl bg-gray-100 dark:bg-dark-700/70"></div>
+              </div>
+              <div class="mt-3 h-3 w-40 animate-pulse rounded bg-gray-100 dark:bg-dark-700/70"></div>
+              <div class="mt-4 h-9 w-28 animate-pulse rounded-lg bg-gray-200 dark:bg-dark-700"></div>
+            </div>
+            <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 p-6">
+              <div class="flex items-center justify-between">
+                <div class="space-y-2">
+                  <div class="h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-dark-700"></div>
+                  <div class="h-7 w-20 animate-pulse rounded bg-gray-200 dark:bg-dark-700"></div>
+                </div>
+                <div class="h-10 w-10 animate-pulse rounded-xl bg-gray-100 dark:bg-dark-700/70"></div>
+              </div>
+              <div class="mt-3 h-3 w-36 animate-pulse rounded bg-gray-100 dark:bg-dark-700/70"></div>
+              <div class="mt-4 h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-dark-700"></div>
+            </div>
+          </div>
+          <!-- Announcements skeleton -->
+          <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900">
+            <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+              <div class="h-5 w-28 animate-pulse rounded bg-gray-200 dark:bg-dark-700"></div>
+              <div class="h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-dark-700"></div>
+            </div>
+            <div class="space-y-2 p-4">
+              <div v-for="i in 3" :key="i" class="flex items-center justify-between rounded-xl px-4 py-3">
+                <div class="h-4 animate-pulse rounded bg-gray-100 dark:bg-dark-700/70" :style="{ width: `${50 + i * 10}%` }"></div>
+                <div class="ml-4 h-3 w-20 flex-shrink-0 animate-pulse rounded bg-gray-100 dark:bg-dark-700/70"></div>
+              </div>
+            </div>
+          </div>
+          <!-- Quick actions skeleton -->
+          <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900">
+            <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+              <div class="h-5 w-24 animate-pulse rounded bg-gray-200 dark:bg-dark-700"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 p-4 lg:grid-cols-4">
+              <div v-for="i in 4" :key="i" class="flex flex-col items-center gap-3 rounded-xl bg-gray-50 p-5 dark:bg-dark-800/50">
+                <div class="h-12 w-12 animate-pulse rounded-xl bg-gray-200 dark:bg-dark-700"></div>
+                <div class="h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-dark-700"></div>
+              </div>
+            </div>
+          </div>
+        </div>
         <template v-else>
           <!-- Welcome Section -->
           <div>
@@ -173,7 +229,6 @@ import { useSubscriptionStore } from '@/stores/subscriptions'
 import { authAPI } from '@/api/auth'
 import type { Announcement } from '@/types'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { FadeIn, SlideIn } from '@/components/animations'
 
 const router = useRouter()

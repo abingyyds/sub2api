@@ -1,6 +1,5 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import { MotionPlugin } from '@vueuse/motion'
 import App from './App.vue'
 import router from './router'
 import i18n from './i18n'
@@ -24,9 +23,6 @@ if (appStore.siteName && appStore.siteName !== 'Sub2API') {
 
 app.use(router)
 app.use(i18n)
-app.use(MotionPlugin)
 
-// 等待路由器完成初始导航后再挂载，避免竞态条件导致的空白渲染
-router.isReady().then(() => {
-  app.mount('#app')
-})
+// 立即挂载应用，不等待路由就绪（提升首屏速度）
+app.mount('#app')
