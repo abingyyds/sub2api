@@ -12,7 +12,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.7.0
 	github.com/gorilla/websocket v1.5.3
-	github.com/imroc/req/v3 v3.57.0
+	github.com/imroc/req/v3 v3.48.0
 	github.com/lib/pq v1.10.9
 	github.com/pquerna/otp v1.5.0
 	github.com/redis/go-redis/v9 v9.17.2
@@ -164,7 +164,3 @@ require (
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sqlite v1.44.1 // indirect
 )
-
-// Fix compatibility issue between imroc/req v3.57.0 and quic-go v0.57.x
-// Use v0.47.0 which has the required qlog packages
-replace github.com/quic-go/quic-go => github.com/quic-go/quic-go v0.47.0
