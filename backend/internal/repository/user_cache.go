@@ -19,17 +19,11 @@ func userCacheKey(userID int64) string {
 	return fmt.Sprintf("%s%d", userCachePrefix, userID)
 }
 
-type UserCache interface {
-	Get(ctx context.Context, userID int64) (*service.User, error)
-	Set(ctx context.Context, userID int64, user *service.User) error
-	Delete(ctx context.Context, userID int64) error
-}
-
 type userCache struct {
 	rdb *redis.Client
 }
 
-func NewUserCache(rdb *redis.Client) UserCache {
+func NewUserCache(rdb *redis.Client) service.UserCache {
 	return &userCache{rdb: rdb}
 }
 

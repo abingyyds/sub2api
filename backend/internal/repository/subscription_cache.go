@@ -19,17 +19,11 @@ func subscriptionCacheKey(userID int64) string {
 	return fmt.Sprintf("%s%d", subscriptionCachePrefix, userID)
 }
 
-type SubscriptionCache interface {
-	GetActiveByUserID(ctx context.Context, userID int64) ([]service.UserSubscription, error)
-	SetActiveByUserID(ctx context.Context, userID int64, subscriptions []service.UserSubscription) error
-	DeleteByUserID(ctx context.Context, userID int64) error
-}
-
 type subscriptionCache struct {
 	rdb *redis.Client
 }
 
-func NewSubscriptionCache(rdb *redis.Client) SubscriptionCache {
+func NewSubscriptionCache(rdb *redis.Client) service.SubscriptionCache {
 	return &subscriptionCache{rdb: rdb}
 }
 
