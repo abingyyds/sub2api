@@ -79,13 +79,21 @@ type ChangePasswordRequest struct {
 type UserService struct {
 	userRepo             UserRepository
 	authCacheInvalidator APIKeyAuthCacheInvalidator
+	userCache            UserCache
+}
+
+type UserCache interface {
+	Get(ctx context.Context, userID int64) (*User, error)
+	Set(ctx context.Context, userID int64, user *User) error
+	Delete(ctx context.Context, userID int64) error
 }
 
 // NewUserService 创建用户服务实例
-func NewUserService(userRepo UserRepository, authCacheInvalidator APIKeyAuthCacheInvalidator) *UserService {
+func NewUserService(userRepo UserRepository, authCacheInvalidator APIKeyAuthCacheInvalidator, userCache UserCache) *UserService {
 	return &UserService{
 		userRepo:             userRepo,
 		authCacheInvalidator: authCacheInvalidator,
+		userCache:            userCache,
 	}
 }
 
@@ -142,6 +150,9 @@ func (s *UserService) UpdateProfile(ctx context.Context, userID int64, req Updat
 	if s.authCacheInvalidator != nil && user.Concurrency != oldConcurrency {
 		s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, userID)
 	}
+	if s.userCache != nil {
+		_ = s.userCache.Delete(ctx, userID)
+	}
 
 	return user, nil
 }
@@ -191,10 +202,24 @@ func (s *UserService) ChangePassword(ctx context.Context, userID int64, req Chan
 
 // GetByID 根据ID获取用户（管理员功能）
 func (s *UserService) GetByID(ctx context.Context, id int64) (*User, error) {
+	// Try cache first
+	if s.userCache != nil {
+		if user, err := s.userCache.Get(ctx, id); err == nil {
+			return user, nil
+		}
+	}
+
+	// Cache miss, query database
 	user, err := s.userRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("get user: %w", err)
 	}
+
+	// Update cache
+	if s.userCache != nil {
+		_ = s.userCache.Set(ctx, id, user)
+	}
+
 	return user, nil
 }
 
@@ -214,6 +239,9 @@ func (s *UserService) UpdateBalance(ctx context.Context, userID int64, amount fl
 	}
 	if s.authCacheInvalidator != nil {
 		s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, userID)
+	}
+	if s.userCache != nil {
+		_ = s.userCache.Delete(ctx, userID)
 	}
 	return nil
 }
@@ -243,6 +271,9 @@ func (s *UserService) UpdateStatus(ctx context.Context, userID int64, status str
 	}
 	if s.authCacheInvalidator != nil {
 		s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, userID)
+	}
+	if s.userCache != nil {
+		_ = s.userCache.Delete(ctx, userID)
 	}
 
 	return nil

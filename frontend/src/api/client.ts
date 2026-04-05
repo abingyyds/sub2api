@@ -21,12 +21,16 @@ export const apiClient: AxiosInstance = axios.create({
 
 // ==================== Request Interceptor ====================
 
-// Get user's timezone
+// Cache user's timezone (only compute once)
+let cachedTimezone: string | null = null
 const getUserTimezone = (): string => {
+  if (cachedTimezone) return cachedTimezone
   try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone
+    cachedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+    return cachedTimezone
   } catch {
-    return 'UTC'
+    cachedTimezone = 'UTC'
+    return cachedTimezone
   }
 }
 

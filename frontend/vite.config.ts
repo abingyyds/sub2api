@@ -101,8 +101,18 @@ export default defineConfig(({ mode }) => {
               return 'vendor-i18n'
             }
 
+            // 动画库单独分包
+            if (id.includes('/@vueuse/motion/') || id.includes('/framer-motion/')) {
+              return 'vendor-animation'
+            }
+
             // 其他小型第三方库合并
             return 'vendor-misc'
+          }
+
+          // 动画组件单独分包（按需加载）
+          if (id.includes('/components/animations/')) {
+            return 'animations'
           }
 
           // 应用代码：按入口点自动分包，不手动干预

@@ -91,20 +91,20 @@
               <div class="bg-orange-50/80 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800/30 rounded-2xl p-6 md:p-8 relative">
                 <div class="absolute top-4 right-4 text-4xl opacity-10">🚀</div>
                 <div class="text-orange-700 dark:text-orange-400 font-bold mb-4 flex items-center gap-2 text-lg">
-                  <Icon name="checkCircle" size="md" /> 在本站 (以 ¥589 专业版为例)：
+                  <Icon name="checkCircle" size="md" /> 在本站 (以 ¥499 专业版为例)：
                 </div>
                 <ul class="space-y-4 text-sm text-gray-700 dark:text-dark-300">
                   <li class="flex items-start gap-3">
                     <Icon name="check" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
-                    <span class="leading-relaxed">获得 <strong>$1800</strong> 的官方算力额度</span>
+                    <span class="leading-relaxed">每月获得 <strong>$650</strong> 算力额度 (≈ 官方 $1,300 等效)</span>
                   </li>
                   <li class="flex items-start gap-3">
                     <Icon name="check" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
-                    <span class="leading-relaxed">享有 <strong>1:1</strong> 的超低汇率标准</span>
+                    <span class="leading-relaxed">折合 <strong>$1 = ¥0.77</strong>，立省 89% 成本</span>
                   </li>
                   <li class="flex items-start gap-3">
                     <Icon name="check" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
-                    <span class="leading-relaxed">专属不拥堵的高速调用通道</span>
+                    <span class="leading-relaxed">每周 $162.5 专属高速通道，拒绝排队</span>
                   </li>
                   <li class="flex items-start gap-3">
                     <Icon name="check" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />

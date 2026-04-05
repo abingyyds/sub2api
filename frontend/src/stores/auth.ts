@@ -10,7 +10,7 @@ import type { User, LoginRequest, RegisterRequest, AuthResponse } from '@/types'
 
 const AUTH_TOKEN_KEY = 'auth_token'
 const AUTH_USER_KEY = 'auth_user'
-const AUTO_REFRESH_INTERVAL = 60 * 1000 // 60 seconds
+const AUTO_REFRESH_INTERVAL = 10 * 60 * 1000 // 10 minutes (reduced from 60s)
 
 export const useAuthStore = defineStore('auth', () => {
   // ==================== State ====================
@@ -56,12 +56,7 @@ export const useAuthStore = defineStore('auth', () => {
         token.value = savedToken
         user.value = JSON.parse(savedUser)
 
-        // Immediately refresh user data from backend (async, don't block)
-        refreshUser().catch((error) => {
-          console.error('Failed to refresh user on init:', error)
-        })
-
-        // Start auto-refresh interval
+        // Start auto-refresh interval (first refresh will happen after interval)
         startAutoRefresh()
       } catch (error) {
         console.error('Failed to parse saved user data:', error)
@@ -72,7 +67,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   /**
    * Start auto-refresh interval for user data
-   * Refreshes user data every 60 seconds
+   * Refreshes user data every 10 minutes
    */
   function startAutoRefresh(): void {
     // Clear existing interval if any

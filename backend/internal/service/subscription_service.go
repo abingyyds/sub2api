@@ -35,14 +35,22 @@ type SubscriptionService struct {
 	groupRepo           GroupRepository
 	userSubRepo         UserSubscriptionRepository
 	billingCacheService *BillingCacheService
+	subscriptionCache   SubscriptionCache
+}
+
+type SubscriptionCache interface {
+	GetActiveByUserID(ctx context.Context, userID int64) ([]UserSubscription, error)
+	SetActiveByUserID(ctx context.Context, userID int64, subscriptions []UserSubscription) error
+	DeleteByUserID(ctx context.Context, userID int64) error
 }
 
 // NewSubscriptionService 创建订阅服务
-func NewSubscriptionService(groupRepo GroupRepository, userSubRepo UserSubscriptionRepository, billingCacheService *BillingCacheService) *SubscriptionService {
+func NewSubscriptionService(groupRepo GroupRepository, userSubRepo UserSubscriptionRepository, billingCacheService *BillingCacheService, subscriptionCache SubscriptionCache) *SubscriptionService {
 	return &SubscriptionService{
 		groupRepo:           groupRepo,
 		userSubRepo:         userSubRepo,
 		billingCacheService: billingCacheService,
+		subscriptionCache:   subscriptionCache,
 	}
 }
 
@@ -88,6 +96,9 @@ func (s *SubscriptionService) AssignSubscription(ctx context.Context, input *Ass
 			defer cancel()
 			_ = s.billingCacheService.InvalidateSubscription(cacheCtx, userID, groupID)
 		}()
+	}
+	if s.subscriptionCache != nil {
+		_ = s.subscriptionCache.DeleteByUserID(ctx, input.UserID)
 	}
 
 	return sub, nil
@@ -174,6 +185,9 @@ func (s *SubscriptionService) AssignOrExtendSubscription(ctx context.Context, in
 				defer cancel()
 				_ = s.billingCacheService.InvalidateSubscription(cacheCtx, userID, groupID)
 			}()
+		}
+		if s.subscriptionCache != nil {
+			_ = s.subscriptionCache.DeleteByUserID(ctx, input.UserID)
 		}
 
 		// 返回更新后的订阅
@@ -402,11 +416,25 @@ func (s *SubscriptionService) ListUserSubscriptions(ctx context.Context, userID 
 
 // ListActiveUserSubscriptions 获取用户的所有有效订阅
 func (s *SubscriptionService) ListActiveUserSubscriptions(ctx context.Context, userID int64) ([]UserSubscription, error) {
+	// Try cache first
+	if s.subscriptionCache != nil {
+		if subs, err := s.subscriptionCache.GetActiveByUserID(ctx, userID); err == nil {
+			return subs, nil
+		}
+	}
+
+	// Cache miss, query database
 	subs, err := s.userSubRepo.ListActiveByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 	normalizeExpiredWindows(subs)
+
+	// Update cache
+	if s.subscriptionCache != nil {
+		_ = s.subscriptionCache.SetActiveByUserID(ctx, userID, subs)
+	}
+
 	return subs, nil
 }
 

@@ -57,10 +57,7 @@ watch(
   () => authStore.isAuthenticated,
   (isAuthenticated) => {
     if (isAuthenticated) {
-      // User logged in: preload subscriptions and start polling
-      subscriptionStore.fetchActiveSubscriptions().catch((error) => {
-        console.error('Failed to preload subscriptions:', error)
-      })
+      // User logged in: start polling (first fetch will happen on-demand)
       subscriptionStore.startPolling()
 
       // Show discovery source survey if user hasn't filled it in
@@ -88,10 +85,7 @@ onMounted(() => {
       // If setup endpoint fails, assume normal mode and continue
     })
 
-  // 异步加载公开设置，不阻塞渲染（已有缓存机制）
-  appStore.fetchPublicSettings().catch((error) => {
-    console.error('Failed to load public settings:', error)
-  })
+  // Public settings are already loaded from injected config or will be loaded on-demand
 })
 </script>
 

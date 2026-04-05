@@ -439,7 +439,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted } from 'vue'
+import { ref, computed, reactive, onMounted, defineAsyncComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { usageAPI, keysAPI } from '@/api'
@@ -454,7 +454,9 @@ import Icon from '@/components/icons/Icon.vue'
 import type { UsageLog, ApiKey, UsageQueryParams, UsageStatsResponse } from '@/types'
 import type { Column } from '@/components/common/types'
 import { formatDateTime } from '@/utils/format'
-import { StaggerContainer, GlowCard } from '@/components/animations'
+// Lazy load animations to reduce initial bundle size
+const StaggerContainer = defineAsyncComponent(() => import('@/components/animations/StaggerContainer.vue'))
+const GlowCard = defineAsyncComponent(() => import('@/components/animations/GlowCard.vue'))
 
 const { t } = useI18n()
 const appStore = useAppStore()
