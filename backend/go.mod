@@ -164,3 +164,7 @@ require (
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sqlite v1.44.1 // indirect
 )
+
+// Fix compatibility issue between imroc/req v3.57.0 and quic-go v0.57.x
+// quic-go v0.57.x removed ConnectionTracingID API that req depends on
+replace github.com/quic-go/quic-go => github.com/quic-go/quic-go v0.48.2
