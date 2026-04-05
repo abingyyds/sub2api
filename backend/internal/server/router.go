@@ -10,7 +10,6 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/service"
 	"github.com/Wei-Shaw/sub2api/internal/web"
 
-	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 )
@@ -34,7 +33,6 @@ func SetupRouter(
 	r.Use(middleware2.Logger())
 	r.Use(middleware2.CORS(cfg.CORS))
 	r.Use(middleware2.SecurityHeaders(cfg.Security.CSP))
-	r.Use(gzip.Gzip(gzip.DefaultCompression))
 
 	// Serve embedded frontend with settings injection if available
 	if web.HasEmbeddedFrontend() {
