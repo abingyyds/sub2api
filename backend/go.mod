@@ -166,5 +166,5 @@ require (
 )
 
 // Fix compatibility issue between imroc/req v3.57.0 and quic-go v0.57.x
-// quic-go v0.57.x removed ConnectionTracingID API that req depends on
-replace github.com/quic-go/quic-go => github.com/quic-go/quic-go v0.48.2
+// Use v0.47.0 which has the required qlog packages
+replace github.com/quic-go/quic-go => github.com/quic-go/quic-go v0.47.0
