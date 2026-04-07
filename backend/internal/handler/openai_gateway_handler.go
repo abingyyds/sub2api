@@ -57,6 +57,20 @@ func NewOpenAIGatewayHandler(
 // Responses handles OpenAI Responses API endpoint
 // POST /openai/v1/responses
 func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
+	h.handleRequest(c, false)
+}
+
+// ChatCompletions handles OpenAI Chat Completions compatible endpoint.
+// POST /openai/v1/chat/completions
+func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
+	h.handleRequest(c, true)
+}
+
+func (h *OpenAIGatewayHandler) handleRequest(c *gin.Context, chatCompletionsMode bool) {
+	if chatCompletionsMode {
+		service.EnableOpenAIChatCompletionsMode(c)
+	}
+
 	// Get apiKey and user from context (set by ApiKeyAuth middleware)
 	apiKey, ok := middleware2.GetAPIKeyFromContext(c)
 	if !ok {
@@ -93,6 +107,18 @@ func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
 	if err := json.Unmarshal(body, &reqBody); err != nil {
 		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", "Failed to parse request body")
 		return
+	}
+
+	if _, hasMessages := reqBody["messages"]; hasMessages {
+		if _, err := service.ConvertChatCompletionsRequest(reqBody); err != nil {
+			h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", err.Error())
+			return
+		}
+		body, err = json.Marshal(reqBody)
+		if err != nil {
+			h.errorResponse(c, http.StatusInternalServerError, "api_error", "Failed to process request")
+			return
+		}
 	}
 
 	// Extract model and stream
