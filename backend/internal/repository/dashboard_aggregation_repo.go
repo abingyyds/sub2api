@@ -88,32 +88,48 @@ func (r *dashboardAggregationRepository) RecomputeRange(ctx context.Context, sta
 		return nil
 	}
 
-	hourStart := startLocal.Truncate(time.Hour)
-	hourEnd := endLocal.Truncate(time.Hour)
-	if endLocal.After(hourEnd) {
-		hourEnd = hourEnd.Add(time.Hour)
-	}
-
-	dayStart := truncateToDay(startLocal)
-	dayEnd := truncateToDay(endLocal)
-	if endLocal.After(dayEnd) {
-		dayEnd = dayEnd.Add(24 * time.Hour)
-	}
-
-	// 尽量使用事务保证范围内的一致性（允许在非 *sql.DB 的情况下退化为非事务执行）。
-	if db, ok := r.sql.(*sql.DB); ok {
-		tx, err := db.BeginTx(ctx, nil)
-		if err != nil {
-			return err
+	// 按小时分片处理，避免长事务锁表
+	chunkStart := startLocal.Truncate(time.Hour)
+	for chunkStart.Before(endLocal) {
+		chunkEnd := chunkStart.Add(time.Hour)
+		if chunkEnd.After(endLocal) {
+			chunkEnd = endLocal
 		}
-		txRepo := newDashboardAggregationRepositoryWithSQL(tx)
-		if err := txRepo.recomputeRangeInTx(ctx, hourStart, hourEnd, dayStart, dayEnd); err != nil {
-			_ = tx.Rollback()
-			return err
+
+		hourStart := chunkStart
+		hourEnd := chunkEnd
+		if chunkEnd.After(chunkEnd.Truncate(time.Hour)) {
+			hourEnd = chunkEnd.Truncate(time.Hour).Add(time.Hour)
 		}
-		return tx.Commit()
+
+		dayStart := truncateToDay(chunkStart)
+		dayEnd := truncateToDay(chunkEnd)
+		if chunkEnd.After(dayEnd) {
+			dayEnd = dayEnd.Add(24 * time.Hour)
+		}
+
+		if db, ok := r.sql.(*sql.DB); ok {
+			tx, err := db.BeginTx(ctx, nil)
+			if err != nil {
+				return err
+			}
+			txRepo := newDashboardAggregationRepositoryWithSQL(tx)
+			if err := txRepo.recomputeRangeInTx(ctx, hourStart, hourEnd, dayStart, dayEnd); err != nil {
+				_ = tx.Rollback()
+				return err
+			}
+			if err := tx.Commit(); err != nil {
+				return err
+			}
+		} else {
+			if err := r.recomputeRangeInTx(ctx, hourStart, hourEnd, dayStart, dayEnd); err != nil {
+				return err
+			}
+		}
+
+		chunkStart = chunkEnd
 	}
-	return r.recomputeRangeInTx(ctx, hourStart, hourEnd, dayStart, dayEnd)
+	return nil
 }
 
 func (r *dashboardAggregationRepository) recomputeRangeInTx(ctx context.Context, hourStart, hourEnd, dayStart, dayEnd time.Time) error {
@@ -195,8 +211,23 @@ func (r *dashboardAggregationRepository) CleanupUsageLogs(ctx context.Context, c
 	if isPartitioned {
 		return r.dropUsageLogsPartitions(ctx, cutoff)
 	}
-	_, err = r.sql.ExecContext(ctx, "DELETE FROM usage_logs WHERE created_at < $1", cutoff.UTC())
-	return err
+
+	// 批量删除，每批 5000 行，避免一次性锁表
+	const batchSize = 5000
+	for {
+		result, err := r.sql.ExecContext(ctx,
+			"DELETE FROM usage_logs WHERE id IN (SELECT id FROM usage_logs WHERE created_at < $1 ORDER BY id LIMIT $2)",
+			cutoff.UTC(), batchSize,
+		)
+		if err != nil {
+			return err
+		}
+		n, _ := result.RowsAffected()
+		if n == 0 {
+			break
+		}
+	}
+	return nil
 }
 
 func (r *dashboardAggregationRepository) EnsureUsageLogsPartitions(ctx context.Context, now time.Time) error {
