@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
-import i18n, { getLocale, loadLocaleMessages, warmupLocaleMessages } from './i18n'
+import i18n, { getLocale, loadLocaleMessages } from './i18n'
 import { useAppStore } from '@/stores/app'
 import './style.css'
 import './styles/animations.css'
@@ -32,10 +32,6 @@ async function bootstrap() {
 
   // 立即挂载应用，不等待路由就绪（提升首屏速度）
   app.mount('#app')
-
-  if (initialLocale !== 'en') {
-    warmupLocaleMessages('en')
-  }
 }
 
 void bootstrap()

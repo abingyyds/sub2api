@@ -2,6 +2,7 @@ package handler
 
 import (
 	"sort"
+	"sync"
 
 	"github.com/Wei-Shaw/sub2api/internal/handler/dto"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
@@ -46,17 +47,33 @@ func (h *ModelPlazaHandler) List(c *gin.Context) {
 		return
 	}
 
-	result := make([]GroupModels, 0, len(groups))
+	result := make([]GroupModels, len(groups))
+
+	// Bound concurrency so we avoid a full serial waterfall without turning the
+	// request into an unbounded burst of DB work when many groups are visible.
+	sem := make(chan struct{}, 6)
+	var wg sync.WaitGroup
+
 	for i := range groups {
-		g := groups[i]
-		gID := g.ID
-		models := h.gatewayService.GetAvailableModels(c.Request.Context(), &gID, "")
-		sort.Strings(models)
-		result = append(result, GroupModels{
-			Group:  *dto.GroupFromService(&g),
-			Models: models,
-		})
+		wg.Add(1)
+		go func(index int) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			group := groups[index]
+			groupID := group.ID
+			models := h.gatewayService.GetAvailableModels(c.Request.Context(), &groupID, "")
+			sort.Strings(models)
+
+			result[index] = GroupModels{
+				Group:  *dto.GroupFromService(&group),
+				Models: models,
+			}
+		}(i)
 	}
+
+	wg.Wait()
 
 	response.Success(c, result)
 }

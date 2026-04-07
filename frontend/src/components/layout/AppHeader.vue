@@ -39,7 +39,7 @@
         <LocaleSwitcher />
 
         <!-- Subscription Progress (for users with active subscriptions) -->
-        <SubscriptionProgressMini v-if="user" />
+        <SubscriptionProgressMini v-if="user && showSubscriptionMini" />
 
         <!-- Balance Display -->
         <div
@@ -205,13 +205,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, defineAsyncComponent } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAppStore, useAuthStore, useOnboardingStore } from '@/stores'
 import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
-import SubscriptionProgressMini from '@/components/common/SubscriptionProgressMini.vue'
 import Icon from '@/components/icons/Icon.vue'
+
+const SubscriptionProgressMini = defineAsyncComponent(
+  () => import('@/components/common/SubscriptionProgressMini.vue')
+)
 
 const router = useRouter()
 const route = useRoute()
@@ -221,6 +224,7 @@ const authStore = useAuthStore()
 const onboardingStore = useOnboardingStore()
 
 const user = computed(() => authStore.user)
+const showSubscriptionMini = ref(false)
 const dropdownOpen = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
 const contactDisplayText = computed(() => {
@@ -306,6 +310,31 @@ function handleClickOutside(event: MouseEvent) {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+
+  const enableSubscriptionMini = () => {
+    showSubscriptionMini.value = true
+  }
+
+  if (!user.value) {
+    return
+  }
+
+  if (document.readyState === 'complete') {
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(enableSubscriptionMini, { timeout: 2500 })
+    } else {
+      window.setTimeout(enableSubscriptionMini, 1200)
+    }
+    return
+  }
+
+  window.addEventListener('load', () => {
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(enableSubscriptionMini, { timeout: 2500 })
+    } else {
+      window.setTimeout(enableSubscriptionMini, 1200)
+    }
+  }, { once: true })
 })
 
 onBeforeUnmount(() => {

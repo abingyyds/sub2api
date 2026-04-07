@@ -21,10 +21,17 @@
     </div>
 
     <!-- Announcement Popup -->
-    <AnnouncementPopup :announcements="announcements" />
+    <AnnouncementPopup
+      v-if="shouldRenderAnnouncementPopup"
+      :announcements="announcements"
+    />
 
     <!-- Contact Modal -->
-    <ContactModal :show="appStore.showContactModal" @close="appStore.showContactModal = false" />
+    <ContactModal
+      v-if="appStore.showContactModal"
+      :show="appStore.showContactModal"
+      @close="appStore.showContactModal = false"
+    />
   </div>
 </template>
 
@@ -48,6 +55,7 @@ const authStore = useAuthStore()
 const sidebarCollapsed = computed(() => appStore.sidebarCollapsed)
 const isAdmin = computed(() => authStore.isAdmin)
 const announcements = computed(() => appStore.announcements)
+const shouldRenderAnnouncementPopup = computed(() => announcements.value.length > 0)
 
 const { replayTour } = useOnboardingTour({
   storageKey: isAdmin.value ? 'admin_guide' : 'user_guide',
@@ -62,10 +70,18 @@ onMounted(() => {
     void appStore.fetchAnnouncements()
   }
 
-  if (typeof window.requestIdleCallback === 'function') {
-    window.requestIdleCallback(loadAnnouncements, { timeout: 3000 })
+  const scheduleAnnouncementsLoad = () => {
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(loadAnnouncements, { timeout: 3000 })
+    } else {
+      window.setTimeout(loadAnnouncements, 1200)
+    }
+  }
+
+  if (document.readyState === 'complete') {
+    scheduleAnnouncementsLoad()
   } else {
-    window.setTimeout(loadAnnouncements, 1200)
+    window.addEventListener('load', scheduleAnnouncementsLoad, { once: true })
   }
 })
 
