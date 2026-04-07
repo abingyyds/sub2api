@@ -194,6 +194,90 @@ func (_c *PaymentOrderCreate) SetNillableEpayTradeNo(v *string) *PaymentOrderCre
 	return _c
 }
 
+// SetInvoiceCompanyName sets the "invoice_company_name" field.
+func (_c *PaymentOrderCreate) SetInvoiceCompanyName(v string) *PaymentOrderCreate {
+	_c.mutation.SetInvoiceCompanyName(v)
+	return _c
+}
+
+// SetNillableInvoiceCompanyName sets the "invoice_company_name" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableInvoiceCompanyName(v *string) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetInvoiceCompanyName(*v)
+	}
+	return _c
+}
+
+// SetInvoiceTaxID sets the "invoice_tax_id" field.
+func (_c *PaymentOrderCreate) SetInvoiceTaxID(v string) *PaymentOrderCreate {
+	_c.mutation.SetInvoiceTaxID(v)
+	return _c
+}
+
+// SetNillableInvoiceTaxID sets the "invoice_tax_id" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableInvoiceTaxID(v *string) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetInvoiceTaxID(*v)
+	}
+	return _c
+}
+
+// SetInvoiceEmail sets the "invoice_email" field.
+func (_c *PaymentOrderCreate) SetInvoiceEmail(v string) *PaymentOrderCreate {
+	_c.mutation.SetInvoiceEmail(v)
+	return _c
+}
+
+// SetNillableInvoiceEmail sets the "invoice_email" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableInvoiceEmail(v *string) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetInvoiceEmail(*v)
+	}
+	return _c
+}
+
+// SetInvoiceRemark sets the "invoice_remark" field.
+func (_c *PaymentOrderCreate) SetInvoiceRemark(v string) *PaymentOrderCreate {
+	_c.mutation.SetInvoiceRemark(v)
+	return _c
+}
+
+// SetNillableInvoiceRemark sets the "invoice_remark" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableInvoiceRemark(v *string) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetInvoiceRemark(*v)
+	}
+	return _c
+}
+
+// SetInvoiceRequestedAt sets the "invoice_requested_at" field.
+func (_c *PaymentOrderCreate) SetInvoiceRequestedAt(v time.Time) *PaymentOrderCreate {
+	_c.mutation.SetInvoiceRequestedAt(v)
+	return _c
+}
+
+// SetNillableInvoiceRequestedAt sets the "invoice_requested_at" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableInvoiceRequestedAt(v *time.Time) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetInvoiceRequestedAt(*v)
+	}
+	return _c
+}
+
+// SetInvoiceProcessedAt sets the "invoice_processed_at" field.
+func (_c *PaymentOrderCreate) SetInvoiceProcessedAt(v time.Time) *PaymentOrderCreate {
+	_c.mutation.SetInvoiceProcessedAt(v)
+	return _c
+}
+
+// SetNillableInvoiceProcessedAt sets the "invoice_processed_at" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableInvoiceProcessedAt(v *time.Time) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetInvoiceProcessedAt(*v)
+	}
+	return _c
+}
+
 // SetCodeURL sets the "code_url" field.
 func (_c *PaymentOrderCreate) SetCodeURL(v string) *PaymentOrderCreate {
 	_c.mutation.SetCodeURL(v)
@@ -345,6 +429,22 @@ func (_c *PaymentOrderCreate) defaults() {
 		v := paymentorder.DefaultPayMethod
 		_c.mutation.SetPayMethod(v)
 	}
+	if _, ok := _c.mutation.InvoiceCompanyName(); !ok {
+		v := paymentorder.DefaultInvoiceCompanyName
+		_c.mutation.SetInvoiceCompanyName(v)
+	}
+	if _, ok := _c.mutation.InvoiceTaxID(); !ok {
+		v := paymentorder.DefaultInvoiceTaxID
+		_c.mutation.SetInvoiceTaxID(v)
+	}
+	if _, ok := _c.mutation.InvoiceEmail(); !ok {
+		v := paymentorder.DefaultInvoiceEmail
+		_c.mutation.SetInvoiceEmail(v)
+	}
+	if _, ok := _c.mutation.InvoiceRemark(); !ok {
+		v := paymentorder.DefaultInvoiceRemark
+		_c.mutation.SetInvoiceRemark(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := paymentorder.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -433,6 +533,21 @@ func (_c *PaymentOrderCreate) check() error {
 	if v, ok := _c.mutation.EpayTradeNo(); ok {
 		if err := paymentorder.EpayTradeNoValidator(v); err != nil {
 			return &ValidationError{Name: "epay_trade_no", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.epay_trade_no": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.InvoiceCompanyName(); ok {
+		if err := paymentorder.InvoiceCompanyNameValidator(v); err != nil {
+			return &ValidationError{Name: "invoice_company_name", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.invoice_company_name": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.InvoiceTaxID(); ok {
+		if err := paymentorder.InvoiceTaxIDValidator(v); err != nil {
+			return &ValidationError{Name: "invoice_tax_id", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.invoice_tax_id": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.InvoiceEmail(); ok {
+		if err := paymentorder.InvoiceEmailValidator(v); err != nil {
+			return &ValidationError{Name: "invoice_email", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.invoice_email": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.ExpiredAt(); !ok {
@@ -535,6 +650,30 @@ func (_c *PaymentOrderCreate) createSpec() (*PaymentOrder, *sqlgraph.CreateSpec)
 	if value, ok := _c.mutation.EpayTradeNo(); ok {
 		_spec.SetField(paymentorder.FieldEpayTradeNo, field.TypeString, value)
 		_node.EpayTradeNo = &value
+	}
+	if value, ok := _c.mutation.InvoiceCompanyName(); ok {
+		_spec.SetField(paymentorder.FieldInvoiceCompanyName, field.TypeString, value)
+		_node.InvoiceCompanyName = value
+	}
+	if value, ok := _c.mutation.InvoiceTaxID(); ok {
+		_spec.SetField(paymentorder.FieldInvoiceTaxID, field.TypeString, value)
+		_node.InvoiceTaxID = value
+	}
+	if value, ok := _c.mutation.InvoiceEmail(); ok {
+		_spec.SetField(paymentorder.FieldInvoiceEmail, field.TypeString, value)
+		_node.InvoiceEmail = value
+	}
+	if value, ok := _c.mutation.InvoiceRemark(); ok {
+		_spec.SetField(paymentorder.FieldInvoiceRemark, field.TypeString, value)
+		_node.InvoiceRemark = value
+	}
+	if value, ok := _c.mutation.InvoiceRequestedAt(); ok {
+		_spec.SetField(paymentorder.FieldInvoiceRequestedAt, field.TypeTime, value)
+		_node.InvoiceRequestedAt = &value
+	}
+	if value, ok := _c.mutation.InvoiceProcessedAt(); ok {
+		_spec.SetField(paymentorder.FieldInvoiceProcessedAt, field.TypeTime, value)
+		_node.InvoiceProcessedAt = &value
 	}
 	if value, ok := _c.mutation.CodeURL(); ok {
 		_spec.SetField(paymentorder.FieldCodeURL, field.TypeString, value)
@@ -872,6 +1011,114 @@ func (u *PaymentOrderUpsert) UpdateEpayTradeNo() *PaymentOrderUpsert {
 // ClearEpayTradeNo clears the value of the "epay_trade_no" field.
 func (u *PaymentOrderUpsert) ClearEpayTradeNo() *PaymentOrderUpsert {
 	u.SetNull(paymentorder.FieldEpayTradeNo)
+	return u
+}
+
+// SetInvoiceCompanyName sets the "invoice_company_name" field.
+func (u *PaymentOrderUpsert) SetInvoiceCompanyName(v string) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldInvoiceCompanyName, v)
+	return u
+}
+
+// UpdateInvoiceCompanyName sets the "invoice_company_name" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateInvoiceCompanyName() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldInvoiceCompanyName)
+	return u
+}
+
+// ClearInvoiceCompanyName clears the value of the "invoice_company_name" field.
+func (u *PaymentOrderUpsert) ClearInvoiceCompanyName() *PaymentOrderUpsert {
+	u.SetNull(paymentorder.FieldInvoiceCompanyName)
+	return u
+}
+
+// SetInvoiceTaxID sets the "invoice_tax_id" field.
+func (u *PaymentOrderUpsert) SetInvoiceTaxID(v string) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldInvoiceTaxID, v)
+	return u
+}
+
+// UpdateInvoiceTaxID sets the "invoice_tax_id" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateInvoiceTaxID() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldInvoiceTaxID)
+	return u
+}
+
+// ClearInvoiceTaxID clears the value of the "invoice_tax_id" field.
+func (u *PaymentOrderUpsert) ClearInvoiceTaxID() *PaymentOrderUpsert {
+	u.SetNull(paymentorder.FieldInvoiceTaxID)
+	return u
+}
+
+// SetInvoiceEmail sets the "invoice_email" field.
+func (u *PaymentOrderUpsert) SetInvoiceEmail(v string) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldInvoiceEmail, v)
+	return u
+}
+
+// UpdateInvoiceEmail sets the "invoice_email" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateInvoiceEmail() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldInvoiceEmail)
+	return u
+}
+
+// ClearInvoiceEmail clears the value of the "invoice_email" field.
+func (u *PaymentOrderUpsert) ClearInvoiceEmail() *PaymentOrderUpsert {
+	u.SetNull(paymentorder.FieldInvoiceEmail)
+	return u
+}
+
+// SetInvoiceRemark sets the "invoice_remark" field.
+func (u *PaymentOrderUpsert) SetInvoiceRemark(v string) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldInvoiceRemark, v)
+	return u
+}
+
+// UpdateInvoiceRemark sets the "invoice_remark" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateInvoiceRemark() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldInvoiceRemark)
+	return u
+}
+
+// ClearInvoiceRemark clears the value of the "invoice_remark" field.
+func (u *PaymentOrderUpsert) ClearInvoiceRemark() *PaymentOrderUpsert {
+	u.SetNull(paymentorder.FieldInvoiceRemark)
+	return u
+}
+
+// SetInvoiceRequestedAt sets the "invoice_requested_at" field.
+func (u *PaymentOrderUpsert) SetInvoiceRequestedAt(v time.Time) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldInvoiceRequestedAt, v)
+	return u
+}
+
+// UpdateInvoiceRequestedAt sets the "invoice_requested_at" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateInvoiceRequestedAt() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldInvoiceRequestedAt)
+	return u
+}
+
+// ClearInvoiceRequestedAt clears the value of the "invoice_requested_at" field.
+func (u *PaymentOrderUpsert) ClearInvoiceRequestedAt() *PaymentOrderUpsert {
+	u.SetNull(paymentorder.FieldInvoiceRequestedAt)
+	return u
+}
+
+// SetInvoiceProcessedAt sets the "invoice_processed_at" field.
+func (u *PaymentOrderUpsert) SetInvoiceProcessedAt(v time.Time) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldInvoiceProcessedAt, v)
+	return u
+}
+
+// UpdateInvoiceProcessedAt sets the "invoice_processed_at" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateInvoiceProcessedAt() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldInvoiceProcessedAt)
+	return u
+}
+
+// ClearInvoiceProcessedAt clears the value of the "invoice_processed_at" field.
+func (u *PaymentOrderUpsert) ClearInvoiceProcessedAt() *PaymentOrderUpsert {
+	u.SetNull(paymentorder.FieldInvoiceProcessedAt)
 	return u
 }
 
@@ -1256,6 +1503,132 @@ func (u *PaymentOrderUpsertOne) UpdateEpayTradeNo() *PaymentOrderUpsertOne {
 func (u *PaymentOrderUpsertOne) ClearEpayTradeNo() *PaymentOrderUpsertOne {
 	return u.Update(func(s *PaymentOrderUpsert) {
 		s.ClearEpayTradeNo()
+	})
+}
+
+// SetInvoiceCompanyName sets the "invoice_company_name" field.
+func (u *PaymentOrderUpsertOne) SetInvoiceCompanyName(v string) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetInvoiceCompanyName(v)
+	})
+}
+
+// UpdateInvoiceCompanyName sets the "invoice_company_name" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateInvoiceCompanyName() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateInvoiceCompanyName()
+	})
+}
+
+// ClearInvoiceCompanyName clears the value of the "invoice_company_name" field.
+func (u *PaymentOrderUpsertOne) ClearInvoiceCompanyName() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearInvoiceCompanyName()
+	})
+}
+
+// SetInvoiceTaxID sets the "invoice_tax_id" field.
+func (u *PaymentOrderUpsertOne) SetInvoiceTaxID(v string) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetInvoiceTaxID(v)
+	})
+}
+
+// UpdateInvoiceTaxID sets the "invoice_tax_id" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateInvoiceTaxID() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateInvoiceTaxID()
+	})
+}
+
+// ClearInvoiceTaxID clears the value of the "invoice_tax_id" field.
+func (u *PaymentOrderUpsertOne) ClearInvoiceTaxID() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearInvoiceTaxID()
+	})
+}
+
+// SetInvoiceEmail sets the "invoice_email" field.
+func (u *PaymentOrderUpsertOne) SetInvoiceEmail(v string) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetInvoiceEmail(v)
+	})
+}
+
+// UpdateInvoiceEmail sets the "invoice_email" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateInvoiceEmail() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateInvoiceEmail()
+	})
+}
+
+// ClearInvoiceEmail clears the value of the "invoice_email" field.
+func (u *PaymentOrderUpsertOne) ClearInvoiceEmail() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearInvoiceEmail()
+	})
+}
+
+// SetInvoiceRemark sets the "invoice_remark" field.
+func (u *PaymentOrderUpsertOne) SetInvoiceRemark(v string) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetInvoiceRemark(v)
+	})
+}
+
+// UpdateInvoiceRemark sets the "invoice_remark" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateInvoiceRemark() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateInvoiceRemark()
+	})
+}
+
+// ClearInvoiceRemark clears the value of the "invoice_remark" field.
+func (u *PaymentOrderUpsertOne) ClearInvoiceRemark() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearInvoiceRemark()
+	})
+}
+
+// SetInvoiceRequestedAt sets the "invoice_requested_at" field.
+func (u *PaymentOrderUpsertOne) SetInvoiceRequestedAt(v time.Time) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetInvoiceRequestedAt(v)
+	})
+}
+
+// UpdateInvoiceRequestedAt sets the "invoice_requested_at" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateInvoiceRequestedAt() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateInvoiceRequestedAt()
+	})
+}
+
+// ClearInvoiceRequestedAt clears the value of the "invoice_requested_at" field.
+func (u *PaymentOrderUpsertOne) ClearInvoiceRequestedAt() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearInvoiceRequestedAt()
+	})
+}
+
+// SetInvoiceProcessedAt sets the "invoice_processed_at" field.
+func (u *PaymentOrderUpsertOne) SetInvoiceProcessedAt(v time.Time) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetInvoiceProcessedAt(v)
+	})
+}
+
+// UpdateInvoiceProcessedAt sets the "invoice_processed_at" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateInvoiceProcessedAt() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateInvoiceProcessedAt()
+	})
+}
+
+// ClearInvoiceProcessedAt clears the value of the "invoice_processed_at" field.
+func (u *PaymentOrderUpsertOne) ClearInvoiceProcessedAt() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearInvoiceProcessedAt()
 	})
 }
 
@@ -1816,6 +2189,132 @@ func (u *PaymentOrderUpsertBulk) UpdateEpayTradeNo() *PaymentOrderUpsertBulk {
 func (u *PaymentOrderUpsertBulk) ClearEpayTradeNo() *PaymentOrderUpsertBulk {
 	return u.Update(func(s *PaymentOrderUpsert) {
 		s.ClearEpayTradeNo()
+	})
+}
+
+// SetInvoiceCompanyName sets the "invoice_company_name" field.
+func (u *PaymentOrderUpsertBulk) SetInvoiceCompanyName(v string) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetInvoiceCompanyName(v)
+	})
+}
+
+// UpdateInvoiceCompanyName sets the "invoice_company_name" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateInvoiceCompanyName() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateInvoiceCompanyName()
+	})
+}
+
+// ClearInvoiceCompanyName clears the value of the "invoice_company_name" field.
+func (u *PaymentOrderUpsertBulk) ClearInvoiceCompanyName() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearInvoiceCompanyName()
+	})
+}
+
+// SetInvoiceTaxID sets the "invoice_tax_id" field.
+func (u *PaymentOrderUpsertBulk) SetInvoiceTaxID(v string) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetInvoiceTaxID(v)
+	})
+}
+
+// UpdateInvoiceTaxID sets the "invoice_tax_id" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateInvoiceTaxID() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateInvoiceTaxID()
+	})
+}
+
+// ClearInvoiceTaxID clears the value of the "invoice_tax_id" field.
+func (u *PaymentOrderUpsertBulk) ClearInvoiceTaxID() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearInvoiceTaxID()
+	})
+}
+
+// SetInvoiceEmail sets the "invoice_email" field.
+func (u *PaymentOrderUpsertBulk) SetInvoiceEmail(v string) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetInvoiceEmail(v)
+	})
+}
+
+// UpdateInvoiceEmail sets the "invoice_email" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateInvoiceEmail() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateInvoiceEmail()
+	})
+}
+
+// ClearInvoiceEmail clears the value of the "invoice_email" field.
+func (u *PaymentOrderUpsertBulk) ClearInvoiceEmail() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearInvoiceEmail()
+	})
+}
+
+// SetInvoiceRemark sets the "invoice_remark" field.
+func (u *PaymentOrderUpsertBulk) SetInvoiceRemark(v string) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetInvoiceRemark(v)
+	})
+}
+
+// UpdateInvoiceRemark sets the "invoice_remark" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateInvoiceRemark() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateInvoiceRemark()
+	})
+}
+
+// ClearInvoiceRemark clears the value of the "invoice_remark" field.
+func (u *PaymentOrderUpsertBulk) ClearInvoiceRemark() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearInvoiceRemark()
+	})
+}
+
+// SetInvoiceRequestedAt sets the "invoice_requested_at" field.
+func (u *PaymentOrderUpsertBulk) SetInvoiceRequestedAt(v time.Time) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetInvoiceRequestedAt(v)
+	})
+}
+
+// UpdateInvoiceRequestedAt sets the "invoice_requested_at" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateInvoiceRequestedAt() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateInvoiceRequestedAt()
+	})
+}
+
+// ClearInvoiceRequestedAt clears the value of the "invoice_requested_at" field.
+func (u *PaymentOrderUpsertBulk) ClearInvoiceRequestedAt() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearInvoiceRequestedAt()
+	})
+}
+
+// SetInvoiceProcessedAt sets the "invoice_processed_at" field.
+func (u *PaymentOrderUpsertBulk) SetInvoiceProcessedAt(v time.Time) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetInvoiceProcessedAt(v)
+	})
+}
+
+// UpdateInvoiceProcessedAt sets the "invoice_processed_at" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateInvoiceProcessedAt() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateInvoiceProcessedAt()
+	})
+}
+
+// ClearInvoiceProcessedAt clears the value of the "invoice_processed_at" field.
+func (u *PaymentOrderUpsertBulk) ClearInvoiceProcessedAt() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearInvoiceProcessedAt()
 	})
 }
 

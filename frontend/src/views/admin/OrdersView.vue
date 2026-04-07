@@ -26,12 +26,40 @@
               {{ statusLabel(value) }}
             </span>
           </template>
+          <template #cell-invoice_status="{ row }">
+            <span :class="['badge', invoiceBadgeClass(row)]">
+              {{ invoiceStatusLabel(row) }}
+            </span>
+          </template>
+          <template #cell-invoice_request="{ row }">
+            <div v-if="row.invoice_requested_at" class="max-w-xs whitespace-normal text-xs leading-5 text-gray-600 dark:text-dark-300">
+              <div><span class="font-medium">{{ t('admin.orders.invoiceCompanyName') }}:</span> {{ row.invoice_company_name }}</div>
+              <div><span class="font-medium">{{ t('admin.orders.invoiceTaxId') }}:</span> {{ row.invoice_tax_id }}</div>
+              <div><span class="font-medium">{{ t('admin.orders.invoiceEmail') }}:</span> {{ row.invoice_email }}</div>
+              <div><span class="font-medium">{{ t('admin.orders.invoiceRequestedAt') }}:</span> {{ formatDateTime(row.invoice_requested_at) }}</div>
+              <div v-if="row.invoice_remark"><span class="font-medium">{{ t('admin.orders.invoiceRemark') }}:</span> {{ row.invoice_remark }}</div>
+            </div>
+            <span v-else class="text-sm text-gray-400">{{ t('admin.orders.invoiceNone') }}</span>
+          </template>
           <template #cell-paid_at="{ value }">
             <span v-if="value" class="text-sm text-gray-500 dark:text-dark-400">{{ formatDateTime(value) }}</span>
             <span v-else class="text-sm text-gray-400">-</span>
           </template>
           <template #cell-created_at="{ value }">
             <span class="text-sm text-gray-500 dark:text-dark-400">{{ formatDateTime(value) }}</span>
+          </template>
+          <template #cell-actions="{ row }">
+            <div class="flex justify-end">
+              <button
+                v-if="row.invoice_requested_at && !row.invoice_processed_at"
+                class="rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-primary-700 disabled:opacity-50"
+                :disabled="processingOrderId === row.id"
+                @click="markProcessed(row)"
+              >
+                {{ processingOrderId === row.id ? t('common.processing') : t('admin.orders.markProcessed') }}
+              </button>
+              <span v-else class="text-sm text-gray-400">-</span>
+            </div>
           </template>
           <template #empty>
             <EmptyState :title="t('admin.orders.noData')" :description="t('admin.orders.noDataDesc')" />
@@ -67,6 +95,7 @@ const appStore = useAppStore()
 
 const items = ref<AdminPaymentOrder[]>([])
 const loading = ref(false)
+const processingOrderId = ref<number | null>(null)
 const pagination = ref({ page: 1, page_size: 20, total: 0 })
 const filters = ref({ status: '', order_type: '' })
 
@@ -75,10 +104,13 @@ const columns = computed<Column[]>(() => [
   { key: 'user_id', label: t('admin.orders.userId'), sortable: false },
   { key: 'order_type', label: t('admin.orders.orderType'), sortable: false },
   { key: 'amount_fen', label: t('admin.orders.amount'), sortable: false },
-  { key: 'plan_key', label: t('admin.orders.planKey'), sortable: false },
   { key: 'status', label: t('common.status'), sortable: false },
+  { key: 'invoice_status', label: t('admin.orders.invoiceStatus'), sortable: false },
+  { key: 'invoice_request', label: t('admin.orders.invoiceInfo'), sortable: false },
+  { key: 'plan_key', label: t('admin.orders.planKey'), sortable: false },
   { key: 'paid_at', label: t('admin.orders.paidAt'), sortable: false },
-  { key: 'created_at', label: t('common.createdAt'), sortable: false }
+  { key: 'created_at', label: t('common.createdAt'), sortable: false },
+  { key: 'actions', label: t('common.actions'), sortable: false }
 ])
 
 const statusOptions = computed(() => [
@@ -112,6 +144,18 @@ function statusLabel(status: string) {
   }
 }
 
+function invoiceStatusLabel(order: AdminPaymentOrder) {
+  if (order.invoice_processed_at) return t('admin.orders.invoiceProcessed')
+  if (order.invoice_requested_at) return t('admin.orders.invoicePending')
+  return t('admin.orders.invoiceNone')
+}
+
+function invoiceBadgeClass(order: AdminPaymentOrder) {
+  if (order.invoice_processed_at) return 'badge-success'
+  if (order.invoice_requested_at) return 'badge-warning'
+  return 'badge-gray'
+}
+
 function onFilterChange() {
   pagination.value.page = 1
   loadData()
@@ -130,6 +174,19 @@ const loadData = async () => {
     appStore.showError(t('admin.orders.loadError'))
   } finally {
     loading.value = false
+  }
+}
+
+const markProcessed = async (row: AdminPaymentOrder) => {
+  processingOrderId.value = row.id
+  try {
+    await ordersAPI.markInvoiceProcessed(row.id)
+    appStore.showSuccess(t('admin.orders.markProcessedSuccess'))
+    await loadData()
+  } catch (err: any) {
+    appStore.showError(err?.message || t('admin.orders.markProcessedError'))
+  } finally {
+    processingOrderId.value = null
   }
 }
 

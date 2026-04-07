@@ -53,6 +53,12 @@ export interface PaymentOrder {
   paid_at: string | null
   expired_at: string
   created_at: string
+  invoice_company_name: string
+  invoice_tax_id: string
+  invoice_email: string
+  invoice_remark: string
+  invoice_requested_at: string | null
+  invoice_processed_at: string | null
 }
 
 export type PayMethod = 'wechat' | 'alipay' | 'epay_alipay' | 'epay_wxpay'
@@ -131,6 +137,17 @@ export async function listOrders(params?: {
   return data
 }
 
+export async function submitInvoiceRequest(payload: {
+  order_nos: string[]
+  company_name: string
+  tax_id: string
+  email: string
+  remark?: string
+}): Promise<{ success: boolean }> {
+  const { data } = await apiClient.post<{ success: boolean }>('/payment/invoice-requests', payload)
+  return data
+}
+
 /**
  * Check if user is eligible for newcomer plans
  */
@@ -147,6 +164,7 @@ export const paymentAPI = {
   createRechargeOrder,
   queryOrder,
   listOrders,
+  submitInvoiceRequest,
   getNewcomerStatus,
 }
 

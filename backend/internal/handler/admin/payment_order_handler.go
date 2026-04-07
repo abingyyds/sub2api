@@ -2,6 +2,7 @@ package admin
 
 import (
 	"log/slog"
+	"strconv"
 
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
@@ -37,23 +38,49 @@ func (h *PaymentOrderHandler) List(c *gin.Context) {
 	items := make([]gin.H, len(orders))
 	for i, order := range orders {
 		items[i] = gin.H{
-			"id":                     order.ID,
-			"order_no":               order.OrderNo,
-			"user_id":                order.UserID,
-			"plan_key":               order.PlanKey,
-			"group_id":               order.GroupID,
-			"amount_fen":             order.AmountFen,
-			"validity_days":          order.ValidityDays,
-			"order_type":             order.OrderType,
-			"balance_amount":         order.BalanceAmount,
-			"status":                 order.Status,
-			"pay_method":             order.PayMethod,
-			"wechat_transaction_id":  order.WechatTransactionID,
-			"paid_at":                order.PaidAt,
-			"expired_at":             order.ExpiredAt,
-			"created_at":             order.CreatedAt,
+			"id":                    order.ID,
+			"order_no":              order.OrderNo,
+			"user_id":               order.UserID,
+			"plan_key":              order.PlanKey,
+			"group_id":              order.GroupID,
+			"amount_fen":            order.AmountFen,
+			"validity_days":         order.ValidityDays,
+			"order_type":            order.OrderType,
+			"balance_amount":        order.BalanceAmount,
+			"status":                order.Status,
+			"pay_method":            order.PayMethod,
+			"wechat_transaction_id": order.WechatTransactionID,
+			"alipay_trade_no":       order.AlipayTradeNo,
+			"epay_trade_no":         order.EpayTradeNo,
+			"invoice_company_name":  order.InvoiceCompanyName,
+			"invoice_tax_id":        order.InvoiceTaxID,
+			"invoice_email":         order.InvoiceEmail,
+			"invoice_remark":        order.InvoiceRemark,
+			"invoice_requested_at":  order.InvoiceRequestedAt,
+			"invoice_processed_at":  order.InvoiceProcessedAt,
+			"paid_at":               order.PaidAt,
+			"expired_at":            order.ExpiredAt,
+			"created_at":            order.CreatedAt,
 		}
 	}
 
 	response.Paginated(c, items, pag.Total, pag.Page, pag.PageSize)
+}
+
+// MarkInvoiceProcessed marks an order invoice request as processed.
+// POST /api/v1/admin/orders/:id/invoice/processed
+func (h *PaymentOrderHandler) MarkInvoiceProcessed(c *gin.Context) {
+	orderID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || orderID <= 0 {
+		response.BadRequest(c, "invalid order id")
+		return
+	}
+
+	if err := h.paymentService.MarkInvoiceProcessed(c.Request.Context(), orderID); err != nil {
+		slog.Error("[AdminOrders] MarkInvoiceProcessed failed", "order_id", orderID, "error", err)
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{"success": true})
 }

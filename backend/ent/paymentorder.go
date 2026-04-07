@@ -48,6 +48,18 @@ type PaymentOrder struct {
 	AlipayTradeNo *string `json:"alipay_trade_no,omitempty"`
 	// 易支付交易号
 	EpayTradeNo *string `json:"epay_trade_no,omitempty"`
+	// 发票抬头/公司名称
+	InvoiceCompanyName string `json:"invoice_company_name,omitempty"`
+	// 发票税号
+	InvoiceTaxID string `json:"invoice_tax_id,omitempty"`
+	// 接收发票邮箱
+	InvoiceEmail string `json:"invoice_email,omitempty"`
+	// 发票备注
+	InvoiceRemark string `json:"invoice_remark,omitempty"`
+	// 发票申请时间
+	InvoiceRequestedAt *time.Time `json:"invoice_requested_at,omitempty"`
+	// 发票处理时间
+	InvoiceProcessedAt *time.Time `json:"invoice_processed_at,omitempty"`
 	// CodeURL holds the value of the "code_url" field.
 	CodeURL *string `json:"code_url,omitempty"`
 	// PaidAt holds the value of the "paid_at" field.
@@ -104,9 +116,9 @@ func (*PaymentOrder) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullFloat64)
 		case paymentorder.FieldID, paymentorder.FieldUserID, paymentorder.FieldGroupID, paymentorder.FieldAmountFen, paymentorder.FieldValidityDays, paymentorder.FieldDiscountAmount:
 			values[i] = new(sql.NullInt64)
-		case paymentorder.FieldOrderNo, paymentorder.FieldPlanKey, paymentorder.FieldOrderType, paymentorder.FieldPromoCode, paymentorder.FieldStatus, paymentorder.FieldPayMethod, paymentorder.FieldWechatTransactionID, paymentorder.FieldAlipayTradeNo, paymentorder.FieldEpayTradeNo, paymentorder.FieldCodeURL:
+		case paymentorder.FieldOrderNo, paymentorder.FieldPlanKey, paymentorder.FieldOrderType, paymentorder.FieldPromoCode, paymentorder.FieldStatus, paymentorder.FieldPayMethod, paymentorder.FieldWechatTransactionID, paymentorder.FieldAlipayTradeNo, paymentorder.FieldEpayTradeNo, paymentorder.FieldInvoiceCompanyName, paymentorder.FieldInvoiceTaxID, paymentorder.FieldInvoiceEmail, paymentorder.FieldInvoiceRemark, paymentorder.FieldCodeURL:
 			values[i] = new(sql.NullString)
-		case paymentorder.FieldPaidAt, paymentorder.FieldExpiredAt, paymentorder.FieldCreatedAt, paymentorder.FieldUpdatedAt:
+		case paymentorder.FieldInvoiceRequestedAt, paymentorder.FieldInvoiceProcessedAt, paymentorder.FieldPaidAt, paymentorder.FieldExpiredAt, paymentorder.FieldCreatedAt, paymentorder.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -221,6 +233,44 @@ func (_m *PaymentOrder) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.EpayTradeNo = new(string)
 				*_m.EpayTradeNo = value.String
+			}
+		case paymentorder.FieldInvoiceCompanyName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field invoice_company_name", values[i])
+			} else if value.Valid {
+				_m.InvoiceCompanyName = value.String
+			}
+		case paymentorder.FieldInvoiceTaxID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field invoice_tax_id", values[i])
+			} else if value.Valid {
+				_m.InvoiceTaxID = value.String
+			}
+		case paymentorder.FieldInvoiceEmail:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field invoice_email", values[i])
+			} else if value.Valid {
+				_m.InvoiceEmail = value.String
+			}
+		case paymentorder.FieldInvoiceRemark:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field invoice_remark", values[i])
+			} else if value.Valid {
+				_m.InvoiceRemark = value.String
+			}
+		case paymentorder.FieldInvoiceRequestedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field invoice_requested_at", values[i])
+			} else if value.Valid {
+				_m.InvoiceRequestedAt = new(time.Time)
+				*_m.InvoiceRequestedAt = value.Time
+			}
+		case paymentorder.FieldInvoiceProcessedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field invoice_processed_at", values[i])
+			} else if value.Valid {
+				_m.InvoiceProcessedAt = new(time.Time)
+				*_m.InvoiceProcessedAt = value.Time
 			}
 		case paymentorder.FieldCodeURL:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -349,6 +399,28 @@ func (_m *PaymentOrder) String() string {
 	if v := _m.EpayTradeNo; v != nil {
 		builder.WriteString("epay_trade_no=")
 		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	builder.WriteString("invoice_company_name=")
+	builder.WriteString(_m.InvoiceCompanyName)
+	builder.WriteString(", ")
+	builder.WriteString("invoice_tax_id=")
+	builder.WriteString(_m.InvoiceTaxID)
+	builder.WriteString(", ")
+	builder.WriteString("invoice_email=")
+	builder.WriteString(_m.InvoiceEmail)
+	builder.WriteString(", ")
+	builder.WriteString("invoice_remark=")
+	builder.WriteString(_m.InvoiceRemark)
+	builder.WriteString(", ")
+	if v := _m.InvoiceRequestedAt; v != nil {
+		builder.WriteString("invoice_requested_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.InvoiceProcessedAt; v != nil {
+		builder.WriteString("invoice_processed_at=")
+		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
 	if v := _m.CodeURL; v != nil {

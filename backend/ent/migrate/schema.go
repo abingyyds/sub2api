@@ -719,6 +719,12 @@ var (
 		{Name: "wechat_transaction_id", Type: field.TypeString, Nullable: true, Size: 64},
 		{Name: "alipay_trade_no", Type: field.TypeString, Nullable: true, Size: 64},
 		{Name: "epay_trade_no", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "invoice_company_name", Type: field.TypeString, Nullable: true, Size: 255, Default: ""},
+		{Name: "invoice_tax_id", Type: field.TypeString, Nullable: true, Size: 128, Default: ""},
+		{Name: "invoice_email", Type: field.TypeString, Nullable: true, Size: 255, Default: ""},
+		{Name: "invoice_remark", Type: field.TypeString, Nullable: true, Size: 2147483647, Default: ""},
+		{Name: "invoice_requested_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "invoice_processed_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
 		{Name: "code_url", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "paid_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
 		{Name: "expired_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
@@ -734,7 +740,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "payment_orders_users_payment_orders",
-				Columns:    []*schema.Column{PaymentOrdersColumns[20]},
+				Columns:    []*schema.Column{PaymentOrdersColumns[26]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -743,7 +749,7 @@ var (
 			{
 				Name:    "paymentorder_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{PaymentOrdersColumns[20]},
+				Columns: []*schema.Column{PaymentOrdersColumns[26]},
 			},
 			{
 				Name:    "paymentorder_order_no",
@@ -754,6 +760,11 @@ var (
 				Name:    "paymentorder_status",
 				Unique:  false,
 				Columns: []*schema.Column{PaymentOrdersColumns[10]},
+			},
+			{
+				Name:    "paymentorder_invoice_requested_at",
+				Unique:  false,
+				Columns: []*schema.Column{PaymentOrdersColumns[19]},
 			},
 		},
 	}

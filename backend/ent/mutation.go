@@ -17305,6 +17305,12 @@ type PaymentOrderMutation struct {
 	wechat_transaction_id    *string
 	alipay_trade_no          *string
 	epay_trade_no            *string
+	invoice_company_name     *string
+	invoice_tax_id           *string
+	invoice_email            *string
+	invoice_remark           *string
+	invoice_requested_at     *time.Time
+	invoice_processed_at     *time.Time
 	code_url                 *string
 	paid_at                  *time.Time
 	expired_at               *time.Time
@@ -18117,6 +18123,300 @@ func (m *PaymentOrderMutation) ResetEpayTradeNo() {
 	delete(m.clearedFields, paymentorder.FieldEpayTradeNo)
 }
 
+// SetInvoiceCompanyName sets the "invoice_company_name" field.
+func (m *PaymentOrderMutation) SetInvoiceCompanyName(s string) {
+	m.invoice_company_name = &s
+}
+
+// InvoiceCompanyName returns the value of the "invoice_company_name" field in the mutation.
+func (m *PaymentOrderMutation) InvoiceCompanyName() (r string, exists bool) {
+	v := m.invoice_company_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInvoiceCompanyName returns the old "invoice_company_name" field's value of the PaymentOrder entity.
+// If the PaymentOrder object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PaymentOrderMutation) OldInvoiceCompanyName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInvoiceCompanyName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInvoiceCompanyName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInvoiceCompanyName: %w", err)
+	}
+	return oldValue.InvoiceCompanyName, nil
+}
+
+// ClearInvoiceCompanyName clears the value of the "invoice_company_name" field.
+func (m *PaymentOrderMutation) ClearInvoiceCompanyName() {
+	m.invoice_company_name = nil
+	m.clearedFields[paymentorder.FieldInvoiceCompanyName] = struct{}{}
+}
+
+// InvoiceCompanyNameCleared returns if the "invoice_company_name" field was cleared in this mutation.
+func (m *PaymentOrderMutation) InvoiceCompanyNameCleared() bool {
+	_, ok := m.clearedFields[paymentorder.FieldInvoiceCompanyName]
+	return ok
+}
+
+// ResetInvoiceCompanyName resets all changes to the "invoice_company_name" field.
+func (m *PaymentOrderMutation) ResetInvoiceCompanyName() {
+	m.invoice_company_name = nil
+	delete(m.clearedFields, paymentorder.FieldInvoiceCompanyName)
+}
+
+// SetInvoiceTaxID sets the "invoice_tax_id" field.
+func (m *PaymentOrderMutation) SetInvoiceTaxID(s string) {
+	m.invoice_tax_id = &s
+}
+
+// InvoiceTaxID returns the value of the "invoice_tax_id" field in the mutation.
+func (m *PaymentOrderMutation) InvoiceTaxID() (r string, exists bool) {
+	v := m.invoice_tax_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInvoiceTaxID returns the old "invoice_tax_id" field's value of the PaymentOrder entity.
+// If the PaymentOrder object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PaymentOrderMutation) OldInvoiceTaxID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInvoiceTaxID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInvoiceTaxID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInvoiceTaxID: %w", err)
+	}
+	return oldValue.InvoiceTaxID, nil
+}
+
+// ClearInvoiceTaxID clears the value of the "invoice_tax_id" field.
+func (m *PaymentOrderMutation) ClearInvoiceTaxID() {
+	m.invoice_tax_id = nil
+	m.clearedFields[paymentorder.FieldInvoiceTaxID] = struct{}{}
+}
+
+// InvoiceTaxIDCleared returns if the "invoice_tax_id" field was cleared in this mutation.
+func (m *PaymentOrderMutation) InvoiceTaxIDCleared() bool {
+	_, ok := m.clearedFields[paymentorder.FieldInvoiceTaxID]
+	return ok
+}
+
+// ResetInvoiceTaxID resets all changes to the "invoice_tax_id" field.
+func (m *PaymentOrderMutation) ResetInvoiceTaxID() {
+	m.invoice_tax_id = nil
+	delete(m.clearedFields, paymentorder.FieldInvoiceTaxID)
+}
+
+// SetInvoiceEmail sets the "invoice_email" field.
+func (m *PaymentOrderMutation) SetInvoiceEmail(s string) {
+	m.invoice_email = &s
+}
+
+// InvoiceEmail returns the value of the "invoice_email" field in the mutation.
+func (m *PaymentOrderMutation) InvoiceEmail() (r string, exists bool) {
+	v := m.invoice_email
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInvoiceEmail returns the old "invoice_email" field's value of the PaymentOrder entity.
+// If the PaymentOrder object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PaymentOrderMutation) OldInvoiceEmail(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInvoiceEmail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInvoiceEmail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInvoiceEmail: %w", err)
+	}
+	return oldValue.InvoiceEmail, nil
+}
+
+// ClearInvoiceEmail clears the value of the "invoice_email" field.
+func (m *PaymentOrderMutation) ClearInvoiceEmail() {
+	m.invoice_email = nil
+	m.clearedFields[paymentorder.FieldInvoiceEmail] = struct{}{}
+}
+
+// InvoiceEmailCleared returns if the "invoice_email" field was cleared in this mutation.
+func (m *PaymentOrderMutation) InvoiceEmailCleared() bool {
+	_, ok := m.clearedFields[paymentorder.FieldInvoiceEmail]
+	return ok
+}
+
+// ResetInvoiceEmail resets all changes to the "invoice_email" field.
+func (m *PaymentOrderMutation) ResetInvoiceEmail() {
+	m.invoice_email = nil
+	delete(m.clearedFields, paymentorder.FieldInvoiceEmail)
+}
+
+// SetInvoiceRemark sets the "invoice_remark" field.
+func (m *PaymentOrderMutation) SetInvoiceRemark(s string) {
+	m.invoice_remark = &s
+}
+
+// InvoiceRemark returns the value of the "invoice_remark" field in the mutation.
+func (m *PaymentOrderMutation) InvoiceRemark() (r string, exists bool) {
+	v := m.invoice_remark
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInvoiceRemark returns the old "invoice_remark" field's value of the PaymentOrder entity.
+// If the PaymentOrder object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PaymentOrderMutation) OldInvoiceRemark(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInvoiceRemark is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInvoiceRemark requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInvoiceRemark: %w", err)
+	}
+	return oldValue.InvoiceRemark, nil
+}
+
+// ClearInvoiceRemark clears the value of the "invoice_remark" field.
+func (m *PaymentOrderMutation) ClearInvoiceRemark() {
+	m.invoice_remark = nil
+	m.clearedFields[paymentorder.FieldInvoiceRemark] = struct{}{}
+}
+
+// InvoiceRemarkCleared returns if the "invoice_remark" field was cleared in this mutation.
+func (m *PaymentOrderMutation) InvoiceRemarkCleared() bool {
+	_, ok := m.clearedFields[paymentorder.FieldInvoiceRemark]
+	return ok
+}
+
+// ResetInvoiceRemark resets all changes to the "invoice_remark" field.
+func (m *PaymentOrderMutation) ResetInvoiceRemark() {
+	m.invoice_remark = nil
+	delete(m.clearedFields, paymentorder.FieldInvoiceRemark)
+}
+
+// SetInvoiceRequestedAt sets the "invoice_requested_at" field.
+func (m *PaymentOrderMutation) SetInvoiceRequestedAt(t time.Time) {
+	m.invoice_requested_at = &t
+}
+
+// InvoiceRequestedAt returns the value of the "invoice_requested_at" field in the mutation.
+func (m *PaymentOrderMutation) InvoiceRequestedAt() (r time.Time, exists bool) {
+	v := m.invoice_requested_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInvoiceRequestedAt returns the old "invoice_requested_at" field's value of the PaymentOrder entity.
+// If the PaymentOrder object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PaymentOrderMutation) OldInvoiceRequestedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInvoiceRequestedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInvoiceRequestedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInvoiceRequestedAt: %w", err)
+	}
+	return oldValue.InvoiceRequestedAt, nil
+}
+
+// ClearInvoiceRequestedAt clears the value of the "invoice_requested_at" field.
+func (m *PaymentOrderMutation) ClearInvoiceRequestedAt() {
+	m.invoice_requested_at = nil
+	m.clearedFields[paymentorder.FieldInvoiceRequestedAt] = struct{}{}
+}
+
+// InvoiceRequestedAtCleared returns if the "invoice_requested_at" field was cleared in this mutation.
+func (m *PaymentOrderMutation) InvoiceRequestedAtCleared() bool {
+	_, ok := m.clearedFields[paymentorder.FieldInvoiceRequestedAt]
+	return ok
+}
+
+// ResetInvoiceRequestedAt resets all changes to the "invoice_requested_at" field.
+func (m *PaymentOrderMutation) ResetInvoiceRequestedAt() {
+	m.invoice_requested_at = nil
+	delete(m.clearedFields, paymentorder.FieldInvoiceRequestedAt)
+}
+
+// SetInvoiceProcessedAt sets the "invoice_processed_at" field.
+func (m *PaymentOrderMutation) SetInvoiceProcessedAt(t time.Time) {
+	m.invoice_processed_at = &t
+}
+
+// InvoiceProcessedAt returns the value of the "invoice_processed_at" field in the mutation.
+func (m *PaymentOrderMutation) InvoiceProcessedAt() (r time.Time, exists bool) {
+	v := m.invoice_processed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInvoiceProcessedAt returns the old "invoice_processed_at" field's value of the PaymentOrder entity.
+// If the PaymentOrder object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PaymentOrderMutation) OldInvoiceProcessedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInvoiceProcessedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInvoiceProcessedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInvoiceProcessedAt: %w", err)
+	}
+	return oldValue.InvoiceProcessedAt, nil
+}
+
+// ClearInvoiceProcessedAt clears the value of the "invoice_processed_at" field.
+func (m *PaymentOrderMutation) ClearInvoiceProcessedAt() {
+	m.invoice_processed_at = nil
+	m.clearedFields[paymentorder.FieldInvoiceProcessedAt] = struct{}{}
+}
+
+// InvoiceProcessedAtCleared returns if the "invoice_processed_at" field was cleared in this mutation.
+func (m *PaymentOrderMutation) InvoiceProcessedAtCleared() bool {
+	_, ok := m.clearedFields[paymentorder.FieldInvoiceProcessedAt]
+	return ok
+}
+
+// ResetInvoiceProcessedAt resets all changes to the "invoice_processed_at" field.
+func (m *PaymentOrderMutation) ResetInvoiceProcessedAt() {
+	m.invoice_processed_at = nil
+	delete(m.clearedFields, paymentorder.FieldInvoiceProcessedAt)
+}
+
 // SetCodeURL sets the "code_url" field.
 func (m *PaymentOrderMutation) SetCodeURL(s string) {
 	m.code_url = &s
@@ -18438,7 +18738,7 @@ func (m *PaymentOrderMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PaymentOrderMutation) Fields() []string {
-	fields := make([]string, 0, 20)
+	fields := make([]string, 0, 26)
 	if m.order_no != nil {
 		fields = append(fields, paymentorder.FieldOrderNo)
 	}
@@ -18483,6 +18783,24 @@ func (m *PaymentOrderMutation) Fields() []string {
 	}
 	if m.epay_trade_no != nil {
 		fields = append(fields, paymentorder.FieldEpayTradeNo)
+	}
+	if m.invoice_company_name != nil {
+		fields = append(fields, paymentorder.FieldInvoiceCompanyName)
+	}
+	if m.invoice_tax_id != nil {
+		fields = append(fields, paymentorder.FieldInvoiceTaxID)
+	}
+	if m.invoice_email != nil {
+		fields = append(fields, paymentorder.FieldInvoiceEmail)
+	}
+	if m.invoice_remark != nil {
+		fields = append(fields, paymentorder.FieldInvoiceRemark)
+	}
+	if m.invoice_requested_at != nil {
+		fields = append(fields, paymentorder.FieldInvoiceRequestedAt)
+	}
+	if m.invoice_processed_at != nil {
+		fields = append(fields, paymentorder.FieldInvoiceProcessedAt)
 	}
 	if m.code_url != nil {
 		fields = append(fields, paymentorder.FieldCodeURL)
@@ -18537,6 +18855,18 @@ func (m *PaymentOrderMutation) Field(name string) (ent.Value, bool) {
 		return m.AlipayTradeNo()
 	case paymentorder.FieldEpayTradeNo:
 		return m.EpayTradeNo()
+	case paymentorder.FieldInvoiceCompanyName:
+		return m.InvoiceCompanyName()
+	case paymentorder.FieldInvoiceTaxID:
+		return m.InvoiceTaxID()
+	case paymentorder.FieldInvoiceEmail:
+		return m.InvoiceEmail()
+	case paymentorder.FieldInvoiceRemark:
+		return m.InvoiceRemark()
+	case paymentorder.FieldInvoiceRequestedAt:
+		return m.InvoiceRequestedAt()
+	case paymentorder.FieldInvoiceProcessedAt:
+		return m.InvoiceProcessedAt()
 	case paymentorder.FieldCodeURL:
 		return m.CodeURL()
 	case paymentorder.FieldPaidAt:
@@ -18586,6 +18916,18 @@ func (m *PaymentOrderMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldAlipayTradeNo(ctx)
 	case paymentorder.FieldEpayTradeNo:
 		return m.OldEpayTradeNo(ctx)
+	case paymentorder.FieldInvoiceCompanyName:
+		return m.OldInvoiceCompanyName(ctx)
+	case paymentorder.FieldInvoiceTaxID:
+		return m.OldInvoiceTaxID(ctx)
+	case paymentorder.FieldInvoiceEmail:
+		return m.OldInvoiceEmail(ctx)
+	case paymentorder.FieldInvoiceRemark:
+		return m.OldInvoiceRemark(ctx)
+	case paymentorder.FieldInvoiceRequestedAt:
+		return m.OldInvoiceRequestedAt(ctx)
+	case paymentorder.FieldInvoiceProcessedAt:
+		return m.OldInvoiceProcessedAt(ctx)
 	case paymentorder.FieldCodeURL:
 		return m.OldCodeURL(ctx)
 	case paymentorder.FieldPaidAt:
@@ -18709,6 +19051,48 @@ func (m *PaymentOrderMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetEpayTradeNo(v)
+		return nil
+	case paymentorder.FieldInvoiceCompanyName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInvoiceCompanyName(v)
+		return nil
+	case paymentorder.FieldInvoiceTaxID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInvoiceTaxID(v)
+		return nil
+	case paymentorder.FieldInvoiceEmail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInvoiceEmail(v)
+		return nil
+	case paymentorder.FieldInvoiceRemark:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInvoiceRemark(v)
+		return nil
+	case paymentorder.FieldInvoiceRequestedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInvoiceRequestedAt(v)
+		return nil
+	case paymentorder.FieldInvoiceProcessedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInvoiceProcessedAt(v)
 		return nil
 	case paymentorder.FieldCodeURL:
 		v, ok := value.(string)
@@ -18850,6 +19234,24 @@ func (m *PaymentOrderMutation) ClearedFields() []string {
 	if m.FieldCleared(paymentorder.FieldEpayTradeNo) {
 		fields = append(fields, paymentorder.FieldEpayTradeNo)
 	}
+	if m.FieldCleared(paymentorder.FieldInvoiceCompanyName) {
+		fields = append(fields, paymentorder.FieldInvoiceCompanyName)
+	}
+	if m.FieldCleared(paymentorder.FieldInvoiceTaxID) {
+		fields = append(fields, paymentorder.FieldInvoiceTaxID)
+	}
+	if m.FieldCleared(paymentorder.FieldInvoiceEmail) {
+		fields = append(fields, paymentorder.FieldInvoiceEmail)
+	}
+	if m.FieldCleared(paymentorder.FieldInvoiceRemark) {
+		fields = append(fields, paymentorder.FieldInvoiceRemark)
+	}
+	if m.FieldCleared(paymentorder.FieldInvoiceRequestedAt) {
+		fields = append(fields, paymentorder.FieldInvoiceRequestedAt)
+	}
+	if m.FieldCleared(paymentorder.FieldInvoiceProcessedAt) {
+		fields = append(fields, paymentorder.FieldInvoiceProcessedAt)
+	}
 	if m.FieldCleared(paymentorder.FieldCodeURL) {
 		fields = append(fields, paymentorder.FieldCodeURL)
 	}
@@ -18881,6 +19283,24 @@ func (m *PaymentOrderMutation) ClearField(name string) error {
 		return nil
 	case paymentorder.FieldEpayTradeNo:
 		m.ClearEpayTradeNo()
+		return nil
+	case paymentorder.FieldInvoiceCompanyName:
+		m.ClearInvoiceCompanyName()
+		return nil
+	case paymentorder.FieldInvoiceTaxID:
+		m.ClearInvoiceTaxID()
+		return nil
+	case paymentorder.FieldInvoiceEmail:
+		m.ClearInvoiceEmail()
+		return nil
+	case paymentorder.FieldInvoiceRemark:
+		m.ClearInvoiceRemark()
+		return nil
+	case paymentorder.FieldInvoiceRequestedAt:
+		m.ClearInvoiceRequestedAt()
+		return nil
+	case paymentorder.FieldInvoiceProcessedAt:
+		m.ClearInvoiceProcessedAt()
 		return nil
 	case paymentorder.FieldCodeURL:
 		m.ClearCodeURL()
@@ -18940,6 +19360,24 @@ func (m *PaymentOrderMutation) ResetField(name string) error {
 		return nil
 	case paymentorder.FieldEpayTradeNo:
 		m.ResetEpayTradeNo()
+		return nil
+	case paymentorder.FieldInvoiceCompanyName:
+		m.ResetInvoiceCompanyName()
+		return nil
+	case paymentorder.FieldInvoiceTaxID:
+		m.ResetInvoiceTaxID()
+		return nil
+	case paymentorder.FieldInvoiceEmail:
+		m.ResetInvoiceEmail()
+		return nil
+	case paymentorder.FieldInvoiceRemark:
+		m.ResetInvoiceRemark()
+		return nil
+	case paymentorder.FieldInvoiceRequestedAt:
+		m.ResetInvoiceRequestedAt()
+		return nil
+	case paymentorder.FieldInvoiceProcessedAt:
+		m.ResetInvoiceProcessedAt()
 		return nil
 	case paymentorder.FieldCodeURL:
 		m.ResetCodeURL()

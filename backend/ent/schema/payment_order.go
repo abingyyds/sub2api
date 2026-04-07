@@ -74,6 +74,35 @@ func (PaymentOrder) Fields() []ent.Field {
 			Optional().
 			Nillable().
 			Comment("易支付交易号"),
+		field.String("invoice_company_name").
+			MaxLen(255).
+			Optional().
+			Default("").
+			Comment("发票抬头/公司名称"),
+		field.String("invoice_tax_id").
+			MaxLen(128).
+			Optional().
+			Default("").
+			Comment("发票税号"),
+		field.String("invoice_email").
+			MaxLen(255).
+			Optional().
+			Default("").
+			Comment("接收发票邮箱"),
+		field.Text("invoice_remark").
+			Optional().
+			Default("").
+			Comment("发票备注"),
+		field.Time("invoice_requested_at").
+			Optional().
+			Nillable().
+			SchemaType(map[string]string{dialect.Postgres: "timestamptz"}).
+			Comment("发票申请时间"),
+		field.Time("invoice_processed_at").
+			Optional().
+			Nillable().
+			SchemaType(map[string]string{dialect.Postgres: "timestamptz"}).
+			Comment("发票处理时间"),
 		field.Text("code_url").
 			Optional().
 			Nillable(),
@@ -112,5 +141,6 @@ func (PaymentOrder) Indexes() []ent.Index {
 		index.Fields("user_id"),
 		index.Fields("order_no"),
 		index.Fields("status"),
+		index.Fields("invoice_requested_at"),
 	}
 }

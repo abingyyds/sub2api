@@ -299,6 +299,126 @@ func (_u *PaymentOrderUpdate) ClearEpayTradeNo() *PaymentOrderUpdate {
 	return _u
 }
 
+// SetInvoiceCompanyName sets the "invoice_company_name" field.
+func (_u *PaymentOrderUpdate) SetInvoiceCompanyName(v string) *PaymentOrderUpdate {
+	_u.mutation.SetInvoiceCompanyName(v)
+	return _u
+}
+
+// SetNillableInvoiceCompanyName sets the "invoice_company_name" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableInvoiceCompanyName(v *string) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetInvoiceCompanyName(*v)
+	}
+	return _u
+}
+
+// ClearInvoiceCompanyName clears the value of the "invoice_company_name" field.
+func (_u *PaymentOrderUpdate) ClearInvoiceCompanyName() *PaymentOrderUpdate {
+	_u.mutation.ClearInvoiceCompanyName()
+	return _u
+}
+
+// SetInvoiceTaxID sets the "invoice_tax_id" field.
+func (_u *PaymentOrderUpdate) SetInvoiceTaxID(v string) *PaymentOrderUpdate {
+	_u.mutation.SetInvoiceTaxID(v)
+	return _u
+}
+
+// SetNillableInvoiceTaxID sets the "invoice_tax_id" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableInvoiceTaxID(v *string) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetInvoiceTaxID(*v)
+	}
+	return _u
+}
+
+// ClearInvoiceTaxID clears the value of the "invoice_tax_id" field.
+func (_u *PaymentOrderUpdate) ClearInvoiceTaxID() *PaymentOrderUpdate {
+	_u.mutation.ClearInvoiceTaxID()
+	return _u
+}
+
+// SetInvoiceEmail sets the "invoice_email" field.
+func (_u *PaymentOrderUpdate) SetInvoiceEmail(v string) *PaymentOrderUpdate {
+	_u.mutation.SetInvoiceEmail(v)
+	return _u
+}
+
+// SetNillableInvoiceEmail sets the "invoice_email" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableInvoiceEmail(v *string) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetInvoiceEmail(*v)
+	}
+	return _u
+}
+
+// ClearInvoiceEmail clears the value of the "invoice_email" field.
+func (_u *PaymentOrderUpdate) ClearInvoiceEmail() *PaymentOrderUpdate {
+	_u.mutation.ClearInvoiceEmail()
+	return _u
+}
+
+// SetInvoiceRemark sets the "invoice_remark" field.
+func (_u *PaymentOrderUpdate) SetInvoiceRemark(v string) *PaymentOrderUpdate {
+	_u.mutation.SetInvoiceRemark(v)
+	return _u
+}
+
+// SetNillableInvoiceRemark sets the "invoice_remark" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableInvoiceRemark(v *string) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetInvoiceRemark(*v)
+	}
+	return _u
+}
+
+// ClearInvoiceRemark clears the value of the "invoice_remark" field.
+func (_u *PaymentOrderUpdate) ClearInvoiceRemark() *PaymentOrderUpdate {
+	_u.mutation.ClearInvoiceRemark()
+	return _u
+}
+
+// SetInvoiceRequestedAt sets the "invoice_requested_at" field.
+func (_u *PaymentOrderUpdate) SetInvoiceRequestedAt(v time.Time) *PaymentOrderUpdate {
+	_u.mutation.SetInvoiceRequestedAt(v)
+	return _u
+}
+
+// SetNillableInvoiceRequestedAt sets the "invoice_requested_at" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableInvoiceRequestedAt(v *time.Time) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetInvoiceRequestedAt(*v)
+	}
+	return _u
+}
+
+// ClearInvoiceRequestedAt clears the value of the "invoice_requested_at" field.
+func (_u *PaymentOrderUpdate) ClearInvoiceRequestedAt() *PaymentOrderUpdate {
+	_u.mutation.ClearInvoiceRequestedAt()
+	return _u
+}
+
+// SetInvoiceProcessedAt sets the "invoice_processed_at" field.
+func (_u *PaymentOrderUpdate) SetInvoiceProcessedAt(v time.Time) *PaymentOrderUpdate {
+	_u.mutation.SetInvoiceProcessedAt(v)
+	return _u
+}
+
+// SetNillableInvoiceProcessedAt sets the "invoice_processed_at" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableInvoiceProcessedAt(v *time.Time) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetInvoiceProcessedAt(*v)
+	}
+	return _u
+}
+
+// ClearInvoiceProcessedAt clears the value of the "invoice_processed_at" field.
+func (_u *PaymentOrderUpdate) ClearInvoiceProcessedAt() *PaymentOrderUpdate {
+	_u.mutation.ClearInvoiceProcessedAt()
+	return _u
+}
+
 // SetCodeURL sets the "code_url" field.
 func (_u *PaymentOrderUpdate) SetCodeURL(v string) *PaymentOrderUpdate {
 	_u.mutation.SetCodeURL(v)
@@ -494,6 +614,21 @@ func (_u *PaymentOrderUpdate) check() error {
 			return &ValidationError{Name: "epay_trade_no", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.epay_trade_no": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.InvoiceCompanyName(); ok {
+		if err := paymentorder.InvoiceCompanyNameValidator(v); err != nil {
+			return &ValidationError{Name: "invoice_company_name", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.invoice_company_name": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.InvoiceTaxID(); ok {
+		if err := paymentorder.InvoiceTaxIDValidator(v); err != nil {
+			return &ValidationError{Name: "invoice_tax_id", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.invoice_tax_id": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.InvoiceEmail(); ok {
+		if err := paymentorder.InvoiceEmailValidator(v); err != nil {
+			return &ValidationError{Name: "invoice_email", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.invoice_email": %w`, err)}
+		}
+	}
 	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "PaymentOrder.user"`)
 	}
@@ -580,6 +715,42 @@ func (_u *PaymentOrderUpdate) sqlSave(ctx context.Context) (_node int, err error
 	}
 	if _u.mutation.EpayTradeNoCleared() {
 		_spec.ClearField(paymentorder.FieldEpayTradeNo, field.TypeString)
+	}
+	if value, ok := _u.mutation.InvoiceCompanyName(); ok {
+		_spec.SetField(paymentorder.FieldInvoiceCompanyName, field.TypeString, value)
+	}
+	if _u.mutation.InvoiceCompanyNameCleared() {
+		_spec.ClearField(paymentorder.FieldInvoiceCompanyName, field.TypeString)
+	}
+	if value, ok := _u.mutation.InvoiceTaxID(); ok {
+		_spec.SetField(paymentorder.FieldInvoiceTaxID, field.TypeString, value)
+	}
+	if _u.mutation.InvoiceTaxIDCleared() {
+		_spec.ClearField(paymentorder.FieldInvoiceTaxID, field.TypeString)
+	}
+	if value, ok := _u.mutation.InvoiceEmail(); ok {
+		_spec.SetField(paymentorder.FieldInvoiceEmail, field.TypeString, value)
+	}
+	if _u.mutation.InvoiceEmailCleared() {
+		_spec.ClearField(paymentorder.FieldInvoiceEmail, field.TypeString)
+	}
+	if value, ok := _u.mutation.InvoiceRemark(); ok {
+		_spec.SetField(paymentorder.FieldInvoiceRemark, field.TypeString, value)
+	}
+	if _u.mutation.InvoiceRemarkCleared() {
+		_spec.ClearField(paymentorder.FieldInvoiceRemark, field.TypeString)
+	}
+	if value, ok := _u.mutation.InvoiceRequestedAt(); ok {
+		_spec.SetField(paymentorder.FieldInvoiceRequestedAt, field.TypeTime, value)
+	}
+	if _u.mutation.InvoiceRequestedAtCleared() {
+		_spec.ClearField(paymentorder.FieldInvoiceRequestedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.InvoiceProcessedAt(); ok {
+		_spec.SetField(paymentorder.FieldInvoiceProcessedAt, field.TypeTime, value)
+	}
+	if _u.mutation.InvoiceProcessedAtCleared() {
+		_spec.ClearField(paymentorder.FieldInvoiceProcessedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.CodeURL(); ok {
 		_spec.SetField(paymentorder.FieldCodeURL, field.TypeString, value)
@@ -962,6 +1133,126 @@ func (_u *PaymentOrderUpdateOne) ClearEpayTradeNo() *PaymentOrderUpdateOne {
 	return _u
 }
 
+// SetInvoiceCompanyName sets the "invoice_company_name" field.
+func (_u *PaymentOrderUpdateOne) SetInvoiceCompanyName(v string) *PaymentOrderUpdateOne {
+	_u.mutation.SetInvoiceCompanyName(v)
+	return _u
+}
+
+// SetNillableInvoiceCompanyName sets the "invoice_company_name" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableInvoiceCompanyName(v *string) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetInvoiceCompanyName(*v)
+	}
+	return _u
+}
+
+// ClearInvoiceCompanyName clears the value of the "invoice_company_name" field.
+func (_u *PaymentOrderUpdateOne) ClearInvoiceCompanyName() *PaymentOrderUpdateOne {
+	_u.mutation.ClearInvoiceCompanyName()
+	return _u
+}
+
+// SetInvoiceTaxID sets the "invoice_tax_id" field.
+func (_u *PaymentOrderUpdateOne) SetInvoiceTaxID(v string) *PaymentOrderUpdateOne {
+	_u.mutation.SetInvoiceTaxID(v)
+	return _u
+}
+
+// SetNillableInvoiceTaxID sets the "invoice_tax_id" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableInvoiceTaxID(v *string) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetInvoiceTaxID(*v)
+	}
+	return _u
+}
+
+// ClearInvoiceTaxID clears the value of the "invoice_tax_id" field.
+func (_u *PaymentOrderUpdateOne) ClearInvoiceTaxID() *PaymentOrderUpdateOne {
+	_u.mutation.ClearInvoiceTaxID()
+	return _u
+}
+
+// SetInvoiceEmail sets the "invoice_email" field.
+func (_u *PaymentOrderUpdateOne) SetInvoiceEmail(v string) *PaymentOrderUpdateOne {
+	_u.mutation.SetInvoiceEmail(v)
+	return _u
+}
+
+// SetNillableInvoiceEmail sets the "invoice_email" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableInvoiceEmail(v *string) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetInvoiceEmail(*v)
+	}
+	return _u
+}
+
+// ClearInvoiceEmail clears the value of the "invoice_email" field.
+func (_u *PaymentOrderUpdateOne) ClearInvoiceEmail() *PaymentOrderUpdateOne {
+	_u.mutation.ClearInvoiceEmail()
+	return _u
+}
+
+// SetInvoiceRemark sets the "invoice_remark" field.
+func (_u *PaymentOrderUpdateOne) SetInvoiceRemark(v string) *PaymentOrderUpdateOne {
+	_u.mutation.SetInvoiceRemark(v)
+	return _u
+}
+
+// SetNillableInvoiceRemark sets the "invoice_remark" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableInvoiceRemark(v *string) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetInvoiceRemark(*v)
+	}
+	return _u
+}
+
+// ClearInvoiceRemark clears the value of the "invoice_remark" field.
+func (_u *PaymentOrderUpdateOne) ClearInvoiceRemark() *PaymentOrderUpdateOne {
+	_u.mutation.ClearInvoiceRemark()
+	return _u
+}
+
+// SetInvoiceRequestedAt sets the "invoice_requested_at" field.
+func (_u *PaymentOrderUpdateOne) SetInvoiceRequestedAt(v time.Time) *PaymentOrderUpdateOne {
+	_u.mutation.SetInvoiceRequestedAt(v)
+	return _u
+}
+
+// SetNillableInvoiceRequestedAt sets the "invoice_requested_at" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableInvoiceRequestedAt(v *time.Time) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetInvoiceRequestedAt(*v)
+	}
+	return _u
+}
+
+// ClearInvoiceRequestedAt clears the value of the "invoice_requested_at" field.
+func (_u *PaymentOrderUpdateOne) ClearInvoiceRequestedAt() *PaymentOrderUpdateOne {
+	_u.mutation.ClearInvoiceRequestedAt()
+	return _u
+}
+
+// SetInvoiceProcessedAt sets the "invoice_processed_at" field.
+func (_u *PaymentOrderUpdateOne) SetInvoiceProcessedAt(v time.Time) *PaymentOrderUpdateOne {
+	_u.mutation.SetInvoiceProcessedAt(v)
+	return _u
+}
+
+// SetNillableInvoiceProcessedAt sets the "invoice_processed_at" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableInvoiceProcessedAt(v *time.Time) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetInvoiceProcessedAt(*v)
+	}
+	return _u
+}
+
+// ClearInvoiceProcessedAt clears the value of the "invoice_processed_at" field.
+func (_u *PaymentOrderUpdateOne) ClearInvoiceProcessedAt() *PaymentOrderUpdateOne {
+	_u.mutation.ClearInvoiceProcessedAt()
+	return _u
+}
+
 // SetCodeURL sets the "code_url" field.
 func (_u *PaymentOrderUpdateOne) SetCodeURL(v string) *PaymentOrderUpdateOne {
 	_u.mutation.SetCodeURL(v)
@@ -1170,6 +1461,21 @@ func (_u *PaymentOrderUpdateOne) check() error {
 			return &ValidationError{Name: "epay_trade_no", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.epay_trade_no": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.InvoiceCompanyName(); ok {
+		if err := paymentorder.InvoiceCompanyNameValidator(v); err != nil {
+			return &ValidationError{Name: "invoice_company_name", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.invoice_company_name": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.InvoiceTaxID(); ok {
+		if err := paymentorder.InvoiceTaxIDValidator(v); err != nil {
+			return &ValidationError{Name: "invoice_tax_id", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.invoice_tax_id": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.InvoiceEmail(); ok {
+		if err := paymentorder.InvoiceEmailValidator(v); err != nil {
+			return &ValidationError{Name: "invoice_email", err: fmt.Errorf(`ent: validator failed for field "PaymentOrder.invoice_email": %w`, err)}
+		}
+	}
 	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "PaymentOrder.user"`)
 	}
@@ -1273,6 +1579,42 @@ func (_u *PaymentOrderUpdateOne) sqlSave(ctx context.Context) (_node *PaymentOrd
 	}
 	if _u.mutation.EpayTradeNoCleared() {
 		_spec.ClearField(paymentorder.FieldEpayTradeNo, field.TypeString)
+	}
+	if value, ok := _u.mutation.InvoiceCompanyName(); ok {
+		_spec.SetField(paymentorder.FieldInvoiceCompanyName, field.TypeString, value)
+	}
+	if _u.mutation.InvoiceCompanyNameCleared() {
+		_spec.ClearField(paymentorder.FieldInvoiceCompanyName, field.TypeString)
+	}
+	if value, ok := _u.mutation.InvoiceTaxID(); ok {
+		_spec.SetField(paymentorder.FieldInvoiceTaxID, field.TypeString, value)
+	}
+	if _u.mutation.InvoiceTaxIDCleared() {
+		_spec.ClearField(paymentorder.FieldInvoiceTaxID, field.TypeString)
+	}
+	if value, ok := _u.mutation.InvoiceEmail(); ok {
+		_spec.SetField(paymentorder.FieldInvoiceEmail, field.TypeString, value)
+	}
+	if _u.mutation.InvoiceEmailCleared() {
+		_spec.ClearField(paymentorder.FieldInvoiceEmail, field.TypeString)
+	}
+	if value, ok := _u.mutation.InvoiceRemark(); ok {
+		_spec.SetField(paymentorder.FieldInvoiceRemark, field.TypeString, value)
+	}
+	if _u.mutation.InvoiceRemarkCleared() {
+		_spec.ClearField(paymentorder.FieldInvoiceRemark, field.TypeString)
+	}
+	if value, ok := _u.mutation.InvoiceRequestedAt(); ok {
+		_spec.SetField(paymentorder.FieldInvoiceRequestedAt, field.TypeTime, value)
+	}
+	if _u.mutation.InvoiceRequestedAtCleared() {
+		_spec.ClearField(paymentorder.FieldInvoiceRequestedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.InvoiceProcessedAt(); ok {
+		_spec.SetField(paymentorder.FieldInvoiceProcessedAt, field.TypeTime, value)
+	}
+	if _u.mutation.InvoiceProcessedAtCleared() {
+		_spec.ClearField(paymentorder.FieldInvoiceProcessedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.CodeURL(); ok {
 		_spec.SetField(paymentorder.FieldCodeURL, field.TypeString, value)

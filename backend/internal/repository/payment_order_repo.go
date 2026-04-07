@@ -211,6 +211,97 @@ func (r *paymentOrderRepo) ListAll(ctx context.Context, params pagination.Pagina
 	}, nil
 }
 
+func (r *paymentOrderRepo) SubmitInvoiceRequest(ctx context.Context, userID int64, orderNos []string, invoice service.InvoiceRequest) error {
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("start invoice request transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		}
+	}()
+
+	orders, err := tx.PaymentOrder.Query().
+		Where(
+			paymentorder.UserIDEQ(userID),
+			paymentorder.OrderNoIn(orderNos...),
+		).
+		All(ctx)
+	if err != nil {
+		return fmt.Errorf("query invoice orders: %w", err)
+	}
+	if len(orders) != len(orderNos) {
+		return service.ErrPaymentOrderNotFound
+	}
+
+	for _, order := range orders {
+		if order.Status != service.PaymentOrderStatusPaid {
+			return service.ErrInvoiceOrderNotPaid
+		}
+		if order.InvoiceRequestedAt != nil {
+			return service.ErrInvoiceAlreadyFiled
+		}
+	}
+
+	now := time.Now()
+	updated, err := tx.PaymentOrder.Update().
+		Where(
+			paymentorder.UserIDEQ(userID),
+			paymentorder.OrderNoIn(orderNos...),
+			paymentorder.InvoiceRequestedAtIsNil(),
+		).
+		SetInvoiceCompanyName(invoice.CompanyName).
+		SetInvoiceTaxID(invoice.TaxID).
+		SetInvoiceEmail(invoice.Email).
+		SetInvoiceRemark(invoice.Remark).
+		SetInvoiceRequestedAt(now).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("update invoice request: %w", err)
+	}
+	if updated != len(orderNos) {
+		return service.ErrInvoiceAlreadyFiled
+	}
+
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("commit invoice request transaction: %w", err)
+	}
+	return nil
+}
+
+func (r *paymentOrderRepo) MarkInvoiceProcessed(ctx context.Context, orderID int64) error {
+	order, err := r.client.PaymentOrder.Get(ctx, orderID)
+	if err != nil {
+		if dbent.IsNotFound(err) {
+			return service.ErrPaymentOrderNotFound
+		}
+		return fmt.Errorf("get order before mark invoice processed: %w", err)
+	}
+	if order.InvoiceRequestedAt == nil {
+		return service.ErrInvoiceNotRequested
+	}
+	if order.InvoiceProcessedAt != nil {
+		return service.ErrInvoiceAlreadyHandled
+	}
+
+	updated, err := r.client.PaymentOrder.Update().
+		Where(
+			paymentorder.IDEQ(orderID),
+			paymentorder.InvoiceRequestedAtNotNil(),
+			paymentorder.InvoiceProcessedAtIsNil(),
+		).
+		SetInvoiceProcessedAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("mark invoice processed: %w", err)
+	}
+	if updated == 0 {
+		return service.ErrInvoiceAlreadyHandled
+	}
+	return nil
+}
+
 func (r *paymentOrderRepo) CloseExpiredOrders(ctx context.Context) (int64, error) {
 	affected, err := r.client.PaymentOrder.Update().
 		Where(
@@ -257,6 +348,12 @@ func toServicePaymentOrder(e *dbent.PaymentOrder) *service.PaymentOrder {
 		WechatTransactionID: e.WechatTransactionID,
 		AlipayTradeNo:       e.AlipayTradeNo,
 		EpayTradeNo:         e.EpayTradeNo,
+		InvoiceCompanyName:  e.InvoiceCompanyName,
+		InvoiceTaxID:        e.InvoiceTaxID,
+		InvoiceEmail:        e.InvoiceEmail,
+		InvoiceRemark:       e.InvoiceRemark,
+		InvoiceRequestedAt:  e.InvoiceRequestedAt,
+		InvoiceProcessedAt:  e.InvoiceProcessedAt,
 		CodeURL:             e.CodeURL,
 		PaidAt:              e.PaidAt,
 		ExpiredAt:           e.ExpiredAt,

@@ -44,6 +44,18 @@ const (
 	FieldAlipayTradeNo = "alipay_trade_no"
 	// FieldEpayTradeNo holds the string denoting the epay_trade_no field in the database.
 	FieldEpayTradeNo = "epay_trade_no"
+	// FieldInvoiceCompanyName holds the string denoting the invoice_company_name field in the database.
+	FieldInvoiceCompanyName = "invoice_company_name"
+	// FieldInvoiceTaxID holds the string denoting the invoice_tax_id field in the database.
+	FieldInvoiceTaxID = "invoice_tax_id"
+	// FieldInvoiceEmail holds the string denoting the invoice_email field in the database.
+	FieldInvoiceEmail = "invoice_email"
+	// FieldInvoiceRemark holds the string denoting the invoice_remark field in the database.
+	FieldInvoiceRemark = "invoice_remark"
+	// FieldInvoiceRequestedAt holds the string denoting the invoice_requested_at field in the database.
+	FieldInvoiceRequestedAt = "invoice_requested_at"
+	// FieldInvoiceProcessedAt holds the string denoting the invoice_processed_at field in the database.
+	FieldInvoiceProcessedAt = "invoice_processed_at"
 	// FieldCodeURL holds the string denoting the code_url field in the database.
 	FieldCodeURL = "code_url"
 	// FieldPaidAt holds the string denoting the paid_at field in the database.
@@ -94,6 +106,12 @@ var Columns = []string{
 	FieldWechatTransactionID,
 	FieldAlipayTradeNo,
 	FieldEpayTradeNo,
+	FieldInvoiceCompanyName,
+	FieldInvoiceTaxID,
+	FieldInvoiceEmail,
+	FieldInvoiceRemark,
+	FieldInvoiceRequestedAt,
+	FieldInvoiceProcessedAt,
 	FieldCodeURL,
 	FieldPaidAt,
 	FieldExpiredAt,
@@ -144,6 +162,20 @@ var (
 	AlipayTradeNoValidator func(string) error
 	// EpayTradeNoValidator is a validator for the "epay_trade_no" field. It is called by the builders before save.
 	EpayTradeNoValidator func(string) error
+	// DefaultInvoiceCompanyName holds the default value on creation for the "invoice_company_name" field.
+	DefaultInvoiceCompanyName string
+	// InvoiceCompanyNameValidator is a validator for the "invoice_company_name" field. It is called by the builders before save.
+	InvoiceCompanyNameValidator func(string) error
+	// DefaultInvoiceTaxID holds the default value on creation for the "invoice_tax_id" field.
+	DefaultInvoiceTaxID string
+	// InvoiceTaxIDValidator is a validator for the "invoice_tax_id" field. It is called by the builders before save.
+	InvoiceTaxIDValidator func(string) error
+	// DefaultInvoiceEmail holds the default value on creation for the "invoice_email" field.
+	DefaultInvoiceEmail string
+	// InvoiceEmailValidator is a validator for the "invoice_email" field. It is called by the builders before save.
+	InvoiceEmailValidator func(string) error
+	// DefaultInvoiceRemark holds the default value on creation for the "invoice_remark" field.
+	DefaultInvoiceRemark string
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -233,6 +265,36 @@ func ByAlipayTradeNo(opts ...sql.OrderTermOption) OrderOption {
 // ByEpayTradeNo orders the results by the epay_trade_no field.
 func ByEpayTradeNo(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEpayTradeNo, opts...).ToFunc()
+}
+
+// ByInvoiceCompanyName orders the results by the invoice_company_name field.
+func ByInvoiceCompanyName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldInvoiceCompanyName, opts...).ToFunc()
+}
+
+// ByInvoiceTaxID orders the results by the invoice_tax_id field.
+func ByInvoiceTaxID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldInvoiceTaxID, opts...).ToFunc()
+}
+
+// ByInvoiceEmail orders the results by the invoice_email field.
+func ByInvoiceEmail(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldInvoiceEmail, opts...).ToFunc()
+}
+
+// ByInvoiceRemark orders the results by the invoice_remark field.
+func ByInvoiceRemark(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldInvoiceRemark, opts...).ToFunc()
+}
+
+// ByInvoiceRequestedAt orders the results by the invoice_requested_at field.
+func ByInvoiceRequestedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldInvoiceRequestedAt, opts...).ToFunc()
+}
+
+// ByInvoiceProcessedAt orders the results by the invoice_processed_at field.
+func ByInvoiceProcessedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldInvoiceProcessedAt, opts...).ToFunc()
 }
 
 // ByCodeURL orders the results by the code_url field.

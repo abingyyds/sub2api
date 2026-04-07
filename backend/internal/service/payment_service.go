@@ -5,8 +5,8 @@ import (
 	"context"
 	"crypto"
 	"crypto/aes"
-	"crypto/md5"
 	"crypto/cipher"
+	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
@@ -31,12 +31,18 @@ import (
 )
 
 var (
-	ErrPaymentDisabled      = infraerrors.Forbidden("PAYMENT_DISABLED", "online payment is disabled")
-	ErrPaymentPlanNotFound  = infraerrors.NotFound("PAYMENT_PLAN_NOT_FOUND", "payment plan not found")
-	ErrPaymentOrderNotFound = infraerrors.NotFound("PAYMENT_ORDER_NOT_FOUND", "payment order not found")
-	ErrPaymentConfigMissing = infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", "payment configuration is incomplete")
-	ErrPaymentCreateFailed  = infraerrors.BadRequest("PAYMENT_CREATE_FAILED", "failed to create payment order")
-	ErrPaymentSignature     = infraerrors.BadRequest("PAYMENT_SIGNATURE_INVALID", "payment notification signature invalid")
+	ErrPaymentDisabled       = infraerrors.Forbidden("PAYMENT_DISABLED", "online payment is disabled")
+	ErrPaymentPlanNotFound   = infraerrors.NotFound("PAYMENT_PLAN_NOT_FOUND", "payment plan not found")
+	ErrPaymentOrderNotFound  = infraerrors.NotFound("PAYMENT_ORDER_NOT_FOUND", "payment order not found")
+	ErrPaymentConfigMissing  = infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", "payment configuration is incomplete")
+	ErrPaymentCreateFailed   = infraerrors.BadRequest("PAYMENT_CREATE_FAILED", "failed to create payment order")
+	ErrPaymentSignature      = infraerrors.BadRequest("PAYMENT_SIGNATURE_INVALID", "payment notification signature invalid")
+	ErrInvoiceOrdersRequired = infraerrors.BadRequest("INVOICE_ORDERS_REQUIRED", "at least one order is required")
+	ErrInvoiceEmailInvalid   = infraerrors.BadRequest("INVOICE_EMAIL_INVALID", "invoice email is invalid")
+	ErrInvoiceOrderNotPaid   = infraerrors.BadRequest("INVOICE_ORDER_NOT_PAID", "only paid orders can request invoices")
+	ErrInvoiceNotRequested   = infraerrors.BadRequest("INVOICE_NOT_REQUESTED", "invoice has not been requested for this order")
+	ErrInvoiceAlreadyFiled   = infraerrors.Conflict("INVOICE_ALREADY_FILED", "invoice has already been requested for one or more selected orders")
+	ErrInvoiceAlreadyHandled = infraerrors.Conflict("INVOICE_ALREADY_HANDLED", "invoice has already been processed")
 )
 
 // PaymentPlan 套餐配置
@@ -70,11 +76,24 @@ type PaymentOrder struct {
 	WechatTransactionID *string
 	AlipayTradeNo       *string
 	EpayTradeNo         *string
+	InvoiceCompanyName  string
+	InvoiceTaxID        string
+	InvoiceEmail        string
+	InvoiceRemark       string
+	InvoiceRequestedAt  *time.Time
+	InvoiceProcessedAt  *time.Time
 	CodeURL             *string
 	PaidAt              *time.Time
 	ExpiredAt           time.Time
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
+}
+
+type InvoiceRequest struct {
+	CompanyName string `json:"company_name"`
+	TaxID       string `json:"tax_id"`
+	Email       string `json:"email"`
+	Remark      string `json:"remark"`
 }
 
 type PaymentOrderRepository interface {
@@ -87,6 +106,8 @@ type PaymentOrderRepository interface {
 	CompareAndUpdateStatus(ctx context.Context, orderNo string, expectedStatus string, newStatus string, transactionID *string, paidAt *time.Time) (bool, error)
 	ListByUserID(ctx context.Context, userID int64, params pagination.PaginationParams) ([]PaymentOrder, *pagination.PaginationResult, error)
 	ListAll(ctx context.Context, params pagination.PaginationParams, status string, orderType string) ([]PaymentOrder, *pagination.PaginationResult, error)
+	SubmitInvoiceRequest(ctx context.Context, userID int64, orderNos []string, invoice InvoiceRequest) error
+	MarkInvoiceProcessed(ctx context.Context, orderID int64) error
 	CloseExpiredOrders(ctx context.Context) (int64, error)
 	CountPaidByUserAndPlanKey(ctx context.Context, userID int64, planKey string) (int, error)
 }
@@ -205,11 +226,11 @@ type RechargePlan struct {
 	Key           string  `json:"key"`
 	Name          string  `json:"name"`
 	Description   string  `json:"description,omitempty"`
-	PayAmountFen  int     `json:"pay_amount_fen"`  // 实付金额（分）
-	BalanceAmount float64 `json:"balance_amount"`  // 到账金额（美元）
+	PayAmountFen  int     `json:"pay_amount_fen"` // 实付金额（分）
+	BalanceAmount float64 `json:"balance_amount"` // 到账金额（美元）
 	Popular       bool    `json:"popular,omitempty"`
-	IsNewcomer    bool    `json:"is_newcomer,omitempty"`    // 新人专享标记
-	MaxPurchases  int     `json:"max_purchases,omitempty"`  // 最大购买次数（0=无限）
+	IsNewcomer    bool    `json:"is_newcomer,omitempty"`   // 新人专享标记
+	MaxPurchases  int     `json:"max_purchases,omitempty"` // 最大购买次数（0=无限）
 }
 
 // RechargeInfo 充值信息（含优惠套餐和最低金额）
@@ -620,6 +641,47 @@ func (s *PaymentService) ListOrders(ctx context.Context, userID int64, params pa
 // ListAllOrders 列出所有订单（管理员）
 func (s *PaymentService) ListAllOrders(ctx context.Context, params pagination.PaginationParams, status string, orderType string) ([]PaymentOrder, *pagination.PaginationResult, error) {
 	return s.orderRepo.ListAll(ctx, params, status, orderType)
+}
+
+func (s *PaymentService) SubmitInvoiceRequest(ctx context.Context, userID int64, orderNos []string, invoice InvoiceRequest) error {
+	uniqueOrderNos := make([]string, 0, len(orderNos))
+	seen := make(map[string]struct{}, len(orderNos))
+	for _, orderNo := range orderNos {
+		trimmed := strings.TrimSpace(orderNo)
+		if trimmed == "" {
+			continue
+		}
+		if _, exists := seen[trimmed]; exists {
+			continue
+		}
+		seen[trimmed] = struct{}{}
+		uniqueOrderNos = append(uniqueOrderNos, trimmed)
+	}
+	if len(uniqueOrderNos) == 0 {
+		return ErrInvoiceOrdersRequired
+	}
+
+	invoice.CompanyName = strings.TrimSpace(invoice.CompanyName)
+	invoice.TaxID = strings.TrimSpace(invoice.TaxID)
+	invoice.Email = strings.TrimSpace(invoice.Email)
+	invoice.Remark = strings.TrimSpace(invoice.Remark)
+
+	if invoice.CompanyName == "" || invoice.TaxID == "" || invoice.Email == "" {
+		return infraerrors.BadRequest("INVOICE_FIELDS_REQUIRED", "company name, tax id and invoice email are required")
+	}
+	if !isValidInvoiceEmail(invoice.Email) {
+		return ErrInvoiceEmailInvalid
+	}
+
+	return s.orderRepo.SubmitInvoiceRequest(ctx, userID, uniqueOrderNos, invoice)
+}
+
+func (s *PaymentService) MarkInvoiceProcessed(ctx context.Context, orderID int64) error {
+	return s.orderRepo.MarkInvoiceProcessed(ctx, orderID)
+}
+
+func isValidInvoiceEmail(email string) bool {
+	return regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`).MatchString(email)
 }
 
 // HandleWechatNotify 处理微信支付回调通知

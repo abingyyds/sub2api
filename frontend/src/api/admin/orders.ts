@@ -14,6 +14,14 @@ export interface AdminPaymentOrder {
   status: string
   pay_method: string
   wechat_transaction_id: string | null
+  alipay_trade_no: string | null
+  epay_trade_no: string | null
+  invoice_company_name: string
+  invoice_tax_id: string
+  invoice_email: string
+  invoice_remark: string
+  invoice_requested_at: string | null
+  invoice_processed_at: string | null
   paid_at: string | null
   expired_at: string
   created_at: string
@@ -37,5 +45,10 @@ export async function list(
   return data
 }
 
-export const ordersAPI = { list }
+export async function markInvoiceProcessed(id: number): Promise<{ success: boolean }> {
+  const { data } = await apiClient.post<{ success: boolean }>(`/admin/orders/${id}/invoice/processed`)
+  return data
+}
+
+export const ordersAPI = { list, markInvoiceProcessed }
 export default ordersAPI
