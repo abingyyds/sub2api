@@ -80,6 +80,7 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 			clientIP := ip.GetClientIP(c)
 			allowed, _ := ip.CheckIPRestriction(clientIP, apiKey.IPWhitelist, apiKey.IPBlacklist)
 			if !allowed {
+				log.Printf("[Auth] 403 ACCESS_DENIED: user=%d path=%s ip=%s", apiKey.User.ID, c.Request.URL.Path, clientIP)
 				AbortWithError(c, 403, "ACCESS_DENIED", "Access denied")
 				return
 			}
@@ -174,12 +175,14 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 				apiKey.Group.ID,
 			)
 			if err != nil {
+				log.Printf("[Auth] 403 SUBSCRIPTION_NOT_FOUND: user=%d group=%d path=%s", apiKey.User.ID, apiKey.Group.ID, c.Request.URL.Path)
 				AbortWithError(c, 403, "SUBSCRIPTION_NOT_FOUND", "No active subscription found for this group")
 				return
 			}
 
 			// 验证订阅状态（是否过期、暂停等）
 			if err := subscriptionService.ValidateSubscription(c.Request.Context(), subscription); err != nil {
+				log.Printf("[Auth] 403 SUBSCRIPTION_INVALID: user=%d group=%d path=%s err=%v", apiKey.User.ID, apiKey.Group.ID, c.Request.URL.Path, err)
 				AbortWithError(c, 403, "SUBSCRIPTION_INVALID", err.Error())
 				return
 			}
@@ -205,6 +208,7 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 		} else {
 			// 余额模式：检查用户余额
 			if apiKey.User.Balance <= 0 {
+				log.Printf("[Auth] 403 INSUFFICIENT_BALANCE: user=%d balance=%.4f path=%s", apiKey.User.ID, apiKey.User.Balance, c.Request.URL.Path)
 				AbortWithError(c, 403, "INSUFFICIENT_BALANCE", "Insufficient account balance")
 				return
 			}
