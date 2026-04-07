@@ -422,6 +422,46 @@ func (s *AccountRepoSuite) TestListSchedulableByGroupIDAndPlatform() {
 	s.Require().Equal(a1.ID, accounts[0].ID)
 }
 
+func (s *AccountRepoSuite) TestListModelMappingsByGroupIDs() {
+	g1 := mustCreateGroup(s.T(), s.client, &service.Group{Name: "g-models-1"})
+	g2 := mustCreateGroup(s.T(), s.client, &service.Group{Name: "g-models-2"})
+
+	a1 := mustCreateAccount(s.T(), s.client, &service.Account{
+		Name: "m1",
+		Credentials: map[string]any{
+			"model_mapping": map[string]any{
+				"claude-3-7-sonnet": "claude-3-7-sonnet",
+				"claude-3-5-haiku":  "claude-3-5-haiku",
+			},
+		},
+	})
+	a2 := mustCreateAccount(s.T(), s.client, &service.Account{
+		Name:     "m2",
+		Platform: service.PlatformOpenAI,
+		Credentials: map[string]any{
+			"model_mapping": map[string]any{
+				"gpt-4o-mini": "gpt-4o-mini",
+			},
+		},
+	})
+	a3 := mustCreateAccount(s.T(), s.client, &service.Account{
+		Name: "m3-no-mapping",
+	})
+
+	mustBindAccountToGroup(s.T(), s.client, a1.ID, g1.ID, 1)
+	mustBindAccountToGroup(s.T(), s.client, a2.ID, g1.ID, 2)
+	mustBindAccountToGroup(s.T(), s.client, a3.ID, g2.ID, 1)
+
+	modelsByGroup, err := s.repo.ListModelMappingsByGroupIDs(s.ctx, []int64{g1.ID, g2.ID}, "")
+	s.Require().NoError(err)
+	s.ElementsMatch([]string{"claude-3-7-sonnet", "claude-3-5-haiku", "gpt-4o-mini"}, modelsByGroup[g1.ID])
+	s.NotContains(modelsByGroup, g2.ID)
+
+	anthropicOnly, err := s.repo.ListModelMappingsByGroupIDs(s.ctx, []int64{g1.ID}, service.PlatformAnthropic)
+	s.Require().NoError(err)
+	s.ElementsMatch([]string{"claude-3-7-sonnet", "claude-3-5-haiku"}, anthropicOnly[g1.ID])
+}
+
 func (s *AccountRepoSuite) TestSetSchedulable() {
 	account := mustCreateAccount(s.T(), s.client, &service.Account{Name: "acc-sched", Schedulable: true})
 	cacheRecorder := &schedulerCacheRecorder{}

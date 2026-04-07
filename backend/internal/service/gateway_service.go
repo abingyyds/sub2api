@@ -220,6 +220,10 @@ type GatewayService struct {
 	sessionLimitCache   SessionLimitCache // 会话数量限制缓存（仅 Anthropic OAuth/SetupToken）
 }
 
+type modelMappingBatchLister interface {
+	ListModelMappingsByGroupIDs(ctx context.Context, groupIDs []int64, platform string) (map[int64][]string, error)
+}
+
 // NewGatewayService creates a new GatewayService
 func NewGatewayService(
 	accountRepo AccountRepository,
@@ -3997,4 +4001,31 @@ func (s *GatewayService) GetAvailableModels(ctx context.Context, groupID *int64,
 	}
 
 	return models
+}
+
+// GetAvailableModelsByGroups returns available models for multiple groups.
+// It uses a repository fast path when available and falls back to per-group
+// aggregation to preserve compatibility with test doubles.
+func (s *GatewayService) GetAvailableModelsByGroups(ctx context.Context, groupIDs []int64, platform string) map[int64][]string {
+	result := make(map[int64][]string, len(groupIDs))
+	if len(groupIDs) == 0 {
+		return result
+	}
+
+	if batchRepo, ok := s.accountRepo.(modelMappingBatchLister); ok {
+		modelsByGroup, err := batchRepo.ListModelMappingsByGroupIDs(ctx, groupIDs, platform)
+		if err == nil {
+			for groupID, models := range modelsByGroup {
+				sort.Strings(models)
+				result[groupID] = models
+			}
+			return result
+		}
+	}
+
+	for _, groupID := range groupIDs {
+		result[groupID] = s.GetAvailableModels(ctx, &groupID, platform)
+	}
+
+	return result
 }

@@ -1,9 +1,6 @@
 package handler
 
 import (
-	"sort"
-	"sync"
-
 	"github.com/Wei-Shaw/sub2api/internal/handler/dto"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
 	middleware2 "github.com/Wei-Shaw/sub2api/internal/server/middleware"
@@ -47,33 +44,20 @@ func (h *ModelPlazaHandler) List(c *gin.Context) {
 		return
 	}
 
-	result := make([]GroupModels, len(groups))
-
-	// Bound concurrency so we avoid a full serial waterfall without turning the
-	// request into an unbounded burst of DB work when many groups are visible.
-	sem := make(chan struct{}, 6)
-	var wg sync.WaitGroup
-
-	for i := range groups {
-		wg.Add(1)
-		go func(index int) {
-			defer wg.Done()
-			sem <- struct{}{}
-			defer func() { <-sem }()
-
-			group := groups[index]
-			groupID := group.ID
-			models := h.gatewayService.GetAvailableModels(c.Request.Context(), &groupID, "")
-			sort.Strings(models)
-
-			result[index] = GroupModels{
-				Group:  *dto.GroupFromService(&group),
-				Models: models,
-			}
-		}(i)
+	groupIDs := make([]int64, 0, len(groups))
+	for _, group := range groups {
+		groupIDs = append(groupIDs, group.ID)
 	}
 
-	wg.Wait()
+	modelsByGroup := h.gatewayService.GetAvailableModelsByGroups(c.Request.Context(), groupIDs, "")
+
+	result := make([]GroupModels, len(groups))
+	for i, group := range groups {
+		result[i] = GroupModels{
+			Group:  *dto.GroupFromService(&group),
+			Models: modelsByGroup[group.ID],
+		}
+	}
 
 	response.Success(c, result)
 }

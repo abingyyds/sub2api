@@ -782,6 +782,76 @@ func (r *accountRepository) ListSchedulableByGroupIDAndPlatforms(ctx context.Con
 	})
 }
 
+// ListModelMappingsByGroupIDs returns the distinct model_mapping keys for each
+// requested group using a single query, avoiding repeated full account loads.
+func (r *accountRepository) ListModelMappingsByGroupIDs(ctx context.Context, groupIDs []int64, platform string) (map[int64][]string, error) {
+	result := make(map[int64][]string, len(groupIDs))
+	if len(groupIDs) == 0 {
+		return result, nil
+	}
+
+	now := time.Now()
+	query := `
+		SELECT ag.group_id, jsonb_object_keys(COALESCE(a.credentials->'model_mapping', '{}'::jsonb)) AS model
+		FROM account_groups ag
+		JOIN accounts a ON a.id = ag.account_id
+		WHERE ag.group_id = ANY($1)
+		  AND a.deleted_at IS NULL
+		  AND a.status = $2
+		  AND a.schedulable = TRUE
+		  AND (a.temp_unschedulable_until IS NULL OR a.temp_unschedulable_until <= NOW())
+		  AND (a.expires_at IS NULL OR a.expires_at > $3 OR a.auto_pause_on_expired = FALSE)
+		  AND (a.overload_until IS NULL OR a.overload_until <= $3)
+		  AND (a.rate_limit_reset_at IS NULL OR a.rate_limit_reset_at <= $3)
+		  AND a.credentials ? 'model_mapping'
+	`
+
+	args := []any{pq.Array(groupIDs), service.StatusActive, now}
+	if platform != "" {
+		query += " AND a.platform = $4"
+		args = append(args, platform)
+	}
+
+	query += " ORDER BY ag.group_id, ag.priority, a.priority"
+
+	rows, err := r.sql.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+
+	modelSets := make(map[int64]map[string]struct{}, len(groupIDs))
+	for rows.Next() {
+		var (
+			groupID int64
+			model   string
+		)
+		if err := rows.Scan(&groupID, &model); err != nil {
+			return nil, err
+		}
+		if model == "" {
+			continue
+		}
+		if _, ok := modelSets[groupID]; !ok {
+			modelSets[groupID] = make(map[string]struct{})
+		}
+		modelSets[groupID][model] = struct{}{}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	for groupID, set := range modelSets {
+		models := make([]string, 0, len(set))
+		for model := range set {
+			models = append(models, model)
+		}
+		result[groupID] = models
+	}
+
+	return result, nil
+}
+
 func (r *accountRepository) SetRateLimited(ctx context.Context, id int64, resetAt time.Time) error {
 	now := time.Now()
 	_, err := r.client.Account.Update().
