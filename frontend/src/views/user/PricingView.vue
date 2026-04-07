@@ -28,7 +28,7 @@
                 :class="activeTab === 'newcomer'
                   ? 'bg-white dark:bg-dark-700 text-gray-900 dark:text-white shadow-sm'
                   : 'text-gray-600 dark:text-dark-400 hover:text-gray-900 dark:hover:text-white'"
-                @click="activeTab = 'newcomer'"
+                @click="setActiveTab('newcomer')"
               >
                 {{ t('pricing.tabs.newcomer') }}
                 <span class="absolute -top-1 -right-1 flex h-5 w-5">
@@ -46,7 +46,7 @@
                 :class="activeTab === 'subscription'
                   ? 'bg-white dark:bg-dark-700 text-gray-900 dark:text-white shadow-sm'
                   : 'text-gray-600 dark:text-dark-400 hover:text-gray-900 dark:hover:text-white'"
-                @click="activeTab = 'subscription'"
+                @click="setActiveTab('subscription')"
               >
                 {{ t('pricing.tabs.subscription') }}
               </button>
@@ -56,7 +56,7 @@
                 :class="activeTab === 'recharge'
                   ? 'bg-white dark:bg-dark-700 text-gray-900 dark:text-white shadow-sm'
                   : 'text-gray-600 dark:text-dark-400 hover:text-gray-900 dark:hover:text-white'"
-                @click="activeTab = 'recharge'"
+                @click="setActiveTab('recharge')"
               >
                 {{ t('pricing.tabs.recharge') }}
               </button>
@@ -123,7 +123,10 @@
             </SlideIn>
 
             <!-- Newcomer Plans -->
-            <StaggerContainer v-if="newcomerPlans.length > 0" :stagger-delay="100" :delay="300">
+            <div v-if="showRechargeCatalogLoader" class="flex justify-center py-12">
+              <div class="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"></div>
+            </div>
+            <StaggerContainer v-else-if="newcomerPlans.length > 0" :stagger-delay="100" :delay="300">
               <div class="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
                 <GlowCard
                   v-for="rp in newcomerPlans"
@@ -369,7 +372,10 @@
           </SlideIn>
 
           <!-- Recharge Plans -->
-          <StaggerContainer v-if="regularRechargePlans.length > 0" :stagger-delay="100" :delay="450">
+          <div v-if="showRechargeCatalogLoader" class="flex justify-center py-12">
+            <div class="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"></div>
+          </div>
+          <StaggerContainer v-else-if="regularRechargePlans.length > 0" :stagger-delay="100" :delay="450">
             <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               <GlowCard
                 v-for="rp in regularRechargePlans"
@@ -651,8 +657,11 @@ const loading = ref(true)
 const plans = ref<PaymentPlan[]>([])
 const rechargePlans = ref<RechargePlan[]>([])
 const rechargeMinAmount = ref(0)
+const rechargeCatalogLoading = ref(false)
+const rechargeCatalogLoaded = ref(false)
 const creatingOrder = ref(false)
 const availablePayMethods = ref<PayMethod[]>([])
+const payMethodsLoaded = ref(false)
 const selectedPayMethod = ref<PayMethod>('wechat')
 const showPayMethodModal = ref(false)
 const showPaymentModal = ref(false)
@@ -669,10 +678,16 @@ const customInput = ref('')
 // Tab state
 const activeTab = ref<'newcomer' | 'subscription' | 'recharge'>('subscription')
 const newcomerEligible = ref(false)
+const hasTabInteraction = ref(false)
 
 // Computed: filter newcomer plans
 const newcomerPlans = computed(() => rechargePlans.value.filter(p => p.is_newcomer))
 const regularRechargePlans = computed(() => rechargePlans.value.filter(p => !p.is_newcomer))
+const showRechargeCatalogLoader = computed(() => (
+  rechargeCatalogLoading.value
+  && activeTab.value !== 'subscription'
+  && rechargePlans.value.length === 0
+))
 
 // Promo code state
 const promoCode = ref('')
@@ -697,6 +712,8 @@ const promoValidation = ref<{
   message: ''
 })
 let promoValidateTimeout: ReturnType<typeof setTimeout> | null = null
+let rechargeCatalogPromise: Promise<void> | null = null
+let payMethodsPromise: Promise<void> | null = null
 
 let pollTimer: ReturnType<typeof setInterval> | null = null
 let countdownTimer: ReturnType<typeof setInterval> | null = null
@@ -975,33 +992,120 @@ function formatDiscountText(): string {
   return t('pricing.promoDiscountFixed', { amount: amountYuan })
 }
 
+function applyRechargeCatalog(
+  rechargeInfo: Awaited<ReturnType<typeof paymentAPI.getRechargeInfo>>,
+  eligible: boolean
+) {
+  rechargePlans.value = rechargeInfo.plans || []
+  rechargeMinAmount.value = rechargeInfo.min_amount || 0
+  newcomerEligible.value = eligible && rechargePlans.value.some((plan) => plan.is_newcomer)
+  rechargeCatalogLoaded.value = true
+
+  if (!hasTabInteraction.value && activeTab.value === 'subscription' && plans.value.length === 0) {
+    activeTab.value = newcomerEligible.value ? 'newcomer' : 'recharge'
+  }
+}
+
+async function ensureRechargeCatalogLoaded(): Promise<void> {
+  if (rechargeCatalogLoaded.value) {
+    return
+  }
+
+  if (rechargeCatalogPromise) {
+    return rechargeCatalogPromise
+  }
+
+  rechargeCatalogLoading.value = true
+
+  const request = Promise.allSettled([
+    paymentAPI.getRechargeInfo(),
+    paymentAPI.getNewcomerStatus()
+  ])
+    .then((results) => {
+      const [rechargeInfoResult, newcomerStatusResult] = results
+      if (rechargeInfoResult.status !== 'fulfilled') {
+        return
+      }
+
+      const eligible = newcomerStatusResult.status === 'fulfilled'
+        ? newcomerStatusResult.value.eligible
+        : false
+
+      applyRechargeCatalog(rechargeInfoResult.value, eligible)
+    })
+    .finally(() => {
+      rechargeCatalogLoading.value = false
+      rechargeCatalogPromise = null
+    })
+
+  rechargeCatalogPromise = request
+
+  return request
+}
+
+function applyPayMethods(methods: PayMethod[]) {
+  availablePayMethods.value = methods || []
+  payMethodsLoaded.value = true
+
+  if (methods.length > 0) {
+    selectedPayMethod.value = methods[0]
+  }
+}
+
+async function ensurePayMethodsLoaded(): Promise<void> {
+  if (payMethodsLoaded.value) {
+    return
+  }
+
+  if (payMethodsPromise) {
+    return payMethodsPromise
+  }
+
+  const request = paymentAPI.getPayMethods()
+    .then((methods) => {
+      applyPayMethods(methods)
+    })
+    .catch(() => {})
+    .finally(() => {
+      payMethodsPromise = null
+    })
+
+  payMethodsPromise = request
+
+  return request
+}
+
+function scheduleSecondaryPricingDataLoad() {
+  const load = () => {
+    void ensureRechargeCatalogLoaded()
+  }
+
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(load, { timeout: 1500 })
+    return
+  }
+
+  window.setTimeout(load, 300)
+}
+
+function setActiveTab(tab: 'newcomer' | 'subscription' | 'recharge') {
+  hasTabInteraction.value = true
+  activeTab.value = tab
+
+  if (tab !== 'subscription') {
+    void ensureRechargeCatalogLoaded()
+  }
+}
+
 onMounted(async () => {
   try {
-    const [allPlans, rechargeInfo, methods, newcomerStatus] = await Promise.all([
-      paymentAPI.getPlans(),
-      paymentAPI.getRechargeInfo(),
-      paymentAPI.getPayMethods(),
-      paymentAPI.getNewcomerStatus()
-    ])
+    const allPlans = await paymentAPI.getPlans()
     plans.value = allPlans.filter(p => (p.type || 'subscription') === 'subscription')
-    rechargePlans.value = rechargeInfo.plans || []
-    rechargeMinAmount.value = rechargeInfo.min_amount || 0
-    availablePayMethods.value = methods || []
-    if (methods.length > 0) {
-      selectedPayMethod.value = methods[0]
-    }
-    newcomerEligible.value = newcomerStatus.eligible
-
-    // Set initial tab: newcomer if eligible and has plans, otherwise subscription
-    if (newcomerEligible.value && rechargePlans.value.some(p => p.is_newcomer)) {
-      activeTab.value = 'newcomer'
-    } else {
-      activeTab.value = 'subscription'
-    }
   } catch {
     // silently fail
   } finally {
     loading.value = false
+    scheduleSecondaryPricingDataLoad()
   }
 })
 
@@ -1033,11 +1137,13 @@ function payMethodMeta(method: string) {
   return PAY_METHOD_META[method] || { label: method, icon: '', color: 'blue' as const }
 }
 
-function showPayMethodOrDirect(action: () => Promise<void>) {
+async function showPayMethodOrDirect(action: () => Promise<void>) {
   pendingPaymentAction.value = action
+  await ensurePayMethodsLoaded()
+
   if (availablePayMethods.value.length <= 1) {
     // Only one method (or none) — skip the modal, execute directly
-    confirmPayMethod()
+    await confirmPayMethod()
   } else {
     showPayMethodModal.value = true
   }
@@ -1061,7 +1167,7 @@ async function handleBuy(plan: PaymentPlan) {
     if (!valid) return
   }
 
-  showPayMethodOrDirect(async () => {
+  await showPayMethodOrDirect(async () => {
     paymentOrderType.value = 'subscription'
     creatingOrder.value = true
     try {
@@ -1086,7 +1192,7 @@ async function handleRechargePreset(rp: RechargePlan) {
     if (!valid) return
   }
 
-  showPayMethodOrDirect(async () => {
+  await showPayMethodOrDirect(async () => {
     paymentOrderType.value = 'recharge'
     creatingOrder.value = true
     try {
@@ -1114,7 +1220,7 @@ async function handleCustomRecharge() {
     if (!valid) return
   }
 
-  showPayMethodOrDirect(async () => {
+  await showPayMethodOrDirect(async () => {
     paymentOrderType.value = 'recharge'
     creatingOrder.value = true
     try {

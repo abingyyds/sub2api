@@ -5,6 +5,14 @@
 
 import { apiClient } from './client'
 
+const CACHE_TTL_MS = 60_000
+
+interface CacheEntry<T> {
+  value: T | null
+  fetchedAt: number
+  promise: Promise<T> | null
+}
+
 export interface PaymentPlan {
   key: string
   name: string
@@ -63,28 +71,88 @@ export interface PaymentOrder {
 
 export type PayMethod = 'wechat' | 'alipay' | 'epay_alipay' | 'epay_wxpay'
 
+const plansCache: CacheEntry<PaymentPlan[]> = {
+  value: null,
+  fetchedAt: 0,
+  promise: null
+}
+
+const rechargeInfoCache: CacheEntry<RechargeInfo> = {
+  value: null,
+  fetchedAt: 0,
+  promise: null
+}
+
+const payMethodsCache: CacheEntry<PayMethod[]> = {
+  value: null,
+  fetchedAt: 0,
+  promise: null
+}
+
+const newcomerStatusCache: CacheEntry<{ eligible: boolean }> = {
+  value: null,
+  fetchedAt: 0,
+  promise: null
+}
+
+function hasFreshCache<T>(entry: CacheEntry<T>): entry is CacheEntry<T> & { value: T } {
+  return entry.value !== null && Date.now() - entry.fetchedAt < CACHE_TTL_MS
+}
+
+function withCache<T>(entry: CacheEntry<T>, loader: () => Promise<T>): Promise<T> {
+  if (hasFreshCache(entry)) {
+    return Promise.resolve(entry.value)
+  }
+
+  if (entry.promise) {
+    return entry.promise
+  }
+
+  const request = loader()
+    .then((data) => {
+      entry.value = data
+      entry.fetchedAt = Date.now()
+      return data
+    })
+    .finally(() => {
+      if (entry.promise === request) {
+        entry.promise = null
+      }
+    })
+
+  entry.promise = request
+
+  return request
+}
+
 /**
  * Get available payment methods
  */
 export async function getPayMethods(): Promise<PayMethod[]> {
-  const { data } = await apiClient.get<{ methods: PayMethod[] }>('/payment/methods')
-  return data.methods
+  return withCache(payMethodsCache, async () => {
+    const { data } = await apiClient.get<{ methods: PayMethod[] }>('/payment/methods')
+    return data.methods
+  })
 }
 
 /**
  * Get available payment plans
  */
 export async function getPlans(): Promise<PaymentPlan[]> {
-  const { data } = await apiClient.get<PaymentPlan[]>('/payment/plans')
-  return data
+  return withCache(plansCache, async () => {
+    const { data } = await apiClient.get<PaymentPlan[]>('/payment/plans')
+    return data
+  })
 }
 
 /**
  * Get recharge info (plans + min amount)
  */
 export async function getRechargeInfo(): Promise<RechargeInfo> {
-  const { data } = await apiClient.get<RechargeInfo>('/payment/recharge-info')
-  return data
+  return withCache(rechargeInfoCache, async () => {
+    const { data } = await apiClient.get<RechargeInfo>('/payment/recharge-info')
+    return data
+  })
 }
 
 /**
@@ -152,8 +220,10 @@ export async function submitInvoiceRequest(payload: {
  * Check if user is eligible for newcomer plans
  */
 export async function getNewcomerStatus(): Promise<{ eligible: boolean }> {
-  const { data } = await apiClient.get<{ eligible: boolean }>('/payment/newcomer-status')
-  return data
+  return withCache(newcomerStatusCache, async () => {
+    const { data } = await apiClient.get<{ eligible: boolean }>('/payment/newcomer-status')
+    return data
+  })
 }
 
 export const paymentAPI = {
