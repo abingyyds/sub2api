@@ -30,23 +30,24 @@
 
 <script setup lang="ts">
 import '@/styles/onboarding.css'
-import { computed, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, onMounted } from 'vue'
 import { useAppStore } from '@/stores'
 import { useAuthStore } from '@/stores/auth'
-import { authAPI } from '@/api/auth'
 import { useOnboardingTour } from '@/composables/useOnboardingTour'
 import { useOnboardingStore } from '@/stores/onboarding'
 import AppSidebar from './AppSidebar.vue'
 import AppHeader from './AppHeader.vue'
-import AnnouncementPopup from '@/components/common/AnnouncementPopup.vue'
-import ContactModal from '@/components/common/ContactModal.vue'
-import type { Announcement } from '@/types'
+
+const AnnouncementPopup = defineAsyncComponent(
+  () => import('@/components/common/AnnouncementPopup.vue')
+)
+const ContactModal = defineAsyncComponent(() => import('@/components/common/ContactModal.vue'))
 
 const appStore = useAppStore()
 const authStore = useAuthStore()
 const sidebarCollapsed = computed(() => appStore.sidebarCollapsed)
 const isAdmin = computed(() => authStore.isAdmin)
-const announcements = ref<Announcement[]>([])
+const announcements = computed(() => appStore.announcements)
 
 const { replayTour } = useOnboardingTour({
   storageKey: isAdmin.value ? 'admin_guide' : 'user_guide',
@@ -57,7 +58,15 @@ const onboardingStore = useOnboardingStore()
 
 onMounted(() => {
   onboardingStore.setReplayCallback(replayTour)
-  authAPI.getActiveAnnouncements().then(data => { announcements.value = data }).catch(() => {})
+  const loadAnnouncements = () => {
+    void appStore.fetchAnnouncements()
+  }
+
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(loadAnnouncements, { timeout: 3000 })
+  } else {
+    window.setTimeout(loadAnnouncements, 1200)
+  }
 })
 
 defineExpose({ replayTour })

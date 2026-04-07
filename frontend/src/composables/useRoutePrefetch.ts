@@ -34,6 +34,26 @@ const PREFETCH_ADJACENCY: Record<string, string[]> = {
   '/profile': ['/dashboard', '/keys']
 }
 
+const HEAVY_ROUTE_PREFIXES = [
+  '/keys',
+  '/usage',
+  '/pricing',
+  '/tutorial',
+  '/model-plaza',
+  '/subscriptions',
+  '/admin/ops',
+  '/admin/users',
+  '/admin/groups',
+  '/admin/subscriptions',
+  '/admin/accounts',
+  '/admin/proxies',
+  '/admin/settings',
+  '/admin/usage',
+  '/admin/orders'
+]
+
+const MAX_PREFETCH_TARGETS = 1
+
 /**
  * requestIdleCallback 的返回类型
  */
@@ -60,6 +80,35 @@ const cancelScheduledCallback = (handle: IdleCallbackHandle): void => {
   } else {
     clearTimeout(handle)
   }
+}
+
+const isHeavyRoute = (path: string): boolean => {
+  return HEAVY_ROUTE_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
+}
+
+const isPrefetchAllowedOnNetwork = (): boolean => {
+  if (typeof navigator === 'undefined') {
+    return false
+  }
+
+  const connection = (
+    navigator as Navigator & {
+      connection?: {
+        saveData?: boolean
+        effectiveType?: string
+      }
+    }
+  ).connection
+
+  if (!connection) {
+    return true
+  }
+
+  if (connection.saveData) {
+    return false
+  }
+
+  return !['slow-2g', '2g', '3g'].includes(connection.effectiveType || '')
 }
 
 /**
@@ -97,7 +146,13 @@ export function useRoutePrefetch(router?: Router) {
    * 获取当前路由应该预加载的路由路径列表
    */
   const getPrefetchPaths = (route: RouteLocationNormalized): string[] => {
-    return PREFETCH_ADJACENCY[route.path] || []
+    if (!isPrefetchAllowedOnNetwork() || isHeavyRoute(route.path)) {
+      return []
+    }
+
+    return (PREFETCH_ADJACENCY[route.path] || [])
+      .filter((path) => !isHeavyRoute(path))
+      .slice(0, MAX_PREFETCH_TARGETS)
   }
 
   /**
@@ -155,7 +210,7 @@ export function useRoutePrefetch(router?: Router) {
           })
         }
       },
-      { timeout: 2000 }
+      { timeout: 5000 }
     )
   }
 

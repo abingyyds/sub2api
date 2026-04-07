@@ -1,14 +1,29 @@
 import { onMounted, onUnmounted, nextTick } from 'vue'
-import { driver, type Driver, type DriveStep } from 'driver.js'
-import 'driver.js/dist/driver.css'
+import type { Driver, DriveStep } from 'driver.js'
 import { useAuthStore as useUserStore } from '@/stores/auth'
 import { useOnboardingStore } from '@/stores/onboarding'
 import { useI18n } from 'vue-i18n'
-import { getAdminSteps, getUserSteps } from '@/components/Guide/steps'
 
 export interface OnboardingOptions {
   storageKey?: string
   autoStart?: boolean
+}
+
+let driverRuntimePromise: Promise<typeof import('driver.js')> | null = null
+let guideStepsPromise: Promise<typeof import('@/components/Guide/steps')> | null = null
+
+const loadDriverRuntime = async () => {
+  driverRuntimePromise ??= Promise.all([
+    import('driver.js'),
+    import('driver.js/dist/driver.css')
+  ]).then(([driverModule]) => driverModule)
+
+  return driverRuntimePromise
+}
+
+const loadGuideSteps = async () => {
+  guideStepsPromise ??= import('@/components/Guide/steps')
+  return guideStepsPromise
 }
 
 export function useOnboardingTour(options: OnboardingOptions) {
@@ -92,6 +107,11 @@ export function useOnboardingTour(options: OnboardingOptions) {
   }
 
   const startTour = async (startIndex = 0) => {
+    const [{ driver }, { getAdminSteps, getUserSteps }] = await Promise.all([
+      loadDriverRuntime(),
+      loadGuideSteps()
+    ])
+
     // 动态获取当前用户角色和步骤
     const isAdmin = userStore.isAdmin
     const isSimpleMode = userStore.isSimpleMode
