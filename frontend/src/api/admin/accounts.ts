@@ -303,6 +303,18 @@ export async function getTodayStats(id: number): Promise<WindowStats> {
 }
 
 /**
+ * Batch get today statistics for multiple accounts
+ * @param accountIds - Array of account IDs
+ * @returns Map of account ID to today's stats
+ */
+export async function batchGetTodayStats(accountIds: number[]): Promise<Record<number, WindowStats>> {
+  const { data } = await apiClient.post<{ stats: Record<number, WindowStats> }>('/admin/accounts/batch-today-stats', {
+    account_ids: accountIds
+  })
+  return data.stats
+}
+
+/**
  * Set account schedulable status
  * @param id - Account ID
  * @param schedulable - Whether the account should participate in scheduling
@@ -360,6 +372,7 @@ export const accountsAPI = {
   clearError,
   getUsage,
   getTodayStats,
+  batchGetTodayStats,
   clearRateLimit,
   getTempUnschedulableStatus,
   resetTempUnschedulable,

@@ -29,6 +29,7 @@ type UsageLogRepository interface {
 
 	GetAccountWindowStats(ctx context.Context, accountID int64, startTime time.Time) (*usagestats.AccountStats, error)
 	GetAccountTodayStats(ctx context.Context, accountID int64) (*usagestats.AccountStats, error)
+	GetBatchAccountTodayStats(ctx context.Context, accountIDs []int64) (map[int64]*usagestats.AccountStats, error)
 
 	// Admin dashboard stats
 	GetDashboardStats(ctx context.Context) (*usagestats.DashboardStats, error)
@@ -427,6 +428,26 @@ func (s *AccountUsageService) GetTodayStats(ctx context.Context, accountID int64
 		StandardCost: stats.StandardCost,
 		UserCost:     stats.UserCost,
 	}, nil
+}
+
+// GetBatchTodayStats 批量获取多个账号今日统计
+func (s *AccountUsageService) GetBatchTodayStats(ctx context.Context, accountIDs []int64) (map[int64]*WindowStats, error) {
+	statsMap, err := s.usageLogRepo.GetBatchAccountTodayStats(ctx, accountIDs)
+	if err != nil {
+		return nil, fmt.Errorf("batch get today stats failed: %w", err)
+	}
+
+	result := make(map[int64]*WindowStats, len(statsMap))
+	for id, stats := range statsMap {
+		result[id] = &WindowStats{
+			Requests:     stats.Requests,
+			Tokens:       stats.Tokens,
+			Cost:         stats.Cost,
+			StandardCost: stats.StandardCost,
+			UserCost:     stats.UserCost,
+		}
+	}
+	return result, nil
 }
 
 func (s *AccountUsageService) GetAccountUsageStats(ctx context.Context, accountID int64, startTime, endTime time.Time) (*usagestats.AccountUsageStatsResponse, error) {

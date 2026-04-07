@@ -861,6 +861,53 @@ func (r *usageLogRepository) GetAccountTodayStats(ctx context.Context, accountID
 	return stats, nil
 }
 
+// GetBatchAccountTodayStats 批量获取多个账号今日统计
+func (r *usageLogRepository) GetBatchAccountTodayStats(ctx context.Context, accountIDs []int64) (map[int64]*usagestats.AccountStats, error) {
+	result := make(map[int64]*usagestats.AccountStats)
+	if len(accountIDs) == 0 {
+		return result, nil
+	}
+
+	for _, id := range accountIDs {
+		result[id] = &usagestats.AccountStats{}
+	}
+
+	today := timezone.Today()
+
+	query := `
+		SELECT
+			account_id,
+			COUNT(*) as requests,
+			COALESCE(SUM(input_tokens + output_tokens + cache_creation_tokens + cache_read_tokens), 0) as tokens,
+			COALESCE(SUM(total_cost * COALESCE(account_rate_multiplier, 1)), 0) as cost,
+			COALESCE(SUM(total_cost), 0) as standard_cost,
+			COALESCE(SUM(actual_cost), 0) as user_cost
+		FROM usage_logs
+		WHERE account_id = ANY($1) AND created_at >= $2
+		GROUP BY account_id
+	`
+
+	rows, err := r.sql.QueryContext(ctx, query, pq.Array(accountIDs), today)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var accountID int64
+		var stats usagestats.AccountStats
+		if err := rows.Scan(&accountID, &stats.Requests, &stats.Tokens, &stats.Cost, &stats.StandardCost, &stats.UserCost); err != nil {
+			return nil, err
+		}
+		result[accountID] = &stats
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
 // GetAccountWindowStats 获取账号时间窗口内的统计
 func (r *usageLogRepository) GetAccountWindowStats(ctx context.Context, accountID int64, startTime time.Time) (*usagestats.AccountStats, error) {
 	query := `

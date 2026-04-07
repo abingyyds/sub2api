@@ -7,11 +7,6 @@
       <div class="h-3 w-10 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
     </div>
 
-    <!-- Error state -->
-    <div v-else-if="error" class="text-xs text-red-500">
-      {{ error }}
-    </div>
-
     <!-- Stats data -->
     <div v-else-if="stats" class="space-y-0.5 text-xs">
       <!-- Requests -->
@@ -54,21 +49,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { adminAPI } from '@/api/admin'
-import type { Account, WindowStats } from '@/types'
+import type { WindowStats } from '@/types'
 import { formatNumber, formatCurrency } from '@/utils/format'
 
-const props = defineProps<{
-  account: Account
+defineProps<{
+  stats: WindowStats | null
+  loading?: boolean
 }>()
 
 const { t } = useI18n()
-
-const loading = ref(false)
-const error = ref<string | null>(null)
-const stats = ref<WindowStats | null>(null)
 
 // Format large token numbers (e.g., 1234567 -> 1.23M)
 const formatTokens = (tokens: number): string => {
@@ -79,22 +69,4 @@ const formatTokens = (tokens: number): string => {
   }
   return tokens.toString()
 }
-
-const loadStats = async () => {
-  loading.value = true
-  error.value = null
-
-  try {
-    stats.value = await adminAPI.accounts.getTodayStats(props.account.id)
-  } catch (e: any) {
-    error.value = 'Failed'
-    console.error('Failed to load today stats:', e)
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(() => {
-  loadStats()
-})
 </script>

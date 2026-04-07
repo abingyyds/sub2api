@@ -144,7 +144,7 @@
             </button>
           </template>
           <template #cell-today_stats="{ row }">
-            <AccountTodayStatsCell :account="row" />
+            <AccountTodayStatsCell :stats="todayStatsMap[row.id] ?? null" :loading="todayStatsLoading" />
           </template>
           <template #cell-groups="{ row }">
             <AccountGroupsCell :groups="row.groups" :max-display="4" />
@@ -227,7 +227,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useIntervalFn } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
@@ -255,7 +255,7 @@ import AccountCapacityCell from '@/components/account/AccountCapacityCell.vue'
 import PlatformTypeBadge from '@/components/common/PlatformTypeBadge.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { formatDateTime, formatRelativeTime } from '@/utils/format'
-import type { Account, Proxy, AdminGroup } from '@/types'
+import type { Account, Proxy, AdminGroup, WindowStats } from '@/types'
 
 const { t } = useI18n()
 const appStore = useAppStore()
@@ -407,6 +407,28 @@ const priorityBadgeClass = (v: number) => {
 const { items: accounts, loading, params, pagination, load, reload, debouncedReload, handlePageChange, handlePageSizeChange } = useTableLoader<Account, any>({
   fetchFn: adminAPI.accounts.list,
   initialParams: { platform: '', type: '', status: '', search: '' }
+})
+
+// Batch today stats
+const todayStatsMap = ref<Record<number, WindowStats>>({})
+const todayStatsLoading = ref(false)
+
+const loadBatchTodayStats = async (accs: Account[]) => {
+  if (accs.length === 0) return
+  todayStatsLoading.value = true
+  try {
+    todayStatsMap.value = await adminAPI.accounts.batchGetTodayStats(accs.map(a => a.id))
+  } catch (e) {
+    console.error('Failed to batch load today stats:', e)
+  } finally {
+    todayStatsLoading.value = false
+  }
+}
+
+watch(accounts, (newAccounts) => {
+  if (newAccounts.length > 0) {
+    loadBatchTodayStats(newAccounts)
+  }
 })
 
 const isAnyModalOpen = computed(() => {

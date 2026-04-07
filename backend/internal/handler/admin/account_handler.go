@@ -1087,6 +1087,34 @@ func (h *AccountHandler) GetTodayStats(c *gin.Context) {
 	response.Success(c, stats)
 }
 
+// BatchGetTodayStatsRequest represents the request body for batch today stats
+type BatchGetTodayStatsRequest struct {
+	AccountIDs []int64 `json:"account_ids" binding:"required"`
+}
+
+// BatchGetTodayStats handles getting today statistics for multiple accounts
+// POST /api/v1/admin/accounts/batch-today-stats
+func (h *AccountHandler) BatchGetTodayStats(c *gin.Context) {
+	var req BatchGetTodayStatsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	if len(req.AccountIDs) == 0 {
+		response.Success(c, gin.H{"stats": map[string]any{}})
+		return
+	}
+
+	stats, err := h.accountUsageService.GetBatchTodayStats(c.Request.Context(), req.AccountIDs)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{"stats": stats})
+}
+
 // SetSchedulableRequest represents the request body for setting schedulable status
 type SetSchedulableRequest struct {
 	Schedulable bool `json:"schedulable"`
