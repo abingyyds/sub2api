@@ -114,6 +114,7 @@ func RegisterUserRoutes(
 			authPayment.POST("/recharge", h.Payment.CreateRecharge)
 			authPayment.GET("/orders", h.Payment.ListOrders)
 			authPayment.GET("/orders/:orderNo", h.Payment.QueryOrder)
+			authPayment.POST("/invoice-requests", h.Payment.SubmitInvoice)
 			authPayment.GET("/newcomer-status", h.Payment.GetNewcomerStatus)
 		}
 

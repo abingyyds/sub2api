@@ -90,6 +90,14 @@ type CreateRechargeRequest struct {
 	PlanKey   string  `json:"plan_key"`   // 充值套餐key（可选，用于验证和限购）
 }
 
+type SubmitInvoiceRequest struct {
+	OrderNos    []string `json:"order_nos" binding:"required,min=1"`
+	CompanyName string   `json:"company_name" binding:"required"`
+	TaxID       string   `json:"tax_id" binding:"required"`
+	Email       string   `json:"email" binding:"required,email"`
+	Remark      string   `json:"remark"`
+}
+
 // CreateOrder creates a new payment order
 // POST /api/v1/payment/orders
 func (h *PaymentHandler) CreateOrder(c *gin.Context) {
@@ -184,15 +192,22 @@ func (h *PaymentHandler) QueryOrder(c *gin.Context) {
 	}
 
 	response.Success(c, gin.H{
-		"order_no":   order.OrderNo,
-		"plan_key":   order.PlanKey,
-		"amount_fen": order.AmountFen,
-		"status":     order.Status,
-		"pay_method": order.PayMethod,
-		"code_url":   order.CodeURL,
-		"paid_at":    order.PaidAt,
-		"expired_at": order.ExpiredAt,
-		"created_at": order.CreatedAt,
+		"order_no":             order.OrderNo,
+		"plan_key":             order.PlanKey,
+		"amount_fen":           order.AmountFen,
+		"discount_amount":      order.DiscountAmount,
+		"status":               order.Status,
+		"pay_method":           order.PayMethod,
+		"code_url":             order.CodeURL,
+		"paid_at":              order.PaidAt,
+		"expired_at":           order.ExpiredAt,
+		"created_at":           order.CreatedAt,
+		"invoice_company_name": order.InvoiceCompanyName,
+		"invoice_tax_id":       order.InvoiceTaxID,
+		"invoice_email":        order.InvoiceEmail,
+		"invoice_remark":       order.InvoiceRemark,
+		"invoice_requested_at": order.InvoiceRequestedAt,
+		"invoice_processed_at": order.InvoiceProcessedAt,
 	})
 }
 
@@ -220,18 +235,54 @@ func (h *PaymentHandler) ListOrders(c *gin.Context) {
 	items := make([]gin.H, len(orders))
 	for i, order := range orders {
 		items[i] = gin.H{
-			"order_no":   order.OrderNo,
-			"plan_key":   order.PlanKey,
-			"amount_fen": order.AmountFen,
-			"status":     order.Status,
-			"pay_method": order.PayMethod,
-			"paid_at":    order.PaidAt,
-			"expired_at": order.ExpiredAt,
-			"created_at": order.CreatedAt,
+			"order_no":             order.OrderNo,
+			"plan_key":             order.PlanKey,
+			"amount_fen":           order.AmountFen,
+			"discount_amount":      order.DiscountAmount,
+			"status":               order.Status,
+			"pay_method":           order.PayMethod,
+			"paid_at":              order.PaidAt,
+			"expired_at":           order.ExpiredAt,
+			"created_at":           order.CreatedAt,
+			"invoice_company_name": order.InvoiceCompanyName,
+			"invoice_tax_id":       order.InvoiceTaxID,
+			"invoice_email":        order.InvoiceEmail,
+			"invoice_remark":       order.InvoiceRemark,
+			"invoice_requested_at": order.InvoiceRequestedAt,
+			"invoice_processed_at": order.InvoiceProcessedAt,
 		}
 	}
 
 	response.Paginated(c, items, paginationResult.Total, paginationResult.Page, paginationResult.PageSize)
+}
+
+// SubmitInvoice submits invoice requests for one or more paid orders.
+// POST /api/v1/payment/invoice-requests
+func (h *PaymentHandler) SubmitInvoice(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "User not found in context")
+		return
+	}
+
+	var req SubmitInvoiceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "invalid invoice request")
+		return
+	}
+
+	err := h.paymentService.SubmitInvoiceRequest(c.Request.Context(), subject.UserID, req.OrderNos, service.InvoiceRequest{
+		CompanyName: req.CompanyName,
+		TaxID:       req.TaxID,
+		Email:       req.Email,
+		Remark:      req.Remark,
+	})
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{"success": true})
 }
 
 // WechatNotify handles WeChat Pay callback notifications

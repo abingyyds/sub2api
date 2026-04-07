@@ -71,6 +71,7 @@
                     <th class="px-4 py-3 font-medium text-gray-500 dark:text-dark-400">{{ t('orderHistory.type') }}</th>
                     <th class="px-4 py-3 font-medium text-gray-500 dark:text-dark-400">{{ t('orderHistory.amount') }}</th>
                     <th class="px-4 py-3 font-medium text-gray-500 dark:text-dark-400">{{ t('orderHistory.status') }}</th>
+                    <th class="px-4 py-3 font-medium text-gray-500 dark:text-dark-400">{{ t('orderHistory.invoiceStatus') }}</th>
                     <th class="px-4 py-3 font-medium text-gray-500 dark:text-dark-400">{{ t('orderHistory.payMethod') }}</th>
                     <th class="px-4 py-3 font-medium text-gray-500 dark:text-dark-400">{{ t('orderHistory.createdAt') }}</th>
                   </tr>
@@ -87,7 +88,7 @@
                         type="checkbox"
                         class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-dark-500 dark:bg-dark-700"
                         :checked="selectedOrders.has(order.order_no)"
-                        :disabled="order.status !== 'paid'"
+                        :disabled="!canRequestInvoice(order)"
                         @change="toggleOrder(order)"
                       />
                     </td>
@@ -95,6 +96,13 @@
                     <td class="px-4 py-3">
                       <div class="flex items-center gap-1.5">
                         <span class="font-mono text-xs text-gray-700 dark:text-dark-300">{{ order.order_no.slice(0, 16) }}...</span>
+                        <span
+                          v-if="order.invoice_requested_at"
+                          class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
+                          :class="invoiceBadgeClass(order)"
+                        >
+                          {{ invoiceStatusText(order) }}
+                        </span>
                         <button
                           class="text-gray-400 hover:text-gray-600 dark:hover:text-dark-200"
                           :title="t('orderHistory.copyOrderNo')"
@@ -131,6 +139,14 @@
                         :class="statusClass(order.status)"
                       >
                         {{ statusText(order.status) }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <span
+                        class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                        :class="invoiceBadgeClass(order)"
+                      >
+                        {{ invoiceStatusText(order) }}
                       </span>
                     </td>
                     <!-- Pay method -->
@@ -281,9 +297,11 @@ import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { FadeIn, SlideIn } from '@/components/animations'
+import { useAppStore } from '@/stores/app'
 import { paymentAPI, type PaymentOrder } from '@/api/payment'
 
 const { t } = useI18n()
+const appStore = useAppStore()
 
 const loading = ref(true)
 const error = ref(false)
@@ -316,12 +334,16 @@ const selectedTotalAmount = computed(() => {
 })
 
 function toggleOrder(order: PaymentOrder) {
-  if (order.status !== 'paid') return
+  if (!canRequestInvoice(order)) return
   if (selectedOrders.has(order.order_no)) {
     selectedOrders.delete(order.order_no)
   } else {
     selectedOrders.add(order.order_no)
   }
+}
+
+function canRequestInvoice(order: PaymentOrder) {
+  return order.status === 'paid' && !order.invoice_requested_at
 }
 
 function getOrderType(order: PaymentOrder): 'recharge' | 'subscription' {
@@ -362,6 +384,25 @@ function payMethodText(method: string): string {
   }
 }
 
+function invoiceStatusText(order: PaymentOrder): string {
+  if (order.invoice_processed_at) return t('orderHistory.invoiceProcessed')
+  if (order.invoice_requested_at) return t('orderHistory.invoiceRequested')
+  return t('orderHistory.invoiceNotRequested')
+}
+
+function invoiceBadgeClass(order: PaymentOrder): string {
+  if (order.invoice_processed_at) return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+  if (order.invoice_requested_at) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+  return 'bg-gray-100 text-gray-600 dark:bg-dark-700 dark:text-dark-400'
+}
+
+function resetInvoiceForm() {
+  invoiceForm.companyName = ''
+  invoiceForm.taxId = ''
+  invoiceForm.email = ''
+  invoiceForm.remark = ''
+}
+
 function formatDate(dateStr: string): string {
   if (!dateStr) return '-'
   const d = new Date(dateStr)
@@ -382,6 +423,12 @@ async function fetchOrders(page = 1) {
   try {
     const result = await paymentAPI.listOrders({ page, page_size: pageSize })
     orders.value = result.items || []
+    const selectable = new Set(orders.value.filter(canRequestInvoice).map(order => order.order_no))
+    for (const orderNo of Array.from(selectedOrders)) {
+      if (!selectable.has(orderNo)) {
+        selectedOrders.delete(orderNo)
+      }
+    }
     currentPage.value = result.page
     totalPages.value = result.pages
   } catch {
@@ -399,22 +446,22 @@ function goPage(page: number) {
 async function submitInvoice() {
   if (selectedOrders.size === 0) return
   submittingInvoice.value = true
-
-  // For now, since there's no backend invoice API yet, we compose an email-based request
-  // In production, this would call a backend endpoint
   try {
-    const orderNos = Array.from(selectedOrders)
-    const body = `开票申请\n\n公司名称: ${invoiceForm.companyName}\n税号: ${invoiceForm.taxId}\n接收邮箱: ${invoiceForm.email}\n备注: ${invoiceForm.remark}\n\n订单列表:\n${orderNos.join('\n')}\n\n总金额: ¥${selectedTotalAmount.value.toFixed(2)}`
-
-    // Copy to clipboard as fallback
-    await navigator.clipboard.writeText(body)
-
+    await paymentAPI.submitInvoiceRequest({
+      order_nos: Array.from(selectedOrders),
+      company_name: invoiceForm.companyName.trim(),
+      tax_id: invoiceForm.taxId.trim(),
+      email: invoiceForm.email.trim(),
+      remark: invoiceForm.remark.trim(),
+    })
     showInvoiceModal.value = false
     invoiceMode.value = false
     selectedOrders.clear()
-    alert(t('orderHistory.invoiceSubmitted'))
-  } catch {
-    alert(t('orderHistory.invoiceError'))
+    resetInvoiceForm()
+    await fetchOrders(currentPage.value)
+    appStore.showSuccess(t('orderHistory.invoiceSubmitted'))
+  } catch (err: any) {
+    appStore.showError(err?.message || t('orderHistory.invoiceError'))
   } finally {
     submittingInvoice.value = false
   }
