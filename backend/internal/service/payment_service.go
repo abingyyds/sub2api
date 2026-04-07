@@ -82,6 +82,9 @@ type PaymentOrderRepository interface {
 	GetByID(ctx context.Context, id int64) (*PaymentOrder, error)
 	GetByOrderNo(ctx context.Context, orderNo string) (*PaymentOrder, error)
 	UpdateStatus(ctx context.Context, orderNo string, status string, transactionID *string, paidAt *time.Time) error
+	// CompareAndUpdateStatus atomically updates order status only if current status matches expectedStatus.
+	// Returns true if the update was applied, false if the current status didn't match.
+	CompareAndUpdateStatus(ctx context.Context, orderNo string, expectedStatus string, newStatus string, transactionID *string, paidAt *time.Time) (bool, error)
 	ListByUserID(ctx context.Context, userID int64, params pagination.PaginationParams) ([]PaymentOrder, *pagination.PaginationResult, error)
 	ListAll(ctx context.Context, params pagination.PaginationParams, status string, orderType string) ([]PaymentOrder, *pagination.PaginationResult, error)
 	CloseExpiredOrders(ctx context.Context) (int64, error)
@@ -679,14 +682,27 @@ func (s *PaymentService) HandleWechatNotify(ctx context.Context, body []byte, we
 		return nil
 	}
 
-	// 6. 更新订单状态
+	// 6. 原子地将订单从 pending 改为 paid（CAS），防止并发重复处理
 	now := time.Now()
-	if err := s.orderRepo.UpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPaid, &transaction.TransactionID, &now); err != nil {
-		return fmt.Errorf("update order status: %w", err)
+	claimed, err := s.orderRepo.CompareAndUpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPending, PaymentOrderStatusPaid, &transaction.TransactionID, &now)
+	if err != nil {
+		return fmt.Errorf("claim order: %w", err)
+	}
+	if !claimed {
+		// 另一个回调已经处理了这个订单
+		return nil
 	}
 
-	// 7. 根据订单类型处理
-	return s.handlePaymentSuccess(ctx, order)
+	// 7. 订单已 claim，执行业务逻辑（加余额/开通订阅）
+	if err := s.handlePaymentSuccess(ctx, order); err != nil {
+		// 业务失败，回滚订单状态
+		if rbErr := s.orderRepo.UpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPending, nil, nil); rbErr != nil {
+			log.Printf("[Payment] CRITICAL: order %s failed to rollback status: %v (original error: %v)", order.OrderNo, rbErr, err)
+		}
+		return err
+	}
+
+	return nil
 }
 
 // ===========================
@@ -1107,17 +1123,28 @@ func (s *PaymentService) HandleAlipayNotify(ctx context.Context, req *http.Reque
 		return fmt.Errorf("app_id mismatch: expected %s, got %s", configuredAppID, notification.AppId)
 	}
 
-	// 更新订单状态
+	// 原子地将订单从 pending 改为 paid（CAS）
 	paidAt := time.Now()
 	tradeNo := notification.TradeNo
-	err = s.orderRepo.UpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPaid, &tradeNo, &paidAt)
+	claimed, err := s.orderRepo.CompareAndUpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPending, PaymentOrderStatusPaid, &tradeNo, &paidAt)
 	if err != nil {
-		return fmt.Errorf("update order status: %w", err)
+		return fmt.Errorf("claim order: %w", err)
+	}
+	if !claimed {
+		return nil
+	}
+
+	// 执行业务逻辑
+	if err := s.handlePaymentSuccess(ctx, order); err != nil {
+		if rbErr := s.orderRepo.UpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPending, nil, nil); rbErr != nil {
+			log.Printf("[Payment] CRITICAL: order %s failed to rollback status: %v (original error: %v)", order.OrderNo, rbErr, err)
+		}
+		return err
 	}
 
 	log.Printf("[Payment] Order %s paid via Alipay, trade_no=%s", order.OrderNo, tradeNo)
 
-	return s.handlePaymentSuccess(ctx, order)
+	return nil
 }
 
 // ===========================
@@ -1296,14 +1323,26 @@ func (s *PaymentService) HandleEpayNotify(ctx context.Context, params map[string
 		return fmt.Errorf("amount mismatch: expected %s, got %s", expectedMoney, params["money"])
 	}
 
-	// 更新订单状态
+	// 原子地将订单从 pending 改为 paid（CAS）
 	paidAt := time.Now()
 	tradeNo := params["trade_no"]
-	if err := s.orderRepo.UpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPaid, &tradeNo, &paidAt); err != nil {
-		return fmt.Errorf("update order status: %w", err)
+	claimed, err := s.orderRepo.CompareAndUpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPending, PaymentOrderStatusPaid, &tradeNo, &paidAt)
+	if err != nil {
+		return fmt.Errorf("claim order: %w", err)
+	}
+	if !claimed {
+		return nil
+	}
+
+	// 执行业务逻辑
+	if err := s.handlePaymentSuccess(ctx, order); err != nil {
+		if rbErr := s.orderRepo.UpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPending, nil, nil); rbErr != nil {
+			log.Printf("[Payment] CRITICAL: order %s failed to rollback status: %v (original error: %v)", order.OrderNo, rbErr, err)
+		}
+		return err
 	}
 
 	log.Printf("[Payment] Order %s paid via Epay, trade_no=%s", order.OrderNo, tradeNo)
 
-	return s.handlePaymentSuccess(ctx, order)
+	return nil
 }

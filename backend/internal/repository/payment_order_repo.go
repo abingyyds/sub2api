@@ -105,6 +105,44 @@ func (r *paymentOrderRepo) UpdateStatus(ctx context.Context, orderNo string, sta
 	return err
 }
 
+func (r *paymentOrderRepo) CompareAndUpdateStatus(ctx context.Context, orderNo string, expectedStatus string, newStatus string, transactionID *string, paidAt *time.Time) (bool, error) {
+	// 先查询订单以确定支付方式
+	order, err := r.client.PaymentOrder.Query().
+		Where(paymentorder.OrderNoEQ(orderNo)).
+		Only(ctx)
+	if err != nil {
+		return false, fmt.Errorf("get order for CAS update: %w", err)
+	}
+
+	// CAS: 只在当前状态匹配时更新
+	builder := r.client.PaymentOrder.Update().
+		Where(
+			paymentorder.OrderNoEQ(orderNo),
+			paymentorder.StatusEQ(expectedStatus),
+		).
+		SetStatus(newStatus)
+
+	if transactionID != nil {
+		switch order.PayMethod {
+		case "alipay_native":
+			builder.SetAlipayTradeNo(*transactionID)
+		case "epay_alipay", "epay_wxpay":
+			builder.SetEpayTradeNo(*transactionID)
+		default:
+			builder.SetWechatTransactionID(*transactionID)
+		}
+	}
+	if paidAt != nil {
+		builder.SetPaidAt(*paidAt)
+	}
+
+	n, err := builder.Save(ctx)
+	if err != nil {
+		return false, err
+	}
+	return n > 0, nil
+}
+
 func (r *paymentOrderRepo) ListByUserID(ctx context.Context, userID int64, params pagination.PaginationParams) ([]service.PaymentOrder, *pagination.PaginationResult, error) {
 	query := r.client.PaymentOrder.Query().
 		Where(paymentorder.UserIDEQ(userID))
