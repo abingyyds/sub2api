@@ -46,6 +46,7 @@ func RegisterGatewayRoutes(
 	openaiV1.Use(gin.HandlerFunc(apiKeyAuth))
 	{
 		openaiV1.POST("/responses", h.OpenAIGateway.Responses)
+		openaiV1.POST("/chat/completions", h.OpenAIGateway.ChatCompletions)
 	}
 
 	// Gemini 原生 API 兼容层（Gemini SDK/CLI 直连）
