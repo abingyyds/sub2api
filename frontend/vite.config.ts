@@ -115,6 +115,19 @@ export default defineConfig(({ mode }) => {
             return 'animations'
           }
 
+          // 表格页常用组件合并，减少页面级碎片请求
+          if (
+            id.includes('/components/common/DataTable.vue') ||
+            id.includes('/components/common/Pagination.vue') ||
+            id.includes('/components/common/Select.vue') ||
+            id.includes('/components/common/EmptyState.vue') ||
+            id.includes('/components/common/DateRangePicker.vue') ||
+            id.includes('/components/layout/TablePageLayout.vue') ||
+            id.includes('/utils/format.ts')
+          ) {
+            return 'table-ui'
+          }
+
           // 应用代码：按入口点自动分包，不手动干预
           // 这样可以避免循环依赖，同时保持合理的 chunk 数量
         }

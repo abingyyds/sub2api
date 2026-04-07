@@ -294,11 +294,18 @@ function handleClickOutside(event: MouseEvent) {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
-  // Trigger initial fetch if not already loaded
-  // The actual data loading is handled by App.vue globally
-  subscriptionStore.fetchActiveSubscriptions().catch((error) => {
-    console.error('Failed to load subscriptions in SubscriptionProgressMini:', error)
-  })
+
+  const loadSubscriptions = () => {
+    subscriptionStore.fetchActiveSubscriptions().catch((error) => {
+      console.error('Failed to load subscriptions in SubscriptionProgressMini:', error)
+    })
+  }
+
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(loadSubscriptions, { timeout: 4000 })
+  } else {
+    window.setTimeout(loadSubscriptions, 1500)
+  }
 })
 
 onBeforeUnmount(() => {

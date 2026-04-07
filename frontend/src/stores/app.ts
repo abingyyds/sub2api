@@ -5,8 +5,11 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Toast, ToastType, PublicSettings } from '@/types'
-import { getPublicSettings as fetchPublicSettingsAPI } from '@/api/auth'
+import type { Toast, ToastType, PublicSettings, Announcement } from '@/types'
+import {
+  getPublicSettings as fetchPublicSettingsAPI,
+  getActiveAnnouncements as fetchActiveAnnouncementsAPI
+} from '@/api/auth'
 
 export const useAppStore = defineStore('app', () => {
   // ==================== State ====================
@@ -27,6 +30,10 @@ export const useAppStore = defineStore('app', () => {
   const docUrl = ref<string>('')
   const cachedPublicSettings = ref<PublicSettings | null>(null)
   const referralEnabled = ref<boolean>(false)
+  const announcements = ref<Announcement[]>([])
+  const announcementsLoaded = ref<boolean>(false)
+  const announcementsLoading = ref<boolean>(false)
+  let announcementsPromise: Promise<Announcement[]> | null = null
 
   // Contact modal state
   const showContactModal = ref<boolean>(false)
@@ -297,6 +304,34 @@ export const useAppStore = defineStore('app', () => {
     cachedPublicSettings.value = null
   }
 
+  async function fetchAnnouncements(force = false): Promise<Announcement[]> {
+    if (announcementsLoaded.value && !force) {
+      return announcements.value
+    }
+
+    if (announcementsLoading.value && announcementsPromise) {
+      return announcementsPromise
+    }
+
+    announcementsLoading.value = true
+    announcementsPromise = fetchActiveAnnouncementsAPI()
+      .then((data) => {
+        announcements.value = data
+        announcementsLoaded.value = true
+        return data
+      })
+      .catch((error) => {
+        console.error('Failed to fetch announcements:', error)
+        return announcements.value
+      })
+      .finally(() => {
+        announcementsLoading.value = false
+        announcementsPromise = null
+      })
+
+    return announcementsPromise
+  }
+
   /**
    * Initialize settings from injected config (window.__APP_CONFIG__)
    * This is called synchronously before Vue app mounts to prevent flash
@@ -328,6 +363,7 @@ export const useAppStore = defineStore('app', () => {
     apiBaseUrl,
     docUrl,
     cachedPublicSettings,
+    announcements,
 
     // Computed
     hasActiveToasts,
@@ -351,6 +387,7 @@ export const useAppStore = defineStore('app', () => {
 
     // Public settings actions
     fetchPublicSettings,
+    fetchAnnouncements,
     clearPublicSettingsCache,
     initFromInjectedConfig,
     referralEnabled,

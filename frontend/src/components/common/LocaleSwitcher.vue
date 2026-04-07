@@ -58,7 +58,7 @@ function toggleDropdown() {
 }
 
 function selectLocale(code: string) {
-  setLocale(code)
+  void setLocale(code)
   isOpen.value = false
 }
 
