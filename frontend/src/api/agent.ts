@@ -1,12 +1,52 @@
 import { apiClient } from './client'
 import type { PaginatedResponse } from '@/types'
 
+export interface AgentProfile {
+  user_id: number
+  real_name: string
+  id_card_no: string
+  phone: string
+  identity_status: string
+  identity_submitted_at: string | null
+  contract_status: string
+  contract_version: string
+  contract_signed_at: string | null
+  contract_ip?: string
+  activation_order_id: number | null
+  activation_fee_paid_at: string | null
+  frozen_balance: number
+  withdrawable_balance: number
+  total_withdrawn: number
+  is_frozen: boolean
+  frozen_reason: string
+}
+
+export interface AgentWalletSummary {
+  site_balance: number
+  frozen_balance: number
+  withdrawable_balance: number
+  total_withdrawn: number
+}
+
+export interface AgentWithdrawWindow {
+  weekday: number
+  start_hour: number
+  end_hour: number
+  label: string
+}
+
 export interface AgentStatus {
+  enabled: boolean
   is_agent: boolean
   agent_status: string
-  agent_commission_rate: number
-  agent_note: string
-  agent_approved_at: string | null
+  commission_rate: number
+  invite_code?: string
+  can_apply: boolean
+  activation_fee: number
+  profile: AgentProfile
+  wallet: AgentWalletSummary
+  withdraw_freeze_days: number
+  withdraw_window: AgentWithdrawWindow
 }
 
 export interface AgentDashboardStats {
@@ -16,8 +56,12 @@ export interface AgentDashboardStats {
   total_commission: number
   pending_commission: number
   settled_commission: number
-  direct_commission: number
-  differential_commission: number
+  today_new_users: number
+  today_recharge: number
+  site_balance: number
+  frozen_balance: number
+  withdrawable_balance: number
+  total_withdrawn: number
 }
 
 export interface AgentSubUser {
@@ -33,15 +77,11 @@ export interface AgentSubUser {
 
 export interface AgentFinancialLog {
   id: number
-  order_no: string
   user_id: number
   user_email: string
-  plan_key: string
-  amount_fen: number
-  balance_amount: number
-  order_type: string
-  status: string
-  paid_at: string | null
+  type: string
+  amount: number
+  detail: string
   created_at: string
 }
 
@@ -63,7 +103,14 @@ export interface AgentCommission {
 
 export interface AgentInviteLink {
   invite_code: string
-  invite_url: string
+  invite_url?: string
+}
+
+export interface AgentProfileRequest {
+  real_name: string
+  id_card_no: string
+  phone: string
+  contract_accepted: boolean
 }
 
 export async function getStatus(): Promise<AgentStatus> {
@@ -71,14 +118,12 @@ export async function getStatus(): Promise<AgentStatus> {
   return data
 }
 
-export interface AgentApplyRequest {
-  contact: string
-  social?: string
-  promotion?: string
+export async function saveProfile(payload: AgentProfileRequest): Promise<void> {
+  await apiClient.post('/agent/profile', payload)
 }
 
-export async function apply(data: AgentApplyRequest): Promise<void> {
-  await apiClient.post('/agent/apply', data)
+export async function apply(): Promise<void> {
+  await apiClient.post('/agent/apply', {})
 }
 
 export async function getDashboard(): Promise<AgentDashboardStats> {
@@ -103,14 +148,12 @@ export async function listSubUsers(
 
 export async function listFinancialLogs(
   page: number = 1,
-  pageSize: number = 20,
-  filters?: { user_id?: number }
+  pageSize: number = 20
 ): Promise<PaginatedResponse<AgentFinancialLog>> {
   const { data } = await apiClient.get<PaginatedResponse<AgentFinancialLog>>('/agent/financial-logs', {
     params: {
       page,
       page_size: pageSize,
-      user_id: filters?.user_id || undefined
     }
   })
   return data
@@ -131,19 +174,15 @@ export async function listCommissions(
   return data
 }
 
-export async function setSubUserRate(subUserId: number, rate: number): Promise<void> {
-  await apiClient.put(`/agent/sub-users/${subUserId}/rate`, { commission_rate: rate })
-}
-
 export const agentAPI = {
   getStatus,
+  saveProfile,
   apply,
   getDashboard,
   getLink,
   listSubUsers,
   listFinancialLogs,
-  listCommissions,
-  setSubUserRate
+  listCommissions
 }
 
 export default agentAPI

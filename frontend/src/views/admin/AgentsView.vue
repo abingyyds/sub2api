@@ -24,19 +24,30 @@
           <template #cell-total_commission="{ value }">
             <span class="font-medium text-primary-600 dark:text-primary-400">${{ (value || 0).toFixed(2) }}</span>
           </template>
-          <template #cell-pending_commission="{ value }">
-            <span class="font-medium text-orange-600 dark:text-orange-400">${{ (value || 0).toFixed(2) }}</span>
-          </template>
           <template #cell-agent_approved_at="{ value }">
             <span v-if="value" class="text-sm text-gray-500 dark:text-dark-400">{{ formatDateTime(value) }}</span>
             <span v-else class="text-sm text-gray-400">-</span>
+          </template>
+          <template #cell-identity_status="{ value }">
+            <span :class="['badge', value === 'submitted' ? 'badge-success' : 'badge-gray']">
+              {{ value === 'submitted' ? '已提交' : '未提交' }}
+            </span>
+          </template>
+          <template #cell-contract_status="{ value }">
+            <span :class="['badge', value === 'signed' ? 'badge-success' : 'badge-gray']">
+              {{ value === 'signed' ? '已确认' : '未确认' }}
+            </span>
+          </template>
+          <template #cell-activation_fee_paid_at="{ value }">
+            <span v-if="value" class="text-sm text-emerald-600 dark:text-emerald-400">{{ formatDateTime(value) }}</span>
+            <span v-else class="text-sm text-gray-400">未支付</span>
           </template>
           <template #cell-created_at="{ value }">
             <span class="text-sm text-gray-500 dark:text-dark-400">{{ formatDateTime(value) }}</span>
           </template>
           <template #cell-actions="{ row }">
             <div class="flex items-center gap-2">
-              <button v-if="row.agent_note" @click="openDetail(row)" class="btn btn-xs btn-secondary" :title="t('admin.agents.viewDetail')">
+              <button @click="openDetail(row)" class="btn btn-xs btn-secondary" :title="t('admin.agents.viewDetail')">
                 <Icon name="document" size="sm" />
               </button>
               <template v-if="row.agent_status === 'pending'">
@@ -46,11 +57,8 @@
               <button @click="openEditRate(row)" class="btn btn-xs btn-secondary" :title="t('admin.agents.editRate')">
                 <Icon name="edit" size="sm" />
               </button>
-              <button v-if="row.agent_status === 'approved' && row.pending_commission > 0" @click="handleSettle(row)" class="btn btn-xs btn-primary">
-                {{ t('admin.agents.settle') }}
-              </button>
-              <button @click="openReassignParent(row)" class="btn btn-xs btn-secondary" :title="t('admin.agents.reassignParent')">
-                {{ t('admin.agents.parentAgent') }}
+              <button @click="handleToggleFrozen(row)" class="btn btn-xs" :class="row.is_frozen ? 'btn-success' : 'btn-danger'">
+                {{ row.is_frozen ? '解冻' : '冻结' }}
               </button>
             </div>
           </template>
@@ -93,21 +101,33 @@
           <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">{{ t('admin.agents.viewDetail') }}</h3>
           <div v-if="detailAgent" class="space-y-3">
             <div class="text-sm text-gray-500 dark:text-dark-400">{{ detailAgent.email }}</div>
-            <template v-if="parseAgentNote(detailAgent.agent_note).contact">
+            <div class="grid grid-cols-2 gap-3 rounded-2xl bg-gray-50 p-3 text-sm dark:bg-dark-800">
               <div>
-                <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">{{ t('admin.agents.contact') }}</label>
-                <p class="text-sm text-gray-900 dark:text-white break-all">{{ parseAgentNote(detailAgent.agent_note).contact }}</p>
+                <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">实名状态</label>
+                <p class="text-gray-900 dark:text-white">{{ detailAgent.identity_status === 'submitted' ? '已提交' : '未提交' }}</p>
               </div>
-              <div v-if="parseAgentNote(detailAgent.agent_note).social">
-                <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">{{ t('admin.agents.social') }}</label>
-                <p class="text-sm text-gray-900 dark:text-white break-all">{{ parseAgentNote(detailAgent.agent_note).social }}</p>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">合同状态</label>
+                <p class="text-gray-900 dark:text-white">{{ detailAgent.contract_status === 'signed' ? '已确认' : '未确认' }}</p>
               </div>
-              <div v-if="parseAgentNote(detailAgent.agent_note).promotion">
-                <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">{{ t('admin.agents.promotion') }}</label>
-                <p class="text-sm text-gray-900 dark:text-white whitespace-pre-wrap break-all">{{ parseAgentNote(detailAgent.agent_note).promotion }}</p>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">真实姓名</label>
+                <p class="text-gray-900 dark:text-white break-all">{{ detailAgent.real_name || '-' }}</p>
               </div>
-            </template>
-            <div v-else>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">手机号</label>
+                <p class="text-gray-900 dark:text-white break-all">{{ detailAgent.phone || '-' }}</p>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">开通费支付</label>
+                <p class="text-gray-900 dark:text-white">{{ detailAgent.activation_fee_paid_at ? formatDateTime(detailAgent.activation_fee_paid_at) : '未支付' }}</p>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">冻结状态</label>
+                <p class="text-gray-900 dark:text-white">{{ detailAgent.is_frozen ? `已冻结：${detailAgent.frozen_reason || '无原因'}` : '正常' }}</p>
+              </div>
+            </div>
+            <div v-if="detailAgent.agent_note">
               <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">{{ t('admin.agents.agentNote') }}</label>
               <p class="text-sm text-gray-900 dark:text-white whitespace-pre-wrap break-all">{{ detailAgent.agent_note }}</p>
             </div>
@@ -119,26 +139,6 @@
       </div>
     </Teleport>
 
-    <!-- Reassign Parent Modal -->
-    <Teleport to="body">
-      <div v-if="showParentModal" class="fixed inset-0 z-50 flex items-center justify-center">
-        <div class="fixed inset-0 bg-black/50" @click="showParentModal = false"></div>
-        <div class="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-dark-800">
-          <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">{{ t('admin.agents.reassignParentTitle') }}</h3>
-          <div class="space-y-4">
-            <p class="text-sm text-gray-500 dark:text-dark-400">{{ parentEditAgent?.email }}</p>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-1">{{ t('admin.agents.parentAgent') }} (ID)</label>
-              <input v-model.number="parentId" type="number" min="1" :placeholder="t('admin.agents.parentIdPlaceholder')" class="input w-full" />
-            </div>
-          </div>
-          <div class="mt-6 flex justify-end gap-3">
-            <button @click="showParentModal = false" class="btn btn-secondary">{{ t('common.cancel') }}</button>
-            <button @click="saveParent" :disabled="savingParent" class="btn btn-primary">{{ savingParent ? t('common.saving') : t('common.save') }}</button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
   </AppLayout>
 </template>
 
@@ -176,21 +176,18 @@ const editingAgent = ref<AdminAgent | null>(null)
 const showDetailModal = ref(false)
 const detailAgent = ref<AdminAgent | null>(null)
 
-// Parent reassignment modal
-const showParentModal = ref(false)
-const parentId = ref(0)
-const savingParent = ref(false)
-const parentEditAgent = ref<AdminAgent | null>(null)
-
 const columns = computed<Column[]>(() => [
   { key: 'id', label: 'ID', sortable: false },
   { key: 'email', label: t('admin.agents.email'), sortable: false },
+  { key: 'real_name', label: '实名', sortable: false },
   { key: 'username', label: t('admin.agents.username'), sortable: false },
   { key: 'agent_status', label: t('common.status'), sortable: false },
+  { key: 'identity_status', label: '实名资料', sortable: false },
+  { key: 'contract_status', label: '合同', sortable: false },
+  { key: 'activation_fee_paid_at', label: '开通费', sortable: false },
   { key: 'agent_commission_rate', label: t('admin.agents.commissionRate'), sortable: false },
   { key: 'sub_user_count', label: t('admin.agents.subUserCount'), sortable: false },
   { key: 'total_commission', label: t('admin.agents.totalCommission'), sortable: false },
-  { key: 'pending_commission', label: t('admin.agents.pendingCommission'), sortable: false },
   { key: 'created_at', label: t('common.createdAt'), sortable: false },
   { key: 'actions', label: t('common.actions'), sortable: false }
 ])
@@ -217,18 +214,6 @@ function statusLabel(status: string) {
     case 'pending': return t('admin.agents.statusPending')
     case 'rejected': return t('admin.agents.statusRejected')
     default: return status
-  }
-}
-
-function parseAgentNote(note: string): { contact: string; social: string; promotion: string } {
-  try {
-    const parsed = JSON.parse(note)
-    if (typeof parsed === 'object' && parsed !== null) {
-      return { contact: parsed.contact || '', social: parsed.social || '', promotion: parsed.promotion || '' }
-    }
-    return { contact: '', social: '', promotion: '' }
-  } catch {
-    return { contact: '', social: '', promotion: '' }
   }
 }
 
@@ -278,6 +263,16 @@ async function handleReject(agent: AdminAgent) {
   }
 }
 
+async function handleToggleFrozen(agent: AdminAgent) {
+  try {
+    await agentsAPI.setFrozen(agent.id, !agent.is_frozen, agent.is_frozen ? '' : '管理员手动冻结')
+    appStore.showSuccess(agent.is_frozen ? '代理已解冻' : '代理已冻结')
+    await loadData()
+  } catch {
+    appStore.showError(agent.is_frozen ? '代理解冻失败' : '代理冻结失败')
+  }
+}
+
 function openEditRate(agent: AdminAgent) {
   editingAgent.value = agent
   editRate.value = agent.agent_commission_rate * 100
@@ -296,37 +291,6 @@ async function saveRate() {
     appStore.showError(t('admin.agents.updateError'))
   } finally {
     saving.value = false
-  }
-}
-
-async function handleSettle(agent: AdminAgent) {
-  try {
-    const res = await agentsAPI.settle(agent.id)
-    appStore.showSuccess(t('admin.agents.settleSuccess', { count: res.settled_count, amount: res.settled_amount.toFixed(2) }))
-    loadData()
-  } catch {
-    appStore.showError(t('admin.agents.settleError'))
-  }
-}
-
-function openReassignParent(agent: AdminAgent) {
-  parentEditAgent.value = agent
-  parentId.value = 0
-  showParentModal.value = true
-}
-
-async function saveParent() {
-  if (!parentEditAgent.value || !parentId.value) return
-  savingParent.value = true
-  try {
-    await agentsAPI.updateParent(parentEditAgent.value.id, parentId.value)
-    appStore.showSuccess(t('admin.agents.parentUpdated'))
-    showParentModal.value = false
-    loadData()
-  } catch {
-    appStore.showError(t('admin.agents.parentUpdateError'))
-  } finally {
-    savingParent.value = false
   }
 }
 

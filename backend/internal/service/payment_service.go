@@ -170,7 +170,7 @@ func (s *PaymentService) GetPlans(ctx context.Context) ([]PaymentPlan, error) {
 				AmountFen:    g.PriceFen,
 				GroupID:      g.ID,
 				ValidityDays: g.DefaultValidityDays,
-				Type:         "subscription",
+				Type:         PaymentOrderTypeSubscription,
 			}
 			// 特性列表：优先使用管理员自定义，否则自动生成
 			if len(g.PlanFeatures) > 0 {
@@ -206,9 +206,9 @@ func (s *PaymentService) GetPlans(ctx context.Context) ([]PaymentPlan, error) {
 			}
 			for i := range jsonPlans {
 				if jsonPlans[i].Type == "" {
-					jsonPlans[i].Type = "subscription"
+					jsonPlans[i].Type = PaymentOrderTypeSubscription
 				}
-				if jsonPlans[i].Type == "subscription" && existingGroupIDs[jsonPlans[i].GroupID] {
+				if jsonPlans[i].Type == PaymentOrderTypeSubscription && existingGroupIDs[jsonPlans[i].GroupID] {
 					continue // 分组已通过 price_fen 生成
 				}
 				plans = append(plans, jsonPlans[i])
@@ -401,7 +401,7 @@ func (s *PaymentService) CheckNewcomerEligibility(ctx context.Context, userID in
 func (s *PaymentService) enrichPlansFromGroups(ctx context.Context, plans []PaymentPlan) {
 	for i := range plans {
 		plan := &plans[i]
-		if plan.Type != "subscription" || plan.GroupID == 0 {
+		if plan.Type != PaymentOrderTypeSubscription || plan.GroupID == 0 {
 			continue
 		}
 		// 如果已手动配置了 features，跳过
@@ -489,7 +489,7 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 	// 确定订单类型
 	orderType := plan.Type
 	if orderType == "" {
-		orderType = "subscription"
+		orderType = PaymentOrderTypeSubscription
 	}
 
 	// 确定支付方式
@@ -534,7 +534,7 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 		ExpiredAt:      time.Now().Add(30 * time.Minute), // 30分钟过期
 	}
 
-	if orderType == "balance" {
+	if orderType == PaymentOrderTypeBalance {
 		order.GroupID = 0
 		order.ValidityDays = 0
 		order.BalanceAmount = plan.BalanceAmount
@@ -678,7 +678,7 @@ func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, 
 		AmountFen:      finalAmount,
 		GroupID:        0,
 		ValidityDays:   0,
-		OrderType:      "balance",
+		OrderType:      PaymentOrderTypeBalance,
 		BalanceAmount:  planBalanceAmount,
 		PromoCode:      promoCode,
 		DiscountAmount: discountFen,
@@ -710,6 +710,101 @@ func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, 
 		return nil, fmt.Errorf("save recharge order: %w", err)
 	}
 
+	return order, nil
+}
+
+// CreateAgentActivationOrder creates a payment order for the agent activation fee.
+func (s *PaymentService) CreateAgentActivationOrder(ctx context.Context, userID int64, payMethod string) (*PaymentOrder, error) {
+	enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyPaymentEnabled)
+	if enabled != "true" {
+		return nil, ErrPaymentDisabled
+	}
+	if !s.settingService.IsAgentEnabled(ctx) {
+		return nil, ErrAgentDisabled
+	}
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get user: %w", err)
+	}
+	if user.IsAgent || user.AgentStatus == AgentStatusApproved {
+		return nil, infraerrors.Conflict("AGENT_ALREADY_APPROVED", "you are already an approved agent")
+	}
+	if user.AgentStatus == AgentStatusPending {
+		return nil, infraerrors.Conflict("AGENT_APPLICATION_PENDING", "your agent application is already pending review")
+	}
+	paidCount, err := s.orderRepo.CountPaidByUserAndPlanKey(ctx, userID, PaymentOrderTypeAgentActivation)
+	if err != nil {
+		return nil, fmt.Errorf("count paid activation orders: %w", err)
+	}
+	if paidCount > 0 {
+		return nil, infraerrors.Conflict("AGENT_ACTIVATION_ALREADY_PAID", "agent activation fee has already been paid")
+	}
+
+	activationFee := s.settingService.GetAgentActivationFee(ctx)
+	amountFen := int(activationFee * 100)
+	if amountFen <= 0 {
+		return nil, infraerrors.BadRequest("AGENT_ACTIVATION_FEE_INVALID", "agent activation fee must be positive")
+	}
+
+	if payMethod == "" {
+		payMethod = "wechat"
+	}
+	var payMethodStr string
+	switch payMethod {
+	case "alipay":
+		if !s.isAlipayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "alipay payment is not configured")
+		}
+		payMethodStr = PaymentMethodAlipayNative
+	case "epay_alipay":
+		if !s.isEpayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "epay payment is not configured")
+		}
+		payMethodStr = PaymentMethodEpayAlipay
+	case "epay_wxpay":
+		if !s.isEpayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "epay payment is not configured")
+		}
+		payMethodStr = PaymentMethodEpayWxpay
+	default:
+		if !s.isWechatPayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "wechat payment is not configured")
+		}
+		payMethodStr = PaymentMethodWechatNative
+	}
+
+	order := &PaymentOrder{
+		OrderNo:   generateOrderNo(),
+		UserID:    userID,
+		PlanKey:   PaymentOrderTypeAgentActivation,
+		AmountFen: amountFen,
+		Status:    PaymentOrderStatusPending,
+		PayMethod: payMethodStr,
+		OrderType: PaymentOrderTypeAgentActivation,
+		ExpiredAt: time.Now().Add(30 * time.Minute),
+	}
+
+	description := fmt.Sprintf("代理开通费 %.2f 元", activationFee)
+	var codeURL string
+	switch payMethod {
+	case "alipay":
+		codeURL, err = s.createAlipayNativeOrder(ctx, order, description)
+	case "epay_alipay":
+		codeURL, err = s.createEpayOrder(ctx, order, description, "alipay")
+	case "epay_wxpay":
+		codeURL, err = s.createEpayOrder(ctx, order, description, "wxpay")
+	default:
+		codeURL, err = s.createWechatNativeOrder(ctx, order, description)
+	}
+	if err != nil {
+		log.Printf("[Payment] Failed to create %s native order for agent activation: %v", payMethod, err)
+		return nil, err
+	}
+	order.CodeURL = &codeURL
+
+	if err := s.orderRepo.Create(ctx, order); err != nil {
+		return nil, fmt.Errorf("save activation order: %w", err)
+	}
 	return order, nil
 }
 
@@ -1155,7 +1250,7 @@ func generateNonce() string {
 
 // handlePaymentSuccess 处理支付成功后的共享逻辑（订阅分配/余额充值/缓存失效/优惠码记录）
 func (s *PaymentService) handlePaymentSuccess(ctx context.Context, order *PaymentOrder) error {
-	if order.OrderType == "balance" {
+	if order.OrderType == PaymentOrderTypeBalance {
 		// 充值余额
 		if err := s.userRepo.UpdateBalance(ctx, order.UserID, order.BalanceAmount); err != nil {
 			log.Printf("[Payment] Failed to update balance for order %s, user %d: %v", order.OrderNo, order.UserID, err)
@@ -1169,6 +1264,14 @@ func (s *PaymentService) handlePaymentSuccess(ctx context.Context, order *Paymen
 		}
 		log.Printf("[Payment] Order %s paid successfully, balance +%.2f for user %d",
 			order.OrderNo, order.BalanceAmount, order.UserID)
+	} else if order.OrderType == PaymentOrderTypeAgentActivation {
+		if s.agentService != nil {
+			if err := s.agentService.MarkActivationFeePaid(ctx, order.UserID, order.ID); err != nil {
+				log.Printf("[Payment] Failed to mark agent activation paid for user %d order %s: %v", order.UserID, order.OrderNo, err)
+				return fmt.Errorf("mark agent activation paid: %w", err)
+			}
+		}
+		log.Printf("[Payment] Order %s paid successfully, agent activation marked for user %d", order.OrderNo, order.UserID)
 	} else {
 		// 分配订阅
 		_, _, err := s.subscriptionService.AssignOrExtendSubscription(ctx, &AssignSubscriptionInput{
@@ -1200,7 +1303,7 @@ func (s *PaymentService) handlePaymentSuccess(ctx context.Context, order *Paymen
 		if payAmount <= 0 {
 			payAmount = float64(order.AmountFen) / 100.0
 		}
-		s.agentService.TriggerCommissionForPayment(ctx, order.UserID, order.ID, payAmount)
+		s.agentService.TriggerCommissionForPayment(ctx, order.UserID, order.ID, order.OrderType, payAmount)
 	}
 
 	return nil

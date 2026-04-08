@@ -90,6 +90,10 @@ type CreateRechargeRequest struct {
 	PlanKey   string  `json:"plan_key"`   // 充值套餐key（可选，用于验证和限购）
 }
 
+type CreateAgentActivationOrderRequest struct {
+	PayMethod string `json:"pay_method"` // "wechat" | "alipay" | "epay_alipay" | "epay_wxpay"
+}
+
 type SubmitInvoiceRequest struct {
 	OrderNos    []string `json:"order_nos" binding:"required,min=1"`
 	CompanyName string   `json:"company_name" binding:"required"`
@@ -167,6 +171,40 @@ func (h *PaymentHandler) CreateRecharge(c *gin.Context) {
 		"amount_fen":      order.AmountFen,
 		"discount_amount": order.DiscountAmount,
 		"expired_at":      order.ExpiredAt,
+	})
+}
+
+// CreateAgentActivationOrder creates an order for the agent activation fee.
+// POST /api/v1/payment/agent-activation
+func (h *PaymentHandler) CreateAgentActivationOrder(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "User not found in context")
+		return
+	}
+
+	var req CreateAgentActivationOrderRequest
+	if err := c.ShouldBindJSON(&req); err != nil && err != io.EOF {
+		response.BadRequest(c, "invalid request")
+		return
+	}
+
+	payMethod := req.PayMethod
+	if payMethod == "" {
+		payMethod = "wechat"
+	}
+
+	order, err := h.paymentService.CreateAgentActivationOrder(c.Request.Context(), subject.UserID, payMethod)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{
+		"order_no":   order.OrderNo,
+		"code_url":   order.CodeURL,
+		"amount_fen": order.AmountFen,
+		"expired_at": order.ExpiredAt,
 	})
 }
 

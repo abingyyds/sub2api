@@ -453,5 +453,6 @@ func registerAgentRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		agents.PUT("/:id", h.Admin.Agent.Update)
 		agents.POST("/:id/settle", h.Admin.Agent.Settle)
 		agents.PUT("/:id/parent", h.Admin.Agent.UpdateParent)
+		agents.POST("/:id/freeze", h.Admin.Agent.SetFrozen)
 	}
 }

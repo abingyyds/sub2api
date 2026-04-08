@@ -10,6 +10,16 @@ export interface AdminAgent {
   agent_commission_rate: number
   agent_note: string
   agent_approved_at: string | null
+  real_name: string
+  phone: string
+  identity_status: string
+  contract_status: string
+  activation_fee_paid_at: string | null
+  is_frozen: boolean
+  frozen_reason: string
+  frozen_balance: number
+  withdrawable_balance: number
+  total_withdrawn: number
   sub_user_count: number
   total_commission: number
   pending_commission: number
@@ -46,16 +56,9 @@ export async function update(id: number, data: { commission_rate: number }): Pro
   await apiClient.put(`/admin/agents/${id}`, data)
 }
 
-export async function settle(id: number): Promise<{ settled_count: number; settled_amount: number }> {
-  const { data } = await apiClient.post<{ settled_count: number; settled_amount: number }>(
-    `/admin/agents/${id}/settle`
-  )
-  return data
+export async function setFrozen(id: number, frozen: boolean, reason?: string): Promise<void> {
+  await apiClient.post(`/admin/agents/${id}/freeze`, { frozen, reason: reason || '' })
 }
 
-export async function updateParent(userId: number, parentId: number): Promise<void> {
-  await apiClient.put(`/admin/agents/${userId}/parent`, { parent_id: parentId })
-}
-
-export const agentsAPI = { list, approve, reject, update, settle, updateParent }
+export const agentsAPI = { list, approve, reject, update, setFrozen }
 export default agentsAPI

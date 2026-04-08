@@ -50,7 +50,7 @@ const (
 // PromoCode discount type constants
 const (
 	PromoCodeDiscountTypeFixed      = "fixed"      // 固定金额减免（分）
-	PromoCodeDiscountTypePercentage = "percentage"  // 百分比折扣
+	PromoCodeDiscountTypePercentage = "percentage" // 百分比折扣
 )
 
 // Admin adjustment type constants
@@ -87,8 +87,7 @@ const (
 
 // Agent commission source type constants
 const (
-	AgentCommissionSourcePayment      = "payment"
-	AgentCommissionSourceDifferential = "differential"
+	AgentCommissionSourcePayment = "payment"
 )
 
 // Agent commission status constants
@@ -193,8 +192,8 @@ const (
 	// =========================
 
 	SettingKeyReferralEnabled      = "referral_enabled"       // 是否启用邀请返利功能
-	SettingKeyReferralRewardAmount = "referral_reward_amount"  // 邀请奖励金额
-	SettingKeyInviteeRewardAmount  = "invitee_reward_amount"   // 被邀请人注册奖励金额
+	SettingKeyReferralRewardAmount = "referral_reward_amount" // 邀请奖励金额
+	SettingKeyInviteeRewardAmount  = "invitee_reward_amount"  // 被邀请人注册奖励金额
 
 	// =========================
 	// Stream Timeout Handling
@@ -207,18 +206,18 @@ const (
 	// Payment / WeChat Pay
 	// =========================
 
-	SettingKeyPaymentEnabled         = "payment_enabled"          // 是否启用在线支付
-	SettingKeyPaymentPlans           = "payment_plans"            // 套餐配置 JSON
-	SettingKeyRechargeMinAmount      = "recharge_min_amount"      // 充值最低金额（元）
-	SettingKeyRechargePlans          = "recharge_plans"           // 充值优惠套餐配置 JSON
-	SettingKeyWechatPayAppID         = "wechat_pay_appid"          // 微信支付关联的AppID
-	SettingKeyWechatPayMchID         = "wechat_pay_mch_id"         // 微信支付商户号
-	SettingKeyWechatPayAPIv3Key      = "wechat_pay_apiv3_key"      // APIv3 密钥
-	SettingKeyWechatPayMchSerialNo   = "wechat_pay_mch_serial_no"  // 商户API证书序列号
-	SettingKeyWechatPayPublicKeyID   = "wechat_pay_public_key_id"  // 微信支付公钥ID（验证回调）
-	SettingKeyWechatPayPublicKey     = "wechat_pay_public_key"     // 微信支付公钥内容(PEM)
-	SettingKeyWechatPayPrivateKey    = "wechat_pay_private_key"    // 商户API私钥(PEM)
-	SettingKeyWechatPayNotifyURL     = "wechat_pay_notify_url"     // 支付回调通知URL
+	SettingKeyPaymentEnabled       = "payment_enabled"          // 是否启用在线支付
+	SettingKeyPaymentPlans         = "payment_plans"            // 套餐配置 JSON
+	SettingKeyRechargeMinAmount    = "recharge_min_amount"      // 充值最低金额（元）
+	SettingKeyRechargePlans        = "recharge_plans"           // 充值优惠套餐配置 JSON
+	SettingKeyWechatPayAppID       = "wechat_pay_appid"         // 微信支付关联的AppID
+	SettingKeyWechatPayMchID       = "wechat_pay_mch_id"        // 微信支付商户号
+	SettingKeyWechatPayAPIv3Key    = "wechat_pay_apiv3_key"     // APIv3 密钥
+	SettingKeyWechatPayMchSerialNo = "wechat_pay_mch_serial_no" // 商户API证书序列号
+	SettingKeyWechatPayPublicKeyID = "wechat_pay_public_key_id" // 微信支付公钥ID（验证回调）
+	SettingKeyWechatPayPublicKey   = "wechat_pay_public_key"    // 微信支付公钥内容(PEM)
+	SettingKeyWechatPayPrivateKey  = "wechat_pay_private_key"   // 商户API私钥(PEM)
+	SettingKeyWechatPayNotifyURL   = "wechat_pay_notify_url"    // 支付回调通知URL
 
 	// 初始余额有效期
 	SettingKeyInitialBalanceExpiryDays = "initial_balance_expiry_days" // 新用户初始余额有效天数（0=永不过期）
@@ -227,8 +226,59 @@ const (
 	// Agent / Affiliate System
 	// =========================
 
-	SettingKeyAgentEnabled              = "agent_enabled"               // 是否启用代理系统
+	SettingKeyAgentEnabled               = "agent_enabled"                 // 是否启用代理系统
 	SettingKeyAgentDefaultCommissionRate = "agent_default_commission_rate" // 默认佣金比例
+	SettingKeyAgentActivationFee         = "agent_activation_fee"          // 代理开通费（元）
+	SettingKeyAgentContractVersion       = "agent_contract_version"        // 代理合同版本
+	SettingKeyAgentWithdrawFreezeDays    = "agent_withdraw_freeze_days"    // 提现冻结天数
+	SettingKeyAgentWithdrawWeekday       = "agent_withdraw_weekday"        // 提现开放星期（1-7）
+	SettingKeyAgentWithdrawStartHour     = "agent_withdraw_start_hour"     // 提现开始小时
+	SettingKeyAgentWithdrawEndHour       = "agent_withdraw_end_hour"       // 提现结束小时
+)
+
+// Agent profile status constants.
+const (
+	AgentIdentityStatusUnsubmitted = "unsubmitted"
+	AgentIdentityStatusSubmitted   = "submitted"
+
+	AgentContractStatusUnsigned = "unsigned"
+	AgentContractStatusSigned   = "signed"
+)
+
+// Agent wallet balance type constants.
+const (
+	AgentBalanceTypeSite         = "site"
+	AgentBalanceTypeFrozen       = "frozen"
+	AgentBalanceTypeWithdrawable = "withdrawable"
+)
+
+// Agent wallet change type constants.
+const (
+	AgentWalletChangeInviteCommission   = "invite_commission"
+	AgentWalletChangeConsumptionRevenue = "consumption_commission"
+	AgentWalletChangeFreeze             = "freeze"
+	AgentWalletChangeUnfreeze           = "unfreeze"
+	AgentWalletChangeWithdrawApply      = "withdraw_apply"
+	AgentWalletChangeWithdrawReject     = "withdraw_reject"
+	AgentWalletChangeWithdrawPaid       = "withdraw_paid"
+	AgentWalletChangeManualAdjust       = "manual_adjust"
+	AgentWalletChangeSpend              = "spend"
+)
+
+// Agent withdraw status constants.
+const (
+	AgentWithdrawStatusPending  = "pending"
+	AgentWithdrawStatusApproved = "approved"
+	AgentWithdrawStatusPaid     = "paid"
+	AgentWithdrawStatusRejected = "rejected"
+	AgentWithdrawStatusCanceled = "canceled"
+)
+
+// Payment order type constants.
+const (
+	PaymentOrderTypeSubscription    = "subscription"
+	PaymentOrderTypeBalance         = "balance"
+	PaymentOrderTypeAgentActivation = "agent_activation"
 )
 
 // AdminAPIKeyPrefix is the prefix for admin API keys (distinct from user "sk-" keys).

@@ -1,257 +1,286 @@
 <template>
   <AppLayout>
-    <FadeIn>
-      <div class="mx-auto max-w-5xl space-y-6">
-        <!-- Loading -->
-        <div v-if="loading" class="flex items-center justify-center py-12">
-          <div class="h-8 w-8 animate-spin rounded-full border-b-2 border-primary-600"></div>
-        </div>
+    <div class="mx-auto max-w-6xl space-y-6">
+      <div v-if="loading" class="flex items-center justify-center py-16">
+        <div class="h-9 w-9 animate-spin rounded-full border-b-2 border-primary-600"></div>
+      </div>
+
+      <template v-else>
+        <section class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h1 class="text-2xl font-bold text-gray-900 dark:text-white">代理中心</h1>
+              <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
+                先完成实名、合同确认和开通费支付，再提交代理申请。
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <span class="badge" :class="statusBadgeClass(status.agent_status)">
+                {{ statusLabel(status.agent_status) }}
+              </span>
+              <span class="badge" :class="profileBadgeClass(status.profile?.identity_status)">
+                实名：{{ identityLabel(status.profile?.identity_status) }}
+              </span>
+              <span class="badge" :class="profileBadgeClass(status.profile?.contract_status)">
+                合同：{{ contractLabel(status.profile?.contract_status) }}
+              </span>
+            </div>
+          </div>
+
+          <div v-if="status.profile?.is_frozen" class="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
+            当前代理已被冻结：{{ status.profile?.frozen_reason || '请联系管理员处理' }}
+          </div>
+          <div v-else-if="status.agent_status === 'pending'" class="mt-4 rounded-2xl border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-700 dark:border-yellow-900/40 dark:bg-yellow-950/30 dark:text-yellow-300">
+            资料已提交，等待管理员审核。
+          </div>
+          <div v-else-if="status.agent_status === 'rejected'" class="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
+            申请已被驳回。你可以补充资料后重新提交。
+          </div>
+        </section>
+
+        <template v-if="status.agent_status === 'approved'">
+          <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+              <p class="text-sm text-gray-500 dark:text-dark-400">站内消费余额</p>
+              <p class="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{{ formatMoney(status.wallet.site_balance) }}</p>
+              <p class="mt-2 text-xs text-gray-500 dark:text-dark-400">邀请代理返佣会直接进入这里，只能站内消费。</p>
+            </div>
+            <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+              <p class="text-sm text-gray-500 dark:text-dark-400">冻结余额</p>
+              <p class="mt-2 text-3xl font-bold text-orange-600 dark:text-orange-400">{{ formatMoney(status.wallet.frozen_balance) }}</p>
+              <p class="mt-2 text-xs text-gray-500 dark:text-dark-400">可提现收益会先冻结 {{ status.withdraw_freeze_days }} 天。</p>
+            </div>
+            <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+              <p class="text-sm text-gray-500 dark:text-dark-400">可提现余额</p>
+              <p class="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">{{ formatMoney(status.wallet.withdrawable_balance) }}</p>
+              <p class="mt-2 text-xs text-gray-500 dark:text-dark-400">仅这部分余额允许申请提现。</p>
+            </div>
+            <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+              <p class="text-sm text-gray-500 dark:text-dark-400">累计已提现</p>
+              <p class="mt-2 text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ formatMoney(status.wallet.total_withdrawn) }}</p>
+              <p class="mt-2 text-xs text-gray-500 dark:text-dark-400">提现开放时间：每周 {{ weekdayLabel(status.withdraw_window.weekday) }} {{ windowLabel }}</p>
+            </div>
+          </section>
+
+          <section class="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+            <div class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+              <p class="text-sm text-gray-500 dark:text-dark-400">邀请链接</p>
+              <div class="mt-3 break-all rounded-2xl bg-gray-50 px-4 py-3 text-sm text-gray-800 dark:bg-dark-800 dark:text-dark-100">
+                {{ inviteLink }}
+              </div>
+              <div class="mt-4 flex gap-3">
+                <button class="btn btn-primary" @click="copyLink">复制邀请链接</button>
+                <router-link class="btn btn-secondary" to="/agent/commissions">查看返佣明细</router-link>
+              </div>
+            </div>
+
+            <div class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+              <p class="text-sm text-gray-500 dark:text-dark-400">经营概览</p>
+              <div class="mt-4 grid grid-cols-2 gap-4">
+                <div class="rounded-2xl bg-gray-50 p-4 dark:bg-dark-800">
+                  <p class="text-xs text-gray-500 dark:text-dark-400">直属用户</p>
+                  <p class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{{ dashboard.total_sub_users }}</p>
+                </div>
+                <div class="rounded-2xl bg-gray-50 p-4 dark:bg-dark-800">
+                  <p class="text-xs text-gray-500 dark:text-dark-400">累计返佣</p>
+                  <p class="mt-2 text-2xl font-bold text-primary-600 dark:text-primary-400">{{ formatMoney(dashboard.total_commission) }}</p>
+                </div>
+                <div class="rounded-2xl bg-gray-50 p-4 dark:bg-dark-800">
+                  <p class="text-xs text-gray-500 dark:text-dark-400">今日新增</p>
+                  <p class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{{ dashboard.today_new_users }}</p>
+                </div>
+                <div class="rounded-2xl bg-gray-50 p-4 dark:bg-dark-800">
+                  <p class="text-xs text-gray-500 dark:text-dark-400">今日开通费成交</p>
+                  <p class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{{ formatMoney(dashboard.today_recharge) }}</p>
+                </div>
+              </div>
+              <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                <router-link to="/agent/sub-users" class="rounded-2xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition hover:border-primary-300 hover:text-primary-600 dark:border-dark-700 dark:text-dark-200 dark:hover:border-primary-700 dark:hover:text-primary-400">
+                  查看直属用户
+                </router-link>
+                <router-link to="/agent/financial-logs" class="rounded-2xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition hover:border-primary-300 hover:text-primary-600 dark:border-dark-700 dark:text-dark-200 dark:hover:border-primary-700 dark:hover:text-primary-400">
+                  查看资金动态
+                </router-link>
+              </div>
+            </div>
+          </section>
+        </template>
 
         <template v-else>
-          <!-- Not Agent: Apply Section -->
-          <template v-if="!status.is_agent">
-            <SlideIn direction="up" :delay="100">
-              <GlowCard glow-color="rgb(217, 119, 87)">
-                <div class="rounded-3xl border-2 border-primary-100 dark:border-primary-800/30 shadow-soft overflow-hidden">
-                  <div class="bg-gradient-to-br from-primary-500 to-primary-600 px-6 py-10 text-center relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-                    <div class="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                      <Icon name="users" size="xl" class="text-white" />
-                    </div>
-                    <h2 class="text-2xl font-extrabold text-white">{{ t('agent.becomeAgent') }}</h2>
-                    <p class="mt-2 text-sm text-primary-100">{{ t('agent.becomeAgentDesc') }}</p>
-                    <div class="mt-6 space-y-3 max-w-md mx-auto text-left">
-                      <div>
-                        <label class="block text-xs font-medium text-primary-100 mb-1">{{ t('agent.applyContact') }} *</label>
-                        <input
-                          v-model="applyForm.contact"
-                          :placeholder="t('agent.applyContactPlaceholder')"
-                          class="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/50 backdrop-blur-sm focus:border-white/40 focus:outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label class="block text-xs font-medium text-primary-100 mb-1">{{ t('agent.applySocial') }}</label>
-                        <input
-                          v-model="applyForm.social"
-                          :placeholder="t('agent.applySocialPlaceholder')"
-                          class="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/50 backdrop-blur-sm focus:border-white/40 focus:outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label class="block text-xs font-medium text-primary-100 mb-1">{{ t('agent.applyPromotion') }}</label>
-                        <textarea
-                          v-model="applyForm.promotion"
-                          :placeholder="t('agent.applyPromotionPlaceholder')"
-                          rows="2"
-                          class="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/50 backdrop-blur-sm focus:border-white/40 focus:outline-none"
-                        ></textarea>
-                      </div>
-                    </div>
-                    <div class="mt-4">
-                      <MagneticButton>
-                        <button @click="handleApply" :disabled="applying || !applyForm.contact.trim()" class="inline-flex items-center gap-2 rounded-xl bg-white/20 px-6 py-2.5 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/30 border border-white/20 disabled:opacity-50">
-                          <Icon name="arrowRight" size="sm" />
-                          {{ applying ? t('agent.applying') : t('agent.applyNow') }}
-                        </button>
-                      </MagneticButton>
-                    </div>
-                  </div>
+          <section class="grid gap-6 xl:grid-cols-3">
+            <div class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-dark-700 dark:bg-dark-900 xl:col-span-2">
+              <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-50 dark:bg-primary-900/20">
+                  <Icon name="users" size="md" class="text-primary-600 dark:text-primary-400" />
                 </div>
-              </GlowCard>
-            </SlideIn>
-          </template>
-
-          <!-- Pending Status -->
-          <template v-else-if="status.agent_status === 'pending'">
-            <SlideIn direction="up" :delay="100">
-              <div class="rounded-2xl border-2 border-yellow-200 bg-yellow-50 p-8 text-center dark:border-yellow-800/30 dark:bg-yellow-900/10 shadow-soft">
-                <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-yellow-100 dark:bg-yellow-900/30">
-                  <Icon name="clock" size="lg" class="text-yellow-600 dark:text-yellow-400" />
+                <div>
+                  <h2 class="text-lg font-semibold text-gray-900 dark:text-white">步骤 1：填写实名资料并确认合同</h2>
+                  <p class="text-sm text-gray-500 dark:text-dark-400">一期先采用站内留痕，不接第三方实名和电子签。</p>
                 </div>
-                <h2 class="text-xl font-bold text-yellow-800 dark:text-yellow-300">{{ t('agent.pendingTitle') }}</h2>
-                <p class="mt-2 text-sm text-yellow-600 dark:text-yellow-400">{{ t('agent.pendingDesc') }}</p>
               </div>
-            </SlideIn>
-          </template>
 
-          <!-- Rejected Status -->
-          <template v-else-if="status.agent_status === 'rejected'">
-            <SlideIn direction="up" :delay="100">
-              <div class="rounded-2xl border-2 border-red-200 bg-red-50 p-8 text-center dark:border-red-800/30 dark:bg-red-900/10 shadow-soft">
-                <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-100 dark:bg-red-900/30">
-                  <Icon name="xCircle" size="lg" class="text-red-600 dark:text-red-400" />
+              <div class="mt-6 grid gap-4 md:grid-cols-2">
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-dark-300">真实姓名</label>
+                  <input v-model="profileForm.real_name" class="input w-full" placeholder="请输入真实姓名" />
                 </div>
-                <h2 class="text-xl font-bold text-red-800 dark:text-red-300">{{ t('agent.rejectedTitle') }}</h2>
-                <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ t('agent.rejectedDesc') }}</p>
-              </div>
-            </SlideIn>
-          </template>
-
-          <!-- Approved Agent Dashboard -->
-          <template v-else-if="status.agent_status === 'approved'">
-            <!-- Invite Link Card -->
-            <SlideIn direction="up" :delay="100">
-              <GlowCard glow-color="rgb(217, 119, 87)">
-                <div class="overflow-hidden rounded-3xl border-2 border-primary-100 dark:border-primary-800/30 shadow-soft">
-                  <div class="bg-gradient-to-br from-primary-500 to-primary-600 px-6 py-8 text-center relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-                    <p class="text-sm font-medium text-primary-100">{{ t('agent.yourInviteLink') }}</p>
-                    <p class="mt-2 text-lg font-bold text-white break-all">{{ inviteLink }}</p>
-                    <div class="mt-4 flex items-center justify-center gap-3">
-                      <MagneticButton>
-                        <button @click="copyLink" class="inline-flex items-center gap-2 rounded-xl bg-white/20 px-5 py-2.5 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/30 border border-white/20">
-                          <Icon name="link" size="sm" />
-                          {{ t('agent.copyLink') }}
-                        </button>
-                      </MagneticButton>
-                    </div>
-                  </div>
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-dark-300">手机号</label>
+                  <input v-model="profileForm.phone" class="input w-full" placeholder="请输入本人手机号" />
                 </div>
-              </GlowCard>
-            </SlideIn>
-
-            <!-- Stats Cards -->
-            <StaggerContainer :stagger-delay="100" :delay="200">
-              <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-8">
-                <GlowCard glow-color="rgb(59, 130, 246)">
-                  <div class="rounded-2xl border-2 border-gray-200 bg-white p-5 text-center dark:border-dark-700 dark:bg-dark-900 shadow-soft">
-                    <p class="text-xs font-medium text-gray-500 dark:text-dark-400">{{ t('agent.totalSubUsers') }}</p>
-                    <p class="mt-1 text-2xl font-extrabold text-gray-900 dark:text-white">
-                      <AnimatedNumber :value="dashboard.total_sub_users" />
-                    </p>
-                  </div>
-                </GlowCard>
-                <GlowCard glow-color="rgb(34, 197, 94)">
-                  <div class="rounded-2xl border-2 border-gray-200 bg-white p-5 text-center dark:border-dark-700 dark:bg-dark-900 shadow-soft">
-                    <p class="text-xs font-medium text-gray-500 dark:text-dark-400">{{ t('agent.totalRecharge') }}</p>
-                    <p class="mt-1 text-2xl font-extrabold text-green-600 dark:text-green-400">
-                      $<AnimatedNumber :value="dashboard.total_recharge" :decimals="2" />
-                    </p>
-                  </div>
-                </GlowCard>
-                <GlowCard glow-color="rgb(239, 68, 68)">
-                  <div class="rounded-2xl border-2 border-gray-200 bg-white p-5 text-center dark:border-dark-700 dark:bg-dark-900 shadow-soft">
-                    <p class="text-xs font-medium text-gray-500 dark:text-dark-400">{{ t('agent.totalConsumed') }}</p>
-                    <p class="mt-1 text-2xl font-extrabold text-red-600 dark:text-red-400">
-                      $<AnimatedNumber :value="dashboard.total_consumed" :decimals="2" />
-                    </p>
-                  </div>
-                </GlowCard>
-                <GlowCard glow-color="rgb(217, 119, 87)">
-                  <div class="rounded-2xl border-2 border-gray-200 bg-white p-5 text-center dark:border-dark-700 dark:bg-dark-900 shadow-soft">
-                    <p class="text-xs font-medium text-gray-500 dark:text-dark-400">{{ t('agent.totalCommission') }}</p>
-                    <p class="mt-1 text-2xl font-extrabold text-primary-600 dark:text-primary-400">
-                      $<AnimatedNumber :value="dashboard.total_commission" :decimals="2" />
-                    </p>
-                  </div>
-                </GlowCard>
-                <GlowCard glow-color="rgb(249, 115, 22)">
-                  <div class="rounded-2xl border-2 border-gray-200 bg-white p-5 text-center dark:border-dark-700 dark:bg-dark-900 shadow-soft">
-                    <p class="text-xs font-medium text-gray-500 dark:text-dark-400">{{ t('agent.pendingCommission') }}</p>
-                    <p class="mt-1 text-2xl font-extrabold text-orange-600 dark:text-orange-400">
-                      $<AnimatedNumber :value="dashboard.pending_commission" :decimals="2" />
-                    </p>
-                  </div>
-                </GlowCard>
-                <GlowCard glow-color="rgb(99, 102, 241)">
-                  <div class="rounded-2xl border-2 border-gray-200 bg-white p-5 text-center dark:border-dark-700 dark:bg-dark-900 shadow-soft">
-                    <p class="text-xs font-medium text-gray-500 dark:text-dark-400">{{ t('agent.settledCommission') }}</p>
-                    <p class="mt-1 text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">
-                      $<AnimatedNumber :value="dashboard.settled_commission" :decimals="2" />
-                    </p>
-                  </div>
-                </GlowCard>
-                <GlowCard glow-color="rgb(16, 185, 129)">
-                  <div class="rounded-2xl border-2 border-gray-200 bg-white p-5 text-center dark:border-dark-700 dark:bg-dark-900 shadow-soft">
-                    <p class="text-xs font-medium text-gray-500 dark:text-dark-400">{{ t('agent.directCommission') }}</p>
-                    <p class="mt-1 text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
-                      $<AnimatedNumber :value="dashboard.direct_commission" :decimals="2" />
-                    </p>
-                  </div>
-                </GlowCard>
-                <GlowCard glow-color="rgb(168, 85, 247)">
-                  <div class="rounded-2xl border-2 border-gray-200 bg-white p-5 text-center dark:border-dark-700 dark:bg-dark-900 shadow-soft">
-                    <p class="text-xs font-medium text-gray-500 dark:text-dark-400">{{ t('agent.differentialCommission') }}</p>
-                    <p class="mt-1 text-2xl font-extrabold text-purple-600 dark:text-purple-400">
-                      $<AnimatedNumber :value="dashboard.differential_commission" :decimals="2" />
-                    </p>
-                  </div>
-                </GlowCard>
+                <div class="md:col-span-2">
+                  <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-dark-300">身份证号</label>
+                  <input v-model="profileForm.id_card_no" class="input w-full" placeholder="请输入身份证号" />
+                </div>
               </div>
-            </StaggerContainer>
 
-            <!-- Quick Nav -->
-            <SlideIn direction="up" :delay="400">
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <router-link to="/agent/sub-users" class="group rounded-2xl border-2 border-gray-200 bg-white p-6 dark:border-dark-700 dark:bg-dark-900 shadow-soft transition hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md">
-                  <div class="flex items-center gap-4">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/20">
-                      <Icon name="users" size="md" class="text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div>
-                      <p class="font-bold text-gray-900 dark:text-white">{{ t('agent.subUsers.label') }}</p>
-                      <p class="text-xs text-gray-500 dark:text-dark-400">{{ t('agent.subUsers.desc') }}</p>
-                    </div>
-                  </div>
-                </router-link>
-                <router-link to="/agent/financial-logs" class="group rounded-2xl border-2 border-gray-200 bg-white p-6 dark:border-dark-700 dark:bg-dark-900 shadow-soft transition hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md">
-                  <div class="flex items-center gap-4">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 dark:bg-green-900/20">
-                      <Icon name="dollar" size="md" class="text-green-600 dark:text-green-400" />
-                    </div>
-                    <div>
-                      <p class="font-bold text-gray-900 dark:text-white">{{ t('agent.financialLogs.label') }}</p>
-                      <p class="text-xs text-gray-500 dark:text-dark-400">{{ t('agent.financialLogs.desc') }}</p>
-                    </div>
-                  </div>
-                </router-link>
-                <router-link to="/agent/commissions" class="group rounded-2xl border-2 border-gray-200 bg-white p-6 dark:border-dark-700 dark:bg-dark-900 shadow-soft transition hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md">
-                  <div class="flex items-center gap-4">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 dark:bg-primary-900/20">
-                      <Icon name="document" size="md" class="text-primary-600 dark:text-primary-400" />
-                    </div>
-                    <div>
-                      <p class="font-bold text-gray-900 dark:text-white">{{ t('agent.commissions.label') }}</p>
-                      <p class="text-xs text-gray-500 dark:text-dark-400">{{ t('agent.commissions.desc') }}</p>
-                    </div>
-                  </div>
-                </router-link>
+              <label class="mt-5 flex items-start gap-3 rounded-2xl bg-gray-50 px-4 py-3 text-sm text-gray-700 dark:bg-dark-800 dark:text-dark-200">
+                <input v-model="profileForm.contract_accepted" type="checkbox" class="mt-1 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+                <span>我已阅读并同意当前代理合作条款，确认以站内确认方式完成合同留痕。</span>
+              </label>
+
+              <div class="mt-5 flex items-center gap-3">
+                <button class="btn btn-primary" :disabled="savingProfile || !canSaveProfile" @click="handleSaveProfile">
+                  {{ savingProfile ? '保存中...' : '保存资料' }}
+                </button>
+                <span v-if="status.profile?.identity_status === 'submitted'" class="text-sm text-emerald-600 dark:text-emerald-400">
+                  资料已保存
+                </span>
               </div>
-            </SlideIn>
-          </template>
+            </div>
+
+            <div class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+              <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-50 dark:bg-orange-900/20">
+                  <Icon name="dollar" size="md" class="text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <h2 class="text-lg font-semibold text-gray-900 dark:text-white">步骤 2：支付开通费</h2>
+                  <p class="text-sm text-gray-500 dark:text-dark-400">当前开通费 {{ formatMoney(status.activation_fee) }}</p>
+                </div>
+              </div>
+
+              <div class="mt-5 rounded-2xl bg-gray-50 p-4 text-sm text-gray-700 dark:bg-dark-800 dark:text-dark-200">
+                <p>支付状态：<span class="font-semibold">{{ status.profile?.activation_fee_paid_at ? '已支付' : '未支付' }}</span></p>
+                <p class="mt-2">返佣只针对这笔代理开通费，且仅结算一级邀请关系。</p>
+              </div>
+
+              <button class="btn btn-primary mt-5 w-full" :disabled="creatingOrder || !!status.profile?.activation_fee_paid_at" @click="handleCreateActivationOrder">
+                {{ status.profile?.activation_fee_paid_at ? '已完成支付' : creatingOrder ? '创建订单中...' : '去支付开通费' }}
+              </button>
+            </div>
+          </section>
+
+          <section class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">步骤 3：提交代理申请</h2>
+                <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
+                  只有实名资料、合同确认和开通费支付都完成后，才可以提交申请。
+                </p>
+              </div>
+              <button class="btn btn-primary" :disabled="applying || !status.can_apply" @click="handleApply">
+                {{ applying ? '提交中...' : '提交代理申请' }}
+              </button>
+            </div>
+          </section>
         </template>
+      </template>
+    </div>
+
+    <Teleport to="body">
+      <div v-if="showPaymentModal" class="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/50" @click="closePaymentModal"></div>
+        <div class="relative w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl dark:bg-dark-900">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">扫码支付代理开通费</h3>
+          <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
+            订单号：{{ activationOrder.order_no || '-' }}
+          </p>
+          <div class="mt-6 flex justify-center">
+            <canvas ref="qrCanvas" class="rounded-2xl border border-gray-200 bg-white p-3 dark:border-dark-700"></canvas>
+          </div>
+          <p class="mt-4 text-center text-sm text-gray-500 dark:text-dark-400">
+            支付成功后会自动刷新状态
+          </p>
+          <div class="mt-6 flex justify-end gap-3">
+            <button class="btn btn-secondary" @click="closePaymentModal">关闭</button>
+            <button class="btn btn-primary" @click="refreshStatus">手动刷新</button>
+          </div>
+        </div>
       </div>
-    </FadeIn>
+    </Teleport>
   </AppLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import QRCode from 'qrcode'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import Icon from '@/components/icons/Icon.vue'
+import { agentAPI, type AgentDashboardStats, type AgentStatus } from '@/api/agent'
+import { paymentAPI, type CreateOrderResponse } from '@/api/payment'
 import { useAppStore } from '@/stores'
-import { agentAPI, type AgentStatus, type AgentDashboardStats } from '@/api/agent'
-import { FadeIn, SlideIn, StaggerContainer, GlowCard, MagneticButton, AnimatedNumber } from '@/components/animations'
 
-const { t } = useI18n()
 const appStore = useAppStore()
 
 const loading = ref(true)
+const savingProfile = ref(false)
+const creatingOrder = ref(false)
 const applying = ref(false)
-const applyForm = ref({
-  contact: '',
-  social: '',
-  promotion: ''
+const showPaymentModal = ref(false)
+const qrCanvas = ref<HTMLCanvasElement | null>(null)
+const pollTimer = ref<number | null>(null)
+
+const activationOrder = ref<CreateOrderResponse & { order_no?: string }>({
+  order_no: '',
+  code_url: null,
+  amount_fen: 0,
+  discount_amount: 0,
+  expired_at: ''
 })
-const inviteLink = ref('')
+
 const status = ref<AgentStatus>({
+  enabled: true,
   is_agent: false,
   agent_status: '',
-  agent_commission_rate: 0,
-  agent_note: '',
-  agent_approved_at: null
+  commission_rate: 0,
+  invite_code: '',
+  can_apply: false,
+  activation_fee: 0,
+  profile: {
+    user_id: 0,
+    real_name: '',
+    id_card_no: '',
+    phone: '',
+    identity_status: 'unsubmitted',
+    identity_submitted_at: null,
+    contract_status: 'unsigned',
+    contract_version: 'v1',
+    contract_signed_at: null,
+    contract_ip: '',
+    activation_order_id: null,
+    activation_fee_paid_at: null,
+    frozen_balance: 0,
+    withdrawable_balance: 0,
+    total_withdrawn: 0,
+    is_frozen: false,
+    frozen_reason: ''
+  },
+  wallet: {
+    site_balance: 0,
+    frozen_balance: 0,
+    withdrawable_balance: 0,
+    total_withdrawn: 0
+  },
+  withdraw_freeze_days: 7,
+  withdraw_window: {
+    weekday: 5,
+    start_hour: 14,
+    end_hour: 24,
+    label: ''
+  }
 })
+
 const dashboard = ref<AgentDashboardStats>({
   total_sub_users: 0,
   total_recharge: 0,
@@ -259,13 +288,48 @@ const dashboard = ref<AgentDashboardStats>({
   total_commission: 0,
   pending_commission: 0,
   settled_commission: 0,
-  direct_commission: 0,
-  differential_commission: 0
+  today_new_users: 0,
+  today_recharge: 0,
+  site_balance: 0,
+  frozen_balance: 0,
+  withdrawable_balance: 0,
+  total_withdrawn: 0
 })
 
+const inviteLink = ref('')
+const profileForm = ref({
+  real_name: '',
+  id_card_no: '',
+  phone: '',
+  contract_accepted: false
+})
+
+const canSaveProfile = computed(() =>
+  profileForm.value.real_name.trim() &&
+  profileForm.value.id_card_no.trim() &&
+  profileForm.value.phone.trim() &&
+  profileForm.value.contract_accepted
+)
+
+const windowLabel = computed(() => `${String(status.value.withdraw_window.start_hour).padStart(2, '0')}:00-${String(status.value.withdraw_window.end_hour).padStart(2, '0')}:00`)
+
 onMounted(async () => {
+  await refreshStatus()
+})
+
+onBeforeUnmount(() => {
+  stopPolling()
+})
+
+async function refreshStatus() {
+  loading.value = true
   try {
     status.value = await agentAPI.getStatus()
+    profileForm.value.real_name = status.value.profile?.real_name || ''
+    profileForm.value.id_card_no = status.value.profile?.id_card_no || ''
+    profileForm.value.phone = status.value.profile?.phone || ''
+    profileForm.value.contract_accepted = status.value.profile?.contract_status === 'signed'
+
     if (status.value.agent_status === 'approved') {
       const [dashData, linkData] = await Promise.all([
         agentAPI.getDashboard(),
@@ -275,33 +339,133 @@ onMounted(async () => {
       inviteLink.value = linkData.invite_url || `${window.location.origin}/register?invite=${linkData.invite_code}`
     }
   } catch (err) {
-    console.error('Failed to load agent data:', err)
+    console.error('Failed to load agent status:', err)
+    appStore.showError('加载代理状态失败')
   } finally {
     loading.value = false
   }
-})
+}
+
+async function handleSaveProfile() {
+  if (!canSaveProfile.value) return
+  savingProfile.value = true
+  try {
+    await agentAPI.saveProfile({
+      real_name: profileForm.value.real_name.trim(),
+      id_card_no: profileForm.value.id_card_no.trim(),
+      phone: profileForm.value.phone.trim(),
+      contract_accepted: profileForm.value.contract_accepted
+    })
+    appStore.showSuccess('资料已保存')
+    await refreshStatus()
+  } catch (err) {
+    console.error('Failed to save profile:', err)
+    appStore.showError('保存资料失败')
+  } finally {
+    savingProfile.value = false
+  }
+}
+
+async function handleCreateActivationOrder() {
+  creatingOrder.value = true
+  try {
+    const order = await paymentAPI.createAgentActivationOrder()
+    activationOrder.value = order
+    showPaymentModal.value = true
+    await nextTick()
+    if (order.code_url && qrCanvas.value) {
+      await QRCode.toCanvas(qrCanvas.value, order.code_url, { width: 220, margin: 1 })
+    }
+    startPolling(order.order_no)
+  } catch (err) {
+    console.error('Failed to create activation order:', err)
+    appStore.showError('创建支付订单失败')
+  } finally {
+    creatingOrder.value = false
+  }
+}
 
 async function handleApply() {
   applying.value = true
   try {
-    await agentAPI.apply({
-      contact: applyForm.value.contact,
-      social: applyForm.value.social || undefined,
-      promotion: applyForm.value.promotion || undefined
-    })
-    status.value.is_agent = true
-    status.value.agent_status = 'pending'
-    appStore.showSuccess(t('agent.applySuccess'))
+    await agentAPI.apply()
+    appStore.showSuccess('代理申请已提交')
+    await refreshStatus()
   } catch (err) {
-    console.error('Apply failed:', err)
-    appStore.showError(t('agent.applyError'))
+    console.error('Failed to apply agent:', err)
+    appStore.showError('提交申请失败')
   } finally {
     applying.value = false
   }
 }
 
+function startPolling(orderNo: string) {
+  stopPolling()
+  pollTimer.value = window.setInterval(async () => {
+    try {
+      const order = await paymentAPI.queryOrder(orderNo)
+      if (order.status === 'paid') {
+        stopPolling()
+        showPaymentModal.value = false
+        appStore.showSuccess('开通费支付成功')
+        await refreshStatus()
+      }
+    } catch (err) {
+      console.error('Failed to poll activation order:', err)
+    }
+  }, 3000)
+}
+
+function stopPolling() {
+  if (pollTimer.value !== null) {
+    window.clearInterval(pollTimer.value)
+    pollTimer.value = null
+  }
+}
+
+function closePaymentModal() {
+  showPaymentModal.value = false
+  stopPolling()
+}
+
 function copyLink() {
   navigator.clipboard.writeText(inviteLink.value)
-  appStore.showSuccess(t('agent.linkCopied'))
+  appStore.showSuccess('邀请链接已复制')
+}
+
+function formatMoney(value: number) {
+  return `¥${Number(value || 0).toFixed(2)}`
+}
+
+function statusLabel(value: string) {
+  switch (value) {
+    case 'approved': return '已通过'
+    case 'pending': return '待审核'
+    case 'rejected': return '已驳回'
+    default: return '未申请'
+  }
+}
+
+function identityLabel(value?: string) {
+  return value === 'submitted' ? '已提交' : '未提交'
+}
+
+function contractLabel(value?: string) {
+  return value === 'signed' ? '已确认' : '未确认'
+}
+
+function weekdayLabel(value: number) {
+  return ['一', '二', '三', '四', '五', '六', '日'][Math.max(1, value) - 1] || '五'
+}
+
+function statusBadgeClass(value: string) {
+  if (value === 'approved') return 'badge-success'
+  if (value === 'pending') return 'badge-warning'
+  if (value === 'rejected') return 'badge-danger'
+  return 'badge-gray'
+}
+
+function profileBadgeClass(value?: string) {
+  return value === 'signed' || value === 'submitted' ? 'badge-success' : 'badge-gray'
 }
 </script>

@@ -148,3 +148,29 @@ func (h *AgentHandler) UpdateParent(c *gin.Context) {
 
 	response.Success(c, gin.H{"message": "parent agent updated"})
 }
+
+// SetFrozen updates the frozen status of an agent.
+// POST /api/v1/admin/agents/:id/freeze
+func (h *AgentHandler) SetFrozen(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "invalid user ID")
+		return
+	}
+
+	var req struct {
+		Frozen bool   `json:"frozen"`
+		Reason string `json:"reason"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "invalid request")
+		return
+	}
+
+	if err := h.agentService.AdminSetFrozen(c.Request.Context(), id, req.Frozen, req.Reason); err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{"message": "agent frozen status updated"})
+}

@@ -90,6 +90,15 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		OpsMetricsIntervalSeconds:            settings.OpsMetricsIntervalSeconds,
 		ReferralEnabled:                      settings.ReferralEnabled,
 		ReferralRewardAmount:                 settings.ReferralRewardAmount,
+		InviteeRewardAmount:                  settings.InviteeRewardAmount,
+		AgentEnabled:                         settings.AgentEnabled,
+		AgentDefaultCommissionRate:           settings.AgentDefaultCommissionRate,
+		AgentActivationFee:                   settings.AgentActivationFee,
+		AgentContractVersion:                 settings.AgentContractVersion,
+		AgentWithdrawFreezeDays:              settings.AgentWithdrawFreezeDays,
+		AgentWithdrawWeekday:                 settings.AgentWithdrawWeekday,
+		AgentWithdrawStartHour:               settings.AgentWithdrawStartHour,
+		AgentWithdrawEndHour:                 settings.AgentWithdrawEndHour,
 		PaymentEnabled:                       settings.PaymentEnabled,
 		WechatPayAppID:                       settings.WechatPayAppID,
 		WechatPayMchID:                       settings.WechatPayMchID,
@@ -181,8 +190,17 @@ type UpdateSettingsRequest struct {
 	OpsMetricsIntervalSeconds    *int    `json:"ops_metrics_interval_seconds"`
 
 	// Referral / Invite Reward
-	ReferralEnabled      bool    `json:"referral_enabled"`
-	ReferralRewardAmount float64 `json:"referral_reward_amount"`
+	ReferralEnabled            bool    `json:"referral_enabled"`
+	ReferralRewardAmount       float64 `json:"referral_reward_amount"`
+	InviteeRewardAmount        float64 `json:"invitee_reward_amount"`
+	AgentEnabled               bool    `json:"agent_enabled"`
+	AgentDefaultCommissionRate float64 `json:"agent_default_commission_rate"`
+	AgentActivationFee         float64 `json:"agent_activation_fee"`
+	AgentContractVersion       string  `json:"agent_contract_version"`
+	AgentWithdrawFreezeDays    int     `json:"agent_withdraw_freeze_days"`
+	AgentWithdrawWeekday       int     `json:"agent_withdraw_weekday"`
+	AgentWithdrawStartHour     int     `json:"agent_withdraw_start_hour"`
+	AgentWithdrawEndHour       int     `json:"agent_withdraw_end_hour"`
 
 	// Payment / WeChat Pay
 	PaymentEnabled       bool    `json:"payment_enabled"`
@@ -247,6 +265,18 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	}
 	if req.InitialBalanceExpiryDays < 0 {
 		req.InitialBalanceExpiryDays = 0
+	}
+	if req.AgentWithdrawFreezeDays < 0 {
+		req.AgentWithdrawFreezeDays = 0
+	}
+	if req.AgentWithdrawWeekday < 1 || req.AgentWithdrawWeekday > 7 {
+		req.AgentWithdrawWeekday = 5
+	}
+	if req.AgentWithdrawStartHour < 0 || req.AgentWithdrawStartHour > 23 {
+		req.AgentWithdrawStartHour = 14
+	}
+	if req.AgentWithdrawEndHour < 1 || req.AgentWithdrawEndHour > 24 {
+		req.AgentWithdrawEndHour = 24
 	}
 
 	// Turnstile 参数验证
@@ -390,31 +420,40 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 			}
 			return previousSettings.OpsMetricsIntervalSeconds
 		}(),
-		ReferralEnabled:      req.ReferralEnabled,
-		ReferralRewardAmount: req.ReferralRewardAmount,
-		PaymentEnabled:       req.PaymentEnabled,
-		WechatPayAppID:       req.WechatPayAppID,
-		WechatPayMchID:       req.WechatPayMchID,
-		WechatPayAPIv3Key:    req.WechatPayAPIv3Key,
-		WechatPayMchSerialNo: req.WechatPayMchSerialNo,
-		WechatPayPublicKeyID: req.WechatPayPublicKeyID,
-		WechatPayPublicKey:   req.WechatPayPublicKey,
-		WechatPayPrivateKey:  req.WechatPayPrivateKey,
-		WechatPayNotifyURL:   req.WechatPayNotifyURL,
-		PaymentPlans:         req.PaymentPlans,
-		RechargeMinAmount:    req.RechargeMinAmount,
-		RechargePlans:        req.RechargePlans,
-		AlipayEnabled:        req.AlipayEnabled,
-		AlipayAppID:          req.AlipayAppID,
-		AlipayPrivateKey:     req.AlipayPrivateKey,
-		AlipayPublicKey:      req.AlipayPublicKey,
-		AlipayNotifyURL:      req.AlipayNotifyURL,
-		AlipayIsProduction:   req.AlipayIsProduction,
-		EpayEnabled:          req.EpayEnabled,
-		EpayGateway:          req.EpayGateway,
-		EpayPID:              req.EpayPID,
-		EpayPKey:             req.EpayPKey,
-		EpayNotifyURL:        req.EpayNotifyURL,
+		ReferralEnabled:            req.ReferralEnabled,
+		ReferralRewardAmount:       req.ReferralRewardAmount,
+		InviteeRewardAmount:        req.InviteeRewardAmount,
+		AgentEnabled:               req.AgentEnabled,
+		AgentDefaultCommissionRate: req.AgentDefaultCommissionRate,
+		AgentActivationFee:         req.AgentActivationFee,
+		AgentContractVersion:       req.AgentContractVersion,
+		AgentWithdrawFreezeDays:    req.AgentWithdrawFreezeDays,
+		AgentWithdrawWeekday:       req.AgentWithdrawWeekday,
+		AgentWithdrawStartHour:     req.AgentWithdrawStartHour,
+		AgentWithdrawEndHour:       req.AgentWithdrawEndHour,
+		PaymentEnabled:             req.PaymentEnabled,
+		WechatPayAppID:             req.WechatPayAppID,
+		WechatPayMchID:             req.WechatPayMchID,
+		WechatPayAPIv3Key:          req.WechatPayAPIv3Key,
+		WechatPayMchSerialNo:       req.WechatPayMchSerialNo,
+		WechatPayPublicKeyID:       req.WechatPayPublicKeyID,
+		WechatPayPublicKey:         req.WechatPayPublicKey,
+		WechatPayPrivateKey:        req.WechatPayPrivateKey,
+		WechatPayNotifyURL:         req.WechatPayNotifyURL,
+		PaymentPlans:               req.PaymentPlans,
+		RechargeMinAmount:          req.RechargeMinAmount,
+		RechargePlans:              req.RechargePlans,
+		AlipayEnabled:              req.AlipayEnabled,
+		AlipayAppID:                req.AlipayAppID,
+		AlipayPrivateKey:           req.AlipayPrivateKey,
+		AlipayPublicKey:            req.AlipayPublicKey,
+		AlipayNotifyURL:            req.AlipayNotifyURL,
+		AlipayIsProduction:         req.AlipayIsProduction,
+		EpayEnabled:                req.EpayEnabled,
+		EpayGateway:                req.EpayGateway,
+		EpayPID:                    req.EpayPID,
+		EpayPKey:                   req.EpayPKey,
+		EpayNotifyURL:              req.EpayNotifyURL,
 	}
 
 	if err := h.settingService.UpdateSettings(c.Request.Context(), settings); err != nil {
@@ -477,6 +516,15 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		OpsMetricsIntervalSeconds:            updatedSettings.OpsMetricsIntervalSeconds,
 		ReferralEnabled:                      updatedSettings.ReferralEnabled,
 		ReferralRewardAmount:                 updatedSettings.ReferralRewardAmount,
+		InviteeRewardAmount:                  updatedSettings.InviteeRewardAmount,
+		AgentEnabled:                         updatedSettings.AgentEnabled,
+		AgentDefaultCommissionRate:           updatedSettings.AgentDefaultCommissionRate,
+		AgentActivationFee:                   updatedSettings.AgentActivationFee,
+		AgentContractVersion:                 updatedSettings.AgentContractVersion,
+		AgentWithdrawFreezeDays:              updatedSettings.AgentWithdrawFreezeDays,
+		AgentWithdrawWeekday:                 updatedSettings.AgentWithdrawWeekday,
+		AgentWithdrawStartHour:               updatedSettings.AgentWithdrawStartHour,
+		AgentWithdrawEndHour:                 updatedSettings.AgentWithdrawEndHour,
 		PaymentEnabled:                       updatedSettings.PaymentEnabled,
 		WechatPayAppID:                       updatedSettings.WechatPayAppID,
 		WechatPayMchID:                       updatedSettings.WechatPayMchID,

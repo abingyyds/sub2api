@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"strconv"
 
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
@@ -39,6 +38,34 @@ func (h *AgentHandler) GetStatus(c *gin.Context) {
 	response.Success(c, status)
 }
 
+// SaveProfile stores identity and contract information for the current user.
+// POST /api/v1/agent/profile
+func (h *AgentHandler) SaveProfile(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "User not authenticated")
+		return
+	}
+
+	var req struct {
+		RealName         string `json:"real_name" binding:"required"`
+		IDCardNo         string `json:"id_card_no" binding:"required"`
+		Phone            string `json:"phone" binding:"required"`
+		ContractAccepted bool   `json:"contract_accepted"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "real_name, id_card_no and phone are required")
+		return
+	}
+
+	if err := h.agentService.SaveProfile(c.Request.Context(), subject.UserID, req.RealName, req.IDCardNo, req.Phone, req.ContractAccepted, c.ClientIP()); err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{"message": "profile saved"})
+}
+
 // Apply submits an agent application
 // POST /api/v1/agent/apply
 func (h *AgentHandler) Apply(c *gin.Context) {
@@ -48,23 +75,7 @@ func (h *AgentHandler) Apply(c *gin.Context) {
 		return
 	}
 
-	var req struct {
-		Contact   string `json:"contact"`
-		Social    string `json:"social"`
-		Promotion string `json:"promotion"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		// fields are optional except contact
-	}
-
-	// Serialize structured fields to JSON for storage in agent_note
-	noteData, _ := json.Marshal(map[string]string{
-		"contact":   req.Contact,
-		"social":    req.Social,
-		"promotion": req.Promotion,
-	})
-
-	if err := h.agentService.ApplyForAgent(c.Request.Context(), subject.UserID, string(noteData)); err != nil {
+	if err := h.agentService.ApplyForAgent(c.Request.Context(), subject.UserID); err != nil {
 		response.ErrorFrom(c, err)
 		return
 	}

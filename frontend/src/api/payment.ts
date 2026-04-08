@@ -181,6 +181,16 @@ export async function createRechargeOrder(amount: number, promoCode?: string, pa
 }
 
 /**
+ * Create an agent activation fee order.
+ */
+export async function createAgentActivationOrder(payMethod?: PayMethod): Promise<CreateOrderResponse> {
+  const { data } = await apiClient.post<CreateOrderResponse>('/payment/agent-activation', {
+    pay_method: payMethod || 'wechat',
+  })
+  return data
+}
+
+/**
  * Query order status
  */
 export async function queryOrder(orderNo: string): Promise<PaymentOrder> {
@@ -232,6 +242,7 @@ export const paymentAPI = {
   getPayMethods,
   createOrder,
   createRechargeOrder,
+  createAgentActivationOrder,
   queryOrder,
   listOrders,
   submitInvoiceRequest,

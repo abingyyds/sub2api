@@ -64,6 +64,14 @@ export interface SystemSettings {
   referral_enabled: boolean
   referral_reward_amount: number
   invitee_reward_amount: number
+  agent_enabled: boolean
+  agent_default_commission_rate: number
+  agent_activation_fee: number
+  agent_contract_version: string
+  agent_withdraw_freeze_days: number
+  agent_withdraw_weekday: number
+  agent_withdraw_start_hour: number
+  agent_withdraw_end_hour: number
 
   // Ops Monitoring (vNext)
   ops_monitoring_enabled: boolean
@@ -145,6 +153,14 @@ export interface UpdateSettingsRequest {
   referral_enabled?: boolean
   referral_reward_amount?: number
   invitee_reward_amount?: number
+  agent_enabled?: boolean
+  agent_default_commission_rate?: number
+  agent_activation_fee?: number
+  agent_contract_version?: string
+  agent_withdraw_freeze_days?: number
+  agent_withdraw_weekday?: number
+  agent_withdraw_start_hour?: number
+  agent_withdraw_end_hour?: number
   ops_monitoring_enabled?: boolean
   ops_realtime_monitoring_enabled?: boolean
   ops_query_mode_default?: 'auto' | 'raw' | 'preagg' | string

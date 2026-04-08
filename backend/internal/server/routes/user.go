@@ -112,6 +112,7 @@ func RegisterUserRoutes(
 		{
 			authPayment.POST("/orders", h.Payment.CreateOrder)
 			authPayment.POST("/recharge", h.Payment.CreateRecharge)
+			authPayment.POST("/agent-activation", h.Payment.CreateAgentActivationOrder)
 			authPayment.GET("/orders", h.Payment.ListOrders)
 			authPayment.GET("/orders/:orderNo", h.Payment.QueryOrder)
 			authPayment.POST("/invoice-requests", h.Payment.SubmitInvoice)
@@ -122,6 +123,7 @@ func RegisterUserRoutes(
 		agent := authenticated.Group("/agent")
 		{
 			agent.GET("/status", h.Agent.GetStatus)
+			agent.POST("/profile", h.Agent.SaveProfile)
 			agent.POST("/apply", h.Agent.Apply)
 			agent.GET("/dashboard", h.Agent.Dashboard)
 			agent.GET("/link", h.Agent.GetLink)

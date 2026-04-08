@@ -437,6 +437,57 @@
           </div>
         </div>
 
+        <div class="card">
+          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">代理系统</h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              控制代理开通费、返佣比例和提现时间窗。
+            </p>
+          </div>
+          <div class="space-y-5 p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="font-medium text-gray-900 dark:text-white">启用代理系统</label>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  关闭后前台仍保留页面，但无法继续提交代理流程。
+                </p>
+              </div>
+              <Toggle v-model="form.agent_enabled" />
+            </div>
+
+            <div class="grid gap-4 border-t border-gray-100 pt-4 dark:border-dark-700 md:grid-cols-2 xl:grid-cols-4">
+              <div>
+                <label class="input-label">代理开通费（元）</label>
+                <input v-model.number="form.agent_activation_fee" type="number" min="0" step="0.01" class="input mt-1 w-full" />
+              </div>
+              <div>
+                <label class="input-label">一级返佣比例</label>
+                <input v-model.number="form.agent_default_commission_rate" type="number" min="0" max="1" step="0.01" class="input mt-1 w-full" />
+              </div>
+              <div>
+                <label class="input-label">合同版本</label>
+                <input v-model="form.agent_contract_version" type="text" class="input mt-1 w-full" />
+              </div>
+              <div>
+                <label class="input-label">提现冻结天数</label>
+                <input v-model.number="form.agent_withdraw_freeze_days" type="number" min="0" step="1" class="input mt-1 w-full" />
+              </div>
+              <div>
+                <label class="input-label">提现星期（1-7）</label>
+                <input v-model.number="form.agent_withdraw_weekday" type="number" min="1" max="7" step="1" class="input mt-1 w-full" />
+              </div>
+              <div>
+                <label class="input-label">开始小时</label>
+                <input v-model.number="form.agent_withdraw_start_hour" type="number" min="0" max="23" step="1" class="input mt-1 w-full" />
+              </div>
+              <div>
+                <label class="input-label">结束小时</label>
+                <input v-model.number="form.agent_withdraw_end_hour" type="number" min="1" max="24" step="1" class="input mt-1 w-full" />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Payment / WeChat Pay Settings -->
         <div class="card">
           <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
@@ -1482,6 +1533,14 @@ const form = reactive<SettingsForm>({
   referral_enabled: false,
   referral_reward_amount: 0,
   invitee_reward_amount: 0,
+  agent_enabled: true,
+  agent_default_commission_rate: 0.5,
+  agent_activation_fee: 2000,
+  agent_contract_version: 'v1',
+  agent_withdraw_freeze_days: 7,
+  agent_withdraw_weekday: 5,
+  agent_withdraw_start_hour: 14,
+  agent_withdraw_end_hour: 24,
   // Ops monitoring (vNext)
   ops_monitoring_enabled: true,
   ops_realtime_monitoring_enabled: true,
@@ -1737,6 +1796,14 @@ async function saveSettings() {
       referral_enabled: form.referral_enabled,
       referral_reward_amount: form.referral_reward_amount,
       invitee_reward_amount: form.invitee_reward_amount,
+      agent_enabled: form.agent_enabled,
+      agent_default_commission_rate: form.agent_default_commission_rate,
+      agent_activation_fee: form.agent_activation_fee,
+      agent_contract_version: form.agent_contract_version,
+      agent_withdraw_freeze_days: form.agent_withdraw_freeze_days,
+      agent_withdraw_weekday: form.agent_withdraw_weekday,
+      agent_withdraw_start_hour: form.agent_withdraw_start_hour,
+      agent_withdraw_end_hour: form.agent_withdraw_end_hour,
       // Payment / WeChat Pay
       payment_enabled: form.payment_enabled,
       wechat_pay_appid: form.wechat_pay_appid,

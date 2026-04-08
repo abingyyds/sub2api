@@ -66,6 +66,16 @@ type SystemSettings struct {
 	ReferralRewardAmount float64
 	InviteeRewardAmount  float64 `json:"invitee_reward_amount"`
 
+	// Agent / Affiliate
+	AgentEnabled               bool
+	AgentDefaultCommissionRate float64
+	AgentActivationFee         float64
+	AgentContractVersion       string
+	AgentWithdrawFreezeDays    int
+	AgentWithdrawWeekday       int
+	AgentWithdrawStartHour     int
+	AgentWithdrawEndHour       int
+
 	// Payment / WeChat Pay
 	PaymentEnabled                bool
 	WechatPayAppID                string
@@ -120,6 +130,7 @@ type PublicSettings struct {
 	HideCcsImportButton  bool
 	LinuxDoOAuthEnabled  bool
 	ReferralEnabled      bool
+	AgentEnabled         bool
 	Version              string
 }
 

@@ -18,38 +18,32 @@
                 <table class="w-full">
                   <thead>
                     <tr class="border-b border-gray-100 dark:border-dark-700">
-                      <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-dark-400">{{ t('agent.orderNo') }}</th>
                       <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-dark-400">{{ t('agent.userEmail') }}</th>
-                      <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-dark-400">{{ t('agent.planKey') }}</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-dark-400">类型</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-dark-400">说明</th>
                       <th class="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-dark-400">{{ t('agent.amount') }}</th>
-                      <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-dark-400">{{ t('agent.orderStatus') }}</th>
-                      <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-dark-400">{{ t('agent.paidAt') }}</th>
+                      <th class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-dark-400">{{ t('agent.createdAt') }}</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-gray-100 dark:divide-dark-700">
                     <tr v-if="loading">
-                      <td colspan="6" class="px-6 py-12 text-center">
+                      <td colspan="5" class="px-6 py-12 text-center">
                         <div class="inline-block h-6 w-6 animate-spin rounded-full border-b-2 border-primary-600"></div>
                       </td>
                     </tr>
                     <tr v-else-if="items.length === 0">
-                      <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-dark-400">
+                      <td colspan="5" class="px-6 py-12 text-center text-gray-500 dark:text-dark-400">
                         {{ t('agent.noFinancialLogs') }}
                       </td>
                     </tr>
                     <tr v-for="log in items" :key="log.id" class="hover:bg-gray-50 dark:hover:bg-dark-800/50 transition-colors">
-                      <td class="px-6 py-4 text-sm font-mono text-gray-900 dark:text-white">{{ log.order_no }}</td>
                       <td class="px-6 py-4 text-sm text-gray-600 dark:text-dark-300">{{ log.user_email }}</td>
-                      <td class="px-6 py-4 text-sm text-gray-600 dark:text-dark-300">{{ log.plan_key || '-' }}</td>
+                      <td class="px-6 py-4 text-sm text-gray-600 dark:text-dark-300">{{ log.type }}</td>
+                      <td class="px-6 py-4 text-sm text-gray-600 dark:text-dark-300">{{ log.detail || '-' }}</td>
                       <td class="px-6 py-4 text-sm text-right font-medium text-green-600 dark:text-green-400">
-                        {{ log.balance_amount > 0 ? `$${log.balance_amount.toFixed(2)}` : `¥${(log.amount_fen / 100).toFixed(2)}` }}
+                        ¥{{ Number(log.amount || 0).toFixed(2) }}
                       </td>
-                      <td class="px-6 py-4">
-                        <span :class="statusClass(log.status)" class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
-                          {{ log.status }}
-                        </span>
-                      </td>
-                      <td class="px-6 py-4 text-sm text-gray-500 dark:text-dark-400">{{ formatDate(log.paid_at || log.created_at) }}</td>
+                      <td class="px-6 py-4 text-sm text-gray-500 dark:text-dark-400">{{ formatDate(log.created_at) }}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -102,15 +96,6 @@ async function loadData(p: number) {
     console.error('Failed to load financial logs:', err)
   } finally {
     loading.value = false
-  }
-}
-
-function statusClass(status: string): string {
-  switch (status) {
-    case 'paid': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-    case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-    case 'expired': return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
-    default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
   }
 }
 

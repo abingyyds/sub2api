@@ -158,7 +158,7 @@ func (r *agentRepository) ListSubUserPaymentOrders(ctx context.Context, agentID 
 
 // --- Dashboard stats ---
 
-func (r *agentRepository) GetDashboardStats(ctx context.Context, agentID int64) (*service.AgentDashboardStats, error) {
+func (r *agentRepository) GetDashboardStats(ctx context.Context, agentID int64, siteBalance float64) (*service.AgentDashboardStats, error) {
 	stats := &service.AgentDashboardStats{}
 
 	// Total sub-users
@@ -181,12 +181,9 @@ func (r *agentRepository) GetDashboardStats(ctx context.Context, agentID int64) 
 	r.db.QueryRowContext(ctx,
 		`SELECT COALESCE(SUM(commission_amount), 0),
 			COALESCE(SUM(commission_amount) FILTER (WHERE status = 'pending'), 0),
-			COALESCE(SUM(commission_amount) FILTER (WHERE status = 'settled'), 0),
-			COALESCE(SUM(commission_amount) FILTER (WHERE source_type = 'payment'), 0),
-			COALESCE(SUM(commission_amount) FILTER (WHERE source_type = 'differential'), 0)
+			COALESCE(SUM(commission_amount) FILTER (WHERE status = 'settled'), 0)
 		 FROM agent_commissions WHERE agent_id = $1`, agentID).Scan(
-		&stats.TotalCommission, &stats.PendingCommission, &stats.SettledCommission,
-		&stats.DirectCommission, &stats.DifferentialCommission)
+		&stats.TotalCommission, &stats.PendingCommission, &stats.SettledCommission)
 
 	// Today stats
 	today := time.Now().Truncate(24 * time.Hour)
@@ -201,17 +198,22 @@ func (r *agentRepository) GetDashboardStats(ctx context.Context, agentID int64) 
 		 JOIN referrals ref ON ref.invitee_id = po.user_id AND ref.inviter_id = $1
 		 WHERE po.status = 'paid' AND po.paid_at >= $2`, agentID, today).Scan(&stats.TodayRecharge)
 
+	stats.SiteBalance = siteBalance
+	r.db.QueryRowContext(ctx,
+		`SELECT COALESCE(frozen_balance, 0), COALESCE(withdrawable_balance, 0), COALESCE(total_withdrawn, 0)
+		 FROM agent_profiles WHERE user_id = $1`, agentID).Scan(&stats.FrozenBalance, &stats.WithdrawableBalance, &stats.TotalWithdrawn)
+
 	return stats, nil
 }
 
 // --- Commission CRUD ---
 
 func (r *agentRepository) CreateCommission(ctx context.Context, c *service.AgentCommission) error {
-	query := `INSERT INTO agent_commissions (agent_id, user_id, order_id, source_type, source_amount, commission_rate, commission_amount, status, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING id, created_at, updated_at`
+	query := `INSERT INTO agent_commissions (agent_id, user_id, order_id, source_type, source_amount, commission_rate, commission_amount, status, settled_at, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) RETURNING id, created_at, updated_at`
 	return r.db.QueryRowContext(ctx, query,
 		c.AgentID, c.UserID, c.OrderID, c.SourceType, c.SourceAmount,
-		c.CommissionRate, c.CommissionAmount, c.Status,
+		c.CommissionRate, c.CommissionAmount, c.Status, c.SettledAt,
 	).Scan(&c.ID, &c.CreatedAt, &c.UpdatedAt)
 }
 
@@ -313,10 +315,15 @@ func (r *agentRepository) ListAgents(ctx context.Context, params pagination.Pagi
 	// Build select query
 	selectQuery := `SELECT u.id, u.email, u.username, u.is_agent, u.agent_status, u.agent_commission_rate,
 		u.agent_note, u.agent_approved_at, COALESCE(u.invite_code, ''), u.created_at,
+		COALESCE(ap.real_name, ''), COALESCE(ap.phone, ''), COALESCE(ap.identity_status, 'unsubmitted'),
+		COALESCE(ap.contract_status, 'unsigned'), ap.activation_fee_paid_at, COALESCE(ap.is_frozen, false),
+		COALESCE(ap.frozen_reason, ''), COALESCE(ap.frozen_balance, 0), COALESCE(ap.withdrawable_balance, 0), COALESCE(ap.total_withdrawn, 0),
 		(SELECT COUNT(*) FROM referrals WHERE inviter_id = u.id) AS sub_user_count,
 		COALESCE((SELECT SUM(commission_amount) FROM agent_commissions WHERE agent_id = u.id), 0) AS total_commission,
 		COALESCE((SELECT SUM(commission_amount) FROM agent_commissions WHERE agent_id = u.id AND status = 'pending'), 0) AS pending_commission
-		FROM users u WHERE (u.is_agent = true OR u.agent_status != '') AND u.deleted_at IS NULL`
+		FROM users u
+		LEFT JOIN agent_profiles ap ON ap.user_id = u.id
+		WHERE (u.is_agent = true OR u.agent_status != '') AND u.deleted_at IS NULL`
 
 	var selectArgs []any
 	argIdx = 1
@@ -345,13 +352,19 @@ func (r *agentRepository) ListAgents(ctx context.Context, params pagination.Pagi
 	for rows.Next() {
 		var a service.AgentInfo
 		var approvedAt sql.NullTime
+		var activationFeePaidAt sql.NullTime
 		if err := rows.Scan(&a.ID, &a.Email, &a.Username, &a.IsAgent, &a.AgentStatus, &a.CommissionRate,
 			&a.AgentNote, &approvedAt, &a.InviteCode, &a.CreatedAt,
+			&a.RealName, &a.Phone, &a.IdentityStatus, &a.ContractStatus, &activationFeePaidAt, &a.IsFrozen,
+			&a.FrozenReason, &a.FrozenBalance, &a.WithdrawableBalance, &a.TotalWithdrawn,
 			&a.SubUserCount, &a.TotalCommission, &a.PendingCommission); err != nil {
 			return nil, nil, err
 		}
 		if approvedAt.Valid {
 			a.ApprovedAt = &approvedAt.Time
+		}
+		if activationFeePaidAt.Valid {
+			a.ActivationFeePaidAt = &activationFeePaidAt.Time
 		}
 		results = append(results, a)
 	}
@@ -382,6 +395,106 @@ func (r *agentRepository) GetAgentByUserID(ctx context.Context, userID int64) (i
 		return agentID, &v, nil
 	}
 	return agentID, nil, nil
+}
+
+func (r *agentRepository) GetProfile(ctx context.Context, userID int64) (*service.AgentProfile, error) {
+	query := `SELECT user_id, real_name, id_card_no, phone, identity_status, identity_submitted_at,
+		contract_status, contract_version, contract_signed_at, contract_ip, activation_order_id,
+		activation_fee_paid_at, frozen_balance, withdrawable_balance, total_withdrawn,
+		is_frozen, frozen_reason, created_at, updated_at
+		FROM agent_profiles WHERE user_id = $1`
+
+	var profile service.AgentProfile
+	var identitySubmittedAt sql.NullTime
+	var contractSignedAt sql.NullTime
+	var activationOrderID sql.NullInt64
+	var activationFeePaidAt sql.NullTime
+
+	err := r.db.QueryRowContext(ctx, query, userID).Scan(
+		&profile.UserID, &profile.RealName, &profile.IDCardNo, &profile.Phone,
+		&profile.IdentityStatus, &identitySubmittedAt, &profile.ContractStatus, &profile.ContractVersion,
+		&contractSignedAt, &profile.ContractIP, &activationOrderID, &activationFeePaidAt,
+		&profile.FrozenBalance, &profile.WithdrawableBalance, &profile.TotalWithdrawn,
+		&profile.IsFrozen, &profile.FrozenReason, &profile.CreatedAt, &profile.UpdatedAt,
+	)
+	if err == sql.ErrNoRows {
+		return &service.AgentProfile{
+			UserID:          userID,
+			IdentityStatus:  service.AgentIdentityStatusUnsubmitted,
+			ContractStatus:  service.AgentContractStatusUnsigned,
+			ContractVersion: "v1",
+		}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	if identitySubmittedAt.Valid {
+		profile.IdentitySubmittedAt = &identitySubmittedAt.Time
+	}
+	if contractSignedAt.Valid {
+		profile.ContractSignedAt = &contractSignedAt.Time
+	}
+	if activationOrderID.Valid {
+		profile.ActivationOrderID = &activationOrderID.Int64
+	}
+	if activationFeePaidAt.Valid {
+		profile.ActivationFeePaidAt = &activationFeePaidAt.Time
+	}
+	return &profile, nil
+}
+
+func (r *agentRepository) UpsertProfile(ctx context.Context, profile *service.AgentProfile) error {
+	query := `INSERT INTO agent_profiles (
+			user_id, real_name, id_card_no, phone, identity_status, identity_submitted_at,
+			contract_status, contract_version, contract_signed_at, contract_ip,
+			frozen_balance, withdrawable_balance, total_withdrawn, is_frozen, frozen_reason, created_at, updated_at
+		) VALUES (
+			$1, $2, $3, $4, $5, $6,
+			$7, $8, $9, $10,
+			$11, $12, $13, $14, $15, NOW(), NOW()
+		)
+		ON CONFLICT (user_id) DO UPDATE SET
+			real_name = EXCLUDED.real_name,
+			id_card_no = EXCLUDED.id_card_no,
+			phone = EXCLUDED.phone,
+			identity_status = EXCLUDED.identity_status,
+			identity_submitted_at = EXCLUDED.identity_submitted_at,
+			contract_status = EXCLUDED.contract_status,
+			contract_version = EXCLUDED.contract_version,
+			contract_signed_at = EXCLUDED.contract_signed_at,
+			contract_ip = EXCLUDED.contract_ip,
+			updated_at = NOW()`
+	_, err := r.db.ExecContext(ctx, query,
+		profile.UserID, profile.RealName, profile.IDCardNo, profile.Phone,
+		profile.IdentityStatus, profile.IdentitySubmittedAt,
+		profile.ContractStatus, profile.ContractVersion, profile.ContractSignedAt, profile.ContractIP,
+		profile.FrozenBalance, profile.WithdrawableBalance, profile.TotalWithdrawn,
+		profile.IsFrozen, profile.FrozenReason,
+	)
+	return err
+}
+
+func (r *agentRepository) MarkActivationFeePaid(ctx context.Context, userID int64, orderID int64) error {
+	query := `INSERT INTO agent_profiles (user_id, activation_order_id, activation_fee_paid_at, created_at, updated_at)
+		VALUES ($1, $2, NOW(), NOW(), NOW())
+		ON CONFLICT (user_id) DO UPDATE SET activation_order_id = EXCLUDED.activation_order_id, activation_fee_paid_at = NOW(), updated_at = NOW()`
+	_, err := r.db.ExecContext(ctx, query, userID, orderID)
+	return err
+}
+
+func (r *agentRepository) SetAgentFrozen(ctx context.Context, userID int64, frozen bool, reason string) error {
+	query := `INSERT INTO agent_profiles (user_id, is_frozen, frozen_reason, created_at, updated_at)
+		VALUES ($1, $2, $3, NOW(), NOW())
+		ON CONFLICT (user_id) DO UPDATE SET is_frozen = EXCLUDED.is_frozen, frozen_reason = EXCLUDED.frozen_reason, updated_at = NOW()`
+	_, err := r.db.ExecContext(ctx, query, userID, frozen, reason)
+	return err
+}
+
+func (r *agentRepository) AddWalletLog(ctx context.Context, userID int64, balanceType, changeType string, amount float64, relatedUserID *int64, relatedOrderID *int64, remark string, unlockAt *time.Time) error {
+	query := `INSERT INTO agent_wallet_logs (user_id, balance_type, change_type, amount, related_user_id, related_order_id, unlock_at, remark, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`
+	_, err := r.db.ExecContext(ctx, query, userID, balanceType, changeType, amount, relatedUserID, relatedOrderID, unlockAt, remark)
+	return err
 }
 
 // GetParentAgent finds the parent agent of a given agent (the agent's inviter who is also an approved agent).

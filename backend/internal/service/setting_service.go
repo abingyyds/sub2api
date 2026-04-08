@@ -75,6 +75,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyHideCcsImportButton,
 		SettingKeyLinuxDoConnectEnabled,
 		SettingKeyReferralEnabled,
+		SettingKeyAgentEnabled,
 	}
 
 	settings, err := s.settingRepo.GetMultiple(ctx, keys)
@@ -111,6 +112,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		HideCcsImportButton:  settings[SettingKeyHideCcsImportButton] == "true",
 		LinuxDoOAuthEnabled:  linuxDoEnabled,
 		ReferralEnabled:      settings[SettingKeyReferralEnabled] == "true",
+		AgentEnabled:         settings[SettingKeyAgentEnabled] != "false",
 	}, nil
 }
 
@@ -152,6 +154,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		HideCcsImportButton  bool   `json:"hide_ccs_import_button"`
 		LinuxDoOAuthEnabled  bool   `json:"linuxdo_oauth_enabled"`
 		ReferralEnabled      bool   `json:"referral_enabled"`
+		AgentEnabled         bool   `json:"agent_enabled"`
 		Version              string `json:"version,omitempty"`
 	}{
 		RegistrationEnabled:  settings.RegistrationEnabled,
@@ -171,6 +174,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		HideCcsImportButton:  settings.HideCcsImportButton,
 		LinuxDoOAuthEnabled:  settings.LinuxDoOAuthEnabled,
 		ReferralEnabled:      settings.ReferralEnabled,
+		AgentEnabled:         settings.AgentEnabled,
 		Version:              s.version,
 	}, nil
 }
@@ -247,6 +251,16 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	updates[SettingKeyReferralEnabled] = strconv.FormatBool(settings.ReferralEnabled)
 	updates[SettingKeyReferralRewardAmount] = strconv.FormatFloat(settings.ReferralRewardAmount, 'f', 8, 64)
 	updates[SettingKeyInviteeRewardAmount] = strconv.FormatFloat(settings.InviteeRewardAmount, 'f', 8, 64)
+
+	// Agent settings
+	updates[SettingKeyAgentEnabled] = strconv.FormatBool(settings.AgentEnabled)
+	updates[SettingKeyAgentDefaultCommissionRate] = strconv.FormatFloat(settings.AgentDefaultCommissionRate, 'f', 4, 64)
+	updates[SettingKeyAgentActivationFee] = strconv.FormatFloat(settings.AgentActivationFee, 'f', 2, 64)
+	updates[SettingKeyAgentContractVersion] = settings.AgentContractVersion
+	updates[SettingKeyAgentWithdrawFreezeDays] = strconv.Itoa(settings.AgentWithdrawFreezeDays)
+	updates[SettingKeyAgentWithdrawWeekday] = strconv.Itoa(settings.AgentWithdrawWeekday)
+	updates[SettingKeyAgentWithdrawStartHour] = strconv.Itoa(settings.AgentWithdrawStartHour)
+	updates[SettingKeyAgentWithdrawEndHour] = strconv.Itoa(settings.AgentWithdrawEndHour)
 
 	// Ops monitoring (vNext)
 	updates[SettingKeyOpsMonitoringEnabled] = strconv.FormatBool(settings.OpsMonitoringEnabled)
@@ -460,6 +474,16 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyReferralRewardAmount: "0",
 		SettingKeyInviteeRewardAmount:  "0",
 
+		// Agent defaults
+		SettingKeyAgentEnabled:               "true",
+		SettingKeyAgentDefaultCommissionRate: "0.5",
+		SettingKeyAgentActivationFee:         "2000",
+		SettingKeyAgentContractVersion:       "v1",
+		SettingKeyAgentWithdrawFreezeDays:    "7",
+		SettingKeyAgentWithdrawWeekday:       "5",
+		SettingKeyAgentWithdrawStartHour:     "14",
+		SettingKeyAgentWithdrawEndHour:       "24",
+
 		// 初始余额有效期（默认永不过期）
 		SettingKeyInitialBalanceExpiryDays: "0",
 
@@ -506,6 +530,8 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		DocURL:                       settings[SettingKeyDocURL],
 		HomeContent:                  settings[SettingKeyHomeContent],
 		HideCcsImportButton:          settings[SettingKeyHideCcsImportButton] == "true",
+		AgentEnabled:                 settings[SettingKeyAgentEnabled] != "false",
+		AgentContractVersion:         s.getStringOrDefault(settings, SettingKeyAgentContractVersion, "v1"),
 	}
 
 	// 解析整数类型
@@ -615,6 +641,36 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 	}
 	if v, err := strconv.ParseFloat(settings[SettingKeyInviteeRewardAmount], 64); err == nil {
 		result.InviteeRewardAmount = v
+	}
+	if v, err := strconv.ParseFloat(settings[SettingKeyAgentDefaultCommissionRate], 64); err == nil && v >= 0 {
+		result.AgentDefaultCommissionRate = v
+	} else {
+		result.AgentDefaultCommissionRate = 0.5
+	}
+	if v, err := strconv.ParseFloat(settings[SettingKeyAgentActivationFee], 64); err == nil && v >= 0 {
+		result.AgentActivationFee = v
+	} else {
+		result.AgentActivationFee = 2000
+	}
+	if v, err := strconv.Atoi(settings[SettingKeyAgentWithdrawFreezeDays]); err == nil && v >= 0 {
+		result.AgentWithdrawFreezeDays = v
+	} else {
+		result.AgentWithdrawFreezeDays = 7
+	}
+	if v, err := strconv.Atoi(settings[SettingKeyAgentWithdrawWeekday]); err == nil && v >= 1 && v <= 7 {
+		result.AgentWithdrawWeekday = v
+	} else {
+		result.AgentWithdrawWeekday = 5
+	}
+	if v, err := strconv.Atoi(settings[SettingKeyAgentWithdrawStartHour]); err == nil && v >= 0 && v <= 23 {
+		result.AgentWithdrawStartHour = v
+	} else {
+		result.AgentWithdrawStartHour = 14
+	}
+	if v, err := strconv.Atoi(settings[SettingKeyAgentWithdrawEndHour]); err == nil && v >= 1 && v <= 24 {
+		result.AgentWithdrawEndHour = v
+	} else {
+		result.AgentWithdrawEndHour = 24
 	}
 
 	// Payment / WeChat Pay settings
@@ -1029,10 +1085,68 @@ func (s *SettingService) IsAgentEnabled(ctx context.Context) bool {
 func (s *SettingService) GetAgentDefaultCommissionRate(ctx context.Context) float64 {
 	value, err := s.settingRepo.GetValue(ctx, SettingKeyAgentDefaultCommissionRate)
 	if err != nil {
-		return 0.1 // 默认 10%
+		return 0.5 // 默认 50%
 	}
 	if v, err := strconv.ParseFloat(value, 64); err == nil && v > 0 && v <= 1 {
 		return v
 	}
-	return 0.1
+	return 0.5
+}
+
+// GetAgentActivationFee 获取代理开通费（元）。
+func (s *SettingService) GetAgentActivationFee(ctx context.Context) float64 {
+	value, err := s.settingRepo.GetValue(ctx, SettingKeyAgentActivationFee)
+	if err != nil {
+		return 2000
+	}
+	if v, err := strconv.ParseFloat(value, 64); err == nil && v >= 0 {
+		return v
+	}
+	return 2000
+}
+
+// GetAgentContractVersion 获取代理合同版本。
+func (s *SettingService) GetAgentContractVersion(ctx context.Context) string {
+	value, err := s.settingRepo.GetValue(ctx, SettingKeyAgentContractVersion)
+	if err != nil || strings.TrimSpace(value) == "" {
+		return "v1"
+	}
+	return strings.TrimSpace(value)
+}
+
+// GetAgentWithdrawFreezeDays 获取提现冻结天数。
+func (s *SettingService) GetAgentWithdrawFreezeDays(ctx context.Context) int {
+	value, err := s.settingRepo.GetValue(ctx, SettingKeyAgentWithdrawFreezeDays)
+	if err != nil {
+		return 7
+	}
+	if v, err := strconv.Atoi(value); err == nil && v >= 0 {
+		return v
+	}
+	return 7
+}
+
+// GetAgentWithdrawWindow 获取提现开放时间窗（weekday, startHour, endHour）。
+func (s *SettingService) GetAgentWithdrawWindow(ctx context.Context) (int, int, int) {
+	weekday := 5
+	startHour := 14
+	endHour := 24
+
+	if value, err := s.settingRepo.GetValue(ctx, SettingKeyAgentWithdrawWeekday); err == nil {
+		if v, convErr := strconv.Atoi(value); convErr == nil && v >= 1 && v <= 7 {
+			weekday = v
+		}
+	}
+	if value, err := s.settingRepo.GetValue(ctx, SettingKeyAgentWithdrawStartHour); err == nil {
+		if v, convErr := strconv.Atoi(value); convErr == nil && v >= 0 && v <= 23 {
+			startHour = v
+		}
+	}
+	if value, err := s.settingRepo.GetValue(ctx, SettingKeyAgentWithdrawEndHour); err == nil {
+		if v, convErr := strconv.Atoi(value); convErr == nil && v >= 1 && v <= 24 {
+			endHour = v
+		}
+	}
+
+	return weekday, startHour, endHour
 }

@@ -60,8 +60,17 @@ type SystemSettings struct {
 	OpsMetricsIntervalSeconds    int    `json:"ops_metrics_interval_seconds"`
 
 	// Referral / Invite Reward
-	ReferralEnabled      bool    `json:"referral_enabled"`
-	ReferralRewardAmount float64 `json:"referral_reward_amount"`
+	ReferralEnabled            bool    `json:"referral_enabled"`
+	ReferralRewardAmount       float64 `json:"referral_reward_amount"`
+	InviteeRewardAmount        float64 `json:"invitee_reward_amount"`
+	AgentEnabled               bool    `json:"agent_enabled"`
+	AgentDefaultCommissionRate float64 `json:"agent_default_commission_rate"`
+	AgentActivationFee         float64 `json:"agent_activation_fee"`
+	AgentContractVersion       string  `json:"agent_contract_version"`
+	AgentWithdrawFreezeDays    int     `json:"agent_withdraw_freeze_days"`
+	AgentWithdrawWeekday       int     `json:"agent_withdraw_weekday"`
+	AgentWithdrawStartHour     int     `json:"agent_withdraw_start_hour"`
+	AgentWithdrawEndHour       int     `json:"agent_withdraw_end_hour"`
 
 	// Payment / WeChat Pay
 	PaymentEnabled                bool    `json:"payment_enabled"`
@@ -110,6 +119,8 @@ type PublicSettings struct {
 	HomeContent          string `json:"home_content"`
 	HideCcsImportButton  bool   `json:"hide_ccs_import_button"`
 	LinuxDoOAuthEnabled  bool   `json:"linuxdo_oauth_enabled"`
+	ReferralEnabled      bool   `json:"referral_enabled"`
+	AgentEnabled         bool   `json:"agent_enabled"`
 	Version              string `json:"version"`
 }
 
