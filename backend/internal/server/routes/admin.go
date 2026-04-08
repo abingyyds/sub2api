@@ -439,6 +439,7 @@ func registerPaymentOrderRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	orders := admin.Group("/orders")
 	{
 		orders.GET("", h.Admin.PaymentOrder.List)
+		orders.POST("/:id/repair", h.Admin.PaymentOrder.Repair)
 		orders.POST("/:id/invoice/processed", h.Admin.PaymentOrder.MarkInvoiceProcessed)
 	}
 }

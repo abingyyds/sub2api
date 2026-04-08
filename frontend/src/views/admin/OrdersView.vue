@@ -49,16 +49,24 @@
             <span class="text-sm text-gray-500 dark:text-dark-400">{{ formatDateTime(value) }}</span>
           </template>
           <template #cell-actions="{ row }">
-            <div class="flex justify-end">
+            <div class="flex justify-end gap-2">
+              <button
+                v-if="canRepair(row)"
+                class="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-amber-600 disabled:opacity-50"
+                :disabled="processingActionKey === `repair-${row.id}`"
+                @click="repairOrder(row)"
+              >
+                {{ processingActionKey === `repair-${row.id}` ? t('common.processing') : t('admin.orders.repairOrder') }}
+              </button>
               <button
                 v-if="row.invoice_requested_at && !row.invoice_processed_at"
                 class="rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-primary-700 disabled:opacity-50"
-                :disabled="processingOrderId === row.id"
+                :disabled="processingActionKey === `invoice-${row.id}`"
                 @click="markProcessed(row)"
               >
-                {{ processingOrderId === row.id ? t('common.processing') : t('admin.orders.markProcessed') }}
+                {{ processingActionKey === `invoice-${row.id}` ? t('common.processing') : t('admin.orders.markProcessed') }}
               </button>
-              <span v-else class="text-sm text-gray-400">-</span>
+              <span v-if="!canRepair(row) && !(row.invoice_requested_at && !row.invoice_processed_at)" class="text-sm text-gray-400">-</span>
             </div>
           </template>
           <template #empty>
@@ -95,7 +103,7 @@ const appStore = useAppStore()
 
 const items = ref<AdminPaymentOrder[]>([])
 const loading = ref(false)
-const processingOrderId = ref<number | null>(null)
+const processingActionKey = ref<string | null>(null)
 const pagination = ref({ page: 1, page_size: 20, total: 0 })
 const filters = ref({ status: '', order_type: '' })
 
@@ -156,6 +164,10 @@ function invoiceBadgeClass(order: AdminPaymentOrder) {
   return 'badge-gray'
 }
 
+function canRepair(order: AdminPaymentOrder) {
+  return order.status === 'pending' || order.status === 'closed'
+}
+
 function onFilterChange() {
   pagination.value.page = 1
   loadData()
@@ -178,7 +190,7 @@ const loadData = async () => {
 }
 
 const markProcessed = async (row: AdminPaymentOrder) => {
-  processingOrderId.value = row.id
+  processingActionKey.value = `invoice-${row.id}`
   try {
     await ordersAPI.markInvoiceProcessed(row.id)
     appStore.showSuccess(t('admin.orders.markProcessedSuccess'))
@@ -186,7 +198,22 @@ const markProcessed = async (row: AdminPaymentOrder) => {
   } catch (err: any) {
     appStore.showError(err?.message || t('admin.orders.markProcessedError'))
   } finally {
-    processingOrderId.value = null
+    processingActionKey.value = null
+  }
+}
+
+const repairOrder = async (row: AdminPaymentOrder) => {
+  if (!confirm(t('admin.orders.repairConfirm', { orderNo: row.order_no }))) return
+
+  processingActionKey.value = `repair-${row.id}`
+  try {
+    await ordersAPI.repair(row.id)
+    appStore.showSuccess(t('admin.orders.repairSuccess'))
+    await loadData()
+  } catch (err: any) {
+    appStore.showError(err?.message || t('admin.orders.repairError'))
+  } finally {
+    processingActionKey.value = null
   }
 }
 

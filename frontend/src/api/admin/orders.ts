@@ -50,5 +50,10 @@ export async function markInvoiceProcessed(id: number): Promise<{ success: boole
   return data
 }
 
-export const ordersAPI = { list, markInvoiceProcessed }
+export async function repair(id: number): Promise<{ success: boolean }> {
+  const { data } = await apiClient.post<{ success: boolean }>(`/admin/orders/${id}/repair`)
+  return data
+}
+
+export const ordersAPI = { list, markInvoiceProcessed, repair }
 export default ordersAPI

@@ -32,18 +32,20 @@ import (
 )
 
 var (
-	ErrPaymentDisabled       = infraerrors.Forbidden("PAYMENT_DISABLED", "online payment is disabled")
-	ErrPaymentPlanNotFound   = infraerrors.NotFound("PAYMENT_PLAN_NOT_FOUND", "payment plan not found")
-	ErrPaymentOrderNotFound  = infraerrors.NotFound("PAYMENT_ORDER_NOT_FOUND", "payment order not found")
-	ErrPaymentConfigMissing  = infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", "payment configuration is incomplete")
-	ErrPaymentCreateFailed   = infraerrors.BadRequest("PAYMENT_CREATE_FAILED", "failed to create payment order")
-	ErrPaymentSignature      = infraerrors.BadRequest("PAYMENT_SIGNATURE_INVALID", "payment notification signature invalid")
-	ErrInvoiceOrdersRequired = infraerrors.BadRequest("INVOICE_ORDERS_REQUIRED", "at least one order is required")
-	ErrInvoiceEmailInvalid   = infraerrors.BadRequest("INVOICE_EMAIL_INVALID", "invoice email is invalid")
-	ErrInvoiceOrderNotPaid   = infraerrors.BadRequest("INVOICE_ORDER_NOT_PAID", "only paid orders can request invoices")
-	ErrInvoiceNotRequested   = infraerrors.BadRequest("INVOICE_NOT_REQUESTED", "invoice has not been requested for this order")
-	ErrInvoiceAlreadyFiled   = infraerrors.Conflict("INVOICE_ALREADY_FILED", "invoice has already been requested for one or more selected orders")
-	ErrInvoiceAlreadyHandled = infraerrors.Conflict("INVOICE_ALREADY_HANDLED", "invoice has already been processed")
+	ErrPaymentDisabled          = infraerrors.Forbidden("PAYMENT_DISABLED", "online payment is disabled")
+	ErrPaymentPlanNotFound      = infraerrors.NotFound("PAYMENT_PLAN_NOT_FOUND", "payment plan not found")
+	ErrPaymentOrderNotFound     = infraerrors.NotFound("PAYMENT_ORDER_NOT_FOUND", "payment order not found")
+	ErrPaymentOrderPaid         = infraerrors.Conflict("PAYMENT_ORDER_ALREADY_PAID", "payment order already paid")
+	ErrPaymentOrderUnrepairable = infraerrors.BadRequest("PAYMENT_ORDER_REPAIR_NOT_ALLOWED", "only pending or closed orders can be repaired manually")
+	ErrPaymentConfigMissing     = infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", "payment configuration is incomplete")
+	ErrPaymentCreateFailed      = infraerrors.BadRequest("PAYMENT_CREATE_FAILED", "failed to create payment order")
+	ErrPaymentSignature         = infraerrors.BadRequest("PAYMENT_SIGNATURE_INVALID", "payment notification signature invalid")
+	ErrInvoiceOrdersRequired    = infraerrors.BadRequest("INVOICE_ORDERS_REQUIRED", "at least one order is required")
+	ErrInvoiceEmailInvalid      = infraerrors.BadRequest("INVOICE_EMAIL_INVALID", "invoice email is invalid")
+	ErrInvoiceOrderNotPaid      = infraerrors.BadRequest("INVOICE_ORDER_NOT_PAID", "only paid orders can request invoices")
+	ErrInvoiceNotRequested      = infraerrors.BadRequest("INVOICE_NOT_REQUESTED", "invoice has not been requested for this order")
+	ErrInvoiceAlreadyFiled      = infraerrors.Conflict("INVOICE_ALREADY_FILED", "invoice has already been requested for one or more selected orders")
+	ErrInvoiceAlreadyHandled    = infraerrors.Conflict("INVOICE_ALREADY_HANDLED", "invoice has already been processed")
 )
 
 // PaymentPlan 套餐配置
@@ -768,6 +770,47 @@ func (s *PaymentService) SubmitInvoiceRequest(ctx context.Context, userID int64,
 
 func (s *PaymentService) MarkInvoiceProcessed(ctx context.Context, orderID int64) error {
 	return s.orderRepo.MarkInvoiceProcessed(ctx, orderID)
+}
+
+// RepairOrder manually marks a missed payment callback order as paid and replays the normal fulfillment logic.
+func (s *PaymentService) RepairOrder(ctx context.Context, orderID int64) error {
+	order, err := s.orderRepo.GetByID(ctx, orderID)
+	if err != nil {
+		return err
+	}
+
+	switch order.Status {
+	case PaymentOrderStatusPaid:
+		return ErrPaymentOrderPaid
+	case PaymentOrderStatusPending, PaymentOrderStatusClosed:
+		// repair is allowed
+	default:
+		return ErrPaymentOrderUnrepairable
+	}
+
+	originalStatus := order.Status
+	paidAt := time.Now()
+	claimed, err := s.orderRepo.CompareAndUpdateStatus(ctx, order.OrderNo, originalStatus, PaymentOrderStatusPaid, nil, &paidAt)
+	if err != nil {
+		return fmt.Errorf("claim order for repair: %w", err)
+	}
+	if !claimed {
+		latestOrder, latestErr := s.orderRepo.GetByID(ctx, orderID)
+		if latestErr == nil && latestOrder.Status == PaymentOrderStatusPaid {
+			return ErrPaymentOrderPaid
+		}
+		return infraerrors.Conflict("PAYMENT_ORDER_STATUS_CHANGED", "payment order status changed, please refresh and retry")
+	}
+
+	if err := s.handlePaymentSuccess(ctx, order); err != nil {
+		if rbErr := s.orderRepo.UpdateStatus(ctx, order.OrderNo, originalStatus, nil, nil); rbErr != nil {
+			log.Printf("[Payment] CRITICAL: order %s failed to rollback repaired status: %v (original error: %v)", order.OrderNo, rbErr, err)
+		}
+		return err
+	}
+
+	log.Printf("[Payment] Order %s repaired manually by admin", order.OrderNo)
+	return nil
 }
 
 func isValidInvoiceEmail(email string) bool {

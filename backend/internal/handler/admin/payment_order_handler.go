@@ -84,3 +84,21 @@ func (h *PaymentOrderHandler) MarkInvoiceProcessed(c *gin.Context) {
 
 	response.Success(c, gin.H{"success": true})
 }
+
+// Repair manually fulfills an order when the payment callback was missed.
+// POST /api/v1/admin/orders/:id/repair
+func (h *PaymentOrderHandler) Repair(c *gin.Context) {
+	orderID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || orderID <= 0 {
+		response.BadRequest(c, "invalid order id")
+		return
+	}
+
+	if err := h.paymentService.RepairOrder(c.Request.Context(), orderID); err != nil {
+		slog.Error("[AdminOrders] RepairOrder failed", "order_id", orderID, "error", err)
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{"success": true})
+}
