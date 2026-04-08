@@ -607,11 +607,14 @@
 
             <!-- QR Code -->
             <div class="flex justify-center mb-6">
-              <div v-if="qrLoading" class="flex h-48 w-48 items-center justify-center">
-                <div class="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"></div>
-              </div>
-              <div v-else class="rounded-xl border-2 border-gray-100 dark:border-dark-700 p-2">
+              <div class="relative rounded-xl border-2 border-gray-100 dark:border-dark-700 p-2">
                 <canvas ref="qrCanvas" class="rounded-lg"></canvas>
+                <div
+                  v-if="qrLoading"
+                  class="absolute inset-0 flex items-center justify-center rounded-xl bg-white/90 dark:bg-dark-800/90"
+                >
+                  <div class="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"></div>
+                </div>
               </div>
             </div>
 

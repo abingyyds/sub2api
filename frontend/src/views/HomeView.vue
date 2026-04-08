@@ -489,10 +489,15 @@
 
           <!-- QR Code -->
           <div class="flex justify-center mb-6">
-            <div v-if="qrLoading" class="flex h-48 w-48 items-center justify-center">
-              <div class="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"></div>
+            <div class="relative h-48 w-48">
+              <canvas ref="qrCanvas" class="rounded-lg"></canvas>
+              <div
+                v-if="qrLoading"
+                class="absolute inset-0 flex items-center justify-center rounded-lg bg-white/90 dark:bg-dark-700/90"
+              >
+                <div class="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"></div>
+              </div>
             </div>
-            <canvas v-else ref="qrCanvas" class="rounded-lg"></canvas>
           </div>
 
           <!-- Status -->
