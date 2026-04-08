@@ -334,7 +334,13 @@
                   class="mt-4 flex items-center justify-center rounded-lg bg-primary-600 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
                   :class="{ 'opacity-50 pointer-events-none': creatingOrder }"
                 >
-                  {{ t('pricing.buyNow') }}
+                  <template v-if="creatingOrder">
+                    <div class="mr-2 h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    {{ t('common.processing') }}
+                  </template>
+                  <template v-else>
+                    {{ t('pricing.buyNow') }}
+                  </template>
                 </div>
               </div>
             </div>
@@ -672,6 +678,7 @@ async function handleBuyPlan(plan: PaymentPlan) {
     currentOrderNo.value = order.order_no
     currentOrderAmount.value = (order.amount_fen / 100).toFixed(order.amount_fen % 100 === 0 ? 0 : 2)
     paymentStatus.value = 'pending'
+    qrLoading.value = true
     showPaymentModal.value = true
 
     // Calculate countdown
@@ -679,16 +686,19 @@ async function handleBuyPlan(plan: PaymentPlan) {
     countdown.value = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000))
 
     // Render QR code
-    if (order.code_url) {
-      qrLoading.value = false
-      await nextTick()
-      if (qrCanvas.value) {
-        await QRCode.toCanvas(qrCanvas.value, order.code_url, {
-          width: 192,
-          margin: 2,
-          color: { dark: '#000000', light: '#ffffff' },
-        })
+    try {
+      if (order.code_url) {
+        await nextTick()
+        if (qrCanvas.value) {
+          await QRCode.toCanvas(qrCanvas.value, order.code_url, {
+            width: 192,
+            margin: 2,
+            color: { dark: '#000000', light: '#ffffff' },
+          })
+        }
       }
+    } finally {
+      qrLoading.value = false
     }
 
     // Start polling for payment status
@@ -706,6 +716,7 @@ async function handleBuyPlan(plan: PaymentPlan) {
     const msg = err?.message || err?.response?.data?.message || t('pricing.payment.createFailed')
     alert(msg)
   } finally {
+    qrLoading.value = false
     creatingOrder.value = false
   }
 }

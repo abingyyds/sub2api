@@ -138,6 +138,7 @@
                     :class="rp.pay_amount_fen >= 5000
                       ? 'border-indigo-400 dark:border-indigo-500/60 shadow-lg shadow-indigo-500/10'
                       : 'border-green-400 dark:border-green-500/60 shadow-lg shadow-green-500/10'"
+                    :style="orderFlowBusy ? 'pointer-events:none;' : ''"
                     @click="handleRechargePreset(rp)"
                   >
                     <!-- Badge -->
@@ -230,7 +231,13 @@
                               ? 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 shadow-indigo-500/30'
                               : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-green-500/30'"
                           >
-                            {{ rp.pay_amount_fen >= 5000 ? '立即抢购 + 赠技术指导' : '立即抢购' }}
+                            <template v-if="isProcessingOrderAction('recharge', rp.key)">
+                              <div class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                              {{ t('common.processing') }}
+                            </template>
+                            <template v-else>
+                              {{ rp.pay_amount_fen >= 5000 ? '立即抢购 + 赠技术指导' : '立即抢购' }}
+                            </template>
                           </div>
                         </MagneticButton>
                         <!-- Purchase limit note -->
@@ -275,6 +282,7 @@
                     : dp.plan.amount_fen >= 100000
                       ? 'border-purple-100 dark:border-purple-800/30 shadow-soft'
                       : 'border-orange-100 dark:border-orange-800/30 shadow-soft'"
+                  :style="orderFlowBusy ? 'pointer-events:none;' : ''"
                   @click="handleBuy(dp.plan)"
                 >
                   <!-- Top badge -->
@@ -342,9 +350,17 @@
                           : dp.plan.amount_fen >= 100000
                             ? 'py-3.5 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-700'
                             : 'py-3.5 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-700'"
-                        :disabled="creatingOrder"
+                        :disabled="orderFlowBusy"
                       >
-                        {{ dp.cta }}
+                        <template v-if="isProcessingOrderAction('subscription', dp.plan.key)">
+                          <span class="inline-flex items-center justify-center">
+                            <span class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                            {{ t('common.processing') }}
+                          </span>
+                        </template>
+                        <template v-else>
+                          {{ dp.cta }}
+                        </template>
                       </button>
                     </MagneticButton>
                   </div>
@@ -387,6 +403,7 @@
                   :class="rp.popular
                     ? 'border-primary-500/80 dark:border-primary-400/60 shadow-lg shadow-primary-500/10'
                     : 'border-gray-200 dark:border-dark-600 shadow-soft'"
+                  :style="orderFlowBusy ? 'pointer-events:none;' : ''"
                   @click="handleRechargePreset(rp)"
                 >
                   <!-- Popular badge -->
@@ -415,7 +432,13 @@
                           ? 'bg-primary-600 hover:bg-primary-700 shadow-md'
                           : 'bg-gray-900 hover:bg-gray-800 dark:bg-dark-500 dark:hover:bg-dark-400'"
                       >
-                        {{ t('pricing.rechargePayBtn') }} ¥{{ (rp.pay_amount_fen / 100).toFixed(rp.pay_amount_fen % 100 === 0 ? 0 : 2) }}
+                        <template v-if="isProcessingOrderAction('recharge', rp.key)">
+                          <div class="mr-1.5 h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                          {{ t('common.processing') }}
+                        </template>
+                        <template v-else>
+                          {{ t('pricing.rechargePayBtn') }} ¥{{ (rp.pay_amount_fen / 100).toFixed(rp.pay_amount_fen % 100 === 0 ? 0 : 2) }}
+                        </template>
                       </div>
                       <!-- Purchase limit note -->
                       <p v-if="rp.max_purchases && rp.max_purchases > 0" class="mt-2 text-center text-xs text-gray-400 dark:text-dark-500">
@@ -463,10 +486,10 @@
                     <div class="mt-auto pt-4">
                       <div
                         class="flex items-center justify-center rounded-xl py-2.5 px-3 text-xs sm:text-sm font-bold text-white transition-all whitespace-nowrap overflow-hidden truncate bg-primary-600 hover:bg-primary-700 shadow-md cursor-pointer"
-                        :class="{ 'opacity-50 cursor-not-allowed': customFinalAmount <= 0 || (rechargeMinAmount > 0 && customFinalAmount < rechargeMinAmount) || creatingOrder }"
+                        :class="{ 'opacity-50 cursor-not-allowed': customFinalAmount <= 0 || (rechargeMinAmount > 0 && customFinalAmount < rechargeMinAmount) || orderFlowBusy }"
                         @click="handleCustomRecharge"
                       >
-                        <template v-if="creatingOrder">
+                        <template v-if="isProcessingOrderAction('custom')">
                           <div class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent mr-1.5"></div>
                           {{ t('recharge.creating') }}
                         </template>
@@ -523,7 +546,7 @@
         <div
           v-if="showPayMethodModal"
           class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-          @click.self="showPayMethodModal = false"
+          @click.self="cancelPayMethodSelection"
         >
           <div class="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl dark:bg-dark-800 mx-4 border border-gray-100 dark:border-dark-700">
             <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6 text-center">选择支付方式</h3>
@@ -547,7 +570,7 @@
             <div class="flex gap-3">
               <button
                 class="flex-1 rounded-xl border-2 border-gray-200 dark:border-dark-600 py-3 font-bold text-gray-700 dark:text-dark-300 hover:bg-gray-50 dark:hover:bg-dark-700 transition"
-                @click="showPayMethodModal = false"
+                @click="cancelPayMethodSelection"
               >
                 取消
               </button>
@@ -660,6 +683,7 @@ const rechargeMinAmount = ref(0)
 const rechargeCatalogLoading = ref(false)
 const rechargeCatalogLoaded = ref(false)
 const creatingOrder = ref(false)
+const preparingOrder = ref(false)
 const availablePayMethods = ref<PayMethod[]>([])
 const payMethodsLoaded = ref(false)
 const selectedPayMethod = ref<PayMethod>('wechat')
@@ -674,6 +698,7 @@ const currentOrderNo = ref('')
 const currentOrderAmount = ref('')
 const countdown = ref(0)
 const customInput = ref('')
+const activeOrderActionKey = ref('')
 
 // Tab state
 const activeTab = ref<'newcomer' | 'subscription' | 'recharge'>('subscription')
@@ -714,9 +739,19 @@ const promoValidation = ref<{
 let promoValidateTimeout: ReturnType<typeof setTimeout> | null = null
 let rechargeCatalogPromise: Promise<void> | null = null
 let payMethodsPromise: Promise<void> | null = null
+let qrCodeModulePromise: Promise<typeof import('qrcode')> | null = null
 
 let pollTimer: ReturnType<typeof setInterval> | null = null
 let countdownTimer: ReturnType<typeof setInterval> | null = null
+const orderFlowBusy = computed(() => preparingOrder.value || creatingOrder.value)
+
+function makeOrderActionKey(type: 'subscription' | 'recharge' | 'custom', key?: string) {
+  return `${type}:${key || 'default'}`
+}
+
+function isProcessingOrderAction(type: 'subscription' | 'recharge' | 'custom', key?: string) {
+  return orderFlowBusy.value && activeOrderActionKey.value === makeOrderActionKey(type, key)
+}
 
 const customFinalAmount = computed(() => {
   if (customInput.value !== '') {
@@ -1075,9 +1110,18 @@ async function ensurePayMethodsLoaded(): Promise<void> {
   return request
 }
 
+async function ensureQRCodeLoaded() {
+  if (!qrCodeModulePromise) {
+    qrCodeModulePromise = import('qrcode')
+  }
+  return qrCodeModulePromise
+}
+
 function scheduleSecondaryPricingDataLoad() {
   const load = () => {
     void ensureRechargeCatalogLoaded()
+    void ensurePayMethodsLoaded()
+    void ensureQRCodeLoaded()
   }
 
   if (typeof window.requestIdleCallback === 'function') {
@@ -1086,6 +1130,13 @@ function scheduleSecondaryPricingDataLoad() {
   }
 
   window.setTimeout(load, 300)
+}
+
+function cancelPayMethodSelection() {
+  showPayMethodModal.value = false
+  pendingPaymentAction.value = null
+  preparingOrder.value = false
+  activeOrderActionKey.value = ''
 }
 
 function setActiveTab(tab: 'newcomer' | 'subscription' | 'recharge') {
@@ -1138,11 +1189,13 @@ function payMethodMeta(method: string) {
 }
 
 async function showPayMethodOrDirect(action: () => Promise<void>) {
+  preparingOrder.value = true
   pendingPaymentAction.value = action
   await ensurePayMethodsLoaded()
 
   if (availablePayMethods.value.length === 0) {
     pendingPaymentAction.value = null
+    preparingOrder.value = false
     alert(t('pricing.payment.noMethodsAvailable'))
     return
   }
@@ -1151,6 +1204,7 @@ async function showPayMethodOrDirect(action: () => Promise<void>) {
     // Only one method (or none) — skip the modal, execute directly
     await confirmPayMethod()
   } else {
+    preparingOrder.value = false
     showPayMethodModal.value = true
   }
 }
@@ -1158,87 +1212,133 @@ async function showPayMethodOrDirect(action: () => Promise<void>) {
 async function confirmPayMethod() {
   showPayMethodModal.value = false
   if (pendingPaymentAction.value) {
-    await pendingPaymentAction.value()
-    pendingPaymentAction.value = null
+    try {
+      preparingOrder.value = true
+      await pendingPaymentAction.value()
+    } finally {
+      pendingPaymentAction.value = null
+      preparingOrder.value = false
+    }
+  } else {
+    preparingOrder.value = false
   }
 }
 
 // === Subscription purchase ===
 async function handleBuy(plan: PaymentPlan) {
-  if (creatingOrder.value) return
+  if (orderFlowBusy.value) return
+  activeOrderActionKey.value = makeOrderActionKey('subscription', plan.key)
 
   const code = promoCode.value.trim()
   if (code) {
+    preparingOrder.value = true
     const valid = await validatePromoForAmount(code, plan.amount_fen)
-    if (!valid) return
+    if (!valid) {
+      preparingOrder.value = false
+      activeOrderActionKey.value = ''
+      return
+    }
   }
 
-  await showPayMethodOrDirect(async () => {
-    paymentOrderType.value = 'subscription'
-    creatingOrder.value = true
-    try {
-      const order = await paymentAPI.createOrder(plan.key, code || undefined, selectedPayMethod.value)
-      await showQRModal(order)
-    } catch (err: any) {
-      const msg = err?.message || err?.response?.data?.message || t('pricing.payment.createFailed')
-      alert(msg)
-    } finally {
-      creatingOrder.value = false
+  try {
+    await showPayMethodOrDirect(async () => {
+      paymentOrderType.value = 'subscription'
+      creatingOrder.value = true
+      try {
+        const order = await paymentAPI.createOrder(plan.key, code || undefined, selectedPayMethod.value)
+        await showQRModal(order)
+      } catch (err: any) {
+        const msg = err?.message || err?.response?.data?.message || t('pricing.payment.createFailed')
+        alert(msg)
+      } finally {
+        creatingOrder.value = false
+      }
+    })
+  } finally {
+    preparingOrder.value = false
+    if (!showPaymentModal.value) {
+      activeOrderActionKey.value = ''
     }
-  })
+  }
 }
 
 // === Recharge preset ===
 async function handleRechargePreset(rp: RechargePlan) {
-  if (creatingOrder.value) return
+  if (orderFlowBusy.value) return
+  activeOrderActionKey.value = makeOrderActionKey('recharge', rp.key)
 
   const code = promoCode.value.trim()
   if (code) {
+    preparingOrder.value = true
     const valid = await validatePromoForAmount(code, rp.pay_amount_fen)
-    if (!valid) return
+    if (!valid) {
+      preparingOrder.value = false
+      activeOrderActionKey.value = ''
+      return
+    }
   }
 
-  await showPayMethodOrDirect(async () => {
-    paymentOrderType.value = 'recharge'
-    creatingOrder.value = true
-    try {
-      const payYuan = rp.pay_amount_fen / 100
-      const order = await paymentAPI.createRechargeOrder(payYuan, code || undefined, selectedPayMethod.value, rp.key)
-      await showQRModal(order)
-    } catch (err: any) {
-      const msg = err?.message || err?.response?.data?.message || t('recharge.payment.createFailed')
-      alert(msg)
-    } finally {
-      creatingOrder.value = false
+  try {
+    await showPayMethodOrDirect(async () => {
+      paymentOrderType.value = 'recharge'
+      creatingOrder.value = true
+      try {
+        const payYuan = rp.pay_amount_fen / 100
+        const order = await paymentAPI.createRechargeOrder(payYuan, code || undefined, selectedPayMethod.value, rp.key)
+        await showQRModal(order)
+      } catch (err: any) {
+        const msg = err?.message || err?.response?.data?.message || t('recharge.payment.createFailed')
+        alert(msg)
+      } finally {
+        creatingOrder.value = false
+      }
+    })
+  } finally {
+    preparingOrder.value = false
+    if (!showPaymentModal.value) {
+      activeOrderActionKey.value = ''
     }
-  })
+  }
 }
 
 // === Custom recharge ===
 async function handleCustomRecharge() {
-  if (customFinalAmount.value <= 0 || creatingOrder.value) return
+  if (customFinalAmount.value <= 0 || orderFlowBusy.value) return
   if (rechargeMinAmount.value > 0 && customFinalAmount.value < rechargeMinAmount.value) return
+  activeOrderActionKey.value = makeOrderActionKey('custom')
 
   const code = promoCode.value.trim()
   const amountFen = Math.round(customFinalAmount.value * 100)
   if (code) {
+    preparingOrder.value = true
     const valid = await validatePromoForAmount(code, amountFen)
-    if (!valid) return
+    if (!valid) {
+      preparingOrder.value = false
+      activeOrderActionKey.value = ''
+      return
+    }
   }
 
-  await showPayMethodOrDirect(async () => {
-    paymentOrderType.value = 'recharge'
-    creatingOrder.value = true
-    try {
-      const order = await paymentAPI.createRechargeOrder(customFinalAmount.value, code || undefined, selectedPayMethod.value)
-      await showQRModal(order)
-    } catch (err: any) {
-      const msg = err?.message || err?.response?.data?.message || t('recharge.payment.createFailed')
-      alert(msg)
-    } finally {
-      creatingOrder.value = false
+  try {
+    await showPayMethodOrDirect(async () => {
+      paymentOrderType.value = 'recharge'
+      creatingOrder.value = true
+      try {
+        const order = await paymentAPI.createRechargeOrder(customFinalAmount.value, code || undefined, selectedPayMethod.value)
+        await showQRModal(order)
+      } catch (err: any) {
+        const msg = err?.message || err?.response?.data?.message || t('recharge.payment.createFailed')
+        alert(msg)
+      } finally {
+        creatingOrder.value = false
+      }
+    })
+  } finally {
+    preparingOrder.value = false
+    if (!showPaymentModal.value) {
+      activeOrderActionKey.value = ''
     }
-  })
+  }
 }
 
 // === Shared QR modal logic ===
@@ -1246,22 +1346,26 @@ async function showQRModal(order: { order_no: string; code_url: string | null; a
   currentOrderNo.value = order.order_no
   currentOrderAmount.value = (order.amount_fen / 100).toFixed(order.amount_fen % 100 === 0 ? 0 : 2)
   paymentStatus.value = 'pending'
+  qrLoading.value = true
   showPaymentModal.value = true
 
   const expiresAt = new Date(order.expired_at).getTime()
   countdown.value = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000))
 
-  if (order.code_url) {
-    qrLoading.value = false
-    await nextTick()
-    if (qrCanvas.value) {
-      const QRCode = (await import('qrcode')).default
-      await QRCode.toCanvas(qrCanvas.value, order.code_url, {
-        width: 192,
-        margin: 2,
-        color: { dark: '#000000', light: '#ffffff' },
-      })
+  try {
+    if (order.code_url) {
+      await nextTick()
+      if (qrCanvas.value) {
+        const QRCode = await ensureQRCodeLoaded()
+        await QRCode.toCanvas(qrCanvas.value, order.code_url, {
+          width: 192,
+          margin: 2,
+          color: { dark: '#000000', light: '#ffffff' },
+        })
+      }
     }
+  } finally {
+    qrLoading.value = false
   }
 
   startPolling()
@@ -1295,11 +1399,13 @@ function startPolling() {
 function cancelPayment() {
   showPaymentModal.value = false
   clearTimers()
+  activeOrderActionKey.value = ''
 }
 
 function goAfterPayment() {
   showPaymentModal.value = false
   clearTimers()
+  activeOrderActionKey.value = ''
   if (paymentOrderType.value === 'subscription') {
     router.push('/subscriptions')
   } else {
