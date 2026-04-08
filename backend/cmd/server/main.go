@@ -16,13 +16,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Wei-Shaw/sub2api/ent"
 	_ "github.com/Wei-Shaw/sub2api/ent/runtime"
 	"github.com/Wei-Shaw/sub2api/internal/config"
 	"github.com/Wei-Shaw/sub2api/internal/handler"
 	"github.com/Wei-Shaw/sub2api/internal/server/middleware"
 	"github.com/Wei-Shaw/sub2api/internal/setup"
 	"github.com/Wei-Shaw/sub2api/internal/web"
-	"github.com/Wei-Shaw/sub2api/ent"
 
 	"github.com/gin-gonic/gin"
 )
@@ -183,11 +183,20 @@ func runMainServer() {
 func runMigrations(client *ent.Client) error {
 	ctx := context.Background()
 
-	log.Println("Running database migrations...")
+	log.Println("Running startup compatibility migrations...")
 
 	// Execute raw SQL migrations
 	migrations := []string{
 		`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS usage_limit DOUBLE PRECISION`,
+		`ALTER TABLE payment_orders
+			ADD COLUMN IF NOT EXISTS invoice_company_name VARCHAR(255) NOT NULL DEFAULT '',
+			ADD COLUMN IF NOT EXISTS invoice_tax_id VARCHAR(128) NOT NULL DEFAULT '',
+			ADD COLUMN IF NOT EXISTS invoice_email VARCHAR(255) NOT NULL DEFAULT '',
+			ADD COLUMN IF NOT EXISTS invoice_remark TEXT NOT NULL DEFAULT '',
+			ADD COLUMN IF NOT EXISTS invoice_requested_at TIMESTAMPTZ,
+			ADD COLUMN IF NOT EXISTS invoice_processed_at TIMESTAMPTZ`,
+		`CREATE INDEX IF NOT EXISTS idx_payment_orders_invoice_requested_at ON payment_orders(invoice_requested_at)`,
+		`CREATE INDEX IF NOT EXISTS idx_payment_orders_invoice_processed_at ON payment_orders(invoice_processed_at)`,
 	}
 
 	for i, migration := range migrations {
@@ -198,6 +207,6 @@ func runMigrations(client *ent.Client) error {
 		}
 	}
 
-	log.Println("✓ Database migrations completed successfully")
+	log.Println("✓ Startup compatibility migrations completed successfully")
 	return nil
 }

@@ -279,6 +279,11 @@ function payMethodMeta(method: string) {
 
 function showPayMethodOrDirect(action: () => Promise<void>) {
   pendingPaymentAction.value = action
+  if (availablePayMethods.value.length === 0) {
+    pendingPaymentAction.value = null
+    alert(t('recharge.payment.noMethodsAvailable'))
+    return
+  }
   if (availablePayMethods.value.length <= 1) {
     confirmPayMethod()
   } else {

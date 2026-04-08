@@ -18,6 +18,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"regexp"
 	"sort"
 	"strconv"
@@ -243,22 +244,105 @@ type RechargeInfo struct {
 func (s *PaymentService) GetAvailablePayMethods(ctx context.Context) []string {
 	methods := make([]string, 0, 4)
 
-	// 微信支付：只要 payment_enabled 即可
-	if enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyPaymentEnabled); enabled == "true" {
+	if s.isWechatPayReady(ctx) {
 		methods = append(methods, "wechat")
 	}
 
-	// 支付宝
-	if enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyAlipayEnabled); enabled == "true" {
+	if s.isAlipayReady(ctx) {
 		methods = append(methods, "alipay")
 	}
 
-	// 易支付
-	if enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayEnabled); enabled == "true" {
+	if s.isEpayReady(ctx) {
 		methods = append(methods, "epay_alipay", "epay_wxpay")
 	}
 
 	return methods
+}
+
+func (s *PaymentService) isWechatPayReady(ctx context.Context) bool {
+	enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyPaymentEnabled)
+	if enabled != "true" {
+		return false
+	}
+
+	return s.hasNonEmptySettings(
+		ctx,
+		SettingKeyWechatPayAppID,
+		SettingKeyWechatPayMchID,
+		SettingKeyWechatPayNotifyURL,
+		SettingKeyWechatPayPrivateKey,
+		SettingKeyWechatPayMchSerialNo,
+	)
+}
+
+func (s *PaymentService) isAlipayReady(ctx context.Context) bool {
+	enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyPaymentEnabled)
+	if enabled != "true" {
+		return false
+	}
+
+	alipayEnabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyAlipayEnabled)
+	if alipayEnabled != "true" {
+		return false
+	}
+
+	return s.hasNonEmptySettings(
+		ctx,
+		SettingKeyAlipayAppID,
+		SettingKeyAlipayPrivateKey,
+		SettingKeyAlipayPublicKey,
+		SettingKeyAlipayNotifyURL,
+	)
+}
+
+func (s *PaymentService) isEpayReady(ctx context.Context) bool {
+	enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyPaymentEnabled)
+	if enabled != "true" {
+		return false
+	}
+
+	epayEnabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayEnabled)
+	if epayEnabled != "true" {
+		return false
+	}
+
+	return s.hasNonEmptySettings(
+		ctx,
+		SettingKeyEpayGateway,
+		SettingKeyEpayPID,
+		SettingKeyEpayPKey,
+		SettingKeyEpayNotifyURL,
+	)
+}
+
+func (s *PaymentService) hasNonEmptySettings(ctx context.Context, keys ...string) bool {
+	for _, key := range keys {
+		value, _ := s.settingService.GetSettingValue(ctx, key)
+		if strings.TrimSpace(value) == "" {
+			return false
+		}
+	}
+	return true
+}
+
+func wrapUnknownAsBadRequest(reason, message string, err error) error {
+	if err == nil {
+		return nil
+	}
+	if infraerrors.Code(err) != http.StatusInternalServerError || infraerrors.Reason(err) != "" {
+		return err
+	}
+	return infraerrors.BadRequest(reason, message).WithCause(err)
+}
+
+func wrapUnknownAsServiceUnavailable(reason, message string, err error) error {
+	if err == nil {
+		return nil
+	}
+	if infraerrors.Code(err) != http.StatusInternalServerError || infraerrors.Reason(err) != "" {
+		return err
+	}
+	return infraerrors.ServiceUnavailable(reason, message).WithCause(err)
 }
 
 // GetRechargeInfo 获取充值信息
@@ -413,21 +497,24 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 	var payMethodStr string
 	switch payMethod {
 	case "alipay":
-		if enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyAlipayEnabled); enabled != "true" {
-			return nil, infraerrors.Forbidden("ALIPAY_DISABLED", "alipay payment is not enabled")
+		if !s.isAlipayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "alipay payment is not configured")
 		}
 		payMethodStr = PaymentMethodAlipayNative
 	case "epay_alipay":
-		if enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayEnabled); enabled != "true" {
-			return nil, infraerrors.Forbidden("EPAY_DISABLED", "epay payment is not enabled")
+		if !s.isEpayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "epay payment is not configured")
 		}
 		payMethodStr = PaymentMethodEpayAlipay
 	case "epay_wxpay":
-		if enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayEnabled); enabled != "true" {
-			return nil, infraerrors.Forbidden("EPAY_DISABLED", "epay payment is not enabled")
+		if !s.isEpayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "epay payment is not configured")
 		}
 		payMethodStr = PaymentMethodEpayWxpay
 	default:
+		if !s.isWechatPayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "wechat payment is not configured")
+		}
 		payMethodStr = PaymentMethodWechatNative
 	}
 
@@ -561,21 +648,24 @@ func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, 
 	var payMethodStr string
 	switch payMethod {
 	case "alipay":
-		if enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyAlipayEnabled); enabled != "true" {
-			return nil, infraerrors.Forbidden("ALIPAY_DISABLED", "alipay payment is not enabled")
+		if !s.isAlipayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "alipay payment is not configured")
 		}
 		payMethodStr = PaymentMethodAlipayNative
 	case "epay_alipay":
-		if enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayEnabled); enabled != "true" {
-			return nil, infraerrors.Forbidden("EPAY_DISABLED", "epay payment is not enabled")
+		if !s.isEpayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "epay payment is not configured")
 		}
 		payMethodStr = PaymentMethodEpayAlipay
 	case "epay_wxpay":
-		if enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayEnabled); enabled != "true" {
-			return nil, infraerrors.Forbidden("EPAY_DISABLED", "epay payment is not enabled")
+		if !s.isEpayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "epay payment is not configured")
 		}
 		payMethodStr = PaymentMethodEpayWxpay
 	default:
+		if !s.isWechatPayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "wechat payment is not configured")
+		}
 		payMethodStr = PaymentMethodWechatNative
 	}
 
@@ -836,7 +926,7 @@ func (s *PaymentService) createWechatNativeOrder(ctx context.Context, order *Pay
 
 	signature, err := signSHA256WithRSA(privateKey, []byte(signStr))
 	if err != nil {
-		return "", fmt.Errorf("sign request: %w", err)
+		return "", wrapUnknownAsBadRequest("PAYMENT_CONFIG_INVALID", "wechat payment private key is invalid", fmt.Errorf("sign request: %w", err))
 	}
 
 	// 发送请求
@@ -854,7 +944,7 @@ func (s *PaymentService) createWechatNativeOrder(ctx context.Context, order *Pay
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("wechat api request: %w", err)
+		return "", wrapUnknownAsServiceUnavailable("WECHAT_API_UNAVAILABLE", "wechat pay is temporarily unavailable", fmt.Errorf("wechat api request: %w", err))
 	}
 	defer resp.Body.Close()
 
@@ -869,7 +959,7 @@ func (s *PaymentService) createWechatNativeOrder(ctx context.Context, order *Pay
 		CodeURL string `json:"code_url"`
 	}
 	if err := json.Unmarshal(respBody, &result); err != nil {
-		return "", fmt.Errorf("parse wechat response: %w", err)
+		return "", wrapUnknownAsServiceUnavailable("WECHAT_API_INVALID_RESPONSE", "wechat pay returned an invalid response", fmt.Errorf("parse wechat response: %w", err))
 	}
 
 	return result.CodeURL, nil
@@ -1101,12 +1191,12 @@ func (s *PaymentService) initAlipayClient(ctx context.Context) (*alipay.Client, 
 
 	client, err := alipay.New(appID, privateKey, isProduction)
 	if err != nil {
-		return nil, fmt.Errorf("init alipay client: %w", err)
+		return nil, wrapUnknownAsBadRequest("PAYMENT_CONFIG_INVALID", "alipay configuration is invalid", fmt.Errorf("init alipay client: %w", err))
 	}
 
 	err = client.LoadAliPayPublicKey(alipayPublicKey)
 	if err != nil {
-		return nil, fmt.Errorf("load alipay public key: %w", err)
+		return nil, wrapUnknownAsBadRequest("PAYMENT_CONFIG_INVALID", "alipay public key is invalid", fmt.Errorf("load alipay public key: %w", err))
 	}
 
 	return client, nil
@@ -1133,11 +1223,11 @@ func (s *PaymentService) createAlipayNativeOrder(ctx context.Context, order *Pay
 
 	rsp, err := client.TradePreCreate(ctx, p)
 	if err != nil {
-		return "", fmt.Errorf("alipay trade precreate: %w", err)
+		return "", wrapUnknownAsServiceUnavailable("ALIPAY_API_UNAVAILABLE", "alipay is temporarily unavailable", fmt.Errorf("alipay trade precreate: %w", err))
 	}
 
 	if rsp.IsFailure() {
-		return "", fmt.Errorf("alipay error: %s - %s", rsp.Code, rsp.Msg)
+		return "", infraerrors.BadRequest("ALIPAY_API_ERROR", fmt.Sprintf("alipay error: %s - %s", rsp.Code, rsp.Msg))
 	}
 
 	return rsp.QRCode, nil
@@ -1286,24 +1376,24 @@ func (s *PaymentService) createEpayOrder(ctx context.Context, order *PaymentOrde
 	params["sign"] = epaySign(params, pkey)
 	params["sign_type"] = "MD5"
 
-	// POST 到网关
-	gateway = strings.TrimRight(gateway, "/")
-	formData := make([]string, 0, len(params))
+	form := url.Values{}
 	for k, v := range params {
-		formData = append(formData, fmt.Sprintf("%s=%s", k, v))
+		form.Set(k, v)
 	}
 
+	// POST 到网关
+	gateway = strings.TrimRight(gateway, "/")
 	req, err := http.NewRequestWithContext(ctx, "POST", gateway+"/mapi.php",
-		strings.NewReader(strings.Join(formData, "&")))
+		strings.NewReader(form.Encode()))
 	if err != nil {
-		return "", fmt.Errorf("create epay request: %w", err)
+		return "", wrapUnknownAsBadRequest("PAYMENT_CONFIG_INVALID", "epay gateway url is invalid", fmt.Errorf("create epay request: %w", err))
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	client := &http.Client{Timeout: 15 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("epay api request: %w", err)
+		return "", wrapUnknownAsServiceUnavailable("EPAY_API_UNAVAILABLE", "epay is temporarily unavailable", fmt.Errorf("epay api request: %w", err))
 	}
 	defer resp.Body.Close()
 
@@ -1322,7 +1412,8 @@ func (s *PaymentService) createEpayOrder(ctx context.Context, order *PaymentOrde
 		QRCode  string `json:"qrcode"`
 	}
 	if err := json.Unmarshal(respBody, &result); err != nil {
-		return "", fmt.Errorf("parse epay response: %w, body=%s", err, string(respBody))
+		log.Printf("[Payment] Epay API invalid response: body=%s", string(respBody))
+		return "", infraerrors.BadRequest("EPAY_API_ERROR", "epay gateway returned an unexpected response")
 	}
 
 	if result.Code != 1 {

@@ -1141,6 +1141,12 @@ async function showPayMethodOrDirect(action: () => Promise<void>) {
   pendingPaymentAction.value = action
   await ensurePayMethodsLoaded()
 
+  if (availablePayMethods.value.length === 0) {
+    pendingPaymentAction.value = null
+    alert(t('pricing.payment.noMethodsAvailable'))
+    return
+  }
+
   if (availablePayMethods.value.length <= 1) {
     // Only one method (or none) — skip the modal, execute directly
     await confirmPayMethod()

@@ -3677,7 +3677,8 @@ export default {
       cancel: '取消',
       viewSubscription: '查看订阅',
       viewDashboard: '查看仪表盘',
-      createFailed: '创建订单失败，请稍后重试'
+      createFailed: '创建订单失败，请稍后重试',
+      noMethodsAvailable: '当前没有可用的支付方式，请联系管理员检查支付配置'
     }
   },
 
@@ -3704,7 +3705,8 @@ export default {
       expiresIn: '剩余支付时间 {minutes} 分 {seconds} 秒',
       cancel: '取消',
       viewDashboard: '查看仪表盘',
-      createFailed: '创建订单失败，请稍后重试'
+      createFailed: '创建订单失败，请稍后重试',
+      noMethodsAvailable: '当前没有可用的支付方式，请联系管理员检查支付配置'
     }
   },
 

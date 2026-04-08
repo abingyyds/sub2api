@@ -3527,7 +3527,8 @@ export default {
       cancel: 'Cancel',
       viewSubscription: 'View Subscription',
       viewDashboard: 'View Dashboard',
-      createFailed: 'Failed to create order, please try again'
+      createFailed: 'Failed to create order, please try again',
+      noMethodsAvailable: 'No payment methods are currently available. Please ask the administrator to check the payment configuration.'
     }
   },
 
@@ -3554,7 +3555,8 @@ export default {
       expiresIn: 'Expires in {minutes}m {seconds}s',
       cancel: 'Cancel',
       viewDashboard: 'View Dashboard',
-      createFailed: 'Failed to create order, please try again'
+      createFailed: 'Failed to create order, please try again',
+      noMethodsAvailable: 'No payment methods are currently available. Please ask the administrator to check the payment configuration.'
     }
   },
 
