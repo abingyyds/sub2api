@@ -48,6 +48,8 @@ var (
 	ErrInvoiceAlreadyHandled    = infraerrors.Conflict("INVOICE_ALREADY_HANDLED", "invoice has already been processed")
 )
 
+var wechatPayAPIBaseURL = "https://api.mch.weixin.qq.com"
+
 // PaymentPlan 套餐配置
 type PaymentPlan struct {
 	Key           string   `json:"key"`
@@ -817,6 +819,14 @@ func (s *PaymentService) QueryOrder(ctx context.Context, userID int64, orderNo s
 	if order.UserID != userID {
 		return nil, ErrPaymentOrderNotFound
 	}
+	if order.Status == PaymentOrderStatusPending && order.ExpiredAt.After(time.Now()) {
+		refreshedOrder, refreshErr := s.refreshPendingOrderStatus(ctx, order)
+		if refreshErr != nil {
+			log.Printf("[Payment] QueryOrder refresh failed: order=%s method=%s err=%v", order.OrderNo, order.PayMethod, refreshErr)
+		} else if refreshedOrder != nil {
+			order = refreshedOrder
+		}
+	}
 	return order, nil
 }
 
@@ -906,6 +916,146 @@ func (s *PaymentService) RepairOrder(ctx context.Context, orderID int64) error {
 
 	log.Printf("[Payment] Order %s repaired manually by admin", order.OrderNo)
 	return nil
+}
+
+func (s *PaymentService) refreshPendingOrderStatus(ctx context.Context, order *PaymentOrder) (*PaymentOrder, error) {
+	switch order.PayMethod {
+	case PaymentMethodWechatNative:
+		return s.queryWechatPendingOrder(ctx, order)
+	case PaymentMethodAlipayNative:
+		return s.queryAlipayPendingOrder(ctx, order)
+	default:
+		return nil, nil
+	}
+}
+
+func (s *PaymentService) markPendingOrderPaid(ctx context.Context, order *PaymentOrder, transactionID *string, paidAt *time.Time, source string) (*PaymentOrder, error) {
+	claimed, err := s.orderRepo.CompareAndUpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPending, PaymentOrderStatusPaid, transactionID, paidAt)
+	if err != nil {
+		return nil, fmt.Errorf("claim order as paid: %w", err)
+	}
+	if !claimed {
+		return s.orderRepo.GetByOrderNo(ctx, order.OrderNo)
+	}
+
+	if err := s.handlePaymentSuccess(ctx, order); err != nil {
+		if rbErr := s.orderRepo.UpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPending, nil, nil); rbErr != nil {
+			log.Printf("[Payment] CRITICAL: order %s failed to rollback proactive status: %v (original error: %v)", order.OrderNo, rbErr, err)
+		}
+		return nil, err
+	}
+
+	log.Printf("[Payment] Order %s marked paid via %s", order.OrderNo, source)
+	return s.orderRepo.GetByOrderNo(ctx, order.OrderNo)
+}
+
+func (s *PaymentService) queryWechatPendingOrder(ctx context.Context, order *PaymentOrder) (*PaymentOrder, error) {
+	mchID, _ := s.settingService.GetSettingValue(ctx, SettingKeyWechatPayMchID)
+	privateKeyPEM, _ := s.settingService.GetSettingValue(ctx, SettingKeyWechatPayPrivateKey)
+	mchSerialNo, _ := s.settingService.GetSettingValue(ctx, SettingKeyWechatPayMchSerialNo)
+	if mchID == "" || privateKeyPEM == "" || mchSerialNo == "" {
+		return nil, nil
+	}
+
+	privateKey, err := parsePrivateKey(privateKeyPEM)
+	if err != nil {
+		return nil, fmt.Errorf("parse wechat private key: %w", err)
+	}
+
+	queryPath := fmt.Sprintf("/v3/pay/transactions/out-trade-no/%s?mchid=%s", url.PathEscape(order.OrderNo), url.QueryEscape(mchID))
+	timestamp := fmt.Sprintf("%d", time.Now().Unix())
+	nonce := generateNonce()
+	signStr := fmt.Sprintf("%s\n%s\n%s\n%s\n\n", http.MethodGet, queryPath, timestamp, nonce)
+	signature, err := signSHA256WithRSA(privateKey, []byte(signStr))
+	if err != nil {
+		return nil, fmt.Errorf("sign wechat query request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, wechatPayAPIBaseURL+queryPath, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf(
+		`WECHATPAY2-SHA256-RSA2048 mchid="%s",nonce_str="%s",timestamp="%s",serial_no="%s",signature="%s"`,
+		mchID, nonce, timestamp, mchSerialNo, signature,
+	))
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("query wechat order: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("wechat query api error: status=%d body=%s", resp.StatusCode, string(respBody))
+	}
+
+	var result struct {
+		TradeState    string `json:"trade_state"`
+		TransactionID string `json:"transaction_id"`
+		SuccessTime   string `json:"success_time"`
+	}
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return nil, fmt.Errorf("parse wechat query response: %w", err)
+	}
+	if result.TradeState != "SUCCESS" {
+		return nil, nil
+	}
+
+	var paidAt *time.Time
+	if result.SuccessTime != "" {
+		if parsed, err := time.Parse(time.RFC3339, result.SuccessTime); err == nil {
+			paidAt = &parsed
+		}
+	}
+	if paidAt == nil {
+		now := time.Now()
+		paidAt = &now
+	}
+
+	var transactionID *string
+	if result.TransactionID != "" {
+		transactionID = &result.TransactionID
+	}
+	return s.markPendingOrderPaid(ctx, order, transactionID, paidAt, "wechat order query")
+}
+
+func (s *PaymentService) queryAlipayPendingOrder(ctx context.Context, order *PaymentOrder) (*PaymentOrder, error) {
+	client, err := s.initAlipayClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	rsp, err := client.TradeQuery(ctx, alipay.TradeQuery{OutTradeNo: order.OrderNo})
+	if err != nil {
+		return nil, fmt.Errorf("query alipay order: %w", err)
+	}
+	if rsp.IsFailure() {
+		return nil, fmt.Errorf("alipay query api error: %s - %s", rsp.Code, rsp.Msg)
+	}
+	if rsp.TradeStatus != alipay.TradeStatusSuccess && rsp.TradeStatus != alipay.TradeStatusFinished {
+		return nil, nil
+	}
+
+	var paidAt *time.Time
+	if rsp.SendPayDate != "" {
+		if parsed, err := time.Parse("2006-01-02 15:04:05", rsp.SendPayDate); err == nil {
+			paidAt = &parsed
+		}
+	}
+	if paidAt == nil {
+		now := time.Now()
+		paidAt = &now
+	}
+
+	var transactionID *string
+	if rsp.TradeNo != "" {
+		transactionID = &rsp.TradeNo
+	}
+	return s.markPendingOrderPaid(ctx, order, transactionID, paidAt, "alipay order query")
 }
 
 func isValidInvoiceEmail(email string) bool {

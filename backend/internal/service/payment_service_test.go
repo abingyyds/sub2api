@@ -4,6 +4,10 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -251,4 +255,61 @@ func TestPaymentServiceRepairOrder_RejectsPaidOrder(t *testing.T) {
 	require.ErrorIs(t, err, ErrPaymentOrderPaid)
 	require.Empty(t, userRepo.balanceUpdates)
 	require.Zero(t, orderRepo.compareCalls)
+}
+
+func TestPaymentServiceQueryOrderRepairsPendingWechatOrderViaUpstreamQuery(t *testing.T) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+
+	privateKeyPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
+	})
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Contains(t, r.URL.Path, "/v3/pay/transactions/out-trade-no/PO202604080005")
+		require.Equal(t, "10001", r.URL.Query().Get("mchid"))
+		require.NotEmpty(t, r.Header.Get("Authorization"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"trade_state":"SUCCESS","transaction_id":"wx-trade-100","success_time":"2026-04-08T12:00:00+08:00"}`))
+	}))
+	defer server.Close()
+
+	originalBaseURL := wechatPayAPIBaseURL
+	wechatPayAPIBaseURL = server.URL
+	t.Cleanup(func() {
+		wechatPayAPIBaseURL = originalBaseURL
+	})
+
+	orderRepo := &paymentOrderRepoStub{
+		order: &PaymentOrder{
+			ID:            5,
+			OrderNo:       "PO202604080005",
+			UserID:        7,
+			OrderType:     PaymentOrderTypeBalance,
+			BalanceAmount: 25,
+			Status:        PaymentOrderStatusPending,
+			PayMethod:     PaymentMethodWechatNative,
+			ExpiredAt:     time.Now().Add(30 * time.Minute),
+		},
+	}
+	userRepo := &paymentBalanceUserRepoStub{userRepoStub: &userRepoStub{user: &User{ID: 7, Balance: 10}}}
+	svc := &PaymentService{
+		orderRepo: orderRepo,
+		settingService: NewSettingService(&settingRepoStub{values: map[string]string{
+			SettingKeyWechatPayMchID:       "10001",
+			SettingKeyWechatPayPrivateKey:  string(privateKeyPEM),
+			SettingKeyWechatPayMchSerialNo: "serial-001",
+		}}, &config.Config{}),
+		userRepo: userRepo,
+	}
+
+	order, err := svc.QueryOrder(context.Background(), 7, "PO202604080005")
+	require.NoError(t, err)
+	require.Equal(t, PaymentOrderStatusPaid, order.Status)
+	require.NotNil(t, order.PaidAt)
+	require.Equal(t, []float64{25}, userRepo.balanceUpdates)
+	require.Equal(t, 35.0, userRepo.user.Balance)
+	require.Equal(t, 1, orderRepo.compareCalls)
 }
