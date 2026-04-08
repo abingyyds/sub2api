@@ -676,9 +676,13 @@ import { paymentAPI } from '@/api/payment'
 import { validatePromoCode } from '@/api/auth'
 import type { PaymentPlan, RechargePlan, PayMethod } from '@/api/payment'
 import { FadeIn, SlideIn, StaggerContainer, GlowCard, MagneticButton } from '@/components/animations'
+import { useAppStore, useAuthStore, useSubscriptionStore } from '@/stores'
 
 const { t } = useI18n()
 const router = useRouter()
+const appStore = useAppStore()
+const authStore = useAuthStore()
+const subscriptionStore = useSubscriptionStore()
 
 const loading = ref(true)
 const plans = ref<PaymentPlan[]>([])
@@ -1380,6 +1384,7 @@ function startPolling() {
       if (order.status === 'paid') {
         paymentStatus.value = 'paid'
         clearTimers()
+        await syncPaymentSuccessState()
       } else if (order.status === 'closed') {
         paymentStatus.value = 'closed'
         clearTimers()
@@ -1388,6 +1393,23 @@ function startPolling() {
       // ignore poll errors
     }
   }, 3000)
+}
+
+async function syncPaymentSuccessState() {
+  const refreshTasks: Promise<unknown>[] = [
+    authStore.refreshUser(),
+  ]
+
+  if (paymentOrderType.value === 'subscription') {
+    refreshTasks.push(subscriptionStore.fetchActiveSubscriptions(true))
+  }
+
+  const results = await Promise.allSettled(refreshTasks)
+  const failed = results.find(result => result.status === 'rejected')
+  if (failed) {
+    console.error('Failed to refresh payment success state:', failed.reason)
+    appStore.showError('支付成功，但页面数据刷新失败，请手动刷新页面查看最新状态')
+  }
 }
 
 function cancelPayment() {

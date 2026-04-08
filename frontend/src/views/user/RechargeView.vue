@@ -202,9 +202,12 @@ import { FadeIn, SlideIn, GlowCard, MagneticButton } from '@/components/animatio
 import QRCode from 'qrcode'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { paymentAPI, type PayMethod } from '@/api/payment'
+import { useAppStore, useAuthStore } from '@/stores'
 
 const { t } = useI18n()
 const router = useRouter()
+const appStore = useAppStore()
+const authStore = useAuthStore()
 
 const presets = [10, 50, 100, 200, 500, 1000]
 const selectedAmount = ref<number | null>(null)
@@ -351,6 +354,7 @@ function startPolling() {
       if (order.status === 'paid') {
         paymentStatus.value = 'paid'
         clearTimers()
+        await syncPaymentSuccessState()
       } else if (order.status === 'closed') {
         paymentStatus.value = 'closed'
         clearTimers()
@@ -359,6 +363,15 @@ function startPolling() {
       // ignore poll errors
     }
   }, 3000)
+}
+
+async function syncPaymentSuccessState() {
+  try {
+    await authStore.refreshUser()
+  } catch (error) {
+    console.error('Failed to refresh recharge success state:', error)
+    appStore.showError('充值成功，但页面余额刷新失败，请手动刷新页面查看最新状态')
+  }
 }
 
 function cancelPayment() {
