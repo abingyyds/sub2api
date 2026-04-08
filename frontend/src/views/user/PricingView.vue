@@ -666,6 +666,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import QRCode from 'qrcode'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { paymentAPI } from '@/api/payment'
@@ -739,7 +740,6 @@ const promoValidation = ref<{
 let promoValidateTimeout: ReturnType<typeof setTimeout> | null = null
 let rechargeCatalogPromise: Promise<void> | null = null
 let payMethodsPromise: Promise<void> | null = null
-let qrCodeModulePromise: Promise<typeof import('qrcode')> | null = null
 
 let pollTimer: ReturnType<typeof setInterval> | null = null
 let countdownTimer: ReturnType<typeof setInterval> | null = null
@@ -1110,18 +1110,10 @@ async function ensurePayMethodsLoaded(): Promise<void> {
   return request
 }
 
-async function ensureQRCodeLoaded() {
-  if (!qrCodeModulePromise) {
-    qrCodeModulePromise = import('qrcode')
-  }
-  return qrCodeModulePromise
-}
-
 function scheduleSecondaryPricingDataLoad() {
   const load = () => {
     void ensureRechargeCatalogLoaded()
     void ensurePayMethodsLoaded()
-    void ensureQRCodeLoaded()
   }
 
   if (typeof window.requestIdleCallback === 'function') {
@@ -1356,7 +1348,6 @@ async function showQRModal(order: { order_no: string; code_url: string | null; a
     if (order.code_url) {
       await nextTick()
       if (qrCanvas.value) {
-        const QRCode = await ensureQRCodeLoaded()
         await QRCode.toCanvas(qrCanvas.value, order.code_url, {
           width: 192,
           margin: 2,
