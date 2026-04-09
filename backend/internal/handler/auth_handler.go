@@ -258,7 +258,7 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.userService.GetByID(c.Request.Context(), subject.UserID)
+	user, err := h.userService.GetProfile(c.Request.Context(), subject.UserID)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
@@ -286,10 +286,10 @@ type ValidatePromoCodeRequest struct {
 // ValidatePromoCodeResponse 验证优惠码响应
 type ValidatePromoCodeResponse struct {
 	Valid          bool    `json:"valid"`
-	DiscountType   string  `json:"discount_type,omitempty"`   // "fixed" 或 "percentage"
-	DiscountAmount float64 `json:"discount_amount,omitempty"` // 折扣值（fixed=分, percentage=百分比）
-	DiscountFen    int     `json:"discount_fen,omitempty"`    // 实际折扣金额（分）
-	FinalAmountFen int    `json:"final_amount_fen,omitempty"` // 折后金额（分）
+	DiscountType   string  `json:"discount_type,omitempty"`    // "fixed" 或 "percentage"
+	DiscountAmount float64 `json:"discount_amount,omitempty"`  // 折扣值（fixed=分, percentage=百分比）
+	DiscountFen    int     `json:"discount_fen,omitempty"`     // 实际折扣金额（分）
+	FinalAmountFen int     `json:"final_amount_fen,omitempty"` // 折后金额（分）
 	MinOrderAmount int     `json:"min_order_amount,omitempty"` // 满减门槛（分）
 	ErrorCode      string  `json:"error_code,omitempty"`
 	Message        string  `json:"message,omitempty"`

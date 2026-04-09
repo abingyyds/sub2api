@@ -201,6 +201,10 @@ func (s *SubscriptionService) AssignOrExtendSubscription(ctx context.Context, in
 		return nil, false, err
 	}
 
+	if s.subscriptionCache != nil {
+		_ = s.subscriptionCache.DeleteByUserID(ctx, input.UserID)
+	}
+
 	// 失效订阅缓存
 	if s.billingCacheService != nil {
 		userID, groupID := input.UserID, input.GroupID
