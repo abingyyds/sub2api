@@ -21,6 +21,7 @@ var (
 	ErrAgentFrozen                    = infraerrors.Forbidden("AGENT_FROZEN", "your agent account is frozen")
 	ErrAgentPrerequisitesMissing      = infraerrors.BadRequest("AGENT_PREREQUISITES_MISSING", "complete identity, contract and activation fee payment before applying")
 	ErrAgentContractSignatureRequired = infraerrors.BadRequest("AGENT_CONTRACT_SIGNATURE_REQUIRED", "please sign the contract before saving your profile")
+	ErrAgentContractTemplateMissing   = infraerrors.BadRequest("AGENT_CONTRACT_TEMPLATE_MISSING", "contract template is not configured yet")
 	ErrRateExceedsOwn                 = infraerrors.BadRequest("RATE_EXCEEDS_OWN", "commission rate cannot exceed your own rate")
 	ErrSelfReference                  = infraerrors.BadRequest("SELF_REFERENCE", "cannot set user as their own parent")
 )
@@ -89,6 +90,9 @@ func (s *AgentService) SaveProfile(ctx context.Context, userID int64, realName s
 		profile.IdentitySubmittedAt = &now
 	}
 	if contractAccepted {
+		if strings.TrimSpace(s.settingService.GetAgentContractTemplate(ctx)) == "" {
+			return ErrAgentContractTemplateMissing
+		}
 		if contractSignatureData == "" && strings.TrimSpace(profile.ContractSignatureData) == "" {
 			return ErrAgentContractSignatureRequired
 		}
@@ -205,13 +209,14 @@ func (s *AgentService) GetAgentStatus(ctx context.Context, userID int64) (*Agent
 
 	weekday, startHour, endHour := s.settingService.GetAgentWithdrawWindow(ctx)
 	status := &AgentStatusView{
-		Enabled:        s.settingService.IsAgentEnabled(ctx),
-		IsAgent:        user.IsAgent,
-		AgentStatus:    user.AgentStatus,
-		CommissionRate: user.AgentCommissionRate,
-		CanApply:       s.profileReadyForApplication(profile) && user.AgentStatus != AgentStatusPending && user.AgentStatus != AgentStatusApproved,
-		ActivationFee:  s.settingService.GetAgentActivationFee(ctx),
-		Profile:        profile,
+		Enabled:          s.settingService.IsAgentEnabled(ctx),
+		IsAgent:          user.IsAgent,
+		AgentStatus:      user.AgentStatus,
+		CommissionRate:   user.AgentCommissionRate,
+		CanApply:         s.profileReadyForApplication(profile) && user.AgentStatus != AgentStatusPending && user.AgentStatus != AgentStatusApproved,
+		ActivationFee:    s.settingService.GetAgentActivationFee(ctx),
+		ContractTemplate: s.settingService.GetAgentContractTemplate(ctx),
+		Profile:          profile,
 		Wallet: AgentWalletSummary{
 			SiteBalance:         user.Balance,
 			FrozenBalance:       profile.FrozenBalance,

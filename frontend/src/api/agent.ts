@@ -44,6 +44,7 @@ export interface AgentStatus {
   invite_code?: string
   can_apply: boolean
   activation_fee: number
+  contract_template?: string
   profile: AgentProfile
   wallet: AgentWalletSummary
   withdraw_freeze_days: number

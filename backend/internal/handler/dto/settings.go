@@ -67,6 +67,7 @@ type SystemSettings struct {
 	AgentDefaultCommissionRate float64 `json:"agent_default_commission_rate"`
 	AgentActivationFee         float64 `json:"agent_activation_fee"`
 	AgentContractVersion       string  `json:"agent_contract_version"`
+	AgentContractTemplate      string  `json:"agent_contract_template"`
 	AgentWithdrawFreezeDays    int     `json:"agent_withdraw_freeze_days"`
 	AgentWithdrawWeekday       int     `json:"agent_withdraw_weekday"`
 	AgentWithdrawStartHour     int     `json:"agent_withdraw_start_hour"`

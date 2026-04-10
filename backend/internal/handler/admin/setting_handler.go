@@ -95,6 +95,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		AgentDefaultCommissionRate:           settings.AgentDefaultCommissionRate,
 		AgentActivationFee:                   settings.AgentActivationFee,
 		AgentContractVersion:                 settings.AgentContractVersion,
+		AgentContractTemplate:                settings.AgentContractTemplate,
 		AgentWithdrawFreezeDays:              settings.AgentWithdrawFreezeDays,
 		AgentWithdrawWeekday:                 settings.AgentWithdrawWeekday,
 		AgentWithdrawStartHour:               settings.AgentWithdrawStartHour,
@@ -197,6 +198,7 @@ type UpdateSettingsRequest struct {
 	AgentDefaultCommissionRate float64 `json:"agent_default_commission_rate"`
 	AgentActivationFee         float64 `json:"agent_activation_fee"`
 	AgentContractVersion       string  `json:"agent_contract_version"`
+	AgentContractTemplate      string  `json:"agent_contract_template"`
 	AgentWithdrawFreezeDays    int     `json:"agent_withdraw_freeze_days"`
 	AgentWithdrawWeekday       int     `json:"agent_withdraw_weekday"`
 	AgentWithdrawStartHour     int     `json:"agent_withdraw_start_hour"`
@@ -427,6 +429,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		AgentDefaultCommissionRate: req.AgentDefaultCommissionRate,
 		AgentActivationFee:         req.AgentActivationFee,
 		AgentContractVersion:       req.AgentContractVersion,
+		AgentContractTemplate:      req.AgentContractTemplate,
 		AgentWithdrawFreezeDays:    req.AgentWithdrawFreezeDays,
 		AgentWithdrawWeekday:       req.AgentWithdrawWeekday,
 		AgentWithdrawStartHour:     req.AgentWithdrawStartHour,
@@ -521,6 +524,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		AgentDefaultCommissionRate:           updatedSettings.AgentDefaultCommissionRate,
 		AgentActivationFee:                   updatedSettings.AgentActivationFee,
 		AgentContractVersion:                 updatedSettings.AgentContractVersion,
+		AgentContractTemplate:                updatedSettings.AgentContractTemplate,
 		AgentWithdrawFreezeDays:              updatedSettings.AgentWithdrawFreezeDays,
 		AgentWithdrawWeekday:                 updatedSettings.AgentWithdrawWeekday,
 		AgentWithdrawStartHour:               updatedSettings.AgentWithdrawStartHour,
@@ -679,6 +683,9 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	}
 	if before.IdentityPatchPrompt != after.IdentityPatchPrompt {
 		changed = append(changed, "identity_patch_prompt")
+	}
+	if before.AgentContractTemplate != after.AgentContractTemplate {
+		changed = append(changed, "agent_contract_template")
 	}
 	if before.OpsMonitoringEnabled != after.OpsMonitoringEnabled {
 		changed = append(changed, "ops_monitoring_enabled")

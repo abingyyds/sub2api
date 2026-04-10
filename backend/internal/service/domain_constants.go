@@ -230,6 +230,7 @@ const (
 	SettingKeyAgentDefaultCommissionRate = "agent_default_commission_rate" // 默认佣金比例
 	SettingKeyAgentActivationFee         = "agent_activation_fee"          // 代理开通费（元）
 	SettingKeyAgentContractVersion       = "agent_contract_version"        // 代理合同版本
+	SettingKeyAgentContractTemplate      = "agent_contract_template"       // 代理合同 PDF 模板（data URL）
 	SettingKeyAgentWithdrawFreezeDays    = "agent_withdraw_freeze_days"    // 提现冻结天数
 	SettingKeyAgentWithdrawWeekday       = "agent_withdraw_weekday"        // 提现开放星期（1-7）
 	SettingKeyAgentWithdrawStartHour     = "agent_withdraw_start_hour"     // 提现开始小时

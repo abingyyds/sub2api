@@ -68,6 +68,7 @@ export interface SystemSettings {
   agent_default_commission_rate: number
   agent_activation_fee: number
   agent_contract_version: string
+  agent_contract_template: string
   agent_withdraw_freeze_days: number
   agent_withdraw_weekday: number
   agent_withdraw_start_hour: number
@@ -157,6 +158,7 @@ export interface UpdateSettingsRequest {
   agent_default_commission_rate?: number
   agent_activation_fee?: number
   agent_contract_version?: string
+  agent_contract_template?: string
   agent_withdraw_freeze_days?: number
   agent_withdraw_weekday?: number
   agent_withdraw_start_hour?: number

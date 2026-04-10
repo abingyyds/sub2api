@@ -142,6 +142,29 @@
               <div class="mt-5 rounded-2xl border border-gray-200 p-4 dark:border-dark-700">
                 <div class="flex items-center justify-between gap-3">
                   <div>
+                    <h3 class="text-sm font-medium text-gray-900 dark:text-white">合同 PDF</h3>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">请先阅读管理员上传的合同模板，再完成签字。</p>
+                  </div>
+                  <a
+                    v-if="status.contract_template"
+                    :href="status.contract_template"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn btn-secondary btn-sm"
+                  >
+                    新窗口查看
+                  </a>
+                </div>
+
+                <div v-if="status.contract_template" class="mt-4 overflow-hidden rounded-2xl border border-gray-200 dark:border-dark-700">
+                  <iframe :src="status.contract_template" class="h-72 w-full bg-white"></iframe>
+                </div>
+                <p v-else class="mt-4 text-sm text-amber-600 dark:text-amber-400">管理员还没有上传合同 PDF，当前无法完成签署。</p>
+              </div>
+
+              <div class="mt-5 rounded-2xl border border-gray-200 p-4 dark:border-dark-700">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
                     <h3 class="text-sm font-medium text-gray-900 dark:text-white">合同签字</h3>
                     <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">请使用鼠标或手指在签字板内签名，系统会保存签字图、时间和 IP 作为签署留痕。</p>
                   </div>
@@ -280,6 +303,7 @@ const status = ref<AgentStatus>({
   invite_code: '',
   can_apply: false,
   activation_fee: 0,
+  contract_template: '',
   profile: {
     user_id: 0,
     real_name: '',
@@ -343,6 +367,7 @@ const canSaveProfile = computed(() =>
   profileForm.value.real_name.trim() &&
   profileForm.value.id_card_no.trim() &&
   profileForm.value.phone.trim() &&
+  status.value.contract_template &&
   profileForm.value.contract_accepted &&
   profileForm.value.contract_signature_data.trim()
 )

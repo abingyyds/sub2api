@@ -51,6 +51,7 @@ type AgentStatusView struct {
 	InviteCode         string              `json:"invite_code,omitempty"`
 	CanApply           bool                `json:"can_apply"`
 	ActivationFee      float64             `json:"activation_fee"`
+	ContractTemplate   string              `json:"contract_template,omitempty"`
 	Profile            *AgentProfile       `json:"profile,omitempty"`
 	Wallet             AgentWalletSummary  `json:"wallet"`
 	WithdrawFreezeDays int                 `json:"withdraw_freeze_days"`

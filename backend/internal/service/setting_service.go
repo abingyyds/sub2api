@@ -257,6 +257,7 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	updates[SettingKeyAgentDefaultCommissionRate] = strconv.FormatFloat(settings.AgentDefaultCommissionRate, 'f', 4, 64)
 	updates[SettingKeyAgentActivationFee] = strconv.FormatFloat(settings.AgentActivationFee, 'f', 2, 64)
 	updates[SettingKeyAgentContractVersion] = settings.AgentContractVersion
+	updates[SettingKeyAgentContractTemplate] = settings.AgentContractTemplate
 	updates[SettingKeyAgentWithdrawFreezeDays] = strconv.Itoa(settings.AgentWithdrawFreezeDays)
 	updates[SettingKeyAgentWithdrawWeekday] = strconv.Itoa(settings.AgentWithdrawWeekday)
 	updates[SettingKeyAgentWithdrawStartHour] = strconv.Itoa(settings.AgentWithdrawStartHour)
@@ -479,6 +480,7 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyAgentDefaultCommissionRate: "0.5",
 		SettingKeyAgentActivationFee:         "2000",
 		SettingKeyAgentContractVersion:       "v1",
+		SettingKeyAgentContractTemplate:      "",
 		SettingKeyAgentWithdrawFreezeDays:    "7",
 		SettingKeyAgentWithdrawWeekday:       "5",
 		SettingKeyAgentWithdrawStartHour:     "14",
@@ -532,6 +534,7 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		HideCcsImportButton:          settings[SettingKeyHideCcsImportButton] == "true",
 		AgentEnabled:                 settings[SettingKeyAgentEnabled] != "false",
 		AgentContractVersion:         s.getStringOrDefault(settings, SettingKeyAgentContractVersion, "v1"),
+		AgentContractTemplate:        settings[SettingKeyAgentContractTemplate],
 	}
 
 	// 解析整数类型
@@ -1110,6 +1113,15 @@ func (s *SettingService) GetAgentContractVersion(ctx context.Context) string {
 	value, err := s.settingRepo.GetValue(ctx, SettingKeyAgentContractVersion)
 	if err != nil || strings.TrimSpace(value) == "" {
 		return "v1"
+	}
+	return strings.TrimSpace(value)
+}
+
+// GetAgentContractTemplate 获取代理合同 PDF 模板（data URL）。
+func (s *SettingService) GetAgentContractTemplate(ctx context.Context) string {
+	value, err := s.settingRepo.GetValue(ctx, SettingKeyAgentContractTemplate)
+	if err != nil {
+		return ""
 	}
 	return strings.TrimSpace(value)
 }

@@ -468,6 +468,43 @@
                 <label class="input-label">合同版本</label>
                 <input v-model="form.agent_contract_version" type="text" class="input mt-1 w-full" />
               </div>
+              <div class="md:col-span-2 xl:col-span-4">
+                <label class="input-label">代理合同 PDF</label>
+                <div class="mt-2 rounded-2xl border border-gray-200 p-4 dark:border-dark-700">
+                  <div class="flex flex-wrap items-center gap-3">
+                    <label class="btn btn-secondary btn-sm cursor-pointer">
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        class="hidden"
+                        @change="handleAgentContractUpload"
+                      />
+                      <Icon name="upload" size="sm" class="mr-1.5" :stroke-width="2" />
+                      上传 PDF 合同
+                    </label>
+                    <a
+                      v-if="form.agent_contract_template"
+                      :href="form.agent_contract_template"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="btn btn-secondary btn-sm"
+                    >
+                      预览合同
+                    </a>
+                    <button
+                      v-if="form.agent_contract_template"
+                      type="button"
+                      @click="form.agent_contract_template = ''"
+                      class="btn btn-secondary btn-sm text-red-600 hover:text-red-700 dark:text-red-400"
+                    >
+                      <Icon name="trash" size="sm" class="mr-1.5" :stroke-width="2" />
+                      清空合同
+                    </button>
+                  </div>
+                  <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">用户申请代理时会先看到这份合同 PDF，再在页面内签字确认。</p>
+                  <p v-if="agentContractError" class="mt-2 text-xs text-red-500">{{ agentContractError }}</p>
+                </div>
+              </div>
               <div>
                 <label class="input-label">提现冻结天数</label>
                 <input v-model.number="form.agent_withdraw_freeze_days" type="number" min="0" step="1" class="input mt-1 w-full" />
@@ -1451,6 +1488,7 @@ const testingSmtp = ref(false)
 const sendingTestEmail = ref(false)
 const testEmailAddress = ref('')
 const logoError = ref('')
+const agentContractError = ref('')
 
 // Admin API Key 状态
 const adminApiKeyLoading = ref(true)
@@ -1537,6 +1575,7 @@ const form = reactive<SettingsForm>({
   agent_default_commission_rate: 0.5,
   agent_activation_fee: 2000,
   agent_contract_version: 'v1',
+  agent_contract_template: '',
   agent_withdraw_freeze_days: 7,
   agent_withdraw_weekday: 5,
   agent_withdraw_start_hour: 14,
@@ -1728,6 +1767,38 @@ function handleLogoUpload(event: Event) {
   input.value = ''
 }
 
+function handleAgentContractUpload(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  agentContractError.value = ''
+
+  if (!file) return
+
+  const maxSize = 5 * 1024 * 1024
+  if (file.size > maxSize) {
+    agentContractError.value = `PDF 文件过大，当前 ${(file.size / 1024 / 1024).toFixed(2)}MB，最多允许 5MB`
+    input.value = ''
+    return
+  }
+
+  if (file.type !== 'application/pdf') {
+    agentContractError.value = '只能上传 PDF 文件'
+    input.value = ''
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    form.agent_contract_template = e.target?.result as string
+  }
+  reader.onerror = () => {
+    agentContractError.value = '读取 PDF 失败，请重试'
+  }
+  reader.readAsDataURL(file)
+
+  input.value = ''
+}
+
 async function loadSettings() {
   loading.value = true
   try {
@@ -1800,6 +1871,7 @@ async function saveSettings() {
       agent_default_commission_rate: form.agent_default_commission_rate,
       agent_activation_fee: form.agent_activation_fee,
       agent_contract_version: form.agent_contract_version,
+      agent_contract_template: form.agent_contract_template,
       agent_withdraw_freeze_days: form.agent_withdraw_freeze_days,
       agent_withdraw_weekday: form.agent_withdraw_weekday,
       agent_withdraw_start_hour: form.agent_withdraw_start_hour,

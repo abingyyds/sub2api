@@ -71,6 +71,7 @@ type SystemSettings struct {
 	AgentDefaultCommissionRate float64
 	AgentActivationFee         float64
 	AgentContractVersion       string
+	AgentContractTemplate      string
 	AgentWithdrawFreezeDays    int
 	AgentWithdrawWeekday       int
 	AgentWithdrawStartHour     int
