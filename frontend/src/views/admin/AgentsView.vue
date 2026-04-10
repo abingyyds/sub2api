@@ -99,7 +99,8 @@
         <div class="fixed inset-0 bg-black/50" @click="showDetailModal = false"></div>
         <div class="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-dark-800">
           <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">{{ t('admin.agents.viewDetail') }}</h3>
-          <div v-if="detailAgent" class="space-y-3">
+          <div v-if="detailLoading" class="py-10 text-center text-sm text-gray-500 dark:text-dark-400">加载中...</div>
+          <div v-else-if="detailAgent" class="space-y-3">
             <div class="text-sm text-gray-500 dark:text-dark-400">{{ detailAgent.email }}</div>
             <div class="grid grid-cols-2 gap-3 rounded-2xl bg-gray-50 p-3 text-sm dark:bg-dark-800">
               <div>
@@ -115,6 +116,10 @@
                 <p class="text-gray-900 dark:text-white break-all">{{ detailAgent.real_name || '-' }}</p>
               </div>
               <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">身份证号</label>
+                <p class="text-gray-900 dark:text-white break-all">{{ detailAgent.id_card_no || '-' }}</p>
+              </div>
+              <div>
                 <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">手机号</label>
                 <p class="text-gray-900 dark:text-white break-all">{{ detailAgent.phone || '-' }}</p>
               </div>
@@ -126,6 +131,31 @@
                 <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">冻结状态</label>
                 <p class="text-gray-900 dark:text-white">{{ detailAgent.is_frozen ? `已冻结：${detailAgent.frozen_reason || '无原因'}` : '正常' }}</p>
               </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 rounded-2xl bg-gray-50 p-3 text-sm dark:bg-dark-800">
+              <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">实名提交时间</label>
+                <p class="text-gray-900 dark:text-white">{{ detailAgent.identity_submitted_at ? formatDateTime(detailAgent.identity_submitted_at) : '-' }}</p>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">合同版本</label>
+                <p class="text-gray-900 dark:text-white">{{ detailAgent.contract_version || '-' }}</p>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">签署时间</label>
+                <p class="text-gray-900 dark:text-white">{{ detailAgent.contract_signed_at ? formatDateTime(detailAgent.contract_signed_at) : '-' }}</p>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">签署 IP</label>
+                <p class="text-gray-900 dark:text-white break-all">{{ detailAgent.contract_ip || '-' }}</p>
+              </div>
+            </div>
+            <div>
+              <label class="mb-2 block text-xs font-medium text-gray-500 dark:text-dark-400">合同签字</label>
+              <div v-if="detailAgent.contract_signature_data" class="rounded-2xl border border-gray-200 bg-white p-3 dark:border-dark-700 dark:bg-dark-900">
+                <img :src="detailAgent.contract_signature_data" alt="合同签字" class="max-h-28 rounded-lg" />
+              </div>
+              <p v-else class="text-sm text-gray-500 dark:text-dark-400">未签字</p>
             </div>
             <div v-if="detailAgent.agent_note">
               <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">{{ t('admin.agents.agentNote') }}</label>
@@ -147,7 +177,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { agentsAPI } from '@/api/admin'
-import type { AdminAgent } from '@/api/admin/agents'
+import type { AdminAgent, AdminAgentDetail } from '@/api/admin/agents'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import TablePageLayout from '@/components/layout/TablePageLayout.vue'
 import DataTable from '@/components/common/DataTable.vue'
@@ -174,7 +204,8 @@ const editingAgent = ref<AdminAgent | null>(null)
 
 // Detail modal
 const showDetailModal = ref(false)
-const detailAgent = ref<AdminAgent | null>(null)
+const detailLoading = ref(false)
+const detailAgent = ref<AdminAgentDetail | null>(null)
 
 const columns = computed<Column[]>(() => [
   { key: 'id', label: 'ID', sortable: false },
@@ -222,9 +253,17 @@ function onFilterChange() {
   loadData()
 }
 
-function openDetail(agent: AdminAgent) {
-  detailAgent.value = agent
+async function openDetail(agent: AdminAgent) {
   showDetailModal.value = true
+  detailLoading.value = true
+  try {
+    detailAgent.value = await agentsAPI.getDetail(agent.id)
+  } catch {
+    detailAgent.value = null
+    appStore.showError('加载代理详情失败')
+  } finally {
+    detailLoading.value = false
+  }
 }
 
 async function loadData() {

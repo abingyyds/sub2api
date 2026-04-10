@@ -26,6 +26,15 @@ export interface AdminAgent {
   created_at: string
 }
 
+export interface AdminAgentDetail extends AdminAgent {
+  id_card_no: string
+  identity_submitted_at: string | null
+  contract_version: string
+  contract_signed_at: string | null
+  contract_ip: string
+  contract_signature_data?: string
+}
+
 export async function list(
   page: number = 1,
   pageSize: number = 20,
@@ -48,6 +57,11 @@ export async function approve(id: number): Promise<void> {
   await apiClient.post(`/admin/agents/${id}/approve`)
 }
 
+export async function getDetail(id: number): Promise<AdminAgentDetail> {
+  const { data } = await apiClient.get<AdminAgentDetail>(`/admin/agents/${id}`)
+  return data
+}
+
 export async function reject(id: number, reason?: string): Promise<void> {
   await apiClient.post(`/admin/agents/${id}/reject`, { reason })
 }
@@ -60,5 +74,5 @@ export async function setFrozen(id: number, frozen: boolean, reason?: string): P
   await apiClient.post(`/admin/agents/${id}/freeze`, { frozen, reason: reason || '' })
 }
 
-export const agentsAPI = { list, approve, reject, update, setFrozen }
+export const agentsAPI = { list, getDetail, approve, reject, update, setFrozen }
 export default agentsAPI

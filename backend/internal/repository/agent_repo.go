@@ -399,7 +399,7 @@ func (r *agentRepository) GetAgentByUserID(ctx context.Context, userID int64) (i
 
 func (r *agentRepository) GetProfile(ctx context.Context, userID int64) (*service.AgentProfile, error) {
 	query := `SELECT user_id, real_name, id_card_no, phone, identity_status, identity_submitted_at,
-		contract_status, contract_version, contract_signed_at, contract_ip, activation_order_id,
+		contract_status, contract_version, contract_signed_at, contract_ip, contract_signature_data, activation_order_id,
 		activation_fee_paid_at, frozen_balance, withdrawable_balance, total_withdrawn,
 		is_frozen, frozen_reason, created_at, updated_at
 		FROM agent_profiles WHERE user_id = $1`
@@ -413,7 +413,7 @@ func (r *agentRepository) GetProfile(ctx context.Context, userID int64) (*servic
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(
 		&profile.UserID, &profile.RealName, &profile.IDCardNo, &profile.Phone,
 		&profile.IdentityStatus, &identitySubmittedAt, &profile.ContractStatus, &profile.ContractVersion,
-		&contractSignedAt, &profile.ContractIP, &activationOrderID, &activationFeePaidAt,
+		&contractSignedAt, &profile.ContractIP, &profile.ContractSignatureData, &activationOrderID, &activationFeePaidAt,
 		&profile.FrozenBalance, &profile.WithdrawableBalance, &profile.TotalWithdrawn,
 		&profile.IsFrozen, &profile.FrozenReason, &profile.CreatedAt, &profile.UpdatedAt,
 	)
@@ -446,12 +446,12 @@ func (r *agentRepository) GetProfile(ctx context.Context, userID int64) (*servic
 func (r *agentRepository) UpsertProfile(ctx context.Context, profile *service.AgentProfile) error {
 	query := `INSERT INTO agent_profiles (
 			user_id, real_name, id_card_no, phone, identity_status, identity_submitted_at,
-			contract_status, contract_version, contract_signed_at, contract_ip,
+			contract_status, contract_version, contract_signed_at, contract_ip, contract_signature_data,
 			frozen_balance, withdrawable_balance, total_withdrawn, is_frozen, frozen_reason, created_at, updated_at
 		) VALUES (
 			$1, $2, $3, $4, $5, $6,
-			$7, $8, $9, $10,
-			$11, $12, $13, $14, $15, NOW(), NOW()
+			$7, $8, $9, $10, $11,
+			$12, $13, $14, $15, $16, NOW(), NOW()
 		)
 		ON CONFLICT (user_id) DO UPDATE SET
 			real_name = EXCLUDED.real_name,
@@ -463,11 +463,12 @@ func (r *agentRepository) UpsertProfile(ctx context.Context, profile *service.Ag
 			contract_version = EXCLUDED.contract_version,
 			contract_signed_at = EXCLUDED.contract_signed_at,
 			contract_ip = EXCLUDED.contract_ip,
+			contract_signature_data = EXCLUDED.contract_signature_data,
 			updated_at = NOW()`
 	_, err := r.db.ExecContext(ctx, query,
 		profile.UserID, profile.RealName, profile.IDCardNo, profile.Phone,
 		profile.IdentityStatus, profile.IdentitySubmittedAt,
-		profile.ContractStatus, profile.ContractVersion, profile.ContractSignedAt, profile.ContractIP,
+		profile.ContractStatus, profile.ContractVersion, profile.ContractSignedAt, profile.ContractIP, profile.ContractSignatureData,
 		profile.FrozenBalance, profile.WithdrawableBalance, profile.TotalWithdrawn,
 		profile.IsFrozen, profile.FrozenReason,
 	)

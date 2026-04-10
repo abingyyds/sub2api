@@ -136,8 +136,37 @@
 
               <label class="mt-5 flex items-start gap-3 rounded-2xl bg-gray-50 px-4 py-3 text-sm text-gray-700 dark:bg-dark-800 dark:text-dark-200">
                 <input v-model="profileForm.contract_accepted" type="checkbox" class="mt-1 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
-                <span>我已阅读并同意当前代理合作条款，确认以站内确认方式完成合同留痕。</span>
+                <span>我已阅读并同意当前代理合作条款，并将在下方完成电子签字。</span>
               </label>
+
+              <div class="mt-5 rounded-2xl border border-gray-200 p-4 dark:border-dark-700">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 class="text-sm font-medium text-gray-900 dark:text-white">合同签字</h3>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">请使用鼠标或手指在签字板内签名，系统会保存签字图、时间和 IP 作为签署留痕。</p>
+                  </div>
+                  <button type="button" class="btn btn-secondary btn-sm" @click="clearSignature">清空重签</button>
+                </div>
+
+                <div class="mt-4 overflow-hidden rounded-2xl border border-dashed border-gray-300 bg-white dark:border-dark-600">
+                  <canvas
+                    ref="signatureCanvas"
+                    class="block h-40 w-full touch-none"
+                    @pointerdown="startSignature"
+                    @pointermove="moveSignature"
+                    @pointerup="endSignature"
+                    @pointerleave="endSignature"
+                    @pointercancel="endSignature"
+                  ></canvas>
+                </div>
+
+                <p v-if="signatureError" class="mt-2 text-xs text-red-500">{{ signatureError }}</p>
+
+                <div v-if="status.profile?.contract_signature_data" class="mt-4">
+                  <p class="mb-2 text-xs text-gray-500 dark:text-dark-400">当前已保存签字</p>
+                  <img :src="status.profile.contract_signature_data" alt="合同签字" class="max-h-24 rounded-lg border border-gray-200 bg-white p-2 dark:border-dark-700" />
+                </div>
+              </div>
 
               <div class="mt-5 flex items-center gap-3">
                 <button class="btn btn-primary" :disabled="savingProfile || !canSaveProfile" @click="handleSaveProfile">
@@ -229,7 +258,11 @@ const creatingOrder = ref(false)
 const applying = ref(false)
 const showPaymentModal = ref(false)
 const qrCanvas = ref<HTMLCanvasElement | null>(null)
+const signatureCanvas = ref<HTMLCanvasElement | null>(null)
 const pollTimer = ref<number | null>(null)
+const signatureError = ref('')
+const isSigning = ref(false)
+let signatureContext: CanvasRenderingContext2D | null = null
 
 const activationOrder = ref<CreateOrderResponse & { order_no?: string }>({
   order_no: '',
@@ -258,6 +291,7 @@ const status = ref<AgentStatus>({
     contract_version: 'v1',
     contract_signed_at: null,
     contract_ip: '',
+    contract_signature_data: '',
     activation_order_id: null,
     activation_fee_paid_at: null,
     frozen_balance: 0,
@@ -301,14 +335,16 @@ const profileForm = ref({
   real_name: '',
   id_card_no: '',
   phone: '',
-  contract_accepted: false
+  contract_accepted: false,
+  contract_signature_data: ''
 })
 
 const canSaveProfile = computed(() =>
   profileForm.value.real_name.trim() &&
   profileForm.value.id_card_no.trim() &&
   profileForm.value.phone.trim() &&
-  profileForm.value.contract_accepted
+  profileForm.value.contract_accepted &&
+  profileForm.value.contract_signature_data.trim()
 )
 
 const windowLabel = computed(() => `${String(status.value.withdraw_window.start_hour).padStart(2, '0')}:00-${String(status.value.withdraw_window.end_hour).padStart(2, '0')}:00`)
@@ -329,6 +365,9 @@ async function refreshStatus() {
     profileForm.value.id_card_no = status.value.profile?.id_card_no || ''
     profileForm.value.phone = status.value.profile?.phone || ''
     profileForm.value.contract_accepted = status.value.profile?.contract_status === 'signed'
+    profileForm.value.contract_signature_data = status.value.profile?.contract_signature_data || ''
+    await nextTick()
+    renderSignature(profileForm.value.contract_signature_data)
 
     if (status.value.agent_status === 'approved') {
       const [dashData, linkData] = await Promise.all([
@@ -354,7 +393,8 @@ async function handleSaveProfile() {
       real_name: profileForm.value.real_name.trim(),
       id_card_no: profileForm.value.id_card_no.trim(),
       phone: profileForm.value.phone.trim(),
-      contract_accepted: profileForm.value.contract_accepted
+      contract_accepted: profileForm.value.contract_accepted,
+      contract_signature_data: profileForm.value.contract_signature_data
     })
     appStore.showSuccess('资料已保存')
     await refreshStatus()
@@ -467,5 +507,109 @@ function statusBadgeClass(value: string) {
 
 function profileBadgeClass(value?: string) {
   return value === 'signed' || value === 'submitted' ? 'badge-success' : 'badge-gray'
+}
+
+function ensureSignatureCanvas() {
+  const canvas = signatureCanvas.value
+  if (!canvas) return null
+
+  const rect = canvas.getBoundingClientRect()
+  const ratio = window.devicePixelRatio || 1
+  const width = Math.max(1, Math.floor(rect.width))
+  const height = Math.max(1, Math.floor(rect.height))
+
+  if (canvas.width !== Math.floor(width * ratio) || canvas.height !== Math.floor(height * ratio)) {
+    canvas.width = Math.floor(width * ratio)
+    canvas.height = Math.floor(height * ratio)
+  }
+
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return null
+
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0)
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  ctx.lineWidth = 2
+  ctx.strokeStyle = '#111827'
+  signatureContext = ctx
+  return ctx
+}
+
+function clearCanvasSurface() {
+  const canvas = signatureCanvas.value
+  const ctx = ensureSignatureCanvas()
+  if (!canvas || !ctx) return
+  const width = canvas.width / (window.devicePixelRatio || 1)
+  const height = canvas.height / (window.devicePixelRatio || 1)
+  ctx.clearRect(0, 0, width, height)
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(0, 0, width, height)
+  ctx.strokeStyle = '#111827'
+}
+
+function renderSignature(dataUrl?: string) {
+  clearCanvasSurface()
+  if (!dataUrl || !signatureCanvas.value || !signatureContext) return
+
+  const canvas = signatureCanvas.value
+  const ctx = signatureContext
+  const img = new Image()
+  img.onload = () => {
+    const width = canvas.width / (window.devicePixelRatio || 1)
+    const height = canvas.height / (window.devicePixelRatio || 1)
+    ctx.clearRect(0, 0, width, height)
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, width, height)
+    ctx.drawImage(img, 0, 0, width, height)
+  }
+  img.src = dataUrl
+}
+
+function pointerPosition(event: PointerEvent) {
+  const canvas = signatureCanvas.value
+  if (!canvas) return null
+  const rect = canvas.getBoundingClientRect()
+  return {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top
+  }
+}
+
+function startSignature(event: PointerEvent) {
+  const canvas = signatureCanvas.value
+  const ctx = ensureSignatureCanvas()
+  const point = pointerPosition(event)
+  if (!canvas || !ctx || !point) return
+
+  signatureError.value = ''
+  isSigning.value = true
+  canvas.setPointerCapture(event.pointerId)
+  ctx.beginPath()
+  ctx.moveTo(point.x, point.y)
+}
+
+function moveSignature(event: PointerEvent) {
+  if (!isSigning.value || !signatureContext) return
+  const point = pointerPosition(event)
+  if (!point) return
+  signatureContext.lineTo(point.x, point.y)
+  signatureContext.stroke()
+  profileForm.value.contract_signature_data = signatureCanvas.value?.toDataURL('image/png') || ''
+}
+
+function endSignature(event: PointerEvent) {
+  const canvas = signatureCanvas.value
+  if (canvas?.hasPointerCapture(event.pointerId)) {
+    canvas.releasePointerCapture(event.pointerId)
+  }
+  if (!isSigning.value) return
+  isSigning.value = false
+  profileForm.value.contract_signature_data = signatureCanvas.value?.toDataURL('image/png') || ''
+}
+
+function clearSignature() {
+  profileForm.value.contract_signature_data = ''
+  signatureError.value = ''
+  clearCanvasSurface()
 }
 </script>

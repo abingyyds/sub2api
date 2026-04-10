@@ -12,6 +12,7 @@ export interface AgentProfile {
   contract_version: string
   contract_signed_at: string | null
   contract_ip?: string
+  contract_signature_data?: string
   activation_order_id: number | null
   activation_fee_paid_at: string | null
   frozen_balance: number
@@ -111,6 +112,7 @@ export interface AgentProfileRequest {
   id_card_no: string
   phone: string
   contract_accepted: boolean
+  contract_signature_data?: string
 }
 
 export async function getStatus(): Promise<AgentStatus> {

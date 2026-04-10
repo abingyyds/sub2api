@@ -448,6 +448,7 @@ func registerAgentRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	agents := admin.Group("/agents")
 	{
 		agents.GET("", h.Admin.Agent.List)
+		agents.GET("/:id", h.Admin.Agent.GetDetail)
 		agents.POST("/:id/approve", h.Admin.Agent.Approve)
 		agents.POST("/:id/reject", h.Admin.Agent.Reject)
 		agents.PUT("/:id", h.Admin.Agent.Update)

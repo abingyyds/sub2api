@@ -40,6 +40,24 @@ func (h *AgentHandler) List(c *gin.Context) {
 	response.Paginated(c, agents, pag.Total, pag.Page, pag.PageSize)
 }
 
+// GetDetail returns the full onboarding detail for a single agent/applicant.
+// GET /api/v1/admin/agents/:id
+func (h *AgentHandler) GetDetail(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "invalid agent ID")
+		return
+	}
+
+	detail, err := h.agentService.AdminGetAgentDetail(c.Request.Context(), id)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, detail)
+}
+
 // Approve approves an agent application
 // POST /api/v1/admin/agents/:id/approve
 func (h *AgentHandler) Approve(c *gin.Context) {
