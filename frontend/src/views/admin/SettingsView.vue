@@ -501,7 +501,7 @@
                       清空合同
                     </button>
                   </div>
-                  <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">用户申请代理时会先看到这份合同 PDF，再在页面内签字确认。</p>
+                  <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">用户会下载这份合同模板，自行签署后再上传已签合同供管理员审核。</p>
                   <p v-if="agentContractError" class="mt-2 text-xs text-red-500">{{ agentContractError }}</p>
                 </div>
               </div>

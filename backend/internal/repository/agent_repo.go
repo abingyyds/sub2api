@@ -413,7 +413,7 @@ func (r *agentRepository) GetProfile(ctx context.Context, userID int64) (*servic
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(
 		&profile.UserID, &profile.RealName, &profile.IDCardNo, &profile.Phone,
 		&profile.IdentityStatus, &identitySubmittedAt, &profile.ContractStatus, &profile.ContractVersion,
-		&contractSignedAt, &profile.ContractIP, &profile.ContractSignatureData, &activationOrderID, &activationFeePaidAt,
+		&contractSignedAt, &profile.ContractIP, &profile.ContractFileData, &activationOrderID, &activationFeePaidAt,
 		&profile.FrozenBalance, &profile.WithdrawableBalance, &profile.TotalWithdrawn,
 		&profile.IsFrozen, &profile.FrozenReason, &profile.CreatedAt, &profile.UpdatedAt,
 	)
@@ -468,7 +468,7 @@ func (r *agentRepository) UpsertProfile(ctx context.Context, profile *service.Ag
 	_, err := r.db.ExecContext(ctx, query,
 		profile.UserID, profile.RealName, profile.IDCardNo, profile.Phone,
 		profile.IdentityStatus, profile.IdentitySubmittedAt,
-		profile.ContractStatus, profile.ContractVersion, profile.ContractSignedAt, profile.ContractIP, profile.ContractSignatureData,
+		profile.ContractStatus, profile.ContractVersion, profile.ContractSignedAt, profile.ContractIP, profile.ContractFileData,
 		profile.FrozenBalance, profile.WithdrawableBalance, profile.TotalWithdrawn,
 		profile.IsFrozen, profile.FrozenReason,
 	)
