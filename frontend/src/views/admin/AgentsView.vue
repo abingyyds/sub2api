@@ -35,7 +35,7 @@
           </template>
           <template #cell-contract_status="{ value }">
             <span :class="['badge', value === 'signed' ? 'badge-success' : 'badge-gray']">
-              {{ value === 'signed' ? '已确认' : '未确认' }}
+              {{ value === 'signed' ? '已上传' : '未上传' }}
             </span>
           </template>
           <template #cell-activation_fee_paid_at="{ value }">
@@ -109,7 +109,7 @@
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">合同状态</label>
-                <p class="text-gray-900 dark:text-white">{{ detailAgent.contract_status === 'signed' ? '已确认' : '未确认' }}</p>
+                <p class="text-gray-900 dark:text-white">{{ detailAgent.contract_status === 'signed' ? '已上传' : '未上传' }}</p>
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">真实姓名</label>
@@ -151,11 +151,30 @@
               </div>
             </div>
             <div>
-              <label class="mb-2 block text-xs font-medium text-gray-500 dark:text-dark-400">合同签字</label>
-              <div v-if="detailAgent.contract_signature_data" class="rounded-2xl border border-gray-200 bg-white p-3 dark:border-dark-700 dark:bg-dark-900">
-                <img :src="detailAgent.contract_signature_data" alt="合同签字" class="max-h-28 rounded-lg" />
+              <label class="mb-2 block text-xs font-medium text-gray-500 dark:text-dark-400">已签合同</label>
+              <div v-if="detailAgent.contract_file_data" class="rounded-2xl border border-gray-200 bg-white p-3 dark:border-dark-700 dark:bg-dark-900">
+                <p class="text-sm text-gray-600 dark:text-dark-300">
+                  {{ detailAgent.contract_file_data.startsWith('data:application/pdf') ? '已上传 PDF 合同' : '已上传图片合同' }}
+                </p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <a
+                    :href="detailAgent.contract_file_data"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn btn-secondary btn-sm"
+                  >
+                    查看合同
+                  </a>
+                  <a
+                    :href="detailAgent.contract_file_data"
+                    :download="buildContractFilename(detailAgent.contract_file_data)"
+                    class="btn btn-secondary btn-sm"
+                  >
+                    下载合同
+                  </a>
+                </div>
               </div>
-              <p v-else class="text-sm text-gray-500 dark:text-dark-400">未签字</p>
+              <p v-else class="text-sm text-gray-500 dark:text-dark-400">未上传</p>
             </div>
             <div v-if="detailAgent.agent_note">
               <label class="block text-xs font-medium text-gray-500 dark:text-dark-400 mb-1">{{ t('admin.agents.agentNote') }}</label>
@@ -237,6 +256,15 @@ function statusBadgeClass(status: string) {
     case 'rejected': return 'badge-danger'
     default: return 'badge-gray'
   }
+}
+
+function buildContractFilename(dataUrl?: string) {
+  if (!dataUrl) return 'signed-contract'
+  if (dataUrl.startsWith('data:application/pdf')) return 'signed-contract.pdf'
+  if (dataUrl.startsWith('data:image/png')) return 'signed-contract.png'
+  if (dataUrl.startsWith('data:image/jpeg')) return 'signed-contract.jpg'
+  if (dataUrl.startsWith('data:image/webp')) return 'signed-contract.webp'
+  return 'signed-contract'
 }
 
 function statusLabel(status: string) {

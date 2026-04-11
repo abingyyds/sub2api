@@ -11,7 +11,7 @@
             <div>
               <h1 class="text-2xl font-bold text-gray-900 dark:text-white">代理中心</h1>
               <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
-                先完成实名、合同确认和开通费支付，再提交代理申请。
+                先完成实名、已签合同上传和开通费支付，再提交代理申请。
               </p>
             </div>
             <div class="flex flex-wrap gap-2">
@@ -114,8 +114,8 @@
                   <Icon name="users" size="md" class="text-primary-600 dark:text-primary-400" />
                 </div>
                 <div>
-                  <h2 class="text-lg font-semibold text-gray-900 dark:text-white">步骤 1：填写实名资料并确认合同</h2>
-                  <p class="text-sm text-gray-500 dark:text-dark-400">一期先采用站内留痕，不接第三方实名和电子签。</p>
+                  <h2 class="text-lg font-semibold text-gray-900 dark:text-white">步骤 1：填写实名资料并上传已签合同</h2>
+                  <p class="text-sm text-gray-500 dark:text-dark-400">管理员上传合同模板后，你下载签署，再把已签文件上传回来即可。</p>
                 </div>
               </div>
 
@@ -134,60 +134,72 @@
                 </div>
               </div>
 
-              <label class="mt-5 flex items-start gap-3 rounded-2xl bg-gray-50 px-4 py-3 text-sm text-gray-700 dark:bg-dark-800 dark:text-dark-200">
-                <input v-model="profileForm.contract_accepted" type="checkbox" class="mt-1 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
-                <span>我已阅读并同意当前代理合作条款，并将在下方完成电子签字。</span>
-              </label>
-
               <div class="mt-5 rounded-2xl border border-gray-200 p-4 dark:border-dark-700">
                 <div class="flex items-center justify-between gap-3">
                   <div>
                     <h3 class="text-sm font-medium text-gray-900 dark:text-white">合同 PDF</h3>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">请先阅读管理员上传的合同模板，再完成签字。</p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">先下载管理员上传的合同模板，线下签好后再回来上传。</p>
                   </div>
-                  <a
-                    v-if="status.contract_template"
-                    :href="status.contract_template"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="btn btn-secondary btn-sm"
-                  >
-                    新窗口查看
-                  </a>
+                  <div v-if="status.contract_template" class="flex flex-wrap gap-2">
+                    <a
+                      :href="status.contract_template"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="btn btn-secondary btn-sm"
+                    >
+                      查看模板
+                    </a>
+                    <a
+                      :href="status.contract_template"
+                      download="agent-contract-template.pdf"
+                      class="btn btn-secondary btn-sm"
+                    >
+                      下载模板
+                    </a>
+                  </div>
                 </div>
 
-                <div v-if="status.contract_template" class="mt-4 overflow-hidden rounded-2xl border border-gray-200 dark:border-dark-700">
-                  <iframe :src="status.contract_template" class="h-72 w-full bg-white"></iframe>
-                </div>
                 <p v-else class="mt-4 text-sm text-amber-600 dark:text-amber-400">管理员还没有上传合同 PDF，当前无法完成签署。</p>
               </div>
 
               <div class="mt-5 rounded-2xl border border-gray-200 p-4 dark:border-dark-700">
-                <div class="flex items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h3 class="text-sm font-medium text-gray-900 dark:text-white">合同签字</h3>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">请使用鼠标或手指在签字板内签名，系统会保存签字图、时间和 IP 作为签署留痕。</p>
+                    <h3 class="text-sm font-medium text-gray-900 dark:text-white">上传已签合同</h3>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">支持 PDF 或图片，建议优先上传签好的 PDF。</p>
                   </div>
-                  <button type="button" class="btn btn-secondary btn-sm" @click="clearSignature">清空重签</button>
+                  <label class="btn btn-secondary btn-sm cursor-pointer">
+                    <input
+                      type="file"
+                      accept="application/pdf,image/*"
+                      class="hidden"
+                      @change="handleSignedContractUpload"
+                    />
+                    选择文件
+                  </label>
                 </div>
 
-                <div class="mt-4 overflow-hidden rounded-2xl border border-dashed border-gray-300 bg-white dark:border-dark-600">
-                  <canvas
-                    ref="signatureCanvas"
-                    class="block h-40 w-full touch-none"
-                    @pointerdown="startSignature"
-                    @pointermove="moveSignature"
-                    @pointerup="endSignature"
-                    @pointerleave="endSignature"
-                    @pointercancel="endSignature"
-                  ></canvas>
-                </div>
+                <p class="mt-3 text-sm text-gray-600 dark:text-dark-300">
+                  {{ profileForm.contract_file_data ? '已选择并保存已签合同，可继续付款。' : '暂未上传已签合同。' }}
+                </p>
+                <p v-if="signedContractError" class="mt-2 text-xs text-red-500">{{ signedContractError }}</p>
 
-                <p v-if="signatureError" class="mt-2 text-xs text-red-500">{{ signatureError }}</p>
-
-                <div v-if="status.profile?.contract_signature_data" class="mt-4">
-                  <p class="mb-2 text-xs text-gray-500 dark:text-dark-400">当前已保存签字</p>
-                  <img :src="status.profile.contract_signature_data" alt="合同签字" class="max-h-24 rounded-lg border border-gray-200 bg-white p-2 dark:border-dark-700" />
+                <div v-if="profileForm.contract_file_data" class="mt-4 flex flex-wrap gap-2">
+                  <a
+                    :href="profileForm.contract_file_data"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn btn-secondary btn-sm"
+                  >
+                    查看已签合同
+                  </a>
+                  <a
+                    :href="profileForm.contract_file_data"
+                    :download="signedContractFilename"
+                    class="btn btn-secondary btn-sm"
+                  >
+                    下载已签合同
+                  </a>
                 </div>
               </div>
 
@@ -228,7 +240,7 @@
               <div>
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-white">步骤 3：提交代理申请</h2>
                 <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
-                  只有实名资料、合同确认和开通费支付都完成后，才可以提交申请。
+                  只有实名资料、已签合同上传和开通费支付都完成后，才可以提交申请。
                 </p>
               </div>
               <button class="btn btn-primary" :disabled="applying || !status.can_apply" @click="handleApply">
@@ -281,11 +293,8 @@ const creatingOrder = ref(false)
 const applying = ref(false)
 const showPaymentModal = ref(false)
 const qrCanvas = ref<HTMLCanvasElement | null>(null)
-const signatureCanvas = ref<HTMLCanvasElement | null>(null)
 const pollTimer = ref<number | null>(null)
-const signatureError = ref('')
-const isSigning = ref(false)
-let signatureContext: CanvasRenderingContext2D | null = null
+const signedContractError = ref('')
 
 const activationOrder = ref<CreateOrderResponse & { order_no?: string }>({
   order_no: '',
@@ -315,7 +324,7 @@ const status = ref<AgentStatus>({
     contract_version: 'v1',
     contract_signed_at: null,
     contract_ip: '',
-    contract_signature_data: '',
+    contract_file_data: '',
     activation_order_id: null,
     activation_fee_paid_at: null,
     frozen_balance: 0,
@@ -359,8 +368,7 @@ const profileForm = ref({
   real_name: '',
   id_card_no: '',
   phone: '',
-  contract_accepted: false,
-  contract_signature_data: ''
+  contract_file_data: ''
 })
 
 const canSaveProfile = computed(() =>
@@ -368,9 +376,10 @@ const canSaveProfile = computed(() =>
   profileForm.value.id_card_no.trim() &&
   profileForm.value.phone.trim() &&
   status.value.contract_template &&
-  profileForm.value.contract_accepted &&
-  profileForm.value.contract_signature_data.trim()
+  profileForm.value.contract_file_data.trim()
 )
+
+const signedContractFilename = computed(() => buildContractFilename(profileForm.value.contract_file_data))
 
 const windowLabel = computed(() => `${String(status.value.withdraw_window.start_hour).padStart(2, '0')}:00-${String(status.value.withdraw_window.end_hour).padStart(2, '0')}:00`)
 
@@ -389,10 +398,7 @@ async function refreshStatus() {
     profileForm.value.real_name = status.value.profile?.real_name || ''
     profileForm.value.id_card_no = status.value.profile?.id_card_no || ''
     profileForm.value.phone = status.value.profile?.phone || ''
-    profileForm.value.contract_accepted = status.value.profile?.contract_status === 'signed'
-    profileForm.value.contract_signature_data = status.value.profile?.contract_signature_data || ''
-    await nextTick()
-    renderSignature(profileForm.value.contract_signature_data)
+    profileForm.value.contract_file_data = status.value.profile?.contract_file_data || ''
 
     if (status.value.agent_status === 'approved') {
       const [dashData, linkData] = await Promise.all([
@@ -418,8 +424,7 @@ async function handleSaveProfile() {
       real_name: profileForm.value.real_name.trim(),
       id_card_no: profileForm.value.id_card_no.trim(),
       phone: profileForm.value.phone.trim(),
-      contract_accepted: profileForm.value.contract_accepted,
-      contract_signature_data: profileForm.value.contract_signature_data
+      contract_file_data: profileForm.value.contract_file_data
     })
     appStore.showSuccess('资料已保存')
     await refreshStatus()
@@ -516,7 +521,7 @@ function identityLabel(value?: string) {
 }
 
 function contractLabel(value?: string) {
-  return value === 'signed' ? '已确认' : '未确认'
+  return value === 'signed' ? '已上传' : '未上传'
 }
 
 function weekdayLabel(value: number) {
@@ -534,107 +539,45 @@ function profileBadgeClass(value?: string) {
   return value === 'signed' || value === 'submitted' ? 'badge-success' : 'badge-gray'
 }
 
-function ensureSignatureCanvas() {
-  const canvas = signatureCanvas.value
-  if (!canvas) return null
+function handleSignedContractUpload(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  signedContractError.value = ''
 
-  const rect = canvas.getBoundingClientRect()
-  const ratio = window.devicePixelRatio || 1
-  const width = Math.max(1, Math.floor(rect.width))
-  const height = Math.max(1, Math.floor(rect.height))
+  if (!file) return
 
-  if (canvas.width !== Math.floor(width * ratio) || canvas.height !== Math.floor(height * ratio)) {
-    canvas.width = Math.floor(width * ratio)
-    canvas.height = Math.floor(height * ratio)
+  const maxSize = 8 * 1024 * 1024
+  const isPdf = file.type === 'application/pdf'
+  const isImage = file.type.startsWith('image/')
+  if (!isPdf && !isImage) {
+    signedContractError.value = '只能上传 PDF 或图片文件'
+    input.value = ''
+    return
   }
 
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return null
-
-  ctx.setTransform(ratio, 0, 0, ratio, 0, 0)
-  ctx.lineCap = 'round'
-  ctx.lineJoin = 'round'
-  ctx.lineWidth = 2
-  ctx.strokeStyle = '#111827'
-  signatureContext = ctx
-  return ctx
-}
-
-function clearCanvasSurface() {
-  const canvas = signatureCanvas.value
-  const ctx = ensureSignatureCanvas()
-  if (!canvas || !ctx) return
-  const width = canvas.width / (window.devicePixelRatio || 1)
-  const height = canvas.height / (window.devicePixelRatio || 1)
-  ctx.clearRect(0, 0, width, height)
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, width, height)
-  ctx.strokeStyle = '#111827'
-}
-
-function renderSignature(dataUrl?: string) {
-  clearCanvasSurface()
-  if (!dataUrl || !signatureCanvas.value || !signatureContext) return
-
-  const canvas = signatureCanvas.value
-  const ctx = signatureContext
-  const img = new Image()
-  img.onload = () => {
-    const width = canvas.width / (window.devicePixelRatio || 1)
-    const height = canvas.height / (window.devicePixelRatio || 1)
-    ctx.clearRect(0, 0, width, height)
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, width, height)
-    ctx.drawImage(img, 0, 0, width, height)
+  if (file.size > maxSize) {
+    signedContractError.value = `文件过大，当前 ${(file.size / 1024 / 1024).toFixed(2)}MB，最多允许 8MB`
+    input.value = ''
+    return
   }
-  img.src = dataUrl
-}
 
-function pointerPosition(event: PointerEvent) {
-  const canvas = signatureCanvas.value
-  if (!canvas) return null
-  const rect = canvas.getBoundingClientRect()
-  return {
-    x: event.clientX - rect.left,
-    y: event.clientY - rect.top
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    profileForm.value.contract_file_data = e.target?.result as string
   }
-}
-
-function startSignature(event: PointerEvent) {
-  const canvas = signatureCanvas.value
-  const ctx = ensureSignatureCanvas()
-  const point = pointerPosition(event)
-  if (!canvas || !ctx || !point) return
-
-  signatureError.value = ''
-  isSigning.value = true
-  canvas.setPointerCapture(event.pointerId)
-  ctx.beginPath()
-  ctx.moveTo(point.x, point.y)
-}
-
-function moveSignature(event: PointerEvent) {
-  if (!isSigning.value || !signatureContext) return
-  const point = pointerPosition(event)
-  if (!point) return
-  signatureContext.lineTo(point.x, point.y)
-  signatureContext.stroke()
-  profileForm.value.contract_signature_data = signatureCanvas.value?.toDataURL('image/png') || ''
-}
-
-function endSignature(event: PointerEvent) {
-  const canvas = signatureCanvas.value
-  if (canvas?.hasPointerCapture(event.pointerId)) {
-    canvas.releasePointerCapture(event.pointerId)
+  reader.onerror = () => {
+    signedContractError.value = '读取文件失败，请重试'
   }
-  if (!isSigning.value) return
-  isSigning.value = false
-  profileForm.value.contract_signature_data = signatureCanvas.value?.toDataURL('image/png') || ''
+  reader.readAsDataURL(file)
+  input.value = ''
 }
 
-function clearSignature() {
-  profileForm.value.contract_signature_data = ''
-  signatureError.value = ''
-  clearCanvasSurface()
+function buildContractFilename(dataUrl?: string) {
+  if (!dataUrl) return 'signed-contract'
+  if (dataUrl.startsWith('data:application/pdf')) return 'signed-contract.pdf'
+  if (dataUrl.startsWith('data:image/png')) return 'signed-contract.png'
+  if (dataUrl.startsWith('data:image/jpeg')) return 'signed-contract.jpg'
+  if (dataUrl.startsWith('data:image/webp')) return 'signed-contract.webp'
+  return 'signed-contract'
 }
 </script>

@@ -41,6 +41,7 @@ import { useI18n } from 'vue-i18n'
 import { AuthLayout } from '@/components/layout'
 import Icon from '@/components/icons/Icon.vue'
 import { useAuthStore, useAppStore } from '@/stores'
+import { redirectAfterAuth, sanitizePostAuthRedirect } from '@/utils/postAuthRedirect'
 
 const route = useRoute()
 const router = useRouter()
@@ -58,21 +59,13 @@ function parseFragmentParams(): URLSearchParams {
   return new URLSearchParams(hash)
 }
 
-function sanitizeRedirectPath(path: string | null | undefined): string {
-  if (!path) return '/dashboard'
-  if (!path.startsWith('/')) return '/dashboard'
-  if (path.startsWith('//')) return '/dashboard'
-  if (path.includes('://')) return '/dashboard'
-  if (path.includes('\n') || path.includes('\r')) return '/dashboard'
-  return path
-}
-
 onMounted(async () => {
   const params = parseFragmentParams()
 
   const token = params.get('access_token') || ''
-  const redirect = sanitizeRedirectPath(
-    params.get('redirect') || (route.query.redirect as string | undefined) || '/dashboard'
+  const redirect = sanitizePostAuthRedirect(
+    params.get('redirect') || (route.query.redirect as string | undefined) || '/dashboard',
+    '/dashboard'
   )
   const error = params.get('error')
   const errorDesc = params.get('error_description') || params.get('error_message') || ''
@@ -94,7 +87,7 @@ onMounted(async () => {
   try {
     await authStore.setToken(token)
     appStore.showSuccess(t('auth.loginSuccess'))
-    await router.replace(redirect)
+    await redirectAfterAuth(router, redirect, '/dashboard')
   } catch (e: unknown) {
     const err = e as { message?: string; response?: { data?: { detail?: string } } }
     errorMessage.value = err.response?.data?.detail || err.message || t('auth.loginFailed')
@@ -116,4 +109,3 @@ onMounted(async () => {
   transform: translateY(-8px);
 }
 </style>
-

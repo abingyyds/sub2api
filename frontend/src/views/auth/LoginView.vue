@@ -192,8 +192,9 @@ import TotpLoginModal from '@/components/auth/TotpLoginModal.vue'
 import Icon from '@/components/icons/Icon.vue'
 import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { useAuthStore, useAppStore } from '@/stores'
-import { getPublicSettings, isTotp2FARequired } from '@/api/auth'
+import { isTotp2FARequired } from '@/api/auth'
 import type { TotpLoginResponse } from '@/types'
+import { redirectAfterAuth } from '@/utils/postAuthRedirect'
 import {
   FadeIn,
   SlideIn,
@@ -253,11 +254,13 @@ onMounted(async () => {
   }
 
   try {
-    const settings = await getPublicSettings()
-    turnstileEnabled.value = settings.turnstile_enabled
-    turnstileSiteKey.value = settings.turnstile_site_key || ''
-    linuxdoOAuthEnabled.value = settings.linuxdo_oauth_enabled
-    passwordResetEnabled.value = settings.password_reset_enabled
+    const settings = await appStore.fetchPublicSettings()
+    if (settings) {
+      turnstileEnabled.value = settings.turnstile_enabled
+      turnstileSiteKey.value = settings.turnstile_site_key || ''
+      linuxdoOAuthEnabled.value = settings.linuxdo_oauth_enabled
+      passwordResetEnabled.value = settings.password_reset_enabled
+    }
   } catch (error) {
     console.error('Failed to load public settings:', error)
   }
@@ -352,8 +355,8 @@ async function handleLogin(): Promise<void> {
     appStore.showSuccess(t('auth.loginSuccess'))
 
     // Redirect to dashboard or intended route
-    const redirectTo = (router.currentRoute.value.query.redirect as string) || '/pricing'
-    await router.push(redirectTo)
+    const redirectTo = router.currentRoute.value.query.redirect as string | undefined
+    await redirectAfterAuth(router, redirectTo, '/pricing')
   } catch (error: unknown) {
     // Reset Turnstile on error
     if (turnstileRef.value) {
@@ -394,8 +397,8 @@ async function handle2FAVerify(code: string): Promise<void> {
     appStore.showSuccess(t('auth.loginSuccess'))
 
     // Redirect to dashboard or intended route
-    const redirectTo = (router.currentRoute.value.query.redirect as string) || '/pricing'
-    await router.push(redirectTo)
+    const redirectTo = router.currentRoute.value.query.redirect as string | undefined
+    await redirectAfterAuth(router, redirectTo, '/pricing')
   } catch (error: unknown) {
     const err = error as { message?: string; response?: { data?: { message?: string } } }
     const message = err.response?.data?.message || err.message || t('profile.totp.loginFailed')

@@ -18,12 +18,13 @@
       <div class="flex items-center gap-6">
         <a href="#pricing" class="text-sm font-medium text-gray-500 dark:text-dark-400 hover:text-gray-900 dark:hover:text-white transition hidden md:inline-block">定价套餐</a>
         <a href="#faq" class="text-sm font-medium text-gray-500 dark:text-dark-400 hover:text-gray-900 dark:hover:text-white transition hidden md:inline-block">常见问题</a>
-        <router-link
-          :to="isAuthenticated ? dashboardPath : '/login'"
+        <button
+          type="button"
+          @click="navigateTo(isAuthenticated ? dashboardPath : '/login')"
           class="text-sm px-5 py-2 rounded-full bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 shadow-sm hover:border-primary-500 hover:text-primary-600 dark:hover:border-primary-500 dark:hover:text-primary-400 transition font-medium"
         >
           {{ isAuthenticated ? '控制台' : '登录控制台' }}
-        </router-link>
+        </button>
       </div>
     </nav>
 
@@ -43,12 +44,13 @@
       <SlideIn direction="up" :delay="300">
         <div class="flex flex-col items-center">
           <MagneticButton>
-            <router-link
-              :to="isAuthenticated ? dashboardPath : '/register'"
+            <button
+              type="button"
+              @click="navigateTo(isAuthenticated ? dashboardPath : '/register')"
               class="bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 text-white dark:text-gray-900 text-lg font-bold py-4 px-10 rounded-full shadow-xl transform hover:-translate-y-1 transition duration-300 flex items-center gap-3"
             >
               <Icon name="sparkles" size="md" /> 新人特惠 ¥9.9 = $19.9，即刻接入
-            </router-link>
+            </button>
           </MagneticButton>
         </div>
       </SlideIn>
@@ -359,7 +361,7 @@
           <h4 class="text-gray-900 dark:text-white font-bold mb-6">产品服务</h4>
           <ul class="space-y-4 text-sm text-gray-500 dark:text-dark-400">
             <li>
-              <router-link :to="isAuthenticated ? '/model-plaza' : '/login'" class="hover:text-primary-600 dark:hover:text-primary-400 transition">API 模型列表</router-link>
+              <button type="button" @click="navigateTo(isAuthenticated ? '/model-plaza' : '/login')" class="bg-transparent text-left hover:text-primary-600 dark:hover:text-primary-400 transition">API 模型列表</button>
             </li>
             <li><a href="#pricing" class="hover:text-primary-600 dark:hover:text-primary-400 transition">价格与套餐</a></li>
           </ul>
@@ -370,7 +372,7 @@
           <ul class="space-y-4 text-sm text-gray-500 dark:text-dark-400">
             <li><a href="#faq" class="hover:text-primary-600 dark:hover:text-primary-400 transition">常见问题</a></li>
             <li>
-              <router-link :to="isAuthenticated ? '/tutorial' : '/login'" class="hover:text-primary-600 dark:hover:text-primary-400 transition">快速接入</router-link>
+              <button type="button" @click="navigateTo(isAuthenticated ? '/tutorial' : '/login')" class="bg-transparent text-left hover:text-primary-600 dark:hover:text-primary-400 transition">快速接入</button>
             </li>
           </ul>
         </div>
@@ -392,7 +394,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import Icon from '@/components/icons/Icon.vue'
@@ -437,17 +439,17 @@ function toggleFaq(index: number) {
   activeFaq.value = activeFaq.value === index ? null : index
 }
 
-function selectPlan(_tier: string) {
-  if (isAuthenticated.value) {
-    router.push('/pricing')
-  } else {
-    router.push('/register')
-  }
+function navigateTo(path: string) {
+  router.push(path)
 }
 
-onMounted(() => {
-  authStore.checkAuth()
-})
+function selectPlan(_tier: string) {
+  if (isAuthenticated.value) {
+    navigateTo('/pricing')
+  } else {
+    navigateTo('/register')
+  }
+}
 </script>
 
 <style scoped>

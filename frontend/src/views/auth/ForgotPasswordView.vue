@@ -154,7 +154,7 @@ import { AuthLayout } from '@/components/layout'
 import Icon from '@/components/icons/Icon.vue'
 import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { useAppStore } from '@/stores'
-import { getPublicSettings, forgotPassword } from '@/api/auth'
+import { forgotPassword } from '@/api/auth'
 
 const { t } = useI18n()
 
@@ -189,9 +189,11 @@ const errors = reactive({
 
 onMounted(async () => {
   try {
-    const settings = await getPublicSettings()
-    turnstileEnabled.value = settings.turnstile_enabled
-    turnstileSiteKey.value = settings.turnstile_site_key || ''
+    const settings = await appStore.fetchPublicSettings()
+    if (settings) {
+      turnstileEnabled.value = settings.turnstile_enabled
+      turnstileSiteKey.value = settings.turnstile_site_key || ''
+    }
   } catch (error) {
     console.error('Failed to load public settings:', error)
   }

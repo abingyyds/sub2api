@@ -48,18 +48,17 @@ func (h *AgentHandler) SaveProfile(c *gin.Context) {
 	}
 
 	var req struct {
-		RealName              string `json:"real_name" binding:"required"`
-		IDCardNo              string `json:"id_card_no" binding:"required"`
-		Phone                 string `json:"phone" binding:"required"`
-		ContractAccepted      bool   `json:"contract_accepted"`
-		ContractSignatureData string `json:"contract_signature_data"`
+		RealName         string `json:"real_name" binding:"required"`
+		IDCardNo         string `json:"id_card_no" binding:"required"`
+		Phone            string `json:"phone" binding:"required"`
+		ContractFileData string `json:"contract_file_data"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "real_name, id_card_no and phone are required")
 		return
 	}
 
-	if err := h.agentService.SaveProfile(c.Request.Context(), subject.UserID, req.RealName, req.IDCardNo, req.Phone, req.ContractAccepted, req.ContractSignatureData, c.ClientIP()); err != nil {
+	if err := h.agentService.SaveProfile(c.Request.Context(), subject.UserID, req.RealName, req.IDCardNo, req.Phone, req.ContractFileData, c.ClientIP()); err != nil {
 		response.ErrorFrom(c, err)
 		return
 	}

@@ -14,16 +14,16 @@ import (
 )
 
 var (
-	ErrAgentDisabled                  = infraerrors.Forbidden("AGENT_DISABLED", "agent system is disabled")
-	ErrAgentAlreadyApplied            = infraerrors.Conflict("AGENT_ALREADY_APPLIED", "you have already applied or are already an agent")
-	ErrAgentNotFound                  = infraerrors.NotFound("AGENT_NOT_FOUND", "agent not found")
-	ErrAgentNotApproved               = infraerrors.Forbidden("AGENT_NOT_APPROVED", "your agent application has not been approved")
-	ErrAgentFrozen                    = infraerrors.Forbidden("AGENT_FROZEN", "your agent account is frozen")
-	ErrAgentPrerequisitesMissing      = infraerrors.BadRequest("AGENT_PREREQUISITES_MISSING", "complete identity, contract and activation fee payment before applying")
-	ErrAgentContractSignatureRequired = infraerrors.BadRequest("AGENT_CONTRACT_SIGNATURE_REQUIRED", "please sign the contract before saving your profile")
-	ErrAgentContractTemplateMissing   = infraerrors.BadRequest("AGENT_CONTRACT_TEMPLATE_MISSING", "contract template is not configured yet")
-	ErrRateExceedsOwn                 = infraerrors.BadRequest("RATE_EXCEEDS_OWN", "commission rate cannot exceed your own rate")
-	ErrSelfReference                  = infraerrors.BadRequest("SELF_REFERENCE", "cannot set user as their own parent")
+	ErrAgentDisabled                = infraerrors.Forbidden("AGENT_DISABLED", "agent system is disabled")
+	ErrAgentAlreadyApplied          = infraerrors.Conflict("AGENT_ALREADY_APPLIED", "you have already applied or are already an agent")
+	ErrAgentNotFound                = infraerrors.NotFound("AGENT_NOT_FOUND", "agent not found")
+	ErrAgentNotApproved             = infraerrors.Forbidden("AGENT_NOT_APPROVED", "your agent application has not been approved")
+	ErrAgentFrozen                  = infraerrors.Forbidden("AGENT_FROZEN", "your agent account is frozen")
+	ErrAgentPrerequisitesMissing    = infraerrors.BadRequest("AGENT_PREREQUISITES_MISSING", "complete identity, contract and activation fee payment before applying")
+	ErrAgentContractFileRequired    = infraerrors.BadRequest("AGENT_CONTRACT_FILE_REQUIRED", "please upload the signed contract before saving your profile")
+	ErrAgentContractTemplateMissing = infraerrors.BadRequest("AGENT_CONTRACT_TEMPLATE_MISSING", "contract template is not configured yet")
+	ErrRateExceedsOwn               = infraerrors.BadRequest("RATE_EXCEEDS_OWN", "commission rate cannot exceed your own rate")
+	ErrSelfReference                = infraerrors.BadRequest("SELF_REFERENCE", "cannot set user as their own parent")
 )
 
 // AgentRepository defines the data access interface for agent operations.
@@ -69,8 +69,8 @@ func NewAgentService(
 	}
 }
 
-// SaveProfile stores identity information and contract confirmation for a user who wants to become an agent.
-func (s *AgentService) SaveProfile(ctx context.Context, userID int64, realName string, idCardNo string, phone string, contractAccepted bool, contractSignatureData string, clientIP string) error {
+// SaveProfile stores identity information and a signed contract attachment for a user who wants to become an agent.
+func (s *AgentService) SaveProfile(ctx context.Context, userID int64, realName string, idCardNo string, phone string, contractFileData string, clientIP string) error {
 	if !s.settingService.IsAgentEnabled(ctx) {
 		return ErrAgentDisabled
 	}
@@ -84,24 +84,30 @@ func (s *AgentService) SaveProfile(ctx context.Context, userID int64, realName s
 	profile.RealName = realName
 	profile.IDCardNo = idCardNo
 	profile.Phone = phone
-	contractSignatureData = strings.TrimSpace(contractSignatureData)
+	contractFileData = strings.TrimSpace(contractFileData)
 	if realName != "" && idCardNo != "" && phone != "" {
 		profile.IdentityStatus = AgentIdentityStatusSubmitted
 		profile.IdentitySubmittedAt = &now
 	}
-	if contractAccepted {
+
+	if contractFileData != "" {
 		if strings.TrimSpace(s.settingService.GetAgentContractTemplate(ctx)) == "" {
 			return ErrAgentContractTemplateMissing
-		}
-		if contractSignatureData == "" && strings.TrimSpace(profile.ContractSignatureData) == "" {
-			return ErrAgentContractSignatureRequired
 		}
 		profile.ContractStatus = AgentContractStatusSigned
 		profile.ContractVersion = s.settingService.GetAgentContractVersion(ctx)
 		profile.ContractSignedAt = &now
 		profile.ContractIP = clientIP
-		if contractSignatureData != "" {
-			profile.ContractSignatureData = contractSignatureData
+		profile.ContractFileData = contractFileData
+	}
+
+	if strings.TrimSpace(profile.ContractFileData) == "" {
+		profile.ContractStatus = AgentContractStatusUnsigned
+		profile.ContractVersion = s.settingService.GetAgentContractVersion(ctx)
+		profile.ContractSignedAt = nil
+		profile.ContractIP = ""
+		if strings.TrimSpace(contractFileData) == "" && strings.TrimSpace(s.settingService.GetAgentContractTemplate(ctx)) != "" {
+			return ErrAgentContractFileRequired
 		}
 	}
 
@@ -121,31 +127,31 @@ func (s *AgentService) AdminGetAgentDetail(ctx context.Context, userID int64) (*
 	}
 
 	detail := &AgentInfo{
-		ID:                    user.ID,
-		Email:                 user.Email,
-		Username:              user.Username,
-		IsAgent:               user.IsAgent,
-		AgentStatus:           user.AgentStatus,
-		CommissionRate:        user.AgentCommissionRate,
-		AgentNote:             user.AgentNote,
-		ApprovedAt:            user.AgentApprovedAt,
-		RealName:              profile.RealName,
-		IDCardNo:              profile.IDCardNo,
-		Phone:                 profile.Phone,
-		IdentityStatus:        profile.IdentityStatus,
-		IdentitySubmittedAt:   profile.IdentitySubmittedAt,
-		ContractStatus:        profile.ContractStatus,
-		ContractVersion:       profile.ContractVersion,
-		ContractSignedAt:      profile.ContractSignedAt,
-		ContractIP:            profile.ContractIP,
-		ContractSignatureData: profile.ContractSignatureData,
-		ActivationFeePaidAt:   profile.ActivationFeePaidAt,
-		IsFrozen:              profile.IsFrozen,
-		FrozenReason:          profile.FrozenReason,
-		FrozenBalance:         profile.FrozenBalance,
-		WithdrawableBalance:   profile.WithdrawableBalance,
-		TotalWithdrawn:        profile.TotalWithdrawn,
-		CreatedAt:             user.CreatedAt,
+		ID:                  user.ID,
+		Email:               user.Email,
+		Username:            user.Username,
+		IsAgent:             user.IsAgent,
+		AgentStatus:         user.AgentStatus,
+		CommissionRate:      user.AgentCommissionRate,
+		AgentNote:           user.AgentNote,
+		ApprovedAt:          user.AgentApprovedAt,
+		RealName:            profile.RealName,
+		IDCardNo:            profile.IDCardNo,
+		Phone:               profile.Phone,
+		IdentityStatus:      profile.IdentityStatus,
+		IdentitySubmittedAt: profile.IdentitySubmittedAt,
+		ContractStatus:      profile.ContractStatus,
+		ContractVersion:     profile.ContractVersion,
+		ContractSignedAt:    profile.ContractSignedAt,
+		ContractIP:          profile.ContractIP,
+		ContractFileData:    profile.ContractFileData,
+		ActivationFeePaidAt: profile.ActivationFeePaidAt,
+		IsFrozen:            profile.IsFrozen,
+		FrozenReason:        profile.FrozenReason,
+		FrozenBalance:       profile.FrozenBalance,
+		WithdrawableBalance: profile.WithdrawableBalance,
+		TotalWithdrawn:      profile.TotalWithdrawn,
+		CreatedAt:           user.CreatedAt,
 	}
 
 	if user.AgentStatus == AgentStatusApproved {
@@ -532,6 +538,6 @@ func (s *AgentService) profileReadyForApplication(profile *AgentProfile) bool {
 	}
 	return profile.IdentityStatus == AgentIdentityStatusSubmitted &&
 		profile.ContractStatus == AgentContractStatusSigned &&
-		strings.TrimSpace(profile.ContractSignatureData) != "" &&
+		strings.TrimSpace(profile.ContractFileData) != "" &&
 		profile.ActivationFeePaidAt != nil
 }

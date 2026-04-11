@@ -32,7 +32,7 @@ export interface AdminAgentDetail extends AdminAgent {
   contract_version: string
   contract_signed_at: string | null
   contract_ip: string
-  contract_signature_data?: string
+  contract_file_data?: string
 }
 
 export async function list(

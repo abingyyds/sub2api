@@ -215,7 +215,7 @@ import LinuxDoOAuthSection from '@/components/auth/LinuxDoOAuthSection.vue'
 import Icon from '@/components/icons/Icon.vue'
 import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { useAuthStore, useAppStore } from '@/stores'
-import { getPublicSettings } from '@/api/auth'
+import { redirectAfterAuth } from '@/utils/postAuthRedirect'
 import {
   FadeIn,
   SlideIn,
@@ -268,19 +268,20 @@ const errors = reactive({
 // ==================== Lifecycle ====================
 
 onMounted(async () => {
-  try {
-    const settings = await getPublicSettings()
-    registrationEnabled.value = settings.registration_enabled
-    emailVerifyEnabled.value = settings.email_verify_enabled
-    turnstileEnabled.value = settings.turnstile_enabled
-    turnstileSiteKey.value = settings.turnstile_site_key || ''
-    siteName.value = settings.site_name || 'cCoder.me'
-    linuxdoOAuthEnabled.value = settings.linuxdo_oauth_enabled
+  const inviteParam = route.query.invite as string
+  if (inviteParam) {
+    inviteCode.value = inviteParam
+  }
 
-    // Read invite code from URL parameter
-    const inviteParam = route.query.invite as string
-    if (inviteParam) {
-      inviteCode.value = inviteParam
+  try {
+    const settings = await appStore.fetchPublicSettings()
+    if (settings) {
+      registrationEnabled.value = settings.registration_enabled
+      emailVerifyEnabled.value = settings.email_verify_enabled
+      turnstileEnabled.value = settings.turnstile_enabled
+      turnstileSiteKey.value = settings.turnstile_site_key || ''
+      siteName.value = settings.site_name || 'cCoder.me'
+      linuxdoOAuthEnabled.value = settings.linuxdo_oauth_enabled
     }
   } catch (error) {
     console.error('Failed to load public settings:', error)
@@ -392,7 +393,7 @@ async function handleRegister(): Promise<void> {
     appStore.showSuccess(t('auth.accountCreatedSuccess', { siteName: siteName.value }))
 
     // Redirect to pricing page so new users can purchase/recharge
-    await router.push('/pricing')
+    await redirectAfterAuth(router, '/pricing')
   } catch (error: unknown) {
     // Reset Turnstile on error
     if (turnstileRef.value) {

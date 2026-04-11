@@ -176,7 +176,8 @@ import { AuthLayout } from '@/components/layout'
 import Icon from '@/components/icons/Icon.vue'
 import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { useAuthStore, useAppStore } from '@/stores'
-import { getPublicSettings, sendVerifyCode } from '@/api/auth'
+import { sendVerifyCode } from '@/api/auth'
+import { redirectAfterAuth } from '@/utils/postAuthRedirect'
 
 const { t } = useI18n()
 
@@ -238,10 +239,12 @@ onMounted(async () => {
 
   // Load public settings
   try {
-    const settings = await getPublicSettings()
-    turnstileEnabled.value = settings.turnstile_enabled
-    turnstileSiteKey.value = settings.turnstile_site_key || ''
-    siteName.value = settings.site_name || 'cCoder.me'
+    const settings = await appStore.fetchPublicSettings()
+    if (settings) {
+      turnstileEnabled.value = settings.turnstile_enabled
+      turnstileSiteKey.value = settings.turnstile_site_key || ''
+      siteName.value = settings.site_name || 'cCoder.me'
+    }
   } catch (error) {
     console.error('Failed to load public settings:', error)
   }
@@ -394,7 +397,7 @@ async function handleVerify(): Promise<void> {
     appStore.showSuccess('Account created successfully! Welcome to ' + siteName.value + '.')
 
     // Redirect to pricing page so new users can purchase/recharge
-    await router.push('/pricing')
+    await redirectAfterAuth(router, '/pricing')
   } catch (error: unknown) {
     const err = error as { message?: string; response?: { data?: { detail?: string } } }
 
