@@ -34,6 +34,7 @@ export const useAppStore = defineStore('app', () => {
   const announcementsLoaded = ref<boolean>(false)
   const announcementsLoading = ref<boolean>(false)
   let announcementsPromise: Promise<Announcement[]> | null = null
+  let publicSettingsPromise: Promise<PublicSettings | null> | null = null
 
   // Contact modal state
   const showContactModal = ref<boolean>(false)
@@ -279,21 +280,26 @@ export const useAppStore = defineStore('app', () => {
     }
 
     // Prevent duplicate requests
-    if (publicSettingsLoading.value) {
-      return null
+    if (publicSettingsLoading.value && publicSettingsPromise) {
+      return publicSettingsPromise
     }
 
     publicSettingsLoading.value = true
-    try {
-      const data = await fetchPublicSettingsAPI()
-      applySettings(data)
-      return data
-    } catch (error) {
-      console.error('Failed to fetch public settings:', error)
-      return null
-    } finally {
-      publicSettingsLoading.value = false
-    }
+    publicSettingsPromise = fetchPublicSettingsAPI()
+      .then((data) => {
+        applySettings(data)
+        return data
+      })
+      .catch((error) => {
+        console.error('Failed to fetch public settings:', error)
+        return null
+      })
+      .finally(() => {
+        publicSettingsLoading.value = false
+        publicSettingsPromise = null
+      })
+
+    return publicSettingsPromise
   }
 
   /**
