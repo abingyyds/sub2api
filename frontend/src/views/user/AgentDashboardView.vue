@@ -159,7 +159,7 @@
                   </div>
                 </div>
 
-                <p v-else class="mt-4 text-sm text-amber-600 dark:text-amber-400">管理员还没有上传合同 PDF，当前无法完成签署。</p>
+                <p v-if="!status.contract_template" class="mt-4 text-sm text-amber-600 dark:text-amber-400">管理员还没有上传合同 PDF，当前无法完成签署。</p>
               </div>
 
               <div class="mt-5 rounded-2xl border border-gray-200 p-4 dark:border-dark-700">
