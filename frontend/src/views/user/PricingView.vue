@@ -185,7 +185,7 @@
                           </li>
                           <li class="flex items-start gap-2.5">
                             <Icon name="check" size="sm" class="text-indigo-500 mt-0.5 flex-shrink-0" />
-                            <span><strong class="text-gray-900 dark:text-white">$79.9 充足额度：</strong>≈ 官方 ${{ (rp.balance_amount * 2).toFixed(0) }} 等效算力，足够深度体验</span>
+                            <span><strong class="text-gray-900 dark:text-white">${{ rp.balance_amount.toFixed(2) }} 充足额度：</strong>≈ 官方 ${{ (rp.balance_amount * 2).toFixed(0) }} 等效算力，足够深度体验</span>
                           </li>
                           <li class="flex items-start gap-2.5">
                             <Icon name="check" size="sm" class="text-indigo-500 mt-0.5 flex-shrink-0" />
@@ -199,7 +199,7 @@
                           </li>
                           <li class="flex items-start gap-2.5">
                             <Icon name="check" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
-                            <span><strong class="text-gray-900 dark:text-white">超值性价比：</strong>¥9.99 即享 ${{ rp.balance_amount.toFixed(2) }} 额度，先用再说</span>
+                            <span><strong class="text-gray-900 dark:text-white">超值性价比：</strong>¥{{ (rp.pay_amount_fen / 100).toFixed(rp.pay_amount_fen % 100 === 0 ? 0 : 2) }} 即享 ${{ rp.balance_amount.toFixed(2) }} 额度，先用再说</span>
                           </li>
                           <li class="flex items-start gap-2.5">
                             <Icon name="check" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
