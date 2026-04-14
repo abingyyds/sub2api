@@ -20,6 +20,7 @@ import (
 	_ "github.com/Wei-Shaw/sub2api/ent/runtime"
 	"github.com/Wei-Shaw/sub2api/internal/config"
 	"github.com/Wei-Shaw/sub2api/internal/handler"
+	"github.com/Wei-Shaw/sub2api/internal/repository"
 	"github.com/Wei-Shaw/sub2api/internal/server/middleware"
 	"github.com/Wei-Shaw/sub2api/internal/setup"
 	"github.com/Wei-Shaw/sub2api/internal/web"
@@ -182,6 +183,14 @@ func runMainServer() {
 // runMigrations executes database migrations automatically on startup
 func runMigrations(client *ent.Client) error {
 	ctx := context.Background()
+	db, err := repository.ProvideSQLDB(client)
+	if err != nil {
+		return err
+	}
+
+	if err := repository.ApplyMigrations(ctx, db); err != nil {
+		return err
+	}
 
 	log.Println("Running startup compatibility migrations...")
 

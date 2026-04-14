@@ -113,6 +113,7 @@ type PublicSettings struct {
 	TurnstileSiteKey     string `json:"turnstile_site_key"`
 	SiteName             string `json:"site_name"`
 	SiteLogo             string `json:"site_logo"`
+	SiteFavicon          string `json:"site_favicon"`
 	SiteSubtitle         string `json:"site_subtitle"`
 	APIBaseURL           string `json:"api_base_url"`
 	ContactInfo          string `json:"contact_info"`
@@ -122,6 +123,9 @@ type PublicSettings struct {
 	LinuxDoOAuthEnabled  bool   `json:"linuxdo_oauth_enabled"`
 	ReferralEnabled      bool   `json:"referral_enabled"`
 	AgentEnabled         bool   `json:"agent_enabled"`
+	IsSubSite            bool   `json:"is_subsite"`
+	SubSiteSlug          string `json:"subsite_slug"`
+	SubSiteDomain        string `json:"subsite_domain"`
 	Version              string `json:"version"`
 }
 

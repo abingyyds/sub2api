@@ -19,17 +19,27 @@ type AuthHandler struct {
 	authService  *service.AuthService
 	userService  *service.UserService
 	settingSvc   *service.SettingService
+	subSiteSvc   *service.SubSiteService
 	promoService *service.PromoService
 	totpService  *service.TotpService
 }
 
 // NewAuthHandler creates a new AuthHandler
-func NewAuthHandler(cfg *config.Config, authService *service.AuthService, userService *service.UserService, settingService *service.SettingService, promoService *service.PromoService, totpService *service.TotpService) *AuthHandler {
+func NewAuthHandler(
+	cfg *config.Config,
+	authService *service.AuthService,
+	userService *service.UserService,
+	settingService *service.SettingService,
+	subSiteService *service.SubSiteService,
+	promoService *service.PromoService,
+	totpService *service.TotpService,
+) *AuthHandler {
 	return &AuthHandler{
 		cfg:          cfg,
 		authService:  authService,
 		userService:  userService,
 		settingSvc:   settingService,
+		subSiteSvc:   subSiteService,
 		promoService: promoService,
 		totpService:  totpService,
 	}
@@ -91,6 +101,11 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
+	}
+	if h.subSiteSvc != nil {
+		if bindErr := h.subSiteSvc.BindCurrentUser(c.Request.Context(), user.ID); bindErr != nil {
+			slog.Warn("subsite_bind_register_failed", "user_id", user.ID, "error", bindErr)
+		}
 	}
 
 	response.Success(c, AuthResponse{

@@ -26,6 +26,7 @@ func SetupRouter(
 	subscriptionService *service.SubscriptionService,
 	opsService *service.OpsService,
 	settingService *service.SettingService,
+	subSiteService *service.SubSiteService,
 	cfg *config.Config,
 	redisClient *redis.Client,
 ) *gin.Engine {
@@ -33,6 +34,7 @@ func SetupRouter(
 	r.Use(middleware2.Logger())
 	r.Use(middleware2.CORS(cfg.CORS))
 	r.Use(middleware2.SecurityHeaders(cfg.Security.CSP))
+	r.Use(middleware2.SubSiteIdentify(subSiteService))
 
 	// Serve embedded frontend with settings injection if available
 	if web.HasEmbeddedFrontend() {
@@ -43,6 +45,9 @@ func SetupRouter(
 		} else {
 			// Register cache invalidation callback
 			settingService.SetOnUpdateCallback(frontendServer.InvalidateCache)
+			if subSiteService != nil {
+				subSiteService.SetOnUpdateCallback(frontendServer.InvalidateCache)
+			}
 			r.Use(frontendServer.Middleware())
 		}
 	}

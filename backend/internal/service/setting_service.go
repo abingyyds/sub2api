@@ -31,10 +31,11 @@ type SettingRepository interface {
 
 // SettingService 系统设置服务
 type SettingService struct {
-	settingRepo SettingRepository
-	cfg         *config.Config
-	onUpdate    func() // Callback when settings are updated (for cache invalidation)
-	version     string // Application version
+	settingRepo    SettingRepository
+	cfg            *config.Config
+	subSiteService *SubSiteService
+	onUpdate       func() // Callback when settings are updated (for cache invalidation)
+	version        string // Application version
 }
 
 // NewSettingService 创建系统设置服务实例
@@ -43,6 +44,11 @@ func NewSettingService(settingRepo SettingRepository, cfg *config.Config) *Setti
 		settingRepo: settingRepo,
 		cfg:         cfg,
 	}
+}
+
+// SetSubSiteService wires optional sub-site overrides into public settings.
+func (s *SettingService) SetSubSiteService(subSiteService *SubSiteService) {
+	s.subSiteService = subSiteService
 }
 
 // GetAllSettings 获取所有系统设置
@@ -94,7 +100,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 	emailVerifyEnabled := settings[SettingKeyEmailVerifyEnabled] == "true"
 	passwordResetEnabled := emailVerifyEnabled && settings[SettingKeyPasswordResetEnabled] == "true"
 
-	return &PublicSettings{
+	publicSettings := &PublicSettings{
 		RegistrationEnabled:  settings[SettingKeyRegistrationEnabled] == "true",
 		EmailVerifyEnabled:   emailVerifyEnabled,
 		PromoCodeEnabled:     settings[SettingKeyPromoCodeEnabled] != "false", // 默认启用
@@ -104,6 +110,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		TurnstileSiteKey:     settings[SettingKeyTurnstileSiteKey],
 		SiteName:             s.getStringOrDefault(settings, SettingKeySiteName, "Sub2API"),
 		SiteLogo:             settings[SettingKeySiteLogo],
+		SiteFavicon:          settings[SettingKeySiteLogo],
 		SiteSubtitle:         s.getStringOrDefault(settings, SettingKeySiteSubtitle, "Subscription to API Conversion Platform"),
 		APIBaseURL:           settings[SettingKeyAPIBaseURL],
 		ContactInfo:          settings[SettingKeyContactInfo],
@@ -113,7 +120,11 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		LinuxDoOAuthEnabled:  linuxDoEnabled,
 		ReferralEnabled:      settings[SettingKeyReferralEnabled] == "true",
 		AgentEnabled:         settings[SettingKeyAgentEnabled] != "false",
-	}, nil
+	}
+	if s.subSiteService != nil {
+		return s.subSiteService.ApplyPublicSettings(ctx, publicSettings), nil
+	}
+	return publicSettings, nil
 }
 
 // SetOnUpdateCallback sets a callback function to be called when settings are updated
@@ -146,6 +157,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		TurnstileSiteKey     string `json:"turnstile_site_key,omitempty"`
 		SiteName             string `json:"site_name"`
 		SiteLogo             string `json:"site_logo,omitempty"`
+		SiteFavicon          string `json:"site_favicon,omitempty"`
 		SiteSubtitle         string `json:"site_subtitle,omitempty"`
 		APIBaseURL           string `json:"api_base_url,omitempty"`
 		ContactInfo          string `json:"contact_info,omitempty"`
@@ -155,6 +167,9 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		LinuxDoOAuthEnabled  bool   `json:"linuxdo_oauth_enabled"`
 		ReferralEnabled      bool   `json:"referral_enabled"`
 		AgentEnabled         bool   `json:"agent_enabled"`
+		IsSubSite            bool   `json:"is_subsite"`
+		SubSiteSlug          string `json:"subsite_slug,omitempty"`
+		SubSiteDomain        string `json:"subsite_domain,omitempty"`
 		Version              string `json:"version,omitempty"`
 	}{
 		RegistrationEnabled:  settings.RegistrationEnabled,
@@ -166,6 +181,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		TurnstileSiteKey:     settings.TurnstileSiteKey,
 		SiteName:             settings.SiteName,
 		SiteLogo:             settings.SiteLogo,
+		SiteFavicon:          settings.SiteFavicon,
 		SiteSubtitle:         settings.SiteSubtitle,
 		APIBaseURL:           settings.APIBaseURL,
 		ContactInfo:          settings.ContactInfo,
@@ -175,6 +191,9 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		LinuxDoOAuthEnabled:  settings.LinuxDoOAuthEnabled,
 		ReferralEnabled:      settings.ReferralEnabled,
 		AgentEnabled:         settings.AgentEnabled,
+		IsSubSite:            settings.IsSubSite,
+		SubSiteSlug:          settings.SubSiteSlug,
+		SubSiteDomain:        settings.SubSiteDomain,
 		Version:              s.version,
 	}, nil
 }
@@ -383,6 +402,11 @@ func (s *SettingService) GetSettingValue(ctx context.Context, key string) (strin
 
 // GetSiteName 获取网站名称
 func (s *SettingService) GetSiteName(ctx context.Context) string {
+	if s.subSiteService != nil {
+		if siteName := s.subSiteService.SiteNameOrEmpty(ctx); siteName != "" {
+			return siteName
+		}
+	}
 	value, err := s.settingRepo.GetValue(ctx, SettingKeySiteName)
 	if err != nil || value == "" {
 		return "Sub2API"

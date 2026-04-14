@@ -28,7 +28,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/home',
     name: 'Home',
-    component: () => import('@/views/MarketingHomeView.vue'),
+    component: () => import('@/views/PublicHomeView.vue'),
     meta: {
       requiresAuth: false,
       title: 'Home'
@@ -541,6 +541,17 @@ const routes: RouteRecordRaw[] = [
       title: 'Agent Management',
       titleKey: 'admin.agents.title',
       descriptionKey: 'admin.agents.description'
+    }
+  },
+  {
+    path: '/admin/subsites',
+    name: 'AdminSubSites',
+    component: () => import('@/views/admin/SubSitesView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Sub-site Management',
+      descriptionKey: 'Sub-sites'
     }
   },
 

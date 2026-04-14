@@ -85,6 +85,19 @@ func RegisterAdminRoutes(
 
 		// 代理管理
 		registerAgentRoutes(admin, h)
+
+		// 分站管理
+		registerSubSiteRoutes(admin, h)
+	}
+}
+
+func registerSubSiteRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	subSites := admin.Group("/subsites")
+	{
+		subSites.GET("", h.Admin.SubSite.List)
+		subSites.POST("", h.Admin.SubSite.Create)
+		subSites.PUT("/:id", h.Admin.SubSite.Update)
+		subSites.DELETE("/:id", h.Admin.SubSite.Delete)
 	}
 }
 

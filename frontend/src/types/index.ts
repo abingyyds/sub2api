@@ -79,6 +79,7 @@ export interface PublicSettings {
   turnstile_site_key: string
   site_name: string
   site_logo: string
+  site_favicon?: string
   site_subtitle: string
   api_base_url: string
   contact_info: string
@@ -87,6 +88,10 @@ export interface PublicSettings {
   hide_ccs_import_button: boolean
   linuxdo_oauth_enabled: boolean
   referral_enabled: boolean
+  agent_enabled?: boolean
+  is_subsite?: boolean
+  subsite_slug?: string
+  subsite_domain?: string
   version: string
 }
 

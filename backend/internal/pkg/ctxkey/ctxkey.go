@@ -20,4 +20,11 @@ const (
 	Group Key = "ctx_group"
 	// RoutePlatform 路由推断的目标平台，用于多平台分组根据请求路由选择账号
 	RoutePlatform Key = "ctx_route_platform"
+
+	// SubSite 当前请求命中的分站实体。
+	SubSite Key = "ctx_sub_site"
+	// IsSubSite 标记当前请求是否命中分站。
+	IsSubSite Key = "ctx_is_sub_site"
+	// SubSiteCacheKey 用于前端 HTML 注入缓存按主站/分站隔离。
+	SubSiteCacheKey Key = "ctx_sub_site_cache_key"
 )

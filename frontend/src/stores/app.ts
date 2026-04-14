@@ -24,6 +24,7 @@ export const useAppStore = defineStore('app', () => {
   const publicSettingsLoading = ref<boolean>(false)
   const siteName = ref<string>('cCoder.me')
   const siteLogo = ref<string>('')
+  const siteFavicon = ref<string>('')
   const siteVersion = ref<string>('')
   const contactInfo = ref<string>('')
   const apiBaseUrl = ref<string>('')
@@ -234,6 +235,7 @@ export const useAppStore = defineStore('app', () => {
     cachedPublicSettings.value = config
     siteName.value = config.site_name || 'cCoder.me'
     siteLogo.value = config.site_logo || ''
+    siteFavicon.value = config.site_favicon || config.site_logo || ''
     siteVersion.value = config.version || ''
     contactInfo.value = config.contact_info || ''
     apiBaseUrl.value = config.api_base_url || ''
@@ -267,6 +269,7 @@ export const useAppStore = defineStore('app', () => {
         turnstile_site_key: '',
         site_name: siteName.value,
         site_logo: siteLogo.value,
+        site_favicon: siteFavicon.value,
         site_subtitle: '',
         api_base_url: apiBaseUrl.value,
         contact_info: contactInfo.value,
@@ -275,6 +278,10 @@ export const useAppStore = defineStore('app', () => {
         hide_ccs_import_button: false,
         linuxdo_oauth_enabled: false,
         referral_enabled: false,
+        agent_enabled: false,
+        is_subsite: false,
+        subsite_slug: '',
+        subsite_domain: '',
         version: siteVersion.value
       }
     }
@@ -364,6 +371,7 @@ export const useAppStore = defineStore('app', () => {
     publicSettingsLoaded,
     siteName,
     siteLogo,
+    siteFavicon,
     siteVersion,
     contactInfo,
     apiBaseUrl,
