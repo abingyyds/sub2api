@@ -7,30 +7,31 @@ import (
 
 // AdminHandlers contains all admin-related HTTP handlers
 type AdminHandlers struct {
-	Dashboard        *admin.DashboardHandler
-	User             *admin.UserHandler
-	Group            *admin.GroupHandler
-	Account          *admin.AccountHandler
-	OAuth            *admin.OAuthHandler
-	OpenAIOAuth      *admin.OpenAIOAuthHandler
-	GeminiOAuth      *admin.GeminiOAuthHandler
-	AntigravityOAuth *admin.AntigravityOAuthHandler
-	Proxy            *admin.ProxyHandler
-	Redeem           *admin.RedeemHandler
-	Promo            *admin.PromoHandler
-	Setting          *admin.SettingHandler
-	Ops              *admin.OpsHandler
-	System           *admin.SystemHandler
-	Subscription     *admin.SubscriptionHandler
-	Usage            *admin.UsageHandler
-	UserAttribute    *admin.UserAttributeHandler
-	Referral              *admin.ReferralHandler
-	Announcement          *admin.AnnouncementHandler
-	Organization          *admin.OrganizationHandler
-	AdminInviteCode       *admin.AdminInviteCodeHandler
-	DiscoverySourceStats  *admin.DiscoverySourceStatsHandler
-	PaymentOrder          *admin.PaymentOrderHandler
-	Agent                 *admin.AgentHandler
+	Dashboard            *admin.DashboardHandler
+	User                 *admin.UserHandler
+	Group                *admin.GroupHandler
+	Account              *admin.AccountHandler
+	OAuth                *admin.OAuthHandler
+	OpenAIOAuth          *admin.OpenAIOAuthHandler
+	GeminiOAuth          *admin.GeminiOAuthHandler
+	AntigravityOAuth     *admin.AntigravityOAuthHandler
+	Proxy                *admin.ProxyHandler
+	Redeem               *admin.RedeemHandler
+	Promo                *admin.PromoHandler
+	Setting              *admin.SettingHandler
+	Ops                  *admin.OpsHandler
+	System               *admin.SystemHandler
+	Subscription         *admin.SubscriptionHandler
+	Usage                *admin.UsageHandler
+	UserAttribute        *admin.UserAttributeHandler
+	Referral             *admin.ReferralHandler
+	Announcement         *admin.AnnouncementHandler
+	Organization         *admin.OrganizationHandler
+	AdminInviteCode      *admin.AdminInviteCodeHandler
+	DiscoverySourceStats *admin.DiscoverySourceStatsHandler
+	PaymentOrder         *admin.PaymentOrderHandler
+	Agent                *admin.AgentHandler
+	SubSite              *admin.SubSiteHandler
 }
 
 // Handlers contains all HTTP handlers

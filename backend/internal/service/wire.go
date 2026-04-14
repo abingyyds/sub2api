@@ -25,6 +25,17 @@ func ProvideEmailQueueService(emailService *EmailService) *EmailQueueService {
 	return NewEmailQueueService(emailService, 3)
 }
 
+// ProvideSettingService creates SettingService and wires optional sub-site overrides.
+func ProvideSettingService(
+	settingRepo SettingRepository,
+	cfg *config.Config,
+	subSiteService *SubSiteService,
+) *SettingService {
+	svc := NewSettingService(settingRepo, cfg)
+	svc.SetSubSiteService(subSiteService)
+	return svc
+}
+
 // ProvideTokenRefreshService creates and starts TokenRefreshService
 func ProvideTokenRefreshService(
 	accountRepo AccountRepository,
@@ -241,7 +252,7 @@ var ProviderSet = wire.NewSet(
 	ProvideRateLimitService,
 	NewAccountUsageService,
 	NewAccountTestService,
-	NewSettingService,
+	ProvideSettingService,
 	NewOpsService,
 	ProvideOpsMetricsCollector,
 	ProvideOpsAggregationService,
@@ -277,4 +288,5 @@ var ProviderSet = wire.NewSet(
 	NewAdminInviteCodeService,
 	NewPaymentService,
 	NewAgentService,
+	NewSubSiteService,
 )

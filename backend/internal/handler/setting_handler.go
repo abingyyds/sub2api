@@ -40,6 +40,7 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		TurnstileSiteKey:     settings.TurnstileSiteKey,
 		SiteName:             settings.SiteName,
 		SiteLogo:             settings.SiteLogo,
+		SiteFavicon:          settings.SiteFavicon,
 		SiteSubtitle:         settings.SiteSubtitle,
 		APIBaseURL:           settings.APIBaseURL,
 		ContactInfo:          settings.ContactInfo,
@@ -47,6 +48,11 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		HomeContent:          settings.HomeContent,
 		HideCcsImportButton:  settings.HideCcsImportButton,
 		LinuxDoOAuthEnabled:  settings.LinuxDoOAuthEnabled,
+		ReferralEnabled:      settings.ReferralEnabled,
+		AgentEnabled:         settings.AgentEnabled,
+		IsSubSite:            settings.IsSubSite,
+		SubSiteSlug:          settings.SubSiteSlug,
+		SubSiteDomain:        settings.SubSiteDomain,
 		Version:              h.version,
 	})
 }

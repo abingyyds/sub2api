@@ -123,6 +123,7 @@ type PublicSettings struct {
 	TurnstileSiteKey     string
 	SiteName             string
 	SiteLogo             string
+	SiteFavicon          string
 	SiteSubtitle         string
 	APIBaseURL           string
 	ContactInfo          string
@@ -132,6 +133,9 @@ type PublicSettings struct {
 	LinuxDoOAuthEnabled  bool
 	ReferralEnabled      bool
 	AgentEnabled         bool
+	IsSubSite            bool
+	SubSiteSlug          string
+	SubSiteDomain        string
 	Version              string
 }
 
