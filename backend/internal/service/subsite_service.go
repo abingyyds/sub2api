@@ -383,7 +383,32 @@ func (s *SubSiteService) Update(ctx context.Context, input UpdateSubSiteInput) (
 	input.Name = name
 	input.Slug = slug
 	input.CustomDomain = customDomain
-	s.applyInputToSite(current, CreateSubSiteInput(input), level, normalizeStatus(input.Status), themeTemplate, registrationMode)
+	createInput := CreateSubSiteInput{
+		OwnerUserID:            input.OwnerUserID,
+		ParentSubSiteID:        input.ParentSubSiteID,
+		Name:                   input.Name,
+		Slug:                   input.Slug,
+		CustomDomain:           input.CustomDomain,
+		Status:                 input.Status,
+		SiteLogo:               input.SiteLogo,
+		SiteFavicon:            input.SiteFavicon,
+		SiteSubtitle:           input.SiteSubtitle,
+		Announcement:           input.Announcement,
+		ContactInfo:            input.ContactInfo,
+		DocURL:                 input.DocURL,
+		HomeContent:            input.HomeContent,
+		ThemeTemplate:          input.ThemeTemplate,
+		ThemeConfig:            input.ThemeConfig,
+		CustomConfig:           input.CustomConfig,
+		RegistrationMode:       input.RegistrationMode,
+		EnableTopup:            input.EnableTopup,
+		AllowSubSite:           input.AllowSubSite,
+		SubSitePriceFen:        input.SubSitePriceFen,
+		SubscriptionExpiredAt:  input.SubscriptionExpiredAt,
+		GroupPriceOverrides:    input.GroupPriceOverrides,
+		RechargePriceOverrides: input.RechargePriceOverrides,
+	}
+	s.applyInputToSite(current, createInput, level, normalizeStatus(input.Status), themeTemplate, registrationMode)
 	if parent != nil {
 		current.ParentSubSiteName = parent.Name
 	}
