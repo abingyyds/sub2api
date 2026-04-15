@@ -71,6 +71,43 @@ export interface PaymentOrder {
 
 export type PayMethod = 'wechat' | 'alipay' | 'epay_alipay' | 'epay_wxpay'
 
+export interface SubSiteGroupPriceOverride {
+  group_id: number
+  group_name?: string
+  price_fen: number
+  base_price_fen?: number
+}
+
+export interface SubSiteRechargePriceOverride {
+  plan_key: string
+  name?: string
+  pay_amount_fen: number
+  base_pay_amount_fen?: number
+  balance_amount?: number
+}
+
+export interface CreateSubSiteActivationInput {
+  name: string
+  slug: string
+  custom_domain?: string
+  site_logo?: string
+  site_favicon?: string
+  site_subtitle?: string
+  announcement?: string
+  contact_info?: string
+  doc_url?: string
+  home_content?: string
+  theme_template?: string
+  theme_config?: string
+  custom_config?: string
+  registration_mode?: 'open' | 'invite' | 'closed'
+  enable_topup?: boolean
+  allow_sub_site?: boolean
+  sub_site_price_fen?: number
+  group_price_overrides?: SubSiteGroupPriceOverride[]
+  recharge_price_overrides?: SubSiteRechargePriceOverride[]
+}
+
 const plansCache: CacheEntry<PaymentPlan[]> = {
   value: null,
   fetchedAt: 0,
@@ -190,6 +227,17 @@ export async function createAgentActivationOrder(payMethod?: PayMethod): Promise
   return data
 }
 
+export async function createSubSiteActivationOrder(
+  activationInput: CreateSubSiteActivationInput,
+  payMethod?: PayMethod
+): Promise<CreateOrderResponse> {
+  const { data } = await apiClient.post<CreateOrderResponse>('/payment/subsite-activation', {
+    pay_method: payMethod || 'wechat',
+    activation_input: activationInput,
+  })
+  return data
+}
+
 /**
  * Query order status
  */
@@ -243,6 +291,7 @@ export const paymentAPI = {
   createOrder,
   createRechargeOrder,
   createAgentActivationOrder,
+  createSubSiteActivationOrder,
   queryOrder,
   listOrders,
   submitInvoiceRequest,

@@ -94,6 +94,8 @@ func RegisterAdminRoutes(
 func registerSubSiteRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	subSites := admin.Group("/subsites")
 	{
+		subSites.GET("/platform-config", h.Admin.SubSite.GetPlatformConfig)
+		subSites.PUT("/platform-config", h.Admin.SubSite.UpdatePlatformConfig)
 		subSites.GET("", h.Admin.SubSite.List)
 		subSites.POST("", h.Admin.SubSite.Create)
 		subSites.PUT("/:id", h.Admin.SubSite.Update)

@@ -96,6 +96,12 @@ func (h *AuthHandler) Register(c *gin.Context) {
 			return
 		}
 	}
+	if h.subSiteSvc != nil {
+		if err := h.subSiteSvc.ValidateRegistration(c.Request.Context(), req.InviteCode); err != nil {
+			response.ErrorFrom(c, err)
+			return
+		}
+	}
 
 	token, user, err := h.authService.RegisterWithVerification(c.Request.Context(), req.Email, req.Password, req.VerifyCode, "", req.InviteCode)
 	if err != nil {

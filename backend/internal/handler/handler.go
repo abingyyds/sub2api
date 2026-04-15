@@ -53,6 +53,7 @@ type Handlers struct {
 	ModelPlaza    *ModelPlazaHandler
 	Payment       *PaymentHandler
 	Agent         *AgentHandler
+	SubSite       *SubSiteHandler
 }
 
 // BuildInfo contains build-time information

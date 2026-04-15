@@ -28,6 +28,11 @@ func RegisterUserRoutes(
 		payment.GET("/methods", h.Payment.GetPayMethods)
 	}
 
+	subSite := v1.Group("/subsite")
+	{
+		subSite.GET("/open-info", h.SubSite.GetOpenInfo)
+	}
+
 	authenticated := v1.Group("")
 	authenticated.Use(gin.HandlerFunc(jwtAuth))
 	{
@@ -113,6 +118,7 @@ func RegisterUserRoutes(
 			authPayment.POST("/orders", h.Payment.CreateOrder)
 			authPayment.POST("/recharge", h.Payment.CreateRecharge)
 			authPayment.POST("/agent-activation", h.Payment.CreateAgentActivationOrder)
+			authPayment.POST("/subsite-activation", h.Payment.CreateSubSiteActivationOrder)
 			authPayment.GET("/orders", h.Payment.ListOrders)
 			authPayment.GET("/orders/:orderNo", h.Payment.QueryOrder)
 			authPayment.POST("/invoice-requests", h.Payment.SubmitInvoice)
@@ -131,6 +137,13 @@ func RegisterUserRoutes(
 			agent.PUT("/sub-users/:id/rate", h.Agent.SetSubUserRate)
 			agent.GET("/financial-logs", h.Agent.ListFinancialLogs)
 			agent.GET("/commissions", h.Agent.ListCommissions)
+		}
+
+		ownedSubSite := authenticated.Group("/subsite")
+		{
+			ownedSubSite.GET("/owned", h.SubSite.ListOwned)
+			ownedSubSite.GET("/owned/:id", h.SubSite.GetOwned)
+			ownedSubSite.PUT("/owned/:id", h.SubSite.UpdateOwned)
 		}
 	}
 }

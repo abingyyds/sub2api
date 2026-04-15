@@ -17,6 +17,29 @@ func NewSubSiteHandler(subSiteService *service.SubSiteService) *SubSiteHandler {
 	return &SubSiteHandler{subSiteService: subSiteService}
 }
 
+func (h *SubSiteHandler) GetPlatformConfig(c *gin.Context) {
+	config, err := h.subSiteService.GetPlatformConfig(c.Request.Context())
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, config)
+}
+
+func (h *SubSiteHandler) UpdatePlatformConfig(c *gin.Context) {
+	var req service.UpdatePlatformSubSiteConfigInput
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "invalid request: "+err.Error())
+		return
+	}
+	config, err := h.subSiteService.UpdatePlatformConfig(c.Request.Context(), req)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, config)
+}
+
 func (h *SubSiteHandler) List(c *gin.Context) {
 	page, pageSize := response.ParsePagination(c)
 	params := pagination.PaginationParams{Page: page, PageSize: pageSize}

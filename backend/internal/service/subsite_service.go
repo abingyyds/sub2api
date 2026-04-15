@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -16,17 +17,28 @@ import (
 )
 
 var (
-	ErrSubSiteNotFound      = infraerrors.NotFound("SUBSITE_NOT_FOUND", "sub-site not found")
-	ErrSubSiteSlugExists    = infraerrors.Conflict("SUBSITE_SLUG_EXISTS", "sub-site slug already exists")
-	ErrSubSiteDomainExists  = infraerrors.Conflict("SUBSITE_DOMAIN_EXISTS", "sub-site domain already exists")
-	ErrSubSiteInvalidSlug   = infraerrors.BadRequest("SUBSITE_INVALID_SLUG", "sub-site slug must contain only lowercase letters, numbers and hyphens")
-	ErrSubSiteOwnerNotFound = infraerrors.BadRequest("SUBSITE_OWNER_NOT_FOUND", "sub-site owner user not found")
+	ErrSubSiteNotFound             = infraerrors.NotFound("SUBSITE_NOT_FOUND", "sub-site not found")
+	ErrSubSiteSlugExists           = infraerrors.Conflict("SUBSITE_SLUG_EXISTS", "sub-site slug already exists")
+	ErrSubSiteDomainExists         = infraerrors.Conflict("SUBSITE_DOMAIN_EXISTS", "sub-site domain already exists")
+	ErrSubSiteInvalidSlug          = infraerrors.BadRequest("SUBSITE_INVALID_SLUG", "sub-site slug must contain only lowercase letters, numbers and hyphens")
+	ErrSubSiteOwnerNotFound        = infraerrors.BadRequest("SUBSITE_OWNER_NOT_FOUND", "sub-site owner user not found")
+	ErrSubSiteInvalidStatus        = infraerrors.BadRequest("SUBSITE_INVALID_STATUS", "sub-site status must be pending, active or disabled")
+	ErrSubSiteInvalidThemeTemplate = infraerrors.BadRequest("SUBSITE_INVALID_THEME_TEMPLATE", "sub-site theme template is invalid")
+	ErrSubSiteInvalidRegistration  = infraerrors.BadRequest("SUBSITE_INVALID_REGISTRATION_MODE", "sub-site registration mode must be open, invite or closed")
+	ErrSubSiteParentNotFound       = infraerrors.BadRequest("SUBSITE_PARENT_NOT_FOUND", "parent sub-site not found")
+	ErrSubSiteLevelExceeded        = infraerrors.BadRequest("SUBSITE_LEVEL_EXCEEDED", "sub-site level exceeds the supported hierarchy")
+	ErrSubSiteRegistrationClosed   = infraerrors.Forbidden("SUBSITE_REGISTRATION_CLOSED", "registration is closed for this sub-site")
+	ErrSubSiteInviteRequired       = infraerrors.BadRequest("SUBSITE_INVITE_REQUIRED", "this sub-site requires an invite code for registration")
+	ErrSubSiteOpenDisabled         = infraerrors.Forbidden("SUBSITE_OPEN_DISABLED", "sub-site self-service opening is disabled")
+	ErrSubSiteActivationNotFound   = infraerrors.NotFound("SUBSITE_ACTIVATION_NOT_FOUND", "sub-site activation request not found")
+	ErrSubSiteForbidden            = infraerrors.Forbidden("SUBSITE_FORBIDDEN", "you do not have permission to manage this sub-site")
 )
 
 var subSiteSlugPattern = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
 
 type SubSiteRepository interface {
 	List(ctx context.Context, params pagination.PaginationParams, search, status string) ([]SubSite, *pagination.PaginationResult, error)
+	ListByOwner(ctx context.Context, ownerUserID int64) ([]SubSite, error)
 	GetByID(ctx context.Context, id int64) (*SubSite, error)
 	GetByDomain(ctx context.Context, domain string) (*SubSite, error)
 	GetBySlug(ctx context.Context, slug string) (*SubSite, error)
@@ -36,6 +48,13 @@ type SubSiteRepository interface {
 	Update(ctx context.Context, site *SubSite) error
 	Delete(ctx context.Context, id int64) error
 	BindUser(ctx context.Context, siteID int64, userID int64, source string) error
+	ReplaceGroupPriceOverrides(ctx context.Context, siteID int64, items []SubSiteGroupPriceOverride) error
+	ListGroupPriceOverrides(ctx context.Context, siteID int64) ([]SubSiteGroupPriceOverride, error)
+	ReplaceRechargePriceOverrides(ctx context.Context, siteID int64, items []SubSiteRechargePriceOverride) error
+	ListRechargePriceOverrides(ctx context.Context, siteID int64) ([]SubSiteRechargePriceOverride, error)
+	CreateActivationRequest(ctx context.Context, request *SubSiteActivationRequest) error
+	GetActivationRequestByOrderID(ctx context.Context, orderID int64) (*SubSiteActivationRequest, error)
+	MarkActivationRequestCompleted(ctx context.Context, orderID int64, subSiteID int64) error
 }
 
 type subSiteCacheEntry struct {
@@ -46,6 +65,7 @@ type subSiteCacheEntry struct {
 type SubSiteService struct {
 	repo            SubSiteRepository
 	userRepo        UserRepository
+	settingRepo     SettingRepository
 	mainDomains     map[string]struct{}
 	subdomainSuffix string
 	cacheTTL        time.Duration
@@ -54,10 +74,11 @@ type SubSiteService struct {
 	onUpdate        func()
 }
 
-func NewSubSiteService(repo SubSiteRepository, userRepo UserRepository) *SubSiteService {
+func NewSubSiteService(repo SubSiteRepository, userRepo UserRepository, settingRepo SettingRepository) *SubSiteService {
 	return &SubSiteService{
 		repo:            repo,
 		userRepo:        userRepo,
+		settingRepo:     settingRepo,
 		mainDomains:     parseMainDomains(os.Getenv("SUBSITE_MAIN_DOMAINS")),
 		subdomainSuffix: normalizeHost(os.Getenv("SUBSITE_SUBDOMAIN_SUFFIX")),
 		cacheTTL:        time.Minute,
@@ -125,24 +146,131 @@ func normalizeSlug(slug string) string {
 	return strings.Trim(slug, "-")
 }
 
-func (s *SubSiteService) normalizeAndValidateInput(ownerUserID int64, name, slug, customDomain, status string) (string, string, string, error) {
+func normalizeStatus(status string) string {
+	status = strings.TrimSpace(strings.ToLower(status))
+	if status == "" {
+		return SubSiteStatusActive
+	}
+	return status
+}
+
+func normalizeThemeTemplate(template string) string {
+	template = strings.TrimSpace(strings.ToLower(template))
+	if template == "" {
+		return SubSiteThemeTemplateStarter
+	}
+	return template
+}
+
+func normalizeRegistrationMode(mode string) string {
+	mode = strings.TrimSpace(strings.ToLower(mode))
+	if mode == "" {
+		return SubSiteRegistrationOpen
+	}
+	return mode
+}
+
+func isValidThemeTemplate(template string) bool {
+	for _, item := range DefaultSubSiteThemeTemplates {
+		if item.Key == template {
+			return true
+		}
+	}
+	return false
+}
+
+func boolValue(value *bool, fallback bool) bool {
+	if value == nil {
+		return fallback
+	}
+	return *value
+}
+
+func (s *SubSiteService) resolveParent(ctx context.Context, parentID *int64) (*SubSite, int, error) {
+	if parentID == nil || *parentID <= 0 {
+		return nil, 1, nil
+	}
+	parent, err := s.repo.GetByID(ctx, *parentID)
+	if err != nil {
+		return nil, 0, ErrSubSiteParentNotFound
+	}
+	level := parent.Level + 1
+	if level > MaxSubSiteLevel {
+		return nil, 0, ErrSubSiteLevelExceeded
+	}
+	return parent, level, nil
+}
+
+func (s *SubSiteService) normalizeAndValidateInput(ownerUserID int64, name, slug, customDomain, status, themeTemplate, registrationMode string) (string, string, string, string, string, error) {
 	name = strings.TrimSpace(name)
 	slug = normalizeSlug(slug)
 	customDomain = normalizeDomain(customDomain)
-	status = strings.TrimSpace(strings.ToLower(status))
+	status = normalizeStatus(status)
+	themeTemplate = normalizeThemeTemplate(themeTemplate)
+	registrationMode = normalizeRegistrationMode(registrationMode)
+
 	if name == "" || ownerUserID <= 0 {
-		return "", "", "", infraerrors.BadRequest("SUBSITE_INVALID_INPUT", "sub-site name and owner_user_id are required")
+		return "", "", "", "", "", infraerrors.BadRequest("SUBSITE_INVALID_INPUT", "sub-site name and owner_user_id are required")
 	}
 	if !subSiteSlugPattern.MatchString(slug) {
-		return "", "", "", ErrSubSiteInvalidSlug
+		return "", "", "", "", "", ErrSubSiteInvalidSlug
 	}
-	if status == "" {
-		status = SubSiteStatusActive
+	if status != SubSiteStatusPending && status != SubSiteStatusActive && status != SubSiteStatusDisabled {
+		return "", "", "", "", "", ErrSubSiteInvalidStatus
 	}
-	if status != SubSiteStatusActive && status != SubSiteStatusDisabled {
-		return "", "", "", infraerrors.BadRequest("SUBSITE_INVALID_STATUS", "sub-site status must be active or disabled")
+	if !isValidThemeTemplate(themeTemplate) {
+		return "", "", "", "", "", ErrSubSiteInvalidThemeTemplate
 	}
-	return name, slug, customDomain, nil
+	if registrationMode != SubSiteRegistrationOpen && registrationMode != SubSiteRegistrationInvite && registrationMode != SubSiteRegistrationClosed {
+		return "", "", "", "", "", ErrSubSiteInvalidRegistration
+	}
+	return name, slug, customDomain, themeTemplate, registrationMode, nil
+}
+
+func (s *SubSiteService) applyInputToSite(site *SubSite, input CreateSubSiteInput, level int, status string, themeTemplate string, registrationMode string) {
+	site.OwnerUserID = input.OwnerUserID
+	site.ParentSubSiteID = input.ParentSubSiteID
+	site.Level = level
+	site.Name = strings.TrimSpace(input.Name)
+	site.Slug = normalizeSlug(input.Slug)
+	site.CustomDomain = normalizeDomain(input.CustomDomain)
+	site.Status = status
+	site.SiteLogo = strings.TrimSpace(input.SiteLogo)
+	site.SiteFavicon = strings.TrimSpace(input.SiteFavicon)
+	site.SiteSubtitle = strings.TrimSpace(input.SiteSubtitle)
+	site.Announcement = strings.TrimSpace(input.Announcement)
+	site.ContactInfo = strings.TrimSpace(input.ContactInfo)
+	site.DocURL = strings.TrimSpace(input.DocURL)
+	site.HomeContent = strings.TrimSpace(input.HomeContent)
+	site.ThemeTemplate = themeTemplate
+	site.ThemeConfig = strings.TrimSpace(input.ThemeConfig)
+	site.CustomConfig = strings.TrimSpace(input.CustomConfig)
+	site.RegistrationMode = registrationMode
+	site.EnableTopup = boolValue(input.EnableTopup, true)
+	site.AllowSubSite = boolValue(input.AllowSubSite, false)
+	site.SubSitePriceFen = input.SubSitePriceFen
+	site.SubscriptionExpiredAt = input.SubscriptionExpiredAt
+}
+
+func (s *SubSiteService) populateComputedFields(ctx context.Context, site *SubSite, includePricing bool) (*SubSite, error) {
+	if site == nil {
+		return nil, nil
+	}
+	site.EntryURL = s.buildEntryURL(site)
+	if !includePricing {
+		return site, nil
+	}
+	groupOverrides, err := s.repo.ListGroupPriceOverrides(ctx, site.ID)
+	if err != nil {
+		return nil, err
+	}
+	rechargeOverrides, err := s.repo.ListRechargePriceOverrides(ctx, site.ID)
+	if err != nil {
+		return nil, err
+	}
+	site.GroupPriceOverrides = groupOverrides
+	site.RechargePriceOverrides = rechargeOverrides
+	return site, nil
 }
 
 func (s *SubSiteService) List(ctx context.Context, params pagination.PaginationParams, search, status string) ([]SubSite, *pagination.PaginationResult, error) {
@@ -157,7 +285,15 @@ func (s *SubSiteService) List(ctx context.Context, params pagination.PaginationP
 }
 
 func (s *SubSiteService) Create(ctx context.Context, input CreateSubSiteInput) (*SubSite, error) {
-	name, slug, customDomain, err := s.normalizeAndValidateInput(input.OwnerUserID, input.Name, input.Slug, input.CustomDomain, input.Status)
+	name, slug, customDomain, themeTemplate, registrationMode, err := s.normalizeAndValidateInput(
+		input.OwnerUserID,
+		input.Name,
+		input.Slug,
+		input.CustomDomain,
+		input.Status,
+		input.ThemeTemplate,
+		input.RegistrationMode,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -176,22 +312,25 @@ func (s *SubSiteService) Create(ctx context.Context, input CreateSubSiteInput) (
 			return nil, ErrSubSiteDomainExists
 		}
 	}
-	site := &SubSite{
-		OwnerUserID:  input.OwnerUserID,
-		Name:         name,
-		Slug:         slug,
-		CustomDomain: customDomain,
-		Status:       normalizeStatus(input.Status),
-		SiteLogo:     strings.TrimSpace(input.SiteLogo),
-		SiteFavicon:  strings.TrimSpace(input.SiteFavicon),
-		SiteSubtitle: strings.TrimSpace(input.SiteSubtitle),
-		Announcement: strings.TrimSpace(input.Announcement),
-		ContactInfo:  strings.TrimSpace(input.ContactInfo),
-		DocURL:       strings.TrimSpace(input.DocURL),
-		HomeContent:  strings.TrimSpace(input.HomeContent),
-		ThemeConfig:  strings.TrimSpace(input.ThemeConfig),
+	parent, level, err := s.resolveParent(ctx, input.ParentSubSiteID)
+	if err != nil {
+		return nil, err
+	}
+	site := &SubSite{}
+	input.Name = name
+	input.Slug = slug
+	input.CustomDomain = customDomain
+	s.applyInputToSite(site, input, level, normalizeStatus(input.Status), themeTemplate, registrationMode)
+	if parent != nil {
+		site.ParentSubSiteName = parent.Name
 	}
 	if err := s.repo.Create(ctx, site); err != nil {
+		return nil, err
+	}
+	if err := s.repo.ReplaceGroupPriceOverrides(ctx, site.ID, input.GroupPriceOverrides); err != nil {
+		return nil, err
+	}
+	if err := s.repo.ReplaceRechargePriceOverrides(ctx, site.ID, input.RechargePriceOverrides); err != nil {
 		return nil, err
 	}
 	s.invalidateCaches()
@@ -199,15 +338,22 @@ func (s *SubSiteService) Create(ctx context.Context, input CreateSubSiteInput) (
 	if err != nil {
 		return site, nil
 	}
-	created.EntryURL = s.buildEntryURL(created)
-	return created, nil
+	return s.populateComputedFields(ctx, created, true)
 }
 
 func (s *SubSiteService) Update(ctx context.Context, input UpdateSubSiteInput) (*SubSite, error) {
 	if input.ID <= 0 {
 		return nil, ErrSubSiteNotFound
 	}
-	name, slug, customDomain, err := s.normalizeAndValidateInput(input.OwnerUserID, input.Name, input.Slug, input.CustomDomain, input.Status)
+	name, slug, customDomain, themeTemplate, registrationMode, err := s.normalizeAndValidateInput(
+		input.OwnerUserID,
+		input.Name,
+		input.Slug,
+		input.CustomDomain,
+		input.Status,
+		input.ThemeTemplate,
+		input.RegistrationMode,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -230,20 +376,24 @@ func (s *SubSiteService) Update(ctx context.Context, input UpdateSubSiteInput) (
 			return nil, ErrSubSiteDomainExists
 		}
 	}
-	current.OwnerUserID = input.OwnerUserID
-	current.Name = name
-	current.Slug = slug
-	current.CustomDomain = customDomain
-	current.Status = normalizeStatus(input.Status)
-	current.SiteLogo = strings.TrimSpace(input.SiteLogo)
-	current.SiteFavicon = strings.TrimSpace(input.SiteFavicon)
-	current.SiteSubtitle = strings.TrimSpace(input.SiteSubtitle)
-	current.Announcement = strings.TrimSpace(input.Announcement)
-	current.ContactInfo = strings.TrimSpace(input.ContactInfo)
-	current.DocURL = strings.TrimSpace(input.DocURL)
-	current.HomeContent = strings.TrimSpace(input.HomeContent)
-	current.ThemeConfig = strings.TrimSpace(input.ThemeConfig)
+	parent, level, err := s.resolveParent(ctx, input.ParentSubSiteID)
+	if err != nil {
+		return nil, err
+	}
+	input.Name = name
+	input.Slug = slug
+	input.CustomDomain = customDomain
+	s.applyInputToSite(current, CreateSubSiteInput(input), level, normalizeStatus(input.Status), themeTemplate, registrationMode)
+	if parent != nil {
+		current.ParentSubSiteName = parent.Name
+	}
 	if err := s.repo.Update(ctx, current); err != nil {
+		return nil, err
+	}
+	if err := s.repo.ReplaceGroupPriceOverrides(ctx, current.ID, input.GroupPriceOverrides); err != nil {
+		return nil, err
+	}
+	if err := s.repo.ReplaceRechargePriceOverrides(ctx, current.ID, input.RechargePriceOverrides); err != nil {
 		return nil, err
 	}
 	s.invalidateCaches()
@@ -251,8 +401,7 @@ func (s *SubSiteService) Update(ctx context.Context, input UpdateSubSiteInput) (
 	if err != nil {
 		return current, nil
 	}
-	updated.EntryURL = s.buildEntryURL(updated)
-	return updated, nil
+	return s.populateComputedFields(ctx, updated, true)
 }
 
 func (s *SubSiteService) Delete(ctx context.Context, id int64) error {
@@ -264,14 +413,6 @@ func (s *SubSiteService) Delete(ctx context.Context, id int64) error {
 	}
 	s.invalidateCaches()
 	return nil
-}
-
-func normalizeStatus(status string) string {
-	status = strings.TrimSpace(strings.ToLower(status))
-	if status == "" {
-		return SubSiteStatusActive
-	}
-	return status
 }
 
 func (s *SubSiteService) invalidateCaches() {
@@ -423,6 +564,13 @@ func (s *SubSiteService) ApplyPublicSettings(ctx context.Context, base *PublicSe
 	cloned.IsSubSite = true
 	cloned.SubSiteSlug = site.Slug
 	cloned.SubSiteDomain = site.CustomDomain
+	cloned.ThemeTemplate = site.ThemeTemplate
+	cloned.ThemeConfig = site.ThemeConfig
+	cloned.CustomConfig = site.CustomConfig
+	cloned.RegistrationMode = site.RegistrationMode
+	cloned.EnableTopup = site.EnableTopup
+	cloned.AllowSubSite = site.AllowSubSite
+	cloned.SubSitePriceFen = site.SubSitePriceFen
 	if site.Name != "" {
 		cloned.SiteName = site.Name
 	}
@@ -462,4 +610,45 @@ func (s *SubSiteService) SiteNameOrEmpty(ctx context.Context) string {
 		return ""
 	}
 	return strings.TrimSpace(site.Name)
+}
+
+func (s *SubSiteService) readSettingInt(ctx context.Context, key string, fallback int) int {
+	if s.settingRepo == nil {
+		return fallback
+	}
+	value, err := s.settingRepo.GetValue(ctx, key)
+	if err != nil || strings.TrimSpace(value) == "" {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(strings.TrimSpace(value))
+	if err != nil {
+		return fallback
+	}
+	return parsed
+}
+
+func (s *SubSiteService) readSettingBool(ctx context.Context, key string, fallback bool) bool {
+	if s.settingRepo == nil {
+		return fallback
+	}
+	value, err := s.settingRepo.GetValue(ctx, key)
+	if err != nil || strings.TrimSpace(value) == "" {
+		return fallback
+	}
+	return strings.TrimSpace(strings.ToLower(value)) == "true"
+}
+
+func (s *SubSiteService) readSettingString(ctx context.Context, key string, fallback string) string {
+	if s.settingRepo == nil {
+		return fallback
+	}
+	value, err := s.settingRepo.GetValue(ctx, key)
+	if err != nil {
+		return fallback
+	}
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return fallback
+	}
+	return value
 }

@@ -92,6 +92,13 @@ export interface PublicSettings {
   is_subsite?: boolean
   subsite_slug?: string
   subsite_domain?: string
+  theme_template?: string
+  theme_config?: string
+  custom_config?: string
+  registration_mode?: 'open' | 'invite' | 'closed'
+  enable_topup?: boolean
+  allow_sub_site?: boolean
+  subsite_price_fen?: number
   version: string
 }
 
