@@ -136,6 +136,13 @@ type PublicSettings struct {
 	IsSubSite            bool
 	SubSiteSlug          string
 	SubSiteDomain        string
+	ThemeTemplate        string
+	ThemeConfig          string
+	CustomConfig         string
+	RegistrationMode     string
+	EnableTopup          bool
+	AllowSubSite         bool
+	SubSitePriceFen      int
 	Version              string
 }
 

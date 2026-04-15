@@ -170,6 +170,13 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		IsSubSite            bool   `json:"is_subsite"`
 		SubSiteSlug          string `json:"subsite_slug,omitempty"`
 		SubSiteDomain        string `json:"subsite_domain,omitempty"`
+		ThemeTemplate        string `json:"theme_template,omitempty"`
+		ThemeConfig          string `json:"theme_config,omitempty"`
+		CustomConfig         string `json:"custom_config,omitempty"`
+		RegistrationMode     string `json:"registration_mode,omitempty"`
+		EnableTopup          bool   `json:"enable_topup"`
+		AllowSubSite         bool   `json:"allow_sub_site"`
+		SubSitePriceFen      int    `json:"subsite_price_fen,omitempty"`
 		Version              string `json:"version,omitempty"`
 	}{
 		RegistrationEnabled:  settings.RegistrationEnabled,
@@ -194,6 +201,13 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		IsSubSite:            settings.IsSubSite,
 		SubSiteSlug:          settings.SubSiteSlug,
 		SubSiteDomain:        settings.SubSiteDomain,
+		ThemeTemplate:        settings.ThemeTemplate,
+		ThemeConfig:          settings.ThemeConfig,
+		CustomConfig:         settings.CustomConfig,
+		RegistrationMode:     settings.RegistrationMode,
+		EnableTopup:          settings.EnableTopup,
+		AllowSubSite:         settings.AllowSubSite,
+		SubSitePriceFen:      settings.SubSitePriceFen,
 		Version:              s.version,
 	}, nil
 }

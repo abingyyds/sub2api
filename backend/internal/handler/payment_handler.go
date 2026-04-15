@@ -94,6 +94,11 @@ type CreateAgentActivationOrderRequest struct {
 	PayMethod string `json:"pay_method"` // "wechat" | "alipay" | "epay_alipay" | "epay_wxpay"
 }
 
+type CreateSubSiteActivationOrderRequest struct {
+	PayMethod       string                               `json:"pay_method"`
+	ActivationInput service.CreateSubSiteActivationInput `json:"activation_input"`
+}
+
 type SubmitInvoiceRequest struct {
 	OrderNos    []string `json:"order_nos" binding:"required,min=1"`
 	CompanyName string   `json:"company_name" binding:"required"`
@@ -195,6 +200,40 @@ func (h *PaymentHandler) CreateAgentActivationOrder(c *gin.Context) {
 	}
 
 	order, err := h.paymentService.CreateAgentActivationOrder(c.Request.Context(), subject.UserID, payMethod)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{
+		"order_no":   order.OrderNo,
+		"code_url":   order.CodeURL,
+		"amount_fen": order.AmountFen,
+		"expired_at": order.ExpiredAt,
+	})
+}
+
+// CreateSubSiteActivationOrder creates an order for self-service sub-site activation.
+// POST /api/v1/payment/subsite-activation
+func (h *PaymentHandler) CreateSubSiteActivationOrder(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "User not found in context")
+		return
+	}
+
+	var req CreateSubSiteActivationOrderRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "invalid request")
+		return
+	}
+
+	payMethod := req.PayMethod
+	if payMethod == "" {
+		payMethod = "wechat"
+	}
+
+	order, err := h.paymentService.CreateSubSiteActivationOrder(c.Request.Context(), subject.UserID, req.ActivationInput, payMethod)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return

@@ -644,6 +644,7 @@ const userNavGroups = computed(() => {
         { path: '/order-history', label: t('nav.orderHistory'), icon: ReceiptIcon },
         { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
         { path: '/agent', label: t('nav.agent'), icon: UsersIcon },
+        { path: '/subsites', label: '分站中心', icon: GlobeIcon },
       ]
     },
     {
@@ -689,6 +690,7 @@ const personalNavItems = computed(() => {
     { path: '/order-history', label: t('nav.orderHistory'), icon: ReceiptIcon },
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
     { path: '/agent', label: t('nav.agent'), icon: UsersIcon },
+    { path: '/subsites', label: '分站中心', icon: GlobeIcon },
     { path: '/changelog', label: t('nav.changelog'), icon: MegaphoneIcon },
     { path: '/tutorial', label: t('nav.tutorial'), icon: BookIcon },
     { path: '/contact', label: t('nav.contact'), icon: ChatBubbleIcon },

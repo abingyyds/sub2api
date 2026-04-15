@@ -267,6 +267,16 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/subsites',
+    name: 'SubSiteCenter',
+    component: () => import('@/views/user/SubSiteCenterView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'SubSite Center'
+    }
+  },
+  {
     path: '/agent/sub-users',
     name: 'AgentSubUsers',
     component: () => import('@/views/user/AgentSubUsersView.vue'),

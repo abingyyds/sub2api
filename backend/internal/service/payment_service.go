@@ -127,6 +127,7 @@ type PaymentService struct {
 	groupRepo           GroupRepository
 	promoService        *PromoService
 	agentService        *AgentService
+	subSiteService      *SubSiteService
 }
 
 // NewPaymentService 创建支付服务
@@ -139,6 +140,7 @@ func NewPaymentService(
 	groupRepo GroupRepository,
 	promoService *PromoService,
 	agentService *AgentService,
+	subSiteService *SubSiteService,
 ) *PaymentService {
 	return &PaymentService{
 		orderRepo:           orderRepo,
@@ -149,6 +151,7 @@ func NewPaymentService(
 		groupRepo:           groupRepo,
 		promoService:        promoService,
 		agentService:        agentService,
+		subSiteService:      subSiteService,
 	}
 }
 
@@ -222,6 +225,9 @@ func (s *PaymentService) GetPlans(ctx context.Context) ([]PaymentPlan, error) {
 
 	if plans == nil {
 		plans = []PaymentPlan{}
+	}
+	if s.subSiteService != nil {
+		plans = s.subSiteService.ApplyPlanOverrides(ctx, plans)
 	}
 	return plans, nil
 }
@@ -368,6 +374,9 @@ func (s *PaymentService) GetRechargeInfo(ctx context.Context) (*RechargeInfo, er
 		if err := json.Unmarshal([]byte(plansJSON), &info.Plans); err != nil {
 			log.Printf("[Payment] Failed to parse recharge_plans JSON: %v", err)
 		}
+	}
+	if s.subSiteService != nil {
+		info = s.subSiteService.ApplyRechargeOverrides(ctx, info)
 	}
 
 	return info, nil
@@ -806,6 +815,94 @@ func (s *PaymentService) CreateAgentActivationOrder(ctx context.Context, userID 
 
 	if err := s.orderRepo.Create(ctx, order); err != nil {
 		return nil, fmt.Errorf("save activation order: %w", err)
+	}
+	return order, nil
+}
+
+// CreateSubSiteActivationOrder creates a payment order for self-service sub-site activation.
+func (s *PaymentService) CreateSubSiteActivationOrder(ctx context.Context, userID int64, input CreateSubSiteActivationInput, payMethod string) (*PaymentOrder, error) {
+	enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyPaymentEnabled)
+	if enabled != "true" {
+		return nil, ErrPaymentDisabled
+	}
+	if s.subSiteService == nil {
+		return nil, infraerrors.ServiceUnavailable("SUBSITE_SERVICE_UNAVAILABLE", "sub-site service is unavailable")
+	}
+
+	request, openInfo, err := s.subSiteService.CreateActivationRequest(ctx, userID, input)
+	if err != nil {
+		return nil, err
+	}
+	if openInfo.PriceFen <= 0 {
+		return nil, infraerrors.BadRequest("SUBSITE_PRICE_INVALID", "sub-site activation price must be positive")
+	}
+
+	if payMethod == "" {
+		payMethod = "wechat"
+	}
+	var payMethodStr string
+	switch payMethod {
+	case "alipay":
+		if !s.isAlipayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "alipay payment is not configured")
+		}
+		payMethodStr = PaymentMethodAlipayNative
+	case "epay_alipay":
+		if !s.isEpayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "epay payment is not configured")
+		}
+		payMethodStr = PaymentMethodEpayAlipay
+	case "epay_wxpay":
+		if !s.isEpayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "epay payment is not configured")
+		}
+		payMethodStr = PaymentMethodEpayWxpay
+	default:
+		if !s.isWechatPayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "wechat payment is not configured")
+		}
+		payMethodStr = PaymentMethodWechatNative
+	}
+
+	order := &PaymentOrder{
+		OrderNo:   generateOrderNo(),
+		UserID:    userID,
+		PlanKey:   PaymentOrderTypeSubSiteActivation,
+		AmountFen: openInfo.PriceFen,
+		Status:    PaymentOrderStatusPending,
+		PayMethod: payMethodStr,
+		OrderType: PaymentOrderTypeSubSiteActivation,
+		ExpiredAt: time.Now().Add(30 * time.Minute),
+	}
+
+	scopeLabel := "平台"
+	if openInfo.Scope == "subsite" && openInfo.ParentSubSiteName != "" {
+		scopeLabel = openInfo.ParentSubSiteName
+	}
+	description := fmt.Sprintf("%s分站开通费", scopeLabel)
+	var codeURL string
+	switch payMethod {
+	case "alipay":
+		codeURL, err = s.createAlipayNativeOrder(ctx, order, description)
+	case "epay_alipay":
+		codeURL, err = s.createEpayOrder(ctx, order, description, "alipay")
+	case "epay_wxpay":
+		codeURL, err = s.createEpayOrder(ctx, order, description, "wxpay")
+	default:
+		codeURL, err = s.createWechatNativeOrder(ctx, order, description)
+	}
+	if err != nil {
+		log.Printf("[Payment] Failed to create %s native order for sub-site activation: %v", payMethod, err)
+		return nil, err
+	}
+	order.CodeURL = &codeURL
+
+	if err := s.orderRepo.Create(ctx, order); err != nil {
+		return nil, fmt.Errorf("save sub-site activation order: %w", err)
+	}
+	request.PaymentOrderID = order.ID
+	if err := s.subSiteService.SaveActivationRequest(ctx, request); err != nil {
+		return nil, fmt.Errorf("save sub-site activation request: %w", err)
 	}
 	return order, nil
 }
@@ -1422,6 +1519,14 @@ func (s *PaymentService) handlePaymentSuccess(ctx context.Context, order *Paymen
 			}
 		}
 		log.Printf("[Payment] Order %s paid successfully, agent activation marked for user %d", order.OrderNo, order.UserID)
+	} else if order.OrderType == PaymentOrderTypeSubSiteActivation {
+		if s.subSiteService != nil {
+			if _, err := s.subSiteService.ActivatePaidOrder(ctx, order); err != nil {
+				log.Printf("[Payment] Failed to activate sub-site for user %d order %s: %v", order.UserID, order.OrderNo, err)
+				return fmt.Errorf("activate sub-site: %w", err)
+			}
+		}
+		log.Printf("[Payment] Order %s paid successfully, sub-site activated for user %d", order.OrderNo, order.UserID)
 	} else {
 		// 分配订阅
 		_, _, err := s.subscriptionService.AssignOrExtendSubscription(ctx, &AssignSubscriptionInput{

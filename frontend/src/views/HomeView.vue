@@ -15,7 +15,8 @@
   <!-- Default Home Page -->
   <div
     v-else
-    class="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-br from-gray-50 via-primary-50/30 to-gray-100 dark:from-dark-950 dark:via-dark-900 dark:to-dark-950"
+    :class="themeStyles.root"
+    class="relative flex min-h-screen flex-col overflow-hidden"
   >
     <!-- Background Decorations -->
     <div class="pointer-events-none absolute inset-0 overflow-hidden">
@@ -120,19 +121,20 @@
             <h1
               class="mb-4 text-4xl font-bold text-gray-900 dark:text-white md:text-5xl lg:text-6xl"
             >
-              {{ siteName }}
+              {{ heroTitle }}
             </h1>
             <p class="mb-8 text-lg text-gray-600 dark:text-dark-300 md:text-xl">
-              {{ siteSubtitle }}
+              {{ heroDescription }}
             </p>
 
             <!-- CTA Button -->
             <div>
               <router-link
                 :to="isAuthenticated ? dashboardPath : '/login'"
-                class="btn btn-primary px-8 py-3 text-base shadow-lg shadow-primary-500/30"
+                :class="themeStyles.cta"
+                class="btn px-8 py-3 text-base"
               >
-                {{ isAuthenticated ? t('home.goToDashboard') : t('home.getStarted') }}
+                {{ isAuthenticated ? t('home.goToDashboard') : ctaText }}
                 <Icon name="arrowRight" size="md" class="ml-2" :stroke-width="2" />
               </router-link>
             </div>
@@ -182,25 +184,39 @@
             class="inline-flex items-center gap-2.5 rounded-full border border-gray-200/50 bg-white/80 px-5 py-2.5 shadow-sm backdrop-blur-sm dark:border-dark-700/50 dark:bg-dark-800/80"
           >
             <Icon name="swap" size="sm" class="text-primary-500" />
-            <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{
-              t('home.tags.subscriptionToApi')
-            }}</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{ featureTags[0] }}</span>
           </div>
           <div
             class="inline-flex items-center gap-2.5 rounded-full border border-gray-200/50 bg-white/80 px-5 py-2.5 shadow-sm backdrop-blur-sm dark:border-dark-700/50 dark:bg-dark-800/80"
           >
             <Icon name="shield" size="sm" class="text-primary-500" />
-            <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{
-              t('home.tags.stickySession')
-            }}</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{ featureTags[1] }}</span>
           </div>
           <div
             class="inline-flex items-center gap-2.5 rounded-full border border-gray-200/50 bg-white/80 px-5 py-2.5 shadow-sm backdrop-blur-sm dark:border-dark-700/50 dark:bg-dark-800/80"
           >
             <Icon name="chart" size="sm" class="text-primary-500" />
-            <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{
-              t('home.tags.realtimeBilling')
-            }}</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-dark-200">{{ featureTags[2] }}</span>
+          </div>
+        </div>
+
+        <div v-if="registrationNotice || allowSubSiteOpen" class="mb-12 grid gap-4 lg:grid-cols-2">
+          <div v-if="registrationNotice" class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-700 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300">
+            {{ registrationNotice }}
+          </div>
+          <div v-if="allowSubSiteOpen" class="rounded-2xl border border-primary-200 bg-white/70 px-5 py-4 shadow-sm backdrop-blur-sm dark:border-primary-900/30 dark:bg-dark-800/60">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">当前分站支持自助开通下级分站</p>
+                <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">售价 ￥{{ subSiteOpenPrice }}，站长可自行设置模板和售卖价格。</p>
+              </div>
+              <router-link
+                :to="isAuthenticated ? '/subsites' : '/login'"
+                class="btn btn-primary whitespace-nowrap"
+              >
+                {{ isAuthenticated ? '进入分站中心' : '登录后开通' }}
+              </router-link>
+            </div>
           </div>
         </div>
 
@@ -568,6 +584,69 @@ const siteLogo = computed(() => appStore.cachedPublicSettings?.site_logo || appS
 const siteSubtitle = computed(() => appStore.cachedPublicSettings?.site_subtitle || 'AI API Gateway Platform')
 const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
 const homeContent = computed(() => appStore.cachedPublicSettings?.home_content || '')
+const themeTemplate = computed(() => appStore.cachedPublicSettings?.theme_template || 'starter')
+
+function parseConfig(raw?: string) {
+  if (!raw) return {}
+  try {
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+const mergedConfig = computed(() => ({
+  ...parseConfig(appStore.cachedPublicSettings?.theme_config),
+  ...parseConfig(appStore.cachedPublicSettings?.custom_config),
+}))
+
+const heroTitle = computed(() => String(mergedConfig.value.hero_title || siteName.value))
+const heroDescription = computed(() => String(mergedConfig.value.hero_description || siteSubtitle.value))
+const ctaText = computed(() => String(mergedConfig.value.cta_text || t('home.getStarted')))
+const featureTags = computed(() => {
+  const configured = mergedConfig.value.feature_tags
+  if (Array.isArray(configured) && configured.length >= 3) {
+    return configured.slice(0, 3).map(item => String(item))
+  }
+  return [
+    t('home.tags.subscriptionToApi'),
+    t('home.tags.stickySession'),
+    t('home.tags.realtimeBilling'),
+  ]
+})
+const registrationNotice = computed(() => {
+  const mode = appStore.cachedPublicSettings?.registration_mode
+  if (mode === 'invite') return '当前分站仅支持邀请码注册。'
+  if (mode === 'closed') return '当前分站已关闭新用户注册。'
+  return ''
+})
+const allowSubSiteOpen = computed(() => Boolean(appStore.cachedPublicSettings?.allow_sub_site && (appStore.cachedPublicSettings?.subsite_price_fen || 0) > 0))
+const subSiteOpenPrice = computed(() => fenToYuan(appStore.cachedPublicSettings?.subsite_price_fen || 0))
+const themeStyles = computed(() => {
+  switch (themeTemplate.value) {
+    case 'aurora':
+      return {
+        root: 'bg-gradient-to-br from-sky-50 via-indigo-50/70 to-cyan-100 dark:from-slate-950 dark:via-indigo-950 dark:to-slate-950',
+        cta: 'btn-primary shadow-lg shadow-sky-500/30'
+      }
+    case 'summit':
+      return {
+        root: 'bg-gradient-to-br from-stone-50 via-amber-50/40 to-orange-100 dark:from-neutral-950 dark:via-stone-900 dark:to-neutral-950',
+        cta: 'btn-primary shadow-lg shadow-orange-500/30'
+      }
+    case 'terminal':
+      return {
+        root: 'bg-gradient-to-br from-emerald-50 via-slate-100 to-teal-100 dark:from-zinc-950 dark:via-slate-950 dark:to-zinc-950',
+        cta: 'btn-primary shadow-lg shadow-emerald-500/30'
+      }
+    default:
+      return {
+        root: 'bg-gradient-to-br from-gray-50 via-primary-50/30 to-gray-100 dark:from-dark-950 dark:via-dark-900 dark:to-dark-950',
+        cta: 'btn-primary shadow-lg shadow-primary-500/30'
+      }
+  }
+})
 
 // Check if homeContent is a URL (for iframe display)
 const isHomeContentUrl = computed(() => {
@@ -593,6 +672,10 @@ const userInitial = computed(() => {
 
 // Current year for footer
 const currentYear = computed(() => new Date().getFullYear())
+
+function fenToYuan(value: number) {
+  return (Number(value || 0) / 100).toFixed(value % 100 === 0 ? 0 : 2)
+}
 
 // Payment plans
 const plans = ref<PaymentPlan[]>([])

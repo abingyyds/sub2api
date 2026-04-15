@@ -235,6 +235,16 @@ const (
 	SettingKeyAgentWithdrawWeekday       = "agent_withdraw_weekday"        // 提现开放星期（1-7）
 	SettingKeyAgentWithdrawStartHour     = "agent_withdraw_start_hour"     // 提现开始小时
 	SettingKeyAgentWithdrawEndHour       = "agent_withdraw_end_hour"       // 提现结束小时
+
+	// =========================
+	// SubSite / 分站系统
+	// =========================
+
+	SettingKeySubSiteSelfServiceEnabled     = "subsite_self_service_enabled"
+	SettingKeySubSiteActivationPriceFen     = "subsite_activation_price_fen"
+	SettingKeySubSiteActivationValidityDays = "subsite_activation_validity_days"
+	SettingKeySubSiteDefaultThemeTemplate   = "subsite_default_theme_template"
+	SettingKeySubSiteDefaultCustomConfig    = "subsite_default_custom_config"
 )
 
 // Agent profile status constants.
@@ -277,9 +287,10 @@ const (
 
 // Payment order type constants.
 const (
-	PaymentOrderTypeSubscription    = "subscription"
-	PaymentOrderTypeBalance         = "balance"
-	PaymentOrderTypeAgentActivation = "agent_activation"
+	PaymentOrderTypeSubscription      = "subscription"
+	PaymentOrderTypeBalance           = "balance"
+	PaymentOrderTypeAgentActivation   = "agent_activation"
+	PaymentOrderTypeSubSiteActivation = "subsite_activation"
 )
 
 // AdminAPIKeyPrefix is the prefix for admin API keys (distinct from user "sk-" keys).

@@ -2,20 +2,59 @@
   <AppLayout>
     <div class="mx-auto max-w-7xl space-y-6">
       <section class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-dark-700 dark:bg-dark-900">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">分站管理</h1>
             <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
-              为不同域名配置独立品牌入口。分站是独立站点，不和代理体系绑定。
+              分站是独立站点体系，不属于代理系统。这里可以配置平台自助开通、模板、层级和分站售卖价格。
             </p>
           </div>
           <button class="btn btn-primary" @click="openCreate">新建分站</button>
         </div>
+      </section>
 
-        <div class="mt-6 grid gap-3 md:grid-cols-[1fr_180px_auto]">
+      <section class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">平台自助开通配置</h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">主站用户从平台直接购买分站时，会使用这里的开通价格和默认模板。</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" :disabled="savingPlatform" @click="handleSavePlatform">
+            {{ savingPlatform ? '保存中...' : '保存平台配置' }}
+          </button>
+        </div>
+        <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <label class="flex items-center gap-3 rounded-2xl border border-gray-100 px-4 py-3 text-sm text-gray-700 dark:border-dark-700 dark:text-dark-200">
+            <input v-model="platformForm.enabled" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
+            开启平台自助开通
+          </label>
+          <div>
+            <label class="input-label">平台开通价</label>
+            <input v-model.number="platformPriceYuan" type="number" min="0" step="1" class="input mt-1 w-full" />
+          </div>
+          <div>
+            <label class="input-label">有效期（天）</label>
+            <input v-model.number="platformForm.validity_days" type="number" min="1" step="1" class="input mt-1 w-full" />
+          </div>
+          <div>
+            <label class="input-label">默认模板</label>
+            <select v-model="platformForm.default_theme_template" class="input mt-1 w-full">
+              <option v-for="item in platformForm.theme_templates" :key="item.key" :value="item.key">{{ item.label }}</option>
+            </select>
+          </div>
+          <div class="md:col-span-2 xl:col-span-4">
+            <label class="input-label">默认自定义配置 JSON</label>
+            <textarea v-model="platformForm.default_custom_config" rows="4" class="input mt-1 w-full font-mono text-xs" placeholder='例如：{"hero_title":"欢迎来到你的分站"}'></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+        <div class="grid gap-3 md:grid-cols-[1fr_180px_auto]">
           <input v-model="filters.search" class="input" placeholder="搜索站点名 / slug / 域名 / owner 邮箱" @keyup.enter="loadData(1)" />
           <select v-model="filters.status" class="input" @change="loadData(1)">
             <option value="">全部状态</option>
+            <option value="pending">待激活</option>
             <option value="active">启用</option>
             <option value="disabled">停用</option>
           </select>
@@ -30,40 +69,54 @@
               <tr>
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">站点</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">Owner</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">入口</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">用户数</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">层级 / 入口</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">用户 / 下级</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">下级分站售价</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">状态</th>
                 <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">操作</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-dark-800">
               <tr v-if="loading">
-                <td colspan="6" class="px-4 py-10 text-center text-sm text-gray-500 dark:text-dark-400">加载中...</td>
+                <td colspan="7" class="px-4 py-10 text-center text-sm text-gray-500 dark:text-dark-400">加载中...</td>
               </tr>
               <tr v-else-if="items.length === 0">
-                <td colspan="6" class="px-4 py-10 text-center text-sm text-gray-500 dark:text-dark-400">还没有分站</td>
+                <td colspan="7" class="px-4 py-10 text-center text-sm text-gray-500 dark:text-dark-400">还没有分站</td>
               </tr>
               <tr v-for="item in items" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-dark-800/50">
                 <td class="px-4 py-4 align-top">
                   <div class="font-medium text-gray-900 dark:text-white">{{ item.name }}</div>
                   <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">slug: {{ item.slug }}</div>
-                  <div v-if="item.custom_domain" class="mt-1 text-xs text-gray-500 dark:text-dark-400">域名: {{ item.custom_domain }}</div>
+                  <div v-if="item.parent_sub_site_name" class="mt-1 text-xs text-gray-500 dark:text-dark-400">上级：{{ item.parent_sub_site_name }}</div>
+                  <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">模板：{{ item.theme_template || 'starter' }}</div>
                 </td>
                 <td class="px-4 py-4 align-top text-sm text-gray-600 dark:text-dark-300">
                   <div>ID: {{ item.owner_user_id }}</div>
                   <div class="mt-1 break-all text-xs text-gray-500 dark:text-dark-400">{{ item.owner_email || '-' }}</div>
                 </td>
                 <td class="px-4 py-4 align-top text-sm text-gray-600 dark:text-dark-300">
-                  <a v-if="item.entry_url" :href="item.entry_url" target="_blank" rel="noopener noreferrer" class="break-all text-primary-600 hover:underline dark:text-primary-400">
+                  <div>L{{ item.level }}</div>
+                  <a v-if="item.entry_url" :href="item.entry_url" target="_blank" rel="noopener noreferrer" class="mt-1 block break-all text-primary-600 hover:underline dark:text-primary-400">
                     {{ item.entry_url }}
                   </a>
-                  <span v-else class="text-xs text-gray-400 dark:text-dark-500">未配置主域名后缀或自定义域名</span>
+                  <span v-else class="mt-1 block text-xs text-gray-400 dark:text-dark-500">未配置入口域名</span>
                 </td>
-                <td class="px-4 py-4 align-top text-sm text-gray-600 dark:text-dark-300">{{ item.user_count || 0 }}</td>
+                <td class="px-4 py-4 align-top text-sm text-gray-600 dark:text-dark-300">
+                  <div>{{ item.user_count || 0 }} 个用户</div>
+                  <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">{{ item.child_site_count || 0 }} 个下级分站</div>
+                </td>
+                <td class="px-4 py-4 align-top text-sm text-gray-600 dark:text-dark-300">
+                  <div>￥{{ fenToYuan(item.sub_site_price_fen || 0) }}</div>
+                  <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">{{ item.allow_sub_site ? '允许发展下级' : '未开放下级分站' }}</div>
+                </td>
                 <td class="px-4 py-4 align-top">
                   <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium"
-                    :class="item.status === 'active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-gray-200 text-gray-700 dark:bg-dark-700 dark:text-dark-300'">
-                    {{ item.status === 'active' ? '启用' : '停用' }}
+                    :class="item.status === 'active'
+                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                      : item.status === 'pending'
+                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+                        : 'bg-gray-200 text-gray-700 dark:bg-dark-700 dark:text-dark-300'">
+                    {{ item.status }}
                   </span>
                 </td>
                 <td class="px-4 py-4 align-top text-right">
@@ -87,59 +140,150 @@
     </div>
 
     <BaseDialog :show="showDialog" :title="editingId ? '编辑分站' : '新建分站'" width="extra-wide" @close="closeDialog">
-      <div class="grid gap-4 md:grid-cols-2">
+      <div class="space-y-5">
+        <div class="grid gap-4 md:grid-cols-2">
+          <div>
+            <label class="input-label">站点名称</label>
+            <input v-model="form.name" class="input mt-1 w-full" />
+          </div>
+          <div>
+            <label class="input-label">Owner 用户 ID</label>
+            <input v-model.number="form.owner_user_id" type="number" min="1" class="input mt-1 w-full" />
+          </div>
+          <div>
+            <label class="input-label">上级分站 ID</label>
+            <input v-model.number="form.parent_sub_site_id" type="number" min="0" class="input mt-1 w-full" placeholder="顶级分站留空" />
+          </div>
+          <div>
+            <label class="input-label">状态</label>
+            <select v-model="form.status" class="input mt-1 w-full">
+              <option value="pending">待激活</option>
+              <option value="active">启用</option>
+              <option value="disabled">停用</option>
+            </select>
+          </div>
+          <div>
+            <label class="input-label">Slug</label>
+            <input v-model="form.slug" class="input mt-1 w-full" />
+          </div>
+          <div>
+            <label class="input-label">模板</label>
+            <select v-model="form.theme_template" class="input mt-1 w-full">
+              <option v-for="item in platformForm.theme_templates" :key="item.key" :value="item.key">{{ item.label }}</option>
+            </select>
+          </div>
+          <div class="md:col-span-2">
+            <label class="input-label">自定义域名</label>
+            <input v-model="form.custom_domain" class="input mt-1 w-full" />
+          </div>
+          <div>
+            <label class="input-label">Logo URL</label>
+            <input v-model="form.site_logo" class="input mt-1 w-full" />
+          </div>
+          <div>
+            <label class="input-label">Favicon URL</label>
+            <input v-model="form.site_favicon" class="input mt-1 w-full" />
+          </div>
+          <div class="md:col-span-2">
+            <label class="input-label">副标题</label>
+            <input v-model="form.site_subtitle" class="input mt-1 w-full" />
+          </div>
+          <div class="md:col-span-2">
+            <label class="input-label">公告</label>
+            <input v-model="form.announcement" class="input mt-1 w-full" />
+          </div>
+          <div>
+            <label class="input-label">联系信息</label>
+            <input v-model="form.contact_info" class="input mt-1 w-full" />
+          </div>
+          <div>
+            <label class="input-label">文档地址</label>
+            <input v-model="form.doc_url" class="input mt-1 w-full" />
+          </div>
+          <div>
+            <label class="input-label">注册模式</label>
+            <select v-model="form.registration_mode" class="input mt-1 w-full">
+              <option value="open">开放注册</option>
+              <option value="invite">邀请码注册</option>
+              <option value="closed">关闭注册</option>
+            </select>
+          </div>
+          <div>
+            <label class="input-label">到期时间</label>
+            <input v-model="form.subscription_expired_at" type="datetime-local" class="input mt-1 w-full" />
+          </div>
+          <div class="md:col-span-2">
+            <label class="input-label">首页内容</label>
+            <textarea v-model="form.home_content" rows="5" class="input mt-1 w-full"></textarea>
+          </div>
+          <div class="md:col-span-2">
+            <label class="input-label">主题配置 JSON</label>
+            <textarea v-model="form.theme_config" rows="4" class="input mt-1 w-full font-mono text-xs"></textarea>
+          </div>
+          <div class="md:col-span-2">
+            <label class="input-label">自定义配置 JSON</label>
+            <textarea v-model="form.custom_config" rows="5" class="input mt-1 w-full font-mono text-xs"></textarea>
+          </div>
+        </div>
+
+        <div class="grid gap-4 rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-dark-700 dark:bg-dark-800/60 md:grid-cols-3">
+          <label class="flex items-center gap-3 text-sm text-gray-700 dark:text-dark-200">
+            <input v-model="form.enable_topup" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
+            启用余额充值
+          </label>
+          <label class="flex items-center gap-3 text-sm text-gray-700 dark:text-dark-200">
+            <input v-model="form.allow_sub_site" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
+            允许发展下级分站
+          </label>
+          <div>
+            <label class="input-label">下级分站售价</label>
+            <input v-model.number="formSubSitePriceYuan" type="number" min="0" step="1" class="input mt-1 w-full" />
+          </div>
+        </div>
+
         <div>
-          <label class="input-label">站点名称</label>
-          <input v-model="form.name" class="input mt-1 w-full" placeholder="例如：cCoder 华东站" />
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">订阅套餐售价覆盖</h3>
+          <div class="mt-3 space-y-3">
+            <div v-for="plan in baseSubscriptionPlans" :key="plan.key" class="grid gap-3 rounded-2xl border border-gray-100 px-4 py-3 dark:border-dark-700 md:grid-cols-[1fr_140px]">
+              <div>
+                <div class="font-medium text-gray-900 dark:text-white">{{ plan.name }}</div>
+                <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">默认价：￥{{ fenToYuan(plan.amount_fen) }}</div>
+              </div>
+              <input
+                :value="groupPriceInputs[plan.group_id] ?? ''"
+                type="number"
+                min="0"
+                step="1"
+                class="input w-full"
+                placeholder="自定义售价"
+                @input="updateGroupPrice(plan.group_id, $event)"
+              />
+            </div>
+          </div>
         </div>
+
         <div>
-          <label class="input-label">Owner 用户 ID</label>
-          <input v-model.number="form.owner_user_id" type="number" min="1" class="input mt-1 w-full" placeholder="例如：123" />
-        </div>
-        <div>
-          <label class="input-label">Slug</label>
-          <input v-model="form.slug" class="input mt-1 w-full" placeholder="例如：east-hub" />
-        </div>
-        <div>
-          <label class="input-label">状态</label>
-          <select v-model="form.status" class="input mt-1 w-full">
-            <option value="active">启用</option>
-            <option value="disabled">停用</option>
-          </select>
-        </div>
-        <div class="md:col-span-2">
-          <label class="input-label">自定义域名</label>
-          <input v-model="form.custom_domain" class="input mt-1 w-full" placeholder="例如：east.ccoder.me" />
-        </div>
-        <div>
-          <label class="input-label">Logo URL</label>
-          <input v-model="form.site_logo" class="input mt-1 w-full" placeholder="https://..." />
-        </div>
-        <div>
-          <label class="input-label">Favicon URL</label>
-          <input v-model="form.site_favicon" class="input mt-1 w-full" placeholder="https://..." />
-        </div>
-        <div class="md:col-span-2">
-          <label class="input-label">副标题</label>
-          <input v-model="form.site_subtitle" class="input mt-1 w-full" placeholder="一句话介绍这个分站" />
-        </div>
-        <div class="md:col-span-2">
-          <label class="input-label">公告</label>
-          <input v-model="form.announcement" class="input mt-1 w-full" placeholder="可选，当前先做存储预留" />
-        </div>
-        <div>
-          <label class="input-label">联系信息</label>
-          <input v-model="form.contact_info" class="input mt-1 w-full" placeholder="Telegram / WeChat / Email" />
-        </div>
-        <div>
-          <label class="input-label">文档地址</label>
-          <input v-model="form.doc_url" class="input mt-1 w-full" placeholder="https://docs.example.com" />
-        </div>
-        <div class="md:col-span-2">
-          <label class="input-label">首页内容</label>
-          <textarea v-model="form.home_content" rows="8" class="input mt-1 w-full" placeholder="支持直接填写 HTML，或填一个 https:// 页面地址供 iframe 展示" />
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">充值套餐售价覆盖</h3>
+          <div class="mt-3 space-y-3">
+            <div v-for="plan in baseRechargePlans" :key="plan.key" class="grid gap-3 rounded-2xl border border-gray-100 px-4 py-3 dark:border-dark-700 md:grid-cols-[1fr_140px]">
+              <div>
+                <div class="font-medium text-gray-900 dark:text-white">{{ plan.name }}</div>
+                <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">默认价：￥{{ fenToYuan(plan.pay_amount_fen) }} / 到账 ${{ plan.balance_amount.toFixed(2) }}</div>
+              </div>
+              <input
+                :value="rechargePriceInputs[plan.key] ?? ''"
+                type="number"
+                min="0"
+                step="1"
+                class="input w-full"
+                placeholder="自定义售价"
+                @input="updateRechargePrice(plan.key, $event)"
+              />
+            </div>
+          </div>
         </div>
       </div>
+
       <template #footer>
         <div class="flex justify-end gap-3">
           <button class="btn btn-secondary" @click="closeDialog">取消</button>
@@ -166,29 +310,48 @@ import { onMounted, reactive, ref } from 'vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
-import { subSitesAPI, type AdminSubSite, type SaveSubSiteRequest } from '@/api/admin/subsites'
+import { subSitesAPI, type AdminSubSite, type PlatformSubSiteConfig, type SaveSubSiteRequest } from '@/api/admin/subsites'
+import { paymentAPI, type PaymentPlan, type RechargePlan } from '@/api/payment'
 import { useAppStore } from '@/stores'
 
 const appStore = useAppStore()
 
 const loading = ref(false)
 const saving = ref(false)
+const loadingPlatform = ref(false)
+const savingPlatform = ref(false)
 const items = ref<AdminSubSite[]>([])
 const page = ref(1)
 const pages = ref(1)
+const baseSubscriptionPlans = ref<PaymentPlan[]>([])
+const baseRechargePlans = ref<RechargePlan[]>([])
 
 const filters = reactive({
   search: '',
   status: ''
 })
 
+const platformForm = reactive<PlatformSubSiteConfig>({
+  enabled: true,
+  activation_price_fen: 38800,
+  validity_days: 365,
+  default_theme_template: 'starter',
+  default_custom_config: '',
+  theme_templates: []
+})
+const platformPriceYuan = ref<number | null>(388)
+
 const showDialog = ref(false)
 const showDeleteDialog = ref(false)
 const editingId = ref<number | null>(null)
 const deleteTarget = ref<AdminSubSite | null>(null)
+const formSubSitePriceYuan = ref<number | null>(null)
+const groupPriceInputs = reactive<Record<number, string>>({})
+const rechargePriceInputs = reactive<Record<string, string>>({})
 
 const form = reactive<SaveSubSiteRequest>({
   owner_user_id: 0,
+  parent_sub_site_id: undefined,
   name: '',
   slug: '',
   custom_domain: '',
@@ -200,12 +363,127 @@ const form = reactive<SaveSubSiteRequest>({
   contact_info: '',
   doc_url: '',
   home_content: '',
-  theme_config: ''
+  theme_template: 'starter',
+  theme_config: '',
+  custom_config: '',
+  registration_mode: 'open',
+  enable_topup: true,
+  allow_sub_site: false,
+  sub_site_price_fen: 0,
+  subscription_expired_at: null,
+  group_price_overrides: [],
+  recharge_price_overrides: [],
 })
 
-onMounted(() => {
-  loadData(1)
+onMounted(async () => {
+  await Promise.all([loadPlatformConfig(), loadCatalog(), loadData(1)])
 })
+
+function fenToYuan(value: number) {
+  return (Number(value || 0) / 100).toFixed(value % 100 === 0 ? 0 : 2)
+}
+
+function parseYuanToFen(value: string | number | null | undefined): number | null {
+  if (value === '' || value === null || value === undefined) return null
+  const num = Number(value)
+  if (!Number.isFinite(num) || num < 0) return null
+  return Math.round(num * 100)
+}
+
+function normalizePositiveInt(value: number | string | null | undefined): number | undefined {
+  if (value === '' || value === null || value === undefined) return undefined
+  const num = Number(value)
+  if (!Number.isFinite(num) || num <= 0) return undefined
+  return Math.trunc(num)
+}
+
+function formatDateTimeLocal(value?: string | null): string | null {
+  if (!value) return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
+function parseDateTimeLocal(value?: string | null): string | null {
+  if (!value) return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  return date.toISOString()
+}
+
+function updateGroupPrice(groupId: number, event: Event) {
+  groupPriceInputs[groupId] = (event.target as HTMLInputElement).value
+}
+
+function updateRechargePrice(planKey: string, event: Event) {
+  rechargePriceInputs[planKey] = (event.target as HTMLInputElement).value
+}
+
+function buildGroupOverrides() {
+  return Object.entries(groupPriceInputs)
+    .map(([groupId, value]) => {
+      const priceFen = parseYuanToFen(value)
+      if (priceFen === null) return null
+      return { group_id: Number(groupId), price_fen: priceFen }
+    })
+    .filter(Boolean) as Array<{ group_id: number; price_fen: number }>
+}
+
+function buildRechargeOverrides() {
+  return Object.entries(rechargePriceInputs)
+    .map(([planKey, value]) => {
+      const priceFen = parseYuanToFen(value)
+      if (priceFen === null) return null
+      return { plan_key: planKey, pay_amount_fen: priceFen }
+    })
+    .filter(Boolean) as Array<{ plan_key: string; pay_amount_fen: number }>
+}
+
+async function loadCatalog() {
+  try {
+    const [plans, rechargeInfo] = await Promise.all([
+      paymentAPI.getPlans(),
+      paymentAPI.getRechargeInfo()
+    ])
+    baseSubscriptionPlans.value = plans.filter(plan => (plan.type || 'subscription') === 'subscription')
+    baseRechargePlans.value = rechargeInfo.plans || []
+  } catch (error: any) {
+    appStore.showError(error?.message || '加载套餐目录失败')
+  }
+}
+
+async function loadPlatformConfig() {
+  loadingPlatform.value = true
+  try {
+    const config = await subSitesAPI.getPlatformConfig()
+    Object.assign(platformForm, config)
+    platformPriceYuan.value = config.activation_price_fen / 100
+  } catch (error: any) {
+    appStore.showError(error?.message || '加载平台分站配置失败')
+  } finally {
+    loadingPlatform.value = false
+  }
+}
+
+async function handleSavePlatform() {
+  savingPlatform.value = true
+  try {
+    platformForm.activation_price_fen = parseYuanToFen(platformPriceYuan.value) || 0
+    const next = await subSitesAPI.updatePlatformConfig(platformForm)
+    Object.assign(platformForm, next)
+    platformPriceYuan.value = next.activation_price_fen / 100
+    appStore.showSuccess('平台分站配置已保存')
+  } catch (error: any) {
+    appStore.showError(error?.message || '保存平台分站配置失败')
+  } finally {
+    savingPlatform.value = false
+  }
+}
 
 async function loadData(targetPage = page.value) {
   loading.value = true
@@ -224,6 +502,7 @@ async function loadData(targetPage = page.value) {
 function resetForm() {
   editingId.value = null
   form.owner_user_id = 0
+  form.parent_sub_site_id = undefined
   form.name = ''
   form.slug = ''
   form.custom_domain = ''
@@ -235,7 +514,17 @@ function resetForm() {
   form.contact_info = ''
   form.doc_url = ''
   form.home_content = ''
+  form.theme_template = platformForm.default_theme_template || 'starter'
   form.theme_config = ''
+  form.custom_config = platformForm.default_custom_config || ''
+  form.registration_mode = 'open'
+  form.enable_topup = true
+  form.allow_sub_site = false
+  form.sub_site_price_fen = 0
+  form.subscription_expired_at = null
+  formSubSitePriceYuan.value = null
+  Object.keys(groupPriceInputs).forEach((key) => delete groupPriceInputs[Number(key)])
+  Object.keys(rechargePriceInputs).forEach((key) => delete rechargePriceInputs[key])
 }
 
 function openCreate() {
@@ -246,6 +535,7 @@ function openCreate() {
 function openEdit(item: AdminSubSite) {
   editingId.value = item.id
   form.owner_user_id = item.owner_user_id
+  form.parent_sub_site_id = item.parent_sub_site_id
   form.name = item.name
   form.slug = item.slug
   form.custom_domain = item.custom_domain || ''
@@ -257,7 +547,23 @@ function openEdit(item: AdminSubSite) {
   form.contact_info = item.contact_info || ''
   form.doc_url = item.doc_url || ''
   form.home_content = item.home_content || ''
+  form.theme_template = item.theme_template || 'starter'
   form.theme_config = item.theme_config || ''
+  form.custom_config = item.custom_config || ''
+  form.registration_mode = item.registration_mode || 'open'
+  form.enable_topup = item.enable_topup
+  form.allow_sub_site = item.allow_sub_site
+  form.sub_site_price_fen = item.sub_site_price_fen || 0
+  form.subscription_expired_at = formatDateTimeLocal(item.subscription_expired_at)
+  formSubSitePriceYuan.value = item.sub_site_price_fen ? item.sub_site_price_fen / 100 : null
+  Object.keys(groupPriceInputs).forEach((key) => delete groupPriceInputs[Number(key)])
+  Object.keys(rechargePriceInputs).forEach((key) => delete rechargePriceInputs[key])
+  ;(item.group_price_overrides || []).forEach(override => {
+    groupPriceInputs[override.group_id] = override.price_fen ? String(override.price_fen / 100) : ''
+  })
+  ;(item.recharge_price_overrides || []).forEach(override => {
+    rechargePriceInputs[override.plan_key] = override.pay_amount_fen ? String(override.pay_amount_fen / 100) : ''
+  })
   showDialog.value = true
 }
 
@@ -268,11 +574,39 @@ function closeDialog() {
 async function handleSave() {
   saving.value = true
   try {
+    form.sub_site_price_fen = parseYuanToFen(formSubSitePriceYuan.value) || 0
+    form.group_price_overrides = buildGroupOverrides()
+    form.recharge_price_overrides = buildRechargeOverrides()
+    const payload: SaveSubSiteRequest = {
+      owner_user_id: form.owner_user_id,
+      parent_sub_site_id: normalizePositiveInt(form.parent_sub_site_id),
+      name: form.name,
+      slug: form.slug,
+      custom_domain: form.custom_domain || '',
+      status: form.status,
+      site_logo: form.site_logo || '',
+      site_favicon: form.site_favicon || '',
+      site_subtitle: form.site_subtitle || '',
+      announcement: form.announcement || '',
+      contact_info: form.contact_info || '',
+      doc_url: form.doc_url || '',
+      home_content: form.home_content || '',
+      theme_template: form.theme_template || 'starter',
+      theme_config: form.theme_config || '',
+      custom_config: form.custom_config || '',
+      registration_mode: form.registration_mode || 'open',
+      enable_topup: form.enable_topup,
+      allow_sub_site: form.allow_sub_site,
+      sub_site_price_fen: form.sub_site_price_fen,
+      subscription_expired_at: parseDateTimeLocal(form.subscription_expired_at),
+      group_price_overrides: form.group_price_overrides,
+      recharge_price_overrides: form.recharge_price_overrides,
+    }
     if (editingId.value) {
-      await subSitesAPI.update(editingId.value, form)
+      await subSitesAPI.update(editingId.value, payload)
       appStore.showSuccess('分站已更新')
     } else {
-      await subSitesAPI.create(form)
+      await subSitesAPI.create(payload)
       appStore.showSuccess('分站已创建')
     }
     showDialog.value = false
