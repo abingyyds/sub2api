@@ -120,6 +120,7 @@ func RegisterUserRoutes(
 			authPayment.POST("/recharge", h.Payment.CreateRecharge)
 			authPayment.POST("/agent-activation", h.Payment.CreateAgentActivationOrder)
 			authPayment.POST("/subsite-activation", h.Payment.CreateSubSiteActivationOrder)
+			authPayment.POST("/subsite-topup", h.Payment.CreateSubSiteTopupOrder)
 			authPayment.GET("/orders", h.Payment.ListOrders)
 			authPayment.GET("/orders/:orderNo", h.Payment.QueryOrder)
 			authPayment.POST("/invoice-requests", h.Payment.SubmitInvoice)
@@ -145,6 +146,8 @@ func RegisterUserRoutes(
 			ownedSubSite.GET("/owned", h.SubSite.ListOwned)
 			ownedSubSite.GET("/owned/:id", h.SubSite.GetOwned)
 			ownedSubSite.PUT("/owned/:id", h.SubSite.UpdateOwned)
+			ownedSubSite.POST("/owned/:id/offline-topup", h.SubSite.OfflineTopupOwnedUser)
+			ownedSubSite.GET("/owned/:id/ledger", h.SubSite.OwnedLedger)
 		}
 	}
 }

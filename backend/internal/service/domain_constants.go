@@ -292,6 +292,7 @@ const (
 	PaymentOrderTypeBalance           = "balance"
 	PaymentOrderTypeAgentActivation   = "agent_activation"
 	PaymentOrderTypeSubSiteActivation = "subsite_activation"
+	PaymentOrderTypeSubSiteTopup      = "subsite_topup"
 )
 
 // AdminAPIKeyPrefix is the prefix for admin API keys (distinct from user "sk-" keys).

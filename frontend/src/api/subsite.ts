@@ -1,5 +1,6 @@
 import { apiClient } from './client'
-import type { CreateSubSiteActivationInput, SubSiteGroupPriceOverride, SubSiteRechargePriceOverride } from './payment'
+import type { CreateSubSiteActivationInput } from './payment'
+import type { PaginatedResponse } from '@/types'
 
 export interface SubSiteThemeTemplateOption {
   key: string
@@ -53,10 +54,27 @@ export interface OwnedSubSite {
   user_count?: number
   child_site_count?: number
   entry_url?: string
-  group_price_overrides?: SubSiteGroupPriceOverride[]
-  recharge_price_overrides?: SubSiteRechargePriceOverride[]
+  balance_fen?: number
+  total_topup_fen?: number
+  total_consumed_fen?: number
+  allow_online_topup?: boolean
+  allow_offline_topup?: boolean
   created_at: string
   updated_at: string
+}
+
+export interface OwnedSubSiteLedgerEntry {
+  id: number
+  sub_site_id: number
+  tx_type: string
+  delta_fen: number
+  balance_after_fen: number
+  related_user_id?: number
+  related_usage_log_id?: number
+  related_order_id?: number
+  operator_id?: number
+  note?: string
+  created_at: string
 }
 
 export type UpdateOwnedSubSiteRequest = CreateSubSiteActivationInput
@@ -74,29 +92,58 @@ export async function listOwnedSites(): Promise<OwnedSubSite[]> {
   if (!Array.isArray(data)) {
     return []
   }
-  return data.map((site) => ({
-    ...site,
-    group_price_overrides: Array.isArray(site.group_price_overrides) ? site.group_price_overrides : [],
-    recharge_price_overrides: Array.isArray(site.recharge_price_overrides) ? site.recharge_price_overrides : [],
-  }))
+  return data
 }
 
 export async function getOwnedSite(id: number): Promise<OwnedSubSite> {
   const { data } = await apiClient.get<OwnedSubSite>(`/subsite/owned/${id}`)
-  return {
-    ...data,
-    group_price_overrides: Array.isArray(data.group_price_overrides) ? data.group_price_overrides : [],
-    recharge_price_overrides: Array.isArray(data.recharge_price_overrides) ? data.recharge_price_overrides : [],
-  }
+  return data
 }
 
 export async function updateOwnedSite(id: number, payload: UpdateOwnedSubSiteRequest): Promise<OwnedSubSite> {
   const { data } = await apiClient.put<OwnedSubSite>(`/subsite/owned/${id}`, payload)
-  return {
-    ...data,
-    group_price_overrides: Array.isArray(data.group_price_overrides) ? data.group_price_overrides : [],
-    recharge_price_overrides: Array.isArray(data.recharge_price_overrides) ? data.recharge_price_overrides : [],
-  }
+  return data
+}
+
+export async function offlineTopupUser(
+  siteID: number,
+  payload: { user_id: number; amount_fen: number; note?: string }
+): Promise<OwnedSubSite> {
+  const { data } = await apiClient.post<OwnedSubSite>(`/subsite/owned/${siteID}/offline-topup`, payload)
+  return data
+}
+
+export async function listOwnedLedger(
+  siteID: number,
+  page: number = 1,
+  pageSize: number = 20,
+  txType?: string
+): Promise<PaginatedResponse<OwnedSubSiteLedgerEntry>> {
+  const { data } = await apiClient.get<PaginatedResponse<OwnedSubSiteLedgerEntry>>(
+    `/subsite/owned/${siteID}/ledger`,
+    {
+      params: {
+        page,
+        page_size: pageSize,
+        tx_type: txType || undefined
+      }
+    }
+  )
+  return data
+}
+
+export async function createPoolTopupOrder(payload: {
+  site_id: number
+  amount_fen: number
+  pay_method?: string
+}): Promise<{
+  order_no: string
+  code_url?: string
+  amount_fen: number
+  expired_at: string
+}> {
+  const { data } = await apiClient.post('/payment/subsite-topup', payload)
+  return data as any
 }
 
 export const subSiteAPI = {
@@ -104,6 +151,9 @@ export const subSiteAPI = {
   listOwnedSites,
   getOwnedSite,
   updateOwnedSite,
+  offlineTopupUser,
+  listOwnedLedger,
+  createPoolTopupOrder,
 }
 
 export default subSiteAPI

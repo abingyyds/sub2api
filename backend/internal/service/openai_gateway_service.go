@@ -185,6 +185,7 @@ type OpenAIGatewayService struct {
 	deferredService     *DeferredService
 	openAITokenProvider *OpenAITokenProvider
 	toolCorrector       *CodexToolCorrector
+	subSiteService      *SubSiteService // 分站池扣费
 }
 
 // NewOpenAIGatewayService creates a new OpenAIGatewayService
@@ -207,6 +208,7 @@ func NewOpenAIGatewayService(
 	httpUpstream HTTPUpstream,
 	deferredService *DeferredService,
 	openAITokenProvider *OpenAITokenProvider,
+	subSiteService *SubSiteService,
 ) *OpenAIGatewayService {
 	return &OpenAIGatewayService{
 		accountRepo:         accountRepo,
@@ -228,6 +230,7 @@ func NewOpenAIGatewayService(
 		deferredService:     deferredService,
 		openAITokenProvider: openAITokenProvider,
 		toolCorrector:       NewCodexToolCorrector(),
+		subSiteService:      subSiteService,
 	}
 }
 
@@ -1673,7 +1676,17 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 	if apiKey.GroupID != nil && apiKey.Group != nil {
 		multiplier = apiKey.Group.RateMultiplier
 	}
-	if subSiteRate := currentSubSiteConsumeRateMultiplier(ctx); subSiteRate > 0 {
+	subSiteRate := currentSubSiteConsumeRateMultiplier(ctx)
+	var boundSubSite *SubSite
+	if s.subSiteService != nil {
+		if site, err := s.subSiteService.GetBoundSubSiteForUser(ctx, user.ID); err == nil && site != nil && site.Status == SubSiteStatusActive {
+			boundSubSite = site
+			if subSiteRate <= 0 || subSiteRate == DefaultSubSiteConsumeRate {
+				subSiteRate = normalizeConsumeRateMultiplier(site.ConsumeRateMultiplier)
+			}
+		}
+	}
+	if subSiteRate > 0 && subSiteRate != DefaultSubSiteConsumeRate {
 		multiplier *= subSiteRate
 	}
 
@@ -1814,6 +1827,9 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 		if shouldBill && cost.ActualCost > 0 {
 			_ = s.userRepo.DeductBalance(ctx, user.ID, cost.ActualCost)
 			s.billingCacheService.QueueDeductBalance(user.ID, cost.ActualCost)
+			if boundSubSite != nil && subSiteRate > 0 && s.subSiteService != nil {
+				s.subSiteService.DebitPoolForConsumption(ctx, boundSubSite.ID, user.ID, usageLog.ID, cost.ActualCost, subSiteRate)
+			}
 		}
 	}
 

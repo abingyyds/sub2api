@@ -57,29 +57,6 @@ func TestSubSiteService_ApplyPublicSettings_KeepsMainSiteConfig(t *testing.T) {
 	require.True(t, got.EnableTopup)
 }
 
-func TestSubSiteService_ApplyPlanOverrides_NoLongerChangesInheritedPlans(t *testing.T) {
-	svc := &SubSiteService{}
-	plans := []PaymentPlan{{Key: "starter", AmountFen: 9900, GroupID: 1}}
-
-	got := svc.ApplyPlanOverrides(context.Background(), plans)
-
-	require.Equal(t, plans, got)
-}
-
-func TestSubSiteService_ApplyRechargeOverrides_NoLongerChangesInheritedRechargeInfo(t *testing.T) {
-	svc := &SubSiteService{}
-	info := &RechargeInfo{
-		MinAmount: 10,
-		Plans: []RechargePlan{
-			{Key: "topup-50", PayAmountFen: 5000, BalanceAmount: 50},
-		},
-	}
-
-	got := svc.ApplyRechargeOverrides(context.Background(), info)
-
-	require.Same(t, info, got)
-}
-
 func TestCurrentSubSiteConsumeRateMultiplier(t *testing.T) {
 	ctx := context.WithValue(context.Background(), ctxkey.SubSite, &SubSite{
 		Status:                SubSiteStatusActive,

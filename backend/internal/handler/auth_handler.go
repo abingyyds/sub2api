@@ -109,8 +109,10 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 	if h.subSiteSvc != nil {
-		if bindErr := h.subSiteSvc.BindCurrentUser(c.Request.Context(), user.ID); bindErr != nil {
+		if bindErr := h.subSiteSvc.BindCurrentUserStrict(c.Request.Context(), user.ID); bindErr != nil {
 			slog.Warn("subsite_bind_register_failed", "user_id", user.ID, "error", bindErr)
+			response.ErrorFrom(c, bindErr)
+			return
 		}
 	}
 
@@ -167,6 +169,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
+	}
+
+	if h.subSiteSvc != nil {
+		if err := h.subSiteSvc.EnsureUserScopeMatches(c.Request.Context(), user.ID); err != nil {
+			response.ErrorFrom(c, err)
+			return
+		}
+		// 分站上下文下首次登录的新用户自动补绑
+		if bindErr := h.subSiteSvc.BindCurrentUserStrict(c.Request.Context(), user.ID); bindErr != nil {
+			slog.Warn("subsite_bind_login_failed", "user_id", user.ID, "error", bindErr)
+		}
 	}
 
 	// Check if TOTP 2FA is enabled for this user
@@ -254,6 +267,16 @@ func (h *AuthHandler) Login2FA(c *gin.Context) {
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
+	}
+
+	if h.subSiteSvc != nil {
+		if err := h.subSiteSvc.EnsureUserScopeMatches(c.Request.Context(), user.ID); err != nil {
+			response.ErrorFrom(c, err)
+			return
+		}
+		if bindErr := h.subSiteSvc.BindCurrentUserStrict(c.Request.Context(), user.ID); bindErr != nil {
+			slog.Warn("subsite_bind_login_failed", "user_id", user.ID, "error", bindErr)
+		}
 	}
 
 	// Generate the JWT token

@@ -138,10 +138,16 @@
                     <div v-if="site.entry_url">入口：<a :href="site.entry_url" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:underline dark:text-primary-400">{{ site.entry_url }}</a></div>
                     <div>用户数：{{ site.user_count || 0 }}，下级分站：{{ site.child_site_count || 0 }}</div>
                     <div>消耗倍率：{{ Number(site.consume_rate_multiplier || 1).toFixed(2) }}x，下级分站售价：￥{{ fenToYuan(site.sub_site_price_fen || 0) }}</div>
+                    <div class="font-medium text-gray-900 dark:text-white">
+                      池余额：￥{{ fenToYuan(site.balance_fen || 0) }}
+                      <span class="ml-2 text-xs text-gray-500 dark:text-dark-400">累充 ￥{{ fenToYuan(site.total_topup_fen || 0) }} / 累消 ￥{{ fenToYuan(site.total_consumed_fen || 0) }}</span>
+                    </div>
                   </div>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                   <button class="btn btn-secondary btn-sm" @click="openEdit(site)">编辑分站</button>
+                  <button class="btn btn-secondary btn-sm" @click="openOfflineTopup(site)">线下加余额</button>
+                  <button class="btn btn-secondary btn-sm" @click="openOwnedLedger(site)">查看流水</button>
                 </div>
               </div>
             </div>
@@ -239,6 +245,69 @@
         </div>
       </div>
     </Teleport>
+
+    <BaseDialog :show="showOfflineDialog" title="线下给用户加余额" @close="showOfflineDialog = false">
+      <div v-if="offlineTarget" class="space-y-4">
+        <div class="rounded-2xl border border-gray-200 px-4 py-3 text-sm dark:border-dark-700">
+          <div class="font-medium text-gray-900 dark:text-white">{{ offlineTarget.name }}</div>
+          <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">当前池余额：￥{{ fenToYuan(offlineTarget.balance_fen || 0) }}</div>
+          <div class="text-xs text-gray-500 dark:text-dark-400">说明：给用户加余额的同时会从分站池按等额扣除。</div>
+        </div>
+        <div>
+          <label class="input-label">用户 ID</label>
+          <input v-model.number="offlineUserID" type="number" min="1" class="input mt-1 w-full" />
+        </div>
+        <div>
+          <label class="input-label">加余额金额（元）</label>
+          <input v-model.number="offlineAmountYuan" type="number" min="0" step="1" class="input mt-1 w-full" />
+        </div>
+        <div>
+          <label class="input-label">备注（可选）</label>
+          <input v-model="offlineNote" class="input mt-1 w-full" />
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-3">
+          <button class="btn btn-secondary" @click="showOfflineDialog = false">取消</button>
+          <button class="btn btn-primary" :disabled="offlineSubmitting" @click="handleOfflineTopup">{{ offlineSubmitting ? '提交中...' : '确认加余额' }}</button>
+        </div>
+      </template>
+    </BaseDialog>
+
+    <BaseDialog :show="showOwnedLedgerDialog" title="分站池流水" width="wide" @close="showOwnedLedgerDialog = false">
+      <div v-if="ownedLedgerTarget" class="space-y-3">
+        <div class="text-sm text-gray-600 dark:text-dark-300">
+          {{ ownedLedgerTarget.name }} · 当前余额 ￥{{ fenToYuan(ownedLedgerTarget.balance_fen || 0) }}
+        </div>
+        <div class="max-h-96 overflow-y-auto">
+          <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-dark-700">
+            <thead class="bg-gray-50 dark:bg-dark-800/60">
+              <tr>
+                <th class="px-3 py-2 text-left text-xs font-semibold uppercase">时间</th>
+                <th class="px-3 py-2 text-left text-xs font-semibold uppercase">类型</th>
+                <th class="px-3 py-2 text-right text-xs font-semibold uppercase">变动</th>
+                <th class="px-3 py-2 text-right text-xs font-semibold uppercase">变动后</th>
+                <th class="px-3 py-2 text-left text-xs font-semibold uppercase">备注</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-dark-800">
+              <tr v-for="row in ownedLedgerRows" :key="row.id">
+                <td class="px-3 py-2 text-xs text-gray-500 dark:text-dark-400">{{ formatLedgerDate(row.created_at) }}</td>
+                <td class="px-3 py-2 text-xs">{{ row.tx_type }}</td>
+                <td class="px-3 py-2 text-right text-xs" :class="row.delta_fen >= 0 ? 'text-emerald-600' : 'text-red-600'">
+                  {{ row.delta_fen >= 0 ? '+' : '' }}{{ fenToYuan(row.delta_fen) }}
+                </td>
+                <td class="px-3 py-2 text-right text-xs">{{ fenToYuan(row.balance_after_fen) }}</td>
+                <td class="px-3 py-2 text-xs text-gray-500 dark:text-dark-400">{{ row.note || '-' }}</td>
+              </tr>
+              <tr v-if="ownedLedgerRows.length === 0">
+                <td colspan="5" class="px-3 py-6 text-center text-xs text-gray-400">暂无流水</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </BaseDialog>
   </AppLayout>
 </template>
 
@@ -248,7 +317,7 @@ import QRCode from 'qrcode'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import { paymentAPI, type CreateOrderResponse, type CreateSubSiteActivationInput } from '@/api/payment'
-import { subSiteAPI, type OwnedSubSite, type SubSiteOpenInfo } from '@/api/subsite'
+import { subSiteAPI, type OwnedSubSite, type OwnedSubSiteLedgerEntry, type SubSiteOpenInfo } from '@/api/subsite'
 import { useAppStore } from '@/stores'
 
 const appStore = useAppStore()
@@ -456,6 +525,75 @@ async function handleSaveOwnedSite() {
     appStore.showError(error?.message || '保存分站失败')
   } finally {
     savingSite.value = false
+  }
+}
+
+const showOfflineDialog = ref(false)
+const offlineTarget = ref<OwnedSubSite | null>(null)
+const offlineUserID = ref<number>(0)
+const offlineAmountYuan = ref<number>(0)
+const offlineNote = ref('')
+const offlineSubmitting = ref(false)
+
+function openOfflineTopup(site: OwnedSubSite) {
+  offlineTarget.value = site
+  offlineUserID.value = 0
+  offlineAmountYuan.value = 0
+  offlineNote.value = ''
+  showOfflineDialog.value = true
+}
+
+async function handleOfflineTopup() {
+  if (!offlineTarget.value) return
+  const amountFen = Math.round((offlineAmountYuan.value || 0) * 100)
+  if (!offlineUserID.value || offlineUserID.value <= 0) {
+    appStore.showError('请输入有效的用户 ID')
+    return
+  }
+  if (amountFen <= 0) {
+    appStore.showError('请输入有效金额')
+    return
+  }
+  offlineSubmitting.value = true
+  try {
+    await subSiteAPI.offlineTopupUser(offlineTarget.value.id, {
+      user_id: offlineUserID.value,
+      amount_fen: amountFen,
+      note: offlineNote.value
+    })
+    appStore.showSuccess('加余额成功')
+    showOfflineDialog.value = false
+    offlineTarget.value = null
+    await loadOwnedSites()
+  } catch (error: any) {
+    appStore.showError(error?.message || '加余额失败')
+  } finally {
+    offlineSubmitting.value = false
+  }
+}
+
+const showOwnedLedgerDialog = ref(false)
+const ownedLedgerTarget = ref<OwnedSubSite | null>(null)
+const ownedLedgerRows = ref<OwnedSubSiteLedgerEntry[]>([])
+
+async function openOwnedLedger(site: OwnedSubSite) {
+  ownedLedgerTarget.value = site
+  ownedLedgerRows.value = []
+  showOwnedLedgerDialog.value = true
+  try {
+    const res = await subSiteAPI.listOwnedLedger(site.id, 1, 50)
+    ownedLedgerRows.value = res.items || []
+  } catch (error: any) {
+    appStore.showError(error?.message || '加载流水失败')
+  }
+}
+
+function formatLedgerDate(v: string) {
+  if (!v) return '-'
+  try {
+    return new Date(v).toLocaleString('zh-CN', { hour12: false })
+  } catch {
+    return v
   }
 }
 </script>

@@ -218,6 +218,7 @@ type GatewayService struct {
 	concurrencyService  *ConcurrencyService
 	claudeTokenProvider *ClaudeTokenProvider
 	sessionLimitCache   SessionLimitCache // 会话数量限制缓存（仅 Anthropic OAuth/SetupToken）
+	subSiteService      *SubSiteService   // 分站池扣费
 }
 
 type modelMappingBatchLister interface {
@@ -247,6 +248,7 @@ func NewGatewayService(
 	deferredService *DeferredService,
 	claudeTokenProvider *ClaudeTokenProvider,
 	sessionLimitCache SessionLimitCache,
+	subSiteService *SubSiteService,
 ) *GatewayService {
 	return &GatewayService{
 		accountRepo:         accountRepo,
@@ -270,6 +272,7 @@ func NewGatewayService(
 		deferredService:     deferredService,
 		claudeTokenProvider: claudeTokenProvider,
 		sessionLimitCache:   sessionLimitCache,
+		subSiteService:      subSiteService,
 	}
 }
 
@@ -3501,7 +3504,18 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 	if apiKey.GroupID != nil && apiKey.Group != nil {
 		multiplier = apiKey.Group.RateMultiplier
 	}
-	if subSiteRate := currentSubSiteConsumeRateMultiplier(ctx); subSiteRate > 0 {
+	subSiteRate := currentSubSiteConsumeRateMultiplier(ctx)
+	// 查找用户绑定的分站（走主站域名直接调 API 时 ctx 里没有分站信息）
+	var boundSubSite *SubSite
+	if s.subSiteService != nil {
+		if site, err := s.subSiteService.GetBoundSubSiteForUser(ctx, user.ID); err == nil && site != nil && site.Status == SubSiteStatusActive {
+			boundSubSite = site
+			if subSiteRate <= 0 || subSiteRate == DefaultSubSiteConsumeRate {
+				subSiteRate = normalizeConsumeRateMultiplier(site.ConsumeRateMultiplier)
+			}
+		}
+	}
+	if subSiteRate > 0 && subSiteRate != DefaultSubSiteConsumeRate {
 		multiplier *= subSiteRate
 	}
 
@@ -3696,6 +3710,10 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 			}
 			// 异步更新余额缓存
 			s.billingCacheService.QueueDeductBalance(user.ID, cost.ActualCost)
+			// 分站池扣 1× 成本（允许透支）
+			if boundSubSite != nil && subSiteRate > 0 && s.subSiteService != nil {
+				s.subSiteService.DebitPoolForConsumption(ctx, boundSubSite.ID, user.ID, usageLog.ID, cost.ActualCost, subSiteRate)
+			}
 		}
 	}
 

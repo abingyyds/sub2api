@@ -123,6 +123,58 @@ func (s *SubSiteService) ValidateRegistration(ctx context.Context, inviteCode st
 	return nil
 }
 
+// EnsureUserScopeMatches 确认 user 的站点归属与当前请求域名匹配。
+// 规则：
+//   - 当前在主站（ctx 中无分站）：user 未绑定任何分站才允许。
+//   - 当前在分站 A：user 未绑定 → 允许（登录成功后由调用方绑定）；user 绑到 A → 允许；
+//     user 绑到其他分站 → 返回 ErrSubSiteUserScopeMismatch。
+func (s *SubSiteService) EnsureUserScopeMatches(ctx context.Context, userID int64) error {
+	if s == nil || s.repo == nil || userID <= 0 {
+		return nil
+	}
+	current, _ := s.GetCurrent(ctx)
+	bound, err := s.repo.GetBoundSubSiteByUserID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if current == nil {
+		if bound != nil {
+			return ErrSubSiteUserScopeMismatch
+		}
+		return nil
+	}
+	if bound == nil {
+		return nil
+	}
+	if bound.ID != current.ID {
+		return ErrSubSiteUserScopeMismatch
+	}
+	return nil
+}
+
+// BindCurrentUserStrict 在当前分站上下文下强制绑定用户；若已绑到其他分站或当前不在分站上下文则返回错误。
+func (s *SubSiteService) BindCurrentUserStrict(ctx context.Context, userID int64) error {
+	site, ok := s.GetCurrent(ctx)
+	if !ok || site == nil || userID <= 0 {
+		return nil
+	}
+	bound, err := s.repo.GetBoundSubSiteByUserID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if bound != nil && bound.ID != site.ID {
+		return ErrSubSiteUserScopeMismatch
+	}
+	if bound != nil && bound.ID == site.ID {
+		return nil
+	}
+	if err := s.repo.BindUser(ctx, site.ID, userID, "register"); err != nil {
+		return err
+	}
+	s.invalidateBoundCache(userID)
+	return nil
+}
+
 func (s *SubSiteService) ListOwnedSites(ctx context.Context, ownerUserID int64) ([]SubSite, error) {
 	if ownerUserID <= 0 {
 		return []SubSite{}, nil
@@ -255,29 +307,28 @@ func (s *SubSiteService) ActivatePaidOrder(ctx context.Context, order *PaymentOr
 
 	expiresAt := time.Now().Add(time.Duration(request.ValidityDays) * 24 * time.Hour)
 	createInput := CreateSubSiteInput{
-		OwnerUserID:            request.UserID,
-		ParentSubSiteID:        request.ParentSubSiteID,
-		Name:                   request.Site.Name,
-		Slug:                   request.Site.Slug,
-		CustomDomain:           request.Site.CustomDomain,
-		Status:                 SubSiteStatusActive,
-		SiteLogo:               request.Site.SiteLogo,
-		SiteFavicon:            request.Site.SiteFavicon,
-		SiteSubtitle:           request.Site.SiteSubtitle,
-		Announcement:           request.Site.Announcement,
-		ContactInfo:            request.Site.ContactInfo,
-		DocURL:                 request.Site.DocURL,
-		HomeContent:            request.Site.HomeContent,
-		ThemeTemplate:          request.Site.ThemeTemplate,
-		ThemeConfig:            request.Site.ThemeConfig,
-		CustomConfig:           request.Site.CustomConfig,
-		RegistrationMode:       request.Site.RegistrationMode,
-		EnableTopup:            request.Site.EnableTopup,
-		AllowSubSite:           request.Site.AllowSubSite,
-		SubSitePriceFen:        request.Site.SubSitePriceFen,
-		SubscriptionExpiredAt:  &expiresAt,
-		GroupPriceOverrides:    request.Site.GroupPriceOverrides,
-		RechargePriceOverrides: request.Site.RechargePriceOverrides,
+		OwnerUserID:           request.UserID,
+		ParentSubSiteID:       request.ParentSubSiteID,
+		Name:                  request.Site.Name,
+		Slug:                  request.Site.Slug,
+		CustomDomain:          request.Site.CustomDomain,
+		Status:                SubSiteStatusActive,
+		SiteLogo:              request.Site.SiteLogo,
+		SiteFavicon:           request.Site.SiteFavicon,
+		SiteSubtitle:          request.Site.SiteSubtitle,
+		Announcement:          request.Site.Announcement,
+		ContactInfo:           request.Site.ContactInfo,
+		DocURL:                request.Site.DocURL,
+		HomeContent:           request.Site.HomeContent,
+		ThemeTemplate:         request.Site.ThemeTemplate,
+		ThemeConfig:           request.Site.ThemeConfig,
+		CustomConfig:          request.Site.CustomConfig,
+		RegistrationMode:      request.Site.RegistrationMode,
+		EnableTopup:           request.Site.EnableTopup,
+		AllowSubSite:          request.Site.AllowSubSite,
+		SubSitePriceFen:       request.Site.SubSitePriceFen,
+		ConsumeRateMultiplier: request.Site.ConsumeRateMultiplier,
+		SubscriptionExpiredAt: &expiresAt,
 	}
 	site, err := s.Create(ctx, createInput)
 	if err != nil {
@@ -287,12 +338,4 @@ func (s *SubSiteService) ActivatePaidOrder(ctx context.Context, order *PaymentOr
 		return nil, err
 	}
 	return site, nil
-}
-
-func (s *SubSiteService) ApplyPlanOverrides(ctx context.Context, plans []PaymentPlan) []PaymentPlan {
-	return plans
-}
-
-func (s *SubSiteService) ApplyRechargeOverrides(ctx context.Context, info *RechargeInfo) *RechargeInfo {
-	return info
 }

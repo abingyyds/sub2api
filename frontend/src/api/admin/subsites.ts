@@ -1,6 +1,5 @@
 import { apiClient } from '../client'
 import type { PaginatedResponse } from '@/types'
-import type { SubSiteGroupPriceOverride, SubSiteRechargePriceOverride } from '../payment'
 
 export interface AdminSubSite {
   id: number
@@ -32,8 +31,11 @@ export interface AdminSubSite {
   user_count?: number
   child_site_count?: number
   entry_url?: string
-  group_price_overrides?: SubSiteGroupPriceOverride[]
-  recharge_price_overrides?: SubSiteRechargePriceOverride[]
+  balance_fen?: number
+  total_topup_fen?: number
+  total_consumed_fen?: number
+  allow_online_topup?: boolean
+  allow_offline_topup?: boolean
   created_at: string
   updated_at: string
 }
@@ -61,8 +63,22 @@ export interface SaveSubSiteRequest {
   sub_site_price_fen?: number
   consume_rate_multiplier?: number
   subscription_expired_at?: string | null
-  group_price_overrides?: SubSiteGroupPriceOverride[]
-  recharge_price_overrides?: SubSiteRechargePriceOverride[]
+  allow_online_topup?: boolean
+  allow_offline_topup?: boolean
+}
+
+export interface SubSiteLedgerEntry {
+  id: number
+  sub_site_id: number
+  tx_type: string
+  delta_fen: number
+  balance_after_fen: number
+  related_user_id?: number
+  related_usage_log_id?: number
+  related_order_id?: number
+  operator_id?: number
+  note?: string
+  created_at: string
 }
 
 export interface PlatformSubSiteConfig {
@@ -116,6 +132,37 @@ export async function updatePlatformConfig(payload: PlatformSubSiteConfig): Prom
   return data
 }
 
+export async function topupPool(
+  id: number,
+  amountFen: number,
+  note: string = ''
+): Promise<AdminSubSite> {
+  const { data } = await apiClient.post<AdminSubSite>(`/admin/subsites/${id}/topup`, {
+    amount_fen: amountFen,
+    note
+  })
+  return data
+}
+
+export async function listLedger(
+  id: number,
+  page: number = 1,
+  pageSize: number = 20,
+  txType?: string
+): Promise<PaginatedResponse<SubSiteLedgerEntry>> {
+  const { data } = await apiClient.get<PaginatedResponse<SubSiteLedgerEntry>>(
+    `/admin/subsites/${id}/ledger`,
+    {
+      params: {
+        page,
+        page_size: pageSize,
+        tx_type: txType || undefined
+      }
+    }
+  )
+  return data
+}
+
 export const subSitesAPI = {
   list,
   create,
@@ -123,6 +170,8 @@ export const subSitesAPI = {
   remove,
   getPlatformConfig,
   updatePlatformConfig,
+  topupPool,
+  listLedger,
 }
 
 export default subSitesAPI

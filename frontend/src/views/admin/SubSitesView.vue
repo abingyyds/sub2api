@@ -76,16 +76,17 @@
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">层级 / 入口</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">用户 / 下级</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">下级分站售价</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">余额池（元）</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">状态</th>
                 <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">操作</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-dark-800">
               <tr v-if="loading">
-                <td colspan="7" class="px-4 py-10 text-center text-sm text-gray-500 dark:text-dark-400">加载中...</td>
+                <td colspan="8" class="px-4 py-10 text-center text-sm text-gray-500 dark:text-dark-400">加载中...</td>
               </tr>
               <tr v-else-if="items.length === 0">
-                <td colspan="7" class="px-4 py-10 text-center text-sm text-gray-500 dark:text-dark-400">还没有分站</td>
+                <td colspan="8" class="px-4 py-10 text-center text-sm text-gray-500 dark:text-dark-400">还没有分站</td>
               </tr>
               <tr v-for="item in items" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-dark-800/50">
                 <td class="px-4 py-4 align-top">
@@ -113,6 +114,11 @@
                   <div>￥{{ fenToYuan(item.sub_site_price_fen || 0) }}</div>
                   <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">{{ item.allow_sub_site ? '允许发展下级' : '未开放下级分站' }}</div>
                 </td>
+                <td class="px-4 py-4 align-top text-sm text-gray-600 dark:text-dark-300">
+                  <div class="font-medium text-gray-900 dark:text-white">￥{{ fenToYuan(item.balance_fen || 0) }}</div>
+                  <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">累充 ￥{{ fenToYuan(item.total_topup_fen || 0) }}</div>
+                  <div class="text-xs text-gray-500 dark:text-dark-400">累消 ￥{{ fenToYuan(item.total_consumed_fen || 0) }}</div>
+                </td>
                 <td class="px-4 py-4 align-top">
                   <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium"
                     :class="item.status === 'active'
@@ -125,6 +131,8 @@
                 </td>
                 <td class="px-4 py-4 align-top text-right">
                   <div class="flex justify-end gap-2">
+                    <button class="btn btn-secondary btn-sm" @click="openTopup(item)">充值</button>
+                    <button class="btn btn-secondary btn-sm" @click="openLedger(item)">流水</button>
                     <button class="btn btn-secondary btn-sm" @click="openEdit(item)">编辑</button>
                     <button class="btn btn-secondary btn-sm text-red-600 dark:text-red-300" @click="askDelete(item)">删除</button>
                   </div>
@@ -244,48 +252,6 @@
             <input v-model.number="formSubSitePriceYuan" type="number" min="0" step="1" class="input mt-1 w-full" />
           </div>
         </div>
-
-        <div>
-          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">订阅套餐售价覆盖</h3>
-          <div class="mt-3 space-y-3">
-            <div v-for="plan in baseSubscriptionPlans" :key="plan.key" class="grid gap-3 rounded-2xl border border-gray-100 px-4 py-3 dark:border-dark-700 md:grid-cols-[1fr_140px]">
-              <div>
-                <div class="font-medium text-gray-900 dark:text-white">{{ plan.name }}</div>
-                <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">默认价：￥{{ fenToYuan(plan.amount_fen) }}</div>
-              </div>
-              <input
-                :value="groupPriceInputs[plan.group_id] ?? ''"
-                type="number"
-                min="0"
-                step="1"
-                class="input w-full"
-                placeholder="自定义售价"
-                @input="updateGroupPrice(plan.group_id, $event)"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">充值套餐售价覆盖</h3>
-          <div class="mt-3 space-y-3">
-            <div v-for="plan in baseRechargePlans" :key="plan.key" class="grid gap-3 rounded-2xl border border-gray-100 px-4 py-3 dark:border-dark-700 md:grid-cols-[1fr_140px]">
-              <div>
-                <div class="font-medium text-gray-900 dark:text-white">{{ plan.name }}</div>
-                <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">默认价：￥{{ fenToYuan(plan.pay_amount_fen) }} / 到账 ${{ plan.balance_amount.toFixed(2) }}</div>
-              </div>
-              <input
-                :value="rechargePriceInputs[plan.key] ?? ''"
-                type="number"
-                min="0"
-                step="1"
-                class="input w-full"
-                placeholder="自定义售价"
-                @input="updateRechargePrice(plan.key, $event)"
-              />
-            </div>
-          </div>
-        </div>
       </div>
 
       <template #footer>
@@ -306,6 +272,64 @@
       @confirm="handleDelete"
       @cancel="showDeleteDialog = false"
     />
+
+    <BaseDialog :show="showTopupDialog" title="给分站池充值" @close="showTopupDialog = false">
+      <div v-if="topupTarget" class="space-y-4">
+        <div class="rounded-2xl border border-gray-200 px-4 py-3 text-sm dark:border-dark-700">
+          <div class="font-medium text-gray-900 dark:text-white">{{ topupTarget.name }}</div>
+          <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">当前池余额：￥{{ fenToYuan(topupTarget.balance_fen || 0) }}</div>
+        </div>
+        <div>
+          <label class="input-label">充值金额（元）</label>
+          <input v-model.number="topupAmountYuan" type="number" min="0" step="1" class="input mt-1 w-full" />
+        </div>
+        <div>
+          <label class="input-label">备注（可选）</label>
+          <input v-model="topupNote" class="input mt-1 w-full" />
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-3">
+          <button class="btn btn-secondary" @click="showTopupDialog = false">取消</button>
+          <button class="btn btn-primary" :disabled="topupSubmitting" @click="handleTopup">{{ topupSubmitting ? '提交中...' : '确认充值' }}</button>
+        </div>
+      </template>
+    </BaseDialog>
+
+    <BaseDialog :show="showLedgerDialog" title="分站池流水" width="wide" @close="showLedgerDialog = false">
+      <div v-if="ledgerTarget" class="space-y-3">
+        <div class="text-sm text-gray-600 dark:text-dark-300">
+          {{ ledgerTarget.name }} · 当前余额 ￥{{ fenToYuan(ledgerTarget.balance_fen || 0) }}
+        </div>
+        <div class="max-h-96 overflow-y-auto">
+          <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-dark-700">
+            <thead class="bg-gray-50 dark:bg-dark-800/60">
+              <tr>
+                <th class="px-3 py-2 text-left text-xs font-semibold uppercase">时间</th>
+                <th class="px-3 py-2 text-left text-xs font-semibold uppercase">类型</th>
+                <th class="px-3 py-2 text-right text-xs font-semibold uppercase">变动</th>
+                <th class="px-3 py-2 text-right text-xs font-semibold uppercase">变动后</th>
+                <th class="px-3 py-2 text-left text-xs font-semibold uppercase">备注</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-dark-800">
+              <tr v-for="row in ledgerRows" :key="row.id">
+                <td class="px-3 py-2 text-xs text-gray-500 dark:text-dark-400">{{ formatDate(row.created_at) }}</td>
+                <td class="px-3 py-2 text-xs">{{ row.tx_type }}</td>
+                <td class="px-3 py-2 text-right text-xs" :class="row.delta_fen >= 0 ? 'text-emerald-600' : 'text-red-600'">
+                  {{ row.delta_fen >= 0 ? '+' : '' }}{{ fenToYuan(row.delta_fen) }}
+                </td>
+                <td class="px-3 py-2 text-right text-xs">{{ fenToYuan(row.balance_after_fen) }}</td>
+                <td class="px-3 py-2 text-xs text-gray-500 dark:text-dark-400">{{ row.note || '-' }}</td>
+              </tr>
+              <tr v-if="ledgerRows.length === 0">
+                <td colspan="5" class="px-3 py-6 text-center text-xs text-gray-400">暂无流水</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </BaseDialog>
   </AppLayout>
 </template>
 
@@ -314,8 +338,7 @@ import { onMounted, reactive, ref } from 'vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
-import { subSitesAPI, type AdminSubSite, type PlatformSubSiteConfig, type SaveSubSiteRequest } from '@/api/admin/subsites'
-import { paymentAPI, type PaymentPlan, type RechargePlan } from '@/api/payment'
+import { subSitesAPI, type AdminSubSite, type PlatformSubSiteConfig, type SaveSubSiteRequest, type SubSiteLedgerEntry } from '@/api/admin/subsites'
 import { useAppStore } from '@/stores'
 
 const appStore = useAppStore()
@@ -327,8 +350,6 @@ const savingPlatform = ref(false)
 const items = ref<AdminSubSite[]>([])
 const page = ref(1)
 const pages = ref(1)
-const baseSubscriptionPlans = ref<PaymentPlan[]>([])
-const baseRechargePlans = ref<RechargePlan[]>([])
 
 const filters = reactive({
   search: '',
@@ -351,8 +372,6 @@ const showDeleteDialog = ref(false)
 const editingId = ref<number | null>(null)
 const deleteTarget = ref<AdminSubSite | null>(null)
 const formSubSitePriceYuan = ref<number | null>(null)
-const groupPriceInputs = reactive<Record<number, string>>({})
-const rechargePriceInputs = reactive<Record<string, string>>({})
 
 const form = reactive<SaveSubSiteRequest>({
   owner_user_id: 0,
@@ -376,12 +395,10 @@ const form = reactive<SaveSubSiteRequest>({
   allow_sub_site: false,
   sub_site_price_fen: 0,
   subscription_expired_at: null,
-  group_price_overrides: [],
-  recharge_price_overrides: [],
 })
 
 onMounted(async () => {
-  await Promise.all([loadPlatformConfig(), loadCatalog(), loadData(1)])
+  await Promise.all([loadPlatformConfig(), loadData(1)])
 })
 
 function fenToYuan(value: number) {
@@ -419,47 +436,6 @@ function parseDateTimeLocal(value?: string | null): string | null {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return null
   return date.toISOString()
-}
-
-function updateGroupPrice(groupId: number, event: Event) {
-  groupPriceInputs[groupId] = (event.target as HTMLInputElement).value
-}
-
-function updateRechargePrice(planKey: string, event: Event) {
-  rechargePriceInputs[planKey] = (event.target as HTMLInputElement).value
-}
-
-function buildGroupOverrides() {
-  return Object.entries(groupPriceInputs)
-    .map(([groupId, value]) => {
-      const priceFen = parseYuanToFen(value)
-      if (priceFen === null) return null
-      return { group_id: Number(groupId), price_fen: priceFen }
-    })
-    .filter(Boolean) as Array<{ group_id: number; price_fen: number }>
-}
-
-function buildRechargeOverrides() {
-  return Object.entries(rechargePriceInputs)
-    .map(([planKey, value]) => {
-      const priceFen = parseYuanToFen(value)
-      if (priceFen === null) return null
-      return { plan_key: planKey, pay_amount_fen: priceFen }
-    })
-    .filter(Boolean) as Array<{ plan_key: string; pay_amount_fen: number }>
-}
-
-async function loadCatalog() {
-  try {
-    const [plans, rechargeInfo] = await Promise.all([
-      paymentAPI.getPlans(),
-      paymentAPI.getRechargeInfo()
-    ])
-    baseSubscriptionPlans.value = plans.filter(plan => (plan.type || 'subscription') === 'subscription')
-    baseRechargePlans.value = rechargeInfo.plans || []
-  } catch (error: any) {
-    appStore.showError(error?.message || '加载套餐目录失败')
-  }
 }
 
 async function loadPlatformConfig() {
@@ -529,8 +505,6 @@ function resetForm() {
   form.sub_site_price_fen = 0
   form.subscription_expired_at = null
   formSubSitePriceYuan.value = null
-  Object.keys(groupPriceInputs).forEach((key) => delete groupPriceInputs[Number(key)])
-  Object.keys(rechargePriceInputs).forEach((key) => delete rechargePriceInputs[key])
 }
 
 function openCreate() {
@@ -562,14 +536,6 @@ function openEdit(item: AdminSubSite) {
   form.sub_site_price_fen = item.sub_site_price_fen || 0
   form.subscription_expired_at = formatDateTimeLocal(item.subscription_expired_at)
   formSubSitePriceYuan.value = item.sub_site_price_fen ? item.sub_site_price_fen / 100 : null
-  Object.keys(groupPriceInputs).forEach((key) => delete groupPriceInputs[Number(key)])
-  Object.keys(rechargePriceInputs).forEach((key) => delete rechargePriceInputs[key])
-  ;(item.group_price_overrides || []).forEach(override => {
-    groupPriceInputs[override.group_id] = override.price_fen ? String(override.price_fen / 100) : ''
-  })
-  ;(item.recharge_price_overrides || []).forEach(override => {
-    rechargePriceInputs[override.plan_key] = override.pay_amount_fen ? String(override.pay_amount_fen / 100) : ''
-  })
   showDialog.value = true
 }
 
@@ -581,8 +547,6 @@ async function handleSave() {
   saving.value = true
   try {
     form.sub_site_price_fen = parseYuanToFen(formSubSitePriceYuan.value) || 0
-    form.group_price_overrides = buildGroupOverrides()
-    form.recharge_price_overrides = buildRechargeOverrides()
     const payload: SaveSubSiteRequest = {
       owner_user_id: form.owner_user_id,
       parent_sub_site_id: normalizePositiveInt(form.parent_sub_site_id),
@@ -605,8 +569,6 @@ async function handleSave() {
       allow_sub_site: form.allow_sub_site,
       sub_site_price_fen: form.sub_site_price_fen,
       subscription_expired_at: parseDateTimeLocal(form.subscription_expired_at),
-      group_price_overrides: form.group_price_overrides,
-      recharge_price_overrides: form.recharge_price_overrides,
     }
     if (editingId.value) {
       await subSitesAPI.update(editingId.value, payload)
@@ -639,6 +601,65 @@ async function handleDelete() {
     await loadData(page.value)
   } catch (error: any) {
     appStore.showError(error?.message || '删除分站失败')
+  }
+}
+
+const showTopupDialog = ref(false)
+const topupTarget = ref<AdminSubSite | null>(null)
+const topupAmountYuan = ref<number>(0)
+const topupNote = ref('')
+const topupSubmitting = ref(false)
+
+function openTopup(item: AdminSubSite) {
+  topupTarget.value = item
+  topupAmountYuan.value = 0
+  topupNote.value = ''
+  showTopupDialog.value = true
+}
+
+async function handleTopup() {
+  if (!topupTarget.value) return
+  const amountFen = Math.round((topupAmountYuan.value || 0) * 100)
+  if (amountFen <= 0) {
+    appStore.showError('请输入有效金额')
+    return
+  }
+  topupSubmitting.value = true
+  try {
+    await subSitesAPI.topupPool(topupTarget.value.id, amountFen, topupNote.value)
+    appStore.showSuccess('充值成功')
+    showTopupDialog.value = false
+    topupTarget.value = null
+    await loadData(page.value)
+  } catch (error: any) {
+    appStore.showError(error?.message || '充值失败')
+  } finally {
+    topupSubmitting.value = false
+  }
+}
+
+const showLedgerDialog = ref(false)
+const ledgerTarget = ref<AdminSubSite | null>(null)
+const ledgerRows = ref<SubSiteLedgerEntry[]>([])
+
+async function openLedger(item: AdminSubSite) {
+  ledgerTarget.value = item
+  ledgerRows.value = []
+  showLedgerDialog.value = true
+  try {
+    const res = await subSitesAPI.listLedger(item.id, 1, 50)
+    ledgerRows.value = res.items || []
+  } catch (error: any) {
+    appStore.showError(error?.message || '加载流水失败')
+  }
+}
+
+function formatDate(v: string) {
+  if (!v) return '-'
+  try {
+    return new Date(v).toLocaleString('zh-CN', { hour12: false })
+  } catch {
+    return v
   }
 }
 </script>

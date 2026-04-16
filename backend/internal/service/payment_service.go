@@ -226,9 +226,6 @@ func (s *PaymentService) GetPlans(ctx context.Context) ([]PaymentPlan, error) {
 	if plans == nil {
 		plans = []PaymentPlan{}
 	}
-	if s.subSiteService != nil {
-		plans = s.subSiteService.ApplyPlanOverrides(ctx, plans)
-	}
 	return plans, nil
 }
 
@@ -374,9 +371,6 @@ func (s *PaymentService) GetRechargeInfo(ctx context.Context) (*RechargeInfo, er
 		if err := json.Unmarshal([]byte(plansJSON), &info.Plans); err != nil {
 			log.Printf("[Payment] Failed to parse recharge_plans JSON: %v", err)
 		}
-	}
-	if s.subSiteService != nil {
-		info = s.subSiteService.ApplyRechargeOverrides(ctx, info)
 	}
 
 	return info, nil
@@ -905,6 +899,102 @@ func (s *PaymentService) CreateSubSiteActivationOrder(ctx context.Context, userI
 		return nil, fmt.Errorf("save sub-site activation request: %w", err)
 	}
 	return order, nil
+}
+
+// CreateSubSiteTopupOrder 分站主从主站支付通道向自己的分站池充值。
+// 订单成功后在 handlePaymentSuccess 中将 amountFen 入账到 sub_sites.balance_fen。
+// siteID 通过 PlanKey 编码（subsite_topup:{id}）传递到回调路径。
+func (s *PaymentService) CreateSubSiteTopupOrder(ctx context.Context, userID int64, siteID int64, amountFen int, payMethod string) (*PaymentOrder, error) {
+	enabled, _ := s.settingService.GetSettingValue(ctx, SettingKeyPaymentEnabled)
+	if enabled != "true" {
+		return nil, ErrPaymentDisabled
+	}
+	if amountFen <= 0 {
+		return nil, infraerrors.BadRequest("INVALID_AMOUNT", "topup amount must be positive")
+	}
+	if s.subSiteService == nil {
+		return nil, infraerrors.ServiceUnavailable("SUBSITE_SERVICE_UNAVAILABLE", "sub-site service is unavailable")
+	}
+	site, err := s.subSiteService.repo.GetByID(ctx, siteID)
+	if err != nil {
+		return nil, err
+	}
+	if site.OwnerUserID != userID {
+		return nil, ErrSubSiteForbidden
+	}
+	if !site.AllowOnlineTopup {
+		return nil, infraerrors.Forbidden("SUBSITE_ONLINE_TOPUP_DISABLED", "online topup is disabled for this sub-site")
+	}
+
+	if payMethod == "" {
+		payMethod = "wechat"
+	}
+	var payMethodStr string
+	switch payMethod {
+	case "alipay":
+		if !s.isAlipayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "alipay payment is not configured")
+		}
+		payMethodStr = PaymentMethodAlipayNative
+	case "epay_alipay":
+		if !s.isEpayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "epay payment is not configured")
+		}
+		payMethodStr = PaymentMethodEpayAlipay
+	case "epay_wxpay":
+		if !s.isEpayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "epay payment is not configured")
+		}
+		payMethodStr = PaymentMethodEpayWxpay
+	default:
+		if !s.isWechatPayReady(ctx) {
+			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "wechat payment is not configured")
+		}
+		payMethodStr = PaymentMethodWechatNative
+	}
+
+	order := &PaymentOrder{
+		OrderNo:   generateOrderNo(),
+		UserID:    userID,
+		PlanKey:   fmt.Sprintf("%s:%d", PaymentOrderTypeSubSiteTopup, siteID),
+		AmountFen: amountFen,
+		Status:    PaymentOrderStatusPending,
+		PayMethod: payMethodStr,
+		OrderType: PaymentOrderTypeSubSiteTopup,
+		ExpiredAt: time.Now().Add(30 * time.Minute),
+	}
+
+	description := fmt.Sprintf("分站 %s 余额充值", site.Name)
+	var codeURL string
+	switch payMethod {
+	case "alipay":
+		codeURL, err = s.createAlipayNativeOrder(ctx, order, description)
+	case "epay_alipay":
+		codeURL, err = s.createEpayOrder(ctx, order, description, "alipay")
+	case "epay_wxpay":
+		codeURL, err = s.createEpayOrder(ctx, order, description, "wxpay")
+	default:
+		codeURL, err = s.createWechatNativeOrder(ctx, order, description)
+	}
+	if err != nil {
+		log.Printf("[Payment] Failed to create %s native order for sub-site topup: %v", payMethod, err)
+		return nil, err
+	}
+	order.CodeURL = &codeURL
+
+	if err := s.orderRepo.Create(ctx, order); err != nil {
+		return nil, fmt.Errorf("save sub-site topup order: %w", err)
+	}
+	return order, nil
+}
+
+// parseSubSiteTopupOrderSiteID 从 PlanKey（格式 "subsite_topup:{id}"）提取分站 id。
+func parseSubSiteTopupOrderSiteID(planKey string) (int64, error) {
+	prefix := PaymentOrderTypeSubSiteTopup + ":"
+	if !strings.HasPrefix(planKey, prefix) {
+		return 0, fmt.Errorf("plan key is not a sub-site topup key: %q", planKey)
+	}
+	return strconv.ParseInt(strings.TrimPrefix(planKey, prefix), 10, 64)
 }
 
 // QueryOrder 查询订单状态
@@ -1627,6 +1717,19 @@ func (s *PaymentService) handlePaymentSuccess(ctx context.Context, order *Paymen
 			}
 		}
 		log.Printf("[Payment] Order %s paid successfully, sub-site activated for user %d", order.OrderNo, order.UserID)
+	} else if order.OrderType == PaymentOrderTypeSubSiteTopup {
+		if s.subSiteService != nil {
+			siteID, err := parseSubSiteTopupOrderSiteID(order.PlanKey)
+			if err != nil {
+				log.Printf("[Payment] Sub-site topup order %s has invalid plan_key %q: %v", order.OrderNo, order.PlanKey, err)
+				return fmt.Errorf("parse sub-site topup order: %w", err)
+			}
+			if err := s.subSiteService.CreditPoolFromPayment(ctx, siteID, int64(order.AmountFen), order.ID); err != nil {
+				log.Printf("[Payment] Failed to credit sub-site pool for order %s site %d: %v", order.OrderNo, siteID, err)
+				return fmt.Errorf("credit sub-site pool: %w", err)
+			}
+			log.Printf("[Payment] Order %s paid successfully, sub-site %d pool +%d fen", order.OrderNo, siteID, order.AmountFen)
+		}
 	} else {
 		// 分配订阅
 		_, _, err := s.subscriptionService.AssignOrExtendSubscription(ctx, &AssignSubscriptionInput{
