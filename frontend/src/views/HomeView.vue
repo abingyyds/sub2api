@@ -552,7 +552,7 @@
               class="btn btn-primary flex-1"
               @click="goToSubscriptions"
             >
-              {{ t('pricing.payment.viewSubscription') }}
+              {{ t('pricing.payment.viewOrderHistory') }}
             </button>
           </div>
         </div>
@@ -714,7 +714,7 @@ onMounted(() => {
   initTheme()
 
   // Check auth state
-  authStore.checkAuth()
+  void authStore.checkAuth()
 
   // Ensure public settings are loaded (will use cache if already loaded from injected config)
   if (!appStore.publicSettingsLoaded) {
@@ -816,6 +816,7 @@ function startPolling() {
       if (order.status === 'paid') {
         paymentStatus.value = 'paid'
         clearTimers()
+        await syncPaymentSuccessState()
       } else if (order.status === 'closed') {
         paymentStatus.value = 'closed'
         clearTimers()
@@ -826,6 +827,16 @@ function startPolling() {
   }, 3000)
 }
 
+async function syncPaymentSuccessState() {
+  try {
+    await authStore.refreshUser()
+    appStore.showSuccess(t('pricing.payment.paymentSuccessToast'), 5000)
+  } catch (error) {
+    console.error('Failed to refresh home payment success state:', error)
+    appStore.showError('支付成功，但页面数据刷新失败，请手动刷新页面查看最新状态')
+  }
+}
+
 function cancelPayment() {
   showPaymentModal.value = false
   clearTimers()
@@ -834,7 +845,13 @@ function cancelPayment() {
 function goToSubscriptions() {
   showPaymentModal.value = false
   clearTimers()
-  router.push('/subscriptions')
+  router.push({
+    path: '/order-history',
+    query: {
+      highlight: currentOrderNo.value,
+      success: '1'
+    }
+  })
 }
 </script>
 

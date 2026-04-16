@@ -58,13 +58,6 @@ export function clearAuthToken(): void {
  */
 export async function login(credentials: LoginRequest): Promise<LoginResponse> {
   const { data } = await apiClient.post<LoginResponse>('/auth/login', credentials)
-
-  // Only store token if 2FA is not required
-  if (!isTotp2FARequired(data)) {
-    setAuthToken(data.access_token)
-    localStorage.setItem('auth_user', JSON.stringify(data.user))
-  }
-
   return data
 }
 
@@ -75,11 +68,6 @@ export async function login(credentials: LoginRequest): Promise<LoginResponse> {
  */
 export async function login2FA(request: TotpLogin2FARequest): Promise<AuthResponse> {
   const { data } = await apiClient.post<AuthResponse>('/auth/login/2fa', request)
-
-  // Store token and user data
-  setAuthToken(data.access_token)
-  localStorage.setItem('auth_user', JSON.stringify(data.user))
-
   return data
 }
 
@@ -90,11 +78,6 @@ export async function login2FA(request: TotpLogin2FARequest): Promise<AuthRespon
  */
 export async function register(userData: RegisterRequest): Promise<AuthResponse> {
   const { data } = await apiClient.post<AuthResponse>('/auth/register', userData)
-
-  // Store token and user data
-  setAuthToken(data.access_token)
-  localStorage.setItem('auth_user', JSON.stringify(data.user))
-
   return data
 }
 
@@ -103,7 +86,15 @@ export async function register(userData: RegisterRequest): Promise<AuthResponse>
  * @returns User profile data
  */
 export async function getCurrentUser() {
-  return apiClient.get<CurrentUserResponse>('/auth/me')
+  return apiClient.get<CurrentUserResponse>('/auth/me', {
+    headers: {
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache'
+    },
+    params: {
+      _ts: Date.now()
+    }
+  })
 }
 
 /**
@@ -222,8 +213,8 @@ export async function resetPassword(request: ResetPasswordRequest): Promise<Rese
 }
 
 export async function getActiveAnnouncements(): Promise<Announcement[]> {
-  const { data } = await apiClient.get<Announcement[]>('/settings/announcements')
-  return data
+  const { data } = await apiClient.get<Announcement[] | null>('/settings/announcements')
+  return Array.isArray(data) ? data : []
 }
 
 /**

@@ -16,6 +16,7 @@ func RegisterOrgRoutes(
 ) {
 	org := v1.Group("/org")
 	org.Use(gin.HandlerFunc(jwtAuth))
+	org.Use(middleware.NoStore())
 	org.Use(gin.HandlerFunc(orgAuth))
 	{
 		// Dashboard

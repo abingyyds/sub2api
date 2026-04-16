@@ -654,7 +654,7 @@
                   class="w-full rounded-xl bg-primary-600 py-3 font-bold text-white hover:bg-primary-700 transition shadow-md"
                   @click="goAfterPayment"
                 >
-                  {{ paymentOrderType === 'subscription' ? t('pricing.payment.viewSubscription') : t('recharge.payment.viewDashboard') }}
+                  {{ t('pricing.payment.viewOrderHistory') }}
                 </button>
               </MagneticButton>
             </div>
@@ -667,7 +667,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import QRCode from 'qrcode'
 import AppLayout from '@/components/layout/AppLayout.vue'
@@ -680,6 +680,7 @@ import { useAppStore, useAuthStore, useSubscriptionStore } from '@/stores'
 
 const { t } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const appStore = useAppStore()
 const authStore = useAuthStore()
 const subscriptionStore = useSubscriptionStore()
@@ -705,6 +706,7 @@ const paymentOrderType = ref<'subscription' | 'recharge'>('subscription')
 const currentOrderNo = ref('')
 const currentOrderAmount = ref('')
 const countdown = ref(0)
+const paymentSuccessHandled = ref(false)
 const customInput = ref('')
 const activeOrderActionKey = ref('')
 
@@ -1148,6 +1150,11 @@ function setActiveTab(tab: 'newcomer' | 'subscription' | 'recharge') {
 }
 
 onMounted(async () => {
+  const requestedTab = route.query.tab
+  if (requestedTab === 'newcomer' || requestedTab === 'subscription' || requestedTab === 'recharge') {
+    activeTab.value = requestedTab
+  }
+
   try {
     const allPlans = await paymentAPI.getPlans()
     plans.value = allPlans.filter(p => (p.type || 'subscription') === 'subscription')
@@ -1345,6 +1352,7 @@ async function showQRModal(order: { order_no: string; code_url: string | null; a
   currentOrderNo.value = order.order_no
   currentOrderAmount.value = (order.amount_fen / 100).toFixed(order.amount_fen % 100 === 0 ? 0 : 2)
   paymentStatus.value = 'pending'
+  paymentSuccessHandled.value = false
   qrLoading.value = true
   showPaymentModal.value = true
 
@@ -1381,7 +1389,8 @@ function startPolling() {
   pollTimer = setInterval(async () => {
     try {
       const order = await paymentAPI.queryOrder(currentOrderNo.value)
-      if (order.status === 'paid') {
+      if (order.status === 'paid' && !paymentSuccessHandled.value) {
+        paymentSuccessHandled.value = true
         paymentStatus.value = 'paid'
         clearTimers()
         await syncPaymentSuccessState()
@@ -1409,7 +1418,15 @@ async function syncPaymentSuccessState() {
   if (failed) {
     console.error('Failed to refresh payment success state:', failed.reason)
     appStore.showError('支付成功，但页面数据刷新失败，请手动刷新页面查看最新状态')
+    return
   }
+
+  appStore.showSuccess(
+    paymentOrderType.value === 'subscription'
+      ? t('pricing.payment.paymentSuccessToast')
+      : t('pricing.payment.rechargeSuccessToast'),
+    5000
+  )
 }
 
 function cancelPayment() {
@@ -1422,11 +1439,13 @@ function goAfterPayment() {
   showPaymentModal.value = false
   clearTimers()
   activeOrderActionKey.value = ''
-  if (paymentOrderType.value === 'subscription') {
-    router.push('/subscriptions')
-  } else {
-    router.push('/dashboard')
-  }
+  router.push({
+    path: '/order-history',
+    query: {
+      highlight: currentOrderNo.value,
+      success: '1'
+    }
+  })
 }
 </script>
 

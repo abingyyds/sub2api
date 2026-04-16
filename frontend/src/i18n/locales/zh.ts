@@ -3676,11 +3676,14 @@ export default {
       waitingPayment: '等待支付...',
       paymentSuccess: '支付成功！订阅已自动激活',
       rechargeSuccess: '充值成功！余额已到账',
+      paymentSuccessToast: '支付成功，订阅已激活，页面已自动刷新',
+      rechargeSuccessToast: '充值成功，余额已到账，页面已自动刷新',
       orderExpired: '订单已过期，请重新下单',
       expiresIn: '剩余支付时间 {minutes} 分 {seconds} 秒',
       cancel: '取消',
       viewSubscription: '查看订阅',
       viewDashboard: '查看仪表盘',
+      viewOrderHistory: '查看订单记录',
       createFailed: '创建订单失败，请稍后重试',
       noMethodsAvailable: '当前没有可用的支付方式，请联系管理员检查支付配置'
     }
@@ -3709,6 +3712,7 @@ export default {
       expiresIn: '剩余支付时间 {minutes} 分 {seconds} 秒',
       cancel: '取消',
       viewDashboard: '查看仪表盘',
+      viewOrderHistory: '查看订单记录',
       createFailed: '创建订单失败，请稍后重试',
       noMethodsAvailable: '当前没有可用的支付方式，请联系管理员检查支付配置'
     }
@@ -3754,11 +3758,16 @@ export default {
     invoiceNotRequested: '未申请',
     invoiceRequested: '待处理',
     invoiceProcessed: '已处理',
+    invoiceUnsupported: '不支持',
     invoiceSubmitted: '开票申请已提交',
     invoiceError: '提交开票申请失败',
     noOrderSelected: '请至少选择一笔已支付的订单',
     copyOrderNo: '复制订单号',
     copied: '已复制',
+    legacySubscriptionSource: '历史订阅：{group}',
+    justPaid: '刚支付',
+    paymentSuccessArrived: '支付已完成，订单记录和账户数据已为您自动刷新。',
+    refreshOrders: '刷新订单',
   },
 
   // Contact Us

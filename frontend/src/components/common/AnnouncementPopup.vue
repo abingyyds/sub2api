@@ -91,8 +91,9 @@ function formatDisplayDate(ann: Announcement): string {
 }
 
 watch(() => props.announcements, (newVal) => {
-  if (!newVal.length || isDismissedToday()) return
-  unreadAnnouncements.value = newVal.filter(ann => !isDismissedPermanently(ann.id))
+  const safeAnnouncements = Array.isArray(newVal) ? newVal : []
+  if (!safeAnnouncements.length || isDismissedToday()) return
+  unreadAnnouncements.value = safeAnnouncements.filter(ann => !isDismissedPermanently(ann.id))
   currentIndex.value = 0
 }, { immediate: true })
 </script>
