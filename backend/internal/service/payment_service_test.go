@@ -313,3 +313,42 @@ func TestPaymentServiceQueryOrderRepairsPendingWechatOrderViaUpstreamQuery(t *te
 	require.Equal(t, 35.0, userRepo.user.Balance)
 	require.Equal(t, 1, orderRepo.compareCalls)
 }
+
+func TestLegacySubscriptionOrderStatus(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name               string
+		subscriptionStatus string
+		expected           string
+	}{
+		{
+			name:               "active subscription stays paid",
+			subscriptionStatus: SubscriptionStatusActive,
+			expected:           PaymentOrderStatusPaid,
+		},
+		{
+			name:               "expired subscription stays paid",
+			subscriptionStatus: SubscriptionStatusExpired,
+			expected:           PaymentOrderStatusPaid,
+		},
+		{
+			name:               "suspended subscription becomes closed",
+			subscriptionStatus: SubscriptionStatusSuspended,
+			expected:           PaymentOrderStatusClosed,
+		},
+		{
+			name:               "unknown status is treated as closed",
+			subscriptionStatus: "revoked",
+			expected:           PaymentOrderStatusClosed,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			require.Equal(t, tc.expected, legacySubscriptionOrderStatus(tc.subscriptionStatus))
+		})
+	}
+}
