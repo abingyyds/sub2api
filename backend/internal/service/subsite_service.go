@@ -50,6 +50,9 @@ type SubSiteRepository interface {
 	Update(ctx context.Context, site *SubSite) error
 	Delete(ctx context.Context, id int64) error
 	BindUser(ctx context.Context, siteID int64, userID int64, source string) error
+	// 级联停用：把 sub_sites 中 parent 链包含 rootID 的所有后代（递归）status 置为 newStatus。
+	// 返回受影响的分站 id 列表。
+	CascadeUpdateStatus(ctx context.Context, rootID int64, newStatus string) ([]int64, error)
 	// 分站余额池：原子增减，返回变动后余额（正数入账、负数出账；允许负余额：透支在业务层记 warn）
 	AdjustBalance(ctx context.Context, siteID int64, deltaFen int64, entry SubSiteLedgerEntry) (int64, error)
 	ListLedger(ctx context.Context, siteID int64, params pagination.PaginationParams, txType string) ([]SubSiteLedgerEntry, *pagination.PaginationResult, error)
@@ -197,16 +200,38 @@ func boolValue(value *bool, fallback bool) bool {
 	return *value
 }
 
-func (s *SubSiteService) resolveParent(ctx context.Context, parentID *int64) (*SubSite, int, error) {
+// resolveParent 解析父分站并计算新层级。
+// excludeID 用于 Update 场景：防止把自己挂到自己或自己的后代之下形成环。
+// 通过沿 parent 链向上遍历（以 MaxSubSiteLevelHardLimit 作为安全上界），若遇到 excludeID 即判定为环。
+func (s *SubSiteService) resolveParent(ctx context.Context, parentID *int64, excludeID int64) (*SubSite, int, error) {
 	if parentID == nil || *parentID <= 0 {
 		return nil, 1, nil
+	}
+	if excludeID > 0 && *parentID == excludeID {
+		return nil, 0, ErrSubSiteLevelExceeded
 	}
 	parent, err := s.repo.GetByID(ctx, *parentID)
 	if err != nil {
 		return nil, 0, ErrSubSiteParentNotFound
 	}
+	// 沿 parent 链向上遍历验证无环
+	cursor := parent
+	for hop := 0; hop < MaxSubSiteLevelHardLimit+1 && cursor != nil; hop++ {
+		if excludeID > 0 && cursor.ID == excludeID {
+			return nil, 0, ErrSubSiteLevelExceeded
+		}
+		if cursor.ParentSubSiteID == nil || *cursor.ParentSubSiteID <= 0 {
+			break
+		}
+		next, err := s.repo.GetByID(ctx, *cursor.ParentSubSiteID)
+		if err != nil {
+			return nil, 0, ErrSubSiteParentNotFound
+		}
+		cursor = next
+	}
+	maxLevel := s.MaxLevel(ctx)
 	level := parent.Level + 1
-	if level > MaxSubSiteLevel {
+	if level > maxLevel {
 		return nil, 0, ErrSubSiteLevelExceeded
 	}
 	return parent, level, nil
@@ -313,7 +338,7 @@ func (s *SubSiteService) Create(ctx context.Context, input CreateSubSiteInput) (
 			return nil, ErrSubSiteDomainExists
 		}
 	}
-	parent, level, err := s.resolveParent(ctx, input.ParentSubSiteID)
+	parent, level, err := s.resolveParent(ctx, input.ParentSubSiteID, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -371,7 +396,7 @@ func (s *SubSiteService) Update(ctx context.Context, input UpdateSubSiteInput) (
 			return nil, ErrSubSiteDomainExists
 		}
 	}
-	parent, level, err := s.resolveParent(ctx, input.ParentSubSiteID)
+	parent, level, err := s.resolveParent(ctx, input.ParentSubSiteID, input.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -410,6 +435,13 @@ func (s *SubSiteService) Update(ctx context.Context, input UpdateSubSiteInput) (
 	}
 	if err := s.repo.Update(ctx, current); err != nil {
 		return nil, err
+	}
+	// 级联停用：当 root 从非 disabled 变为 disabled 时把后代也停掉；
+	// 这里不做反向级联激活（避免误激活已故意停掉的子站）。
+	if current.Status == SubSiteStatusDisabled {
+		if _, err := s.repo.CascadeUpdateStatus(ctx, current.ID, SubSiteStatusDisabled); err != nil {
+			return nil, err
+		}
 	}
 	s.invalidateCaches()
 	updated, err := s.repo.GetByID(ctx, input.ID)

@@ -41,6 +41,11 @@
             <input v-model.number="platformForm.validity_days" type="number" min="1" step="1" class="input mt-1 w-full" />
           </div>
           <div>
+            <label class="input-label">最大分站层级</label>
+            <input v-model.number="platformForm.max_level" type="number" min="1" max="10" step="1" class="input mt-1 w-full" />
+            <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">上限 10 层；修改后已存在的超层分站仍保留，但无法继续向下开新站。</p>
+          </div>
+          <div>
             <label class="input-label">默认模板</label>
             <select v-model="platformForm.default_theme_template" class="input mt-1 w-full">
               <option v-for="item in platformForm.theme_templates" :key="item.key" :value="item.key">{{ item.label }}</option>
@@ -361,6 +366,7 @@ const platformForm = reactive<PlatformSubSiteConfig>({
   enabled: true,
   activation_price_fen: 38800,
   validity_days: 365,
+  max_level: 2,
   default_theme_template: 'starter',
   default_custom_config: '',
   theme_templates: []

@@ -1678,10 +1678,19 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 	}
 	subSiteRate := currentSubSiteConsumeRateMultiplier(ctx)
 	var boundSubSite *SubSite
+	var subSiteChain []*SubSite
 	if s.subSiteService != nil {
 		if site, err := s.subSiteService.GetBoundSubSiteForUser(ctx, user.ID); err == nil && site != nil && site.Status == SubSiteStatusActive {
 			boundSubSite = site
-			if subSiteRate <= 0 || subSiteRate == DefaultSubSiteConsumeRate {
+			if chain, err := s.subSiteService.GetSiteChain(ctx, site.ID); err == nil && len(chain) > 0 {
+				if s.subSiteService.ChainActive(chain) {
+					subSiteChain = chain
+					subSiteRate = s.subSiteService.CompoundConsumeRateForChain(chain)
+				} else {
+					boundSubSite = nil
+					subSiteRate = DefaultSubSiteConsumeRate
+				}
+			} else if subSiteRate <= 0 || subSiteRate == DefaultSubSiteConsumeRate {
 				subSiteRate = normalizeConsumeRateMultiplier(site.ConsumeRateMultiplier)
 			}
 		}
@@ -1827,7 +1836,7 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 		if shouldBill && cost.ActualCost > 0 {
 			_ = s.userRepo.DeductBalance(ctx, user.ID, cost.ActualCost)
 			s.billingCacheService.QueueDeductBalance(user.ID, cost.ActualCost)
-			if boundSubSite != nil && subSiteRate > 0 && s.subSiteService != nil {
+			if boundSubSite != nil && subSiteRate > 0 && s.subSiteService != nil && len(subSiteChain) > 0 {
 				s.subSiteService.DebitPoolForConsumption(ctx, boundSubSite.ID, user.ID, usageLog.ID, cost.ActualCost, subSiteRate)
 			}
 		}

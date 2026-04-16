@@ -246,6 +246,7 @@ const (
 	SettingKeySubSiteActivationValidityDays = "subsite_activation_validity_days"
 	SettingKeySubSiteDefaultThemeTemplate   = "subsite_default_theme_template"
 	SettingKeySubSiteDefaultCustomConfig    = "subsite_default_custom_config"
+	SettingKeySubSiteMaxLevel               = "subsite_max_level"
 )
 
 // Agent profile status constants.

@@ -126,32 +126,96 @@ func (s *SubSiteService) OfflineTopupUser(ctx context.Context, ownerUserID, site
 	return s.populateComputedFields(ctx, refreshed, true)
 }
 
-// DebitPoolForConsumption 分站用户消费时从分站池扣 1× 成本（基础成本，去掉放大倍率）。
-// 调用方已确认该用户绑定在给定分站；amountUSD 为用户实际扣费（已经 × subSiteRate）。
+// DebitPoolForConsumption 分站用户消费时沿 parent 链逐级从分站池扣 1× 基础成本。
+// 调用方已确认该用户绑定在 leafSiteID；amountUSD 为用户实际扣费（已经 × 复合倍率）；
+// compoundRate 为沿链累乘后的总倍率（用于反推基础成本）。
+// 每一个祖先池都扣 1× 基础成本，代表该层向平台购买的服务消耗。
 // 允许池透支（负余额）：与 userRepo.DeductBalance 的容忍策略对齐，仅记 warn。
-// 返回变动后余额（分）。调用失败只打日志、不向上游冒泡，避免影响网关主路径。
-func (s *SubSiteService) DebitPoolForConsumption(ctx context.Context, siteID, userID, usageLogID int64, amountUSD, subSiteRate float64) {
-	if siteID <= 0 || subSiteRate <= 0 || amountUSD <= 0 {
+// 调用失败只打日志、不向上游冒泡，避免影响网关主路径。
+func (s *SubSiteService) DebitPoolForConsumption(ctx context.Context, leafSiteID, userID, usageLogID int64, amountUSD, compoundRate float64) {
+	if leafSiteID <= 0 || compoundRate <= 0 || amountUSD <= 0 {
 		return
 	}
-	basePartFen := int64((amountUSD / subSiteRate) * 100.0)
+	basePartFen := int64((amountUSD / compoundRate) * 100.0)
 	if basePartFen <= 0 {
 		return
 	}
-	entry := SubSiteLedgerEntry{
-		TxType: SubSiteLedgerConsume,
+	chain, err := s.GetSiteChain(ctx, leafSiteID)
+	if err != nil || len(chain) == 0 {
+		log.Printf("[SubSitePool] consume chain lookup failed site=%d: %v", leafSiteID, err)
+		return
 	}
-	if userID > 0 {
-		u := userID
-		entry.RelatedUserID = &u
+	for _, site := range chain {
+		entry := SubSiteLedgerEntry{TxType: SubSiteLedgerConsume}
+		if userID > 0 {
+			u := userID
+			entry.RelatedUserID = &u
+		}
+		if usageLogID > 0 {
+			ul := usageLogID
+			entry.RelatedUsageLogID = &ul
+		}
+		if _, err := s.AdjustPoolBalance(ctx, site.ID, -basePartFen, entry); err != nil {
+			log.Printf("[SubSitePool] consume debit failed site=%d user=%d amount=%d: %v", site.ID, userID, basePartFen, err)
+		}
 	}
-	if usageLogID > 0 {
-		ul := usageLogID
-		entry.RelatedUsageLogID = &ul
+}
+
+// GetSiteChain 返回从 leafSiteID 到根分站（含自己）的链，按 leaf→root 顺序。
+// 以 MaxSubSiteLevelHardLimit 作为遍历安全上界，防止数据层循环导致死循环。
+func (s *SubSiteService) GetSiteChain(ctx context.Context, leafSiteID int64) ([]*SubSite, error) {
+	if leafSiteID <= 0 || s == nil || s.repo == nil {
+		return nil, nil
 	}
-	if _, err := s.AdjustPoolBalance(ctx, siteID, -basePartFen, entry); err != nil {
-		log.Printf("[SubSitePool] consume debit failed site=%d user=%d amount=%d: %v", siteID, userID, basePartFen, err)
+	chain := make([]*SubSite, 0, 4)
+	seen := make(map[int64]struct{}, 4)
+	cursorID := leafSiteID
+	for hop := 0; hop <= MaxSubSiteLevelHardLimit; hop++ {
+		if _, dup := seen[cursorID]; dup {
+			break
+		}
+		site, err := s.repo.GetByID(ctx, cursorID)
+		if err != nil {
+			return nil, err
+		}
+		seen[cursorID] = struct{}{}
+		chain = append(chain, site)
+		if site.ParentSubSiteID == nil || *site.ParentSubSiteID <= 0 {
+			break
+		}
+		cursorID = *site.ParentSubSiteID
 	}
+	return chain, nil
+}
+
+// CompoundConsumeRateForChain 计算 leaf→root 链上的复合倍率（各层 consume_rate_multiplier 累乘）。
+// 任一祖先链中的分站 status != active 则返回 (chain, 0, false)，表示链路已失效、不应按分站计费。
+func (s *SubSiteService) CompoundConsumeRateForChain(chain []*SubSite) float64 {
+	if len(chain) == 0 {
+		return DefaultSubSiteConsumeRate
+	}
+	rate := 1.0
+	for _, site := range chain {
+		if site == nil {
+			continue
+		}
+		rate *= normalizeConsumeRateMultiplier(site.ConsumeRateMultiplier)
+	}
+	if rate <= 0 {
+		return DefaultSubSiteConsumeRate
+	}
+	return rate
+}
+
+// ChainActive 判定链路中所有分站是否均处于 active 状态。
+// 若链中任一分站被停用，上层应视该用户为"分站已停用"，停止记账。
+func (s *SubSiteService) ChainActive(chain []*SubSite) bool {
+	for _, site := range chain {
+		if site == nil || site.Status != SubSiteStatusActive {
+			return false
+		}
+	}
+	return len(chain) > 0
 }
 
 // boundSubSiteCacheTTL 控制网关扣费路径查分站绑定的缓存时长。

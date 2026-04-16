@@ -15,6 +15,7 @@ func (s *SubSiteService) GetPlatformConfig(ctx context.Context) (*PlatformSubSit
 		Enabled:              s.readSettingBool(ctx, SettingKeySubSiteSelfServiceEnabled, true),
 		ActivationPriceFen:   s.readSettingInt(ctx, SettingKeySubSiteActivationPriceFen, DefaultSubSiteActivationPriceFen),
 		ValidityDays:         s.readSettingInt(ctx, SettingKeySubSiteActivationValidityDays, DefaultSubSiteValidityDays),
+		MaxLevel:             s.readSettingInt(ctx, SettingKeySubSiteMaxLevel, DefaultSubSiteMaxLevel),
 		DefaultThemeTemplate: normalizeThemeTemplate(s.readSettingString(ctx, SettingKeySubSiteDefaultThemeTemplate, SubSiteThemeTemplateStarter)),
 		DefaultCustomConfig:  s.readSettingString(ctx, SettingKeySubSiteDefaultCustomConfig, ""),
 		ThemeTemplates:       DefaultSubSiteThemeTemplates,
@@ -22,10 +23,26 @@ func (s *SubSiteService) GetPlatformConfig(ctx context.Context) (*PlatformSubSit
 	if cfg.ValidityDays <= 0 {
 		cfg.ValidityDays = DefaultSubSiteValidityDays
 	}
+	cfg.MaxLevel = clampMaxLevel(cfg.MaxLevel)
 	if !isValidThemeTemplate(cfg.DefaultThemeTemplate) {
 		cfg.DefaultThemeTemplate = SubSiteThemeTemplateStarter
 	}
 	return cfg, nil
+}
+
+func clampMaxLevel(v int) int {
+	if v <= 0 {
+		return DefaultSubSiteMaxLevel
+	}
+	if v > MaxSubSiteLevelHardLimit {
+		return MaxSubSiteLevelHardLimit
+	}
+	return v
+}
+
+// MaxLevel 返回 admin 配置的最大层级（带缓存读取 setting）。
+func (s *SubSiteService) MaxLevel(ctx context.Context) int {
+	return clampMaxLevel(s.readSettingInt(ctx, SettingKeySubSiteMaxLevel, DefaultSubSiteMaxLevel))
 }
 
 func (s *SubSiteService) UpdatePlatformConfig(ctx context.Context, input UpdatePlatformSubSiteConfigInput) (*PlatformSubSiteConfig, error) {
@@ -47,6 +64,7 @@ func (s *SubSiteService) UpdatePlatformConfig(ctx context.Context, input UpdateP
 		SettingKeySubSiteSelfServiceEnabled:     fmt.Sprintf("%t", input.Enabled),
 		SettingKeySubSiteActivationPriceFen:     fmt.Sprintf("%d", input.ActivationPriceFen),
 		SettingKeySubSiteActivationValidityDays: fmt.Sprintf("%d", input.ValidityDays),
+		SettingKeySubSiteMaxLevel:               fmt.Sprintf("%d", clampMaxLevel(input.MaxLevel)),
 		SettingKeySubSiteDefaultThemeTemplate:   template,
 		SettingKeySubSiteDefaultCustomConfig:    strings.TrimSpace(input.DefaultCustomConfig),
 	}
@@ -63,9 +81,10 @@ func (s *SubSiteService) GetOpenInfo(ctx context.Context) (*SubSiteOpenInfo, err
 	}
 
 	if current, ok := s.GetCurrent(ctx); ok && current != nil {
+		maxLevel := platformCfg.MaxLevel
 		enabled := current.Status == SubSiteStatusActive &&
 			current.AllowSubSite &&
-			current.Level < MaxSubSiteLevel &&
+			current.Level < maxLevel &&
 			current.SubSitePriceFen > 0
 		defaultTemplate := current.ThemeTemplate
 		if defaultTemplate == "" {
@@ -81,7 +100,7 @@ func (s *SubSiteService) GetOpenInfo(ctx context.Context) (*SubSiteOpenInfo, err
 			ParentSubSiteID:      &current.ID,
 			ParentSubSiteName:    current.Name,
 			Level:                current.Level + 1,
-			MaxLevel:             MaxSubSiteLevel,
+			MaxLevel:             maxLevel,
 			PriceFen:             current.SubSitePriceFen,
 			ValidityDays:         platformCfg.ValidityDays,
 			Currency:             "CNY",
@@ -96,7 +115,7 @@ func (s *SubSiteService) GetOpenInfo(ctx context.Context) (*SubSiteOpenInfo, err
 		Enabled:              platformCfg.Enabled && platformCfg.ActivationPriceFen > 0,
 		Scope:                "platform",
 		Level:                1,
-		MaxLevel:             MaxSubSiteLevel,
+		MaxLevel:             platformCfg.MaxLevel,
 		PriceFen:             platformCfg.ActivationPriceFen,
 		ValidityDays:         platformCfg.ValidityDays,
 		Currency:             "CNY",

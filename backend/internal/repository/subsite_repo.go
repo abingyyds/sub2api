@@ -271,6 +271,38 @@ func (r *subSiteRepository) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
+// CascadeUpdateStatus 使用递归 CTE 找到 rootID 的所有后代，更新它们的 status。
+// 不包含 rootID 本身（调用方通过 Update 单独处理 root）。返回被更新的后代 id 列表。
+func (r *subSiteRepository) CascadeUpdateStatus(ctx context.Context, rootID int64, newStatus string) ([]int64, error) {
+	if rootID <= 0 {
+		return nil, nil
+	}
+	rows, err := r.db.QueryContext(ctx, `
+		WITH RECURSIVE descendants AS (
+			SELECT id FROM sub_sites WHERE parent_sub_site_id = $1
+			UNION ALL
+			SELECT s.id FROM sub_sites s
+			INNER JOIN descendants d ON s.parent_sub_site_id = d.id
+		)
+		UPDATE sub_sites SET status = $2, updated_at = NOW()
+		WHERE id IN (SELECT id FROM descendants) AND status <> $2
+		RETURNING id
+	`, rootID, newStatus)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+	var ids []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, rows.Err()
+}
+
 func (r *subSiteRepository) BindUser(ctx context.Context, siteID int64, userID int64, source string) error {
 	_, err := r.db.ExecContext(ctx, `
 		INSERT INTO sub_site_users (sub_site_id, user_id, source, created_at, updated_at)

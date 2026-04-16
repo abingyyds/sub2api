@@ -3507,10 +3507,21 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 	subSiteRate := currentSubSiteConsumeRateMultiplier(ctx)
 	// 查找用户绑定的分站（走主站域名直接调 API 时 ctx 里没有分站信息）
 	var boundSubSite *SubSite
+	var subSiteChain []*SubSite
 	if s.subSiteService != nil {
 		if site, err := s.subSiteService.GetBoundSubSiteForUser(ctx, user.ID); err == nil && site != nil && site.Status == SubSiteStatusActive {
 			boundSubSite = site
-			if subSiteRate <= 0 || subSiteRate == DefaultSubSiteConsumeRate {
+			// 沿 parent 链构建完整祖先链，复合倍率 + 多级池扣费都需要
+			if chain, err := s.subSiteService.GetSiteChain(ctx, site.ID); err == nil && len(chain) > 0 {
+				if s.subSiteService.ChainActive(chain) {
+					subSiteChain = chain
+					subSiteRate = s.subSiteService.CompoundConsumeRateForChain(chain)
+				} else {
+					// 链中有停用节点：退回该分站自身倍率，不做多级记账（Step: 级联停用）
+					boundSubSite = nil
+					subSiteRate = DefaultSubSiteConsumeRate
+				}
+			} else if subSiteRate <= 0 || subSiteRate == DefaultSubSiteConsumeRate {
 				subSiteRate = normalizeConsumeRateMultiplier(site.ConsumeRateMultiplier)
 			}
 		}
@@ -3710,9 +3721,11 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 			}
 			// 异步更新余额缓存
 			s.billingCacheService.QueueDeductBalance(user.ID, cost.ActualCost)
-			// 分站池扣 1× 成本（允许透支）
+			// 分站池多级扣费：沿 leaf→root 链每层扣 1× 基础成本
 			if boundSubSite != nil && subSiteRate > 0 && s.subSiteService != nil {
-				s.subSiteService.DebitPoolForConsumption(ctx, boundSubSite.ID, user.ID, usageLog.ID, cost.ActualCost, subSiteRate)
+				if len(subSiteChain) > 0 {
+					s.subSiteService.DebitPoolForConsumption(ctx, boundSubSite.ID, user.ID, usageLog.ID, cost.ActualCost, subSiteRate)
+				}
 			}
 		}
 	}

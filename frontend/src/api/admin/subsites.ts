@@ -86,6 +86,7 @@ export interface PlatformSubSiteConfig {
   enabled: boolean
   activation_price_fen: number
   validity_days: number
+  max_level: number
   default_theme_template: string
   default_custom_config?: string
   theme_templates: Array<{ key: string; label: string; description: string }>

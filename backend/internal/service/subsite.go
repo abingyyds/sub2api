@@ -24,7 +24,8 @@ const (
 const (
 	DefaultSubSiteActivationPriceFen = 38800
 	DefaultSubSiteValidityDays       = 365
-	MaxSubSiteLevel                  = 2
+	DefaultSubSiteMaxLevel           = 2
+	MaxSubSiteLevelHardLimit         = 10
 	DefaultSubSiteConsumeRate        = 1.0
 )
 
@@ -78,6 +79,7 @@ type PlatformSubSiteConfig struct {
 	Enabled              bool                         `json:"enabled"`
 	ActivationPriceFen   int                          `json:"activation_price_fen"`
 	ValidityDays         int                          `json:"validity_days"`
+	MaxLevel             int                          `json:"max_level"`
 	DefaultThemeTemplate string                       `json:"default_theme_template"`
 	DefaultCustomConfig  string                       `json:"default_custom_config,omitempty"`
 	ThemeTemplates       []SubSiteThemeTemplateOption `json:"theme_templates"`
@@ -88,6 +90,7 @@ type UpdatePlatformSubSiteConfigInput struct {
 	Enabled              bool   `json:"enabled"`
 	ActivationPriceFen   int    `json:"activation_price_fen"`
 	ValidityDays         int    `json:"validity_days"`
+	MaxLevel             int    `json:"max_level"`
 	DefaultThemeTemplate string `json:"default_theme_template"`
 	DefaultCustomConfig  string `json:"default_custom_config"`
 }
