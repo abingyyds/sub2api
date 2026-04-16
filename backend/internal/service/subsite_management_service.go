@@ -290,68 +290,9 @@ func (s *SubSiteService) ActivatePaidOrder(ctx context.Context, order *PaymentOr
 }
 
 func (s *SubSiteService) ApplyPlanOverrides(ctx context.Context, plans []PaymentPlan) []PaymentPlan {
-	site, ok := s.GetCurrent(ctx)
-	if !ok || site == nil || len(plans) == 0 {
-		return plans
-	}
-	overrides, err := s.repo.ListGroupPriceOverrides(ctx, site.ID)
-	if err != nil || len(overrides) == 0 {
-		return plans
-	}
-	overrideMap := make(map[int64]SubSiteGroupPriceOverride, len(overrides))
-	for _, item := range overrides {
-		overrideMap[item.GroupID] = item
-	}
-	result := make([]PaymentPlan, 0, len(plans))
-	for _, plan := range plans {
-		override, ok := overrideMap[plan.GroupID]
-		if !ok {
-			result = append(result, plan)
-			continue
-		}
-		if override.PriceFen <= 0 {
-			continue
-		}
-		plan.AmountFen = override.PriceFen
-		result = append(result, plan)
-	}
-	return result
+	return plans
 }
 
 func (s *SubSiteService) ApplyRechargeOverrides(ctx context.Context, info *RechargeInfo) *RechargeInfo {
-	if info == nil {
-		return nil
-	}
-	site, ok := s.GetCurrent(ctx)
-	if !ok || site == nil {
-		return info
-	}
-	if !site.EnableTopup {
-		return &RechargeInfo{MinAmount: 0, Plans: []RechargePlan{}}
-	}
-	overrides, err := s.repo.ListRechargePriceOverrides(ctx, site.ID)
-	if err != nil || len(overrides) == 0 {
-		return info
-	}
-	overrideMap := make(map[string]SubSiteRechargePriceOverride, len(overrides))
-	for _, item := range overrides {
-		overrideMap[item.PlanKey] = item
-	}
-	cloned := &RechargeInfo{
-		MinAmount: info.MinAmount,
-		Plans:     make([]RechargePlan, 0, len(info.Plans)),
-	}
-	for _, plan := range info.Plans {
-		override, ok := overrideMap[plan.Key]
-		if !ok {
-			cloned.Plans = append(cloned.Plans, plan)
-			continue
-		}
-		if override.PayAmountFen <= 0 {
-			continue
-		}
-		plan.PayAmountFen = override.PayAmountFen
-		cloned.Plans = append(cloned.Plans, plan)
-	}
-	return cloned
+	return info
 }

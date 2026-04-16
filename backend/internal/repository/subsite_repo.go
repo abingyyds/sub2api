@@ -45,6 +45,7 @@ const subSiteBaseSelect = `
 		COALESCE(s.enable_topup, TRUE),
 		COALESCE(s.allow_sub_site, FALSE),
 		COALESCE(s.sub_site_price_fen, 0),
+		COALESCE(s.consume_rate_multiplier, 1.0),
 		s.subscription_expired_at,
 		s.created_at,
 		s.updated_at,
@@ -182,13 +183,13 @@ func (r *subSiteRepository) Create(ctx context.Context, site *service.SubSite) e
 			site_logo, site_favicon, site_subtitle, announcement,
 			contact_info, doc_url, home_content, theme_template, theme_config, custom_config,
 			registration_mode, enable_topup, allow_sub_site, sub_site_price_fen,
-			subscription_expired_at, created_at, updated_at
+			consume_rate_multiplier, subscription_expired_at, created_at, updated_at
 		) VALUES (
 			$1, $2, $3, $4, $5, NULLIF($6, ''), $7,
 			$8, $9, $10, $11,
 			$12, $13, $14, $15, $16, $17,
-			$18, $19, $20, $21,
-			$22, NOW(), NOW()
+			$18, $19, $20, $21, $22,
+			$23, NOW(), NOW()
 		)
 		RETURNING id, created_at, updated_at
 	`
@@ -197,7 +198,7 @@ func (r *subSiteRepository) Create(ctx context.Context, site *service.SubSite) e
 		site.SiteLogo, site.SiteFavicon, site.SiteSubtitle, site.Announcement,
 		site.ContactInfo, site.DocURL, site.HomeContent, site.ThemeTemplate, site.ThemeConfig, site.CustomConfig,
 		site.RegistrationMode, site.EnableTopup, site.AllowSubSite, site.SubSitePriceFen,
-		site.SubscriptionExpiredAt,
+		site.ConsumeRateMultiplier, site.SubscriptionExpiredAt,
 	).Scan(&site.ID, &site.CreatedAt, &site.UpdatedAt)
 }
 
@@ -225,14 +226,15 @@ func (r *subSiteRepository) Update(ctx context.Context, site *service.SubSite) e
 			enable_topup = $20,
 			allow_sub_site = $21,
 			sub_site_price_fen = $22,
-			subscription_expired_at = $23,
+			consume_rate_multiplier = $23,
+			subscription_expired_at = $24,
 			updated_at = NOW()
 		WHERE id = $1
 	`,
 		site.ID, site.OwnerUserID, site.ParentSubSiteID, site.Level, site.Name, site.Slug, site.CustomDomain, site.Status,
 		site.SiteLogo, site.SiteFavicon, site.SiteSubtitle, site.Announcement,
 		site.ContactInfo, site.DocURL, site.HomeContent, site.ThemeTemplate, site.ThemeConfig, site.CustomConfig,
-		site.RegistrationMode, site.EnableTopup, site.AllowSubSite, site.SubSitePriceFen,
+		site.RegistrationMode, site.EnableTopup, site.AllowSubSite, site.SubSitePriceFen, site.ConsumeRateMultiplier,
 		site.SubscriptionExpiredAt,
 	)
 	if err != nil {
@@ -486,6 +488,7 @@ func scanSubSite(row scanner) (*service.SubSite, error) {
 		&site.EnableTopup,
 		&site.AllowSubSite,
 		&site.SubSitePriceFen,
+		&site.ConsumeRateMultiplier,
 		&subscriptionExpiredAt,
 		&site.CreatedAt,
 		&site.UpdatedAt,

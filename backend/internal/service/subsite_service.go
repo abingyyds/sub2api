@@ -170,6 +170,13 @@ func normalizeRegistrationMode(mode string) string {
 	return mode
 }
 
+func normalizeConsumeRateMultiplier(multiplier float64) float64 {
+	if multiplier <= 0 {
+		return DefaultSubSiteConsumeRate
+	}
+	return multiplier
+}
+
 func isValidThemeTemplate(template string) bool {
 	for _, item := range DefaultSubSiteThemeTemplates {
 		if item.Key == template {
@@ -249,6 +256,7 @@ func (s *SubSiteService) applyInputToSite(site *SubSite, input CreateSubSiteInpu
 	site.EnableTopup = boolValue(input.EnableTopup, true)
 	site.AllowSubSite = boolValue(input.AllowSubSite, false)
 	site.SubSitePriceFen = input.SubSitePriceFen
+	site.ConsumeRateMultiplier = normalizeConsumeRateMultiplier(input.ConsumeRateMultiplier)
 	site.SubscriptionExpiredAt = input.SubscriptionExpiredAt
 }
 
@@ -589,11 +597,6 @@ func (s *SubSiteService) ApplyPublicSettings(ctx context.Context, base *PublicSe
 	cloned.IsSubSite = true
 	cloned.SubSiteSlug = site.Slug
 	cloned.SubSiteDomain = site.CustomDomain
-	cloned.ThemeTemplate = site.ThemeTemplate
-	cloned.ThemeConfig = site.ThemeConfig
-	cloned.CustomConfig = site.CustomConfig
-	cloned.RegistrationMode = site.RegistrationMode
-	cloned.EnableTopup = site.EnableTopup
 	cloned.AllowSubSite = site.AllowSubSite
 	cloned.SubSitePriceFen = site.SubSitePriceFen
 	if site.Name != "" {
@@ -635,6 +638,25 @@ func (s *SubSiteService) SiteNameOrEmpty(ctx context.Context) string {
 		return ""
 	}
 	return strings.TrimSpace(site.Name)
+}
+
+func (s *SubSiteService) CurrentConsumeRateMultiplier(ctx context.Context) float64 {
+	site, ok := s.GetCurrent(ctx)
+	if !ok || site == nil || site.Status != SubSiteStatusActive {
+		return DefaultSubSiteConsumeRate
+	}
+	return normalizeConsumeRateMultiplier(site.ConsumeRateMultiplier)
+}
+
+func currentSubSiteConsumeRateMultiplier(ctx context.Context) float64 {
+	if ctx == nil {
+		return DefaultSubSiteConsumeRate
+	}
+	site, ok := ctx.Value(ctxkey.SubSite).(*SubSite)
+	if !ok || site == nil || site.Status != SubSiteStatusActive {
+		return DefaultSubSiteConsumeRate
+	}
+	return normalizeConsumeRateMultiplier(site.ConsumeRateMultiplier)
 }
 
 func (s *SubSiteService) readSettingInt(ctx context.Context, key string, fallback int) int {

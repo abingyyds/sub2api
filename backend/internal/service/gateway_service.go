@@ -3501,6 +3501,9 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 	if apiKey.GroupID != nil && apiKey.Group != nil {
 		multiplier = apiKey.Group.RateMultiplier
 	}
+	if subSiteRate := currentSubSiteConsumeRateMultiplier(ctx); subSiteRate > 0 {
+		multiplier *= subSiteRate
+	}
 
 	var cost *CostBreakdown
 

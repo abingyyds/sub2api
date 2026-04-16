@@ -1673,6 +1673,9 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 	if apiKey.GroupID != nil && apiKey.Group != nil {
 		multiplier = apiKey.Group.RateMultiplier
 	}
+	if subSiteRate := currentSubSiteConsumeRateMultiplier(ctx); subSiteRate > 0 {
+		multiplier *= subSiteRate
+	}
 
 	cost, err := s.billingService.CalculateCost(result.Model, tokens, multiplier)
 	if err != nil {

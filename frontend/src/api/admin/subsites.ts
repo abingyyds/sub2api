@@ -27,6 +27,7 @@ export interface AdminSubSite {
   enable_topup: boolean
   allow_sub_site: boolean
   sub_site_price_fen: number
+  consume_rate_multiplier?: number
   subscription_expired_at?: string | null
   user_count?: number
   child_site_count?: number
@@ -58,6 +59,7 @@ export interface SaveSubSiteRequest {
   enable_topup?: boolean
   allow_sub_site?: boolean
   sub_site_price_fen?: number
+  consume_rate_multiplier?: number
   subscription_expired_at?: string | null
   group_price_overrides?: SubSiteGroupPriceOverride[]
   recharge_price_overrides?: SubSiteRechargePriceOverride[]

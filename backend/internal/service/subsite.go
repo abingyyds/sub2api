@@ -25,6 +25,7 @@ const (
 	DefaultSubSiteActivationPriceFen = 38800
 	DefaultSubSiteValidityDays       = 365
 	MaxSubSiteLevel                  = 2
+	DefaultSubSiteConsumeRate        = 1.0
 )
 
 type SubSiteThemeTemplateOption struct {
@@ -131,6 +132,7 @@ type SubSite struct {
 	EnableTopup            bool                           `json:"enable_topup"`
 	AllowSubSite           bool                           `json:"allow_sub_site"`
 	SubSitePriceFen        int                            `json:"sub_site_price_fen"`
+	ConsumeRateMultiplier  float64                        `json:"consume_rate_multiplier"`
 	SubscriptionExpiredAt  *time.Time                     `json:"subscription_expired_at,omitempty"`
 	UserCount              int64                          `json:"user_count,omitempty"`
 	ChildSiteCount         int64                          `json:"child_site_count,omitempty"`
@@ -162,6 +164,7 @@ type CreateSubSiteInput struct {
 	EnableTopup            *bool                          `json:"enable_topup,omitempty"`
 	AllowSubSite           *bool                          `json:"allow_sub_site,omitempty"`
 	SubSitePriceFen        int                            `json:"sub_site_price_fen"`
+	ConsumeRateMultiplier  float64                        `json:"consume_rate_multiplier"`
 	SubscriptionExpiredAt  *time.Time                     `json:"subscription_expired_at,omitempty"`
 	GroupPriceOverrides    []SubSiteGroupPriceOverride    `json:"group_price_overrides,omitempty"`
 	RechargePriceOverrides []SubSiteRechargePriceOverride `json:"recharge_price_overrides,omitempty"`
@@ -189,6 +192,7 @@ type UpdateSubSiteInput struct {
 	EnableTopup            *bool                          `json:"enable_topup,omitempty"`
 	AllowSubSite           *bool                          `json:"allow_sub_site,omitempty"`
 	SubSitePriceFen        int                            `json:"sub_site_price_fen"`
+	ConsumeRateMultiplier  float64                        `json:"consume_rate_multiplier"`
 	SubscriptionExpiredAt  *time.Time                     `json:"subscription_expired_at,omitempty"`
 	GroupPriceOverrides    []SubSiteGroupPriceOverride    `json:"group_price_overrides,omitempty"`
 	RechargePriceOverrides []SubSiteRechargePriceOverride `json:"recharge_price_overrides,omitempty"`
@@ -214,6 +218,7 @@ type CreateSubSiteActivationInput struct {
 	EnableTopup            *bool                          `json:"enable_topup,omitempty"`
 	AllowSubSite           *bool                          `json:"allow_sub_site,omitempty"`
 	SubSitePriceFen        int                            `json:"sub_site_price_fen"`
+	ConsumeRateMultiplier  float64                        `json:"consume_rate_multiplier"`
 	GroupPriceOverrides    []SubSiteGroupPriceOverride    `json:"group_price_overrides,omitempty"`
 	RechargePriceOverrides []SubSiteRechargePriceOverride `json:"recharge_price_overrides,omitempty"`
 }
