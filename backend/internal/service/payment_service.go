@@ -996,25 +996,20 @@ func (s *PaymentService) listLegacySubscriptionOrders(ctx context.Context, userI
 			amountFen = sub.Group.PriceFen
 		}
 
-		status := PaymentOrderStatusPaid
-		if sub.Status == SubscriptionStatusRevoked {
-			status = PaymentOrderStatusClosed
-		}
-
 		items = append(items, PaymentOrder{
-			OrderNo:        fmt.Sprintf("legacy-sub-%d", sub.ID),
-			UserID:         sub.UserID,
-			PlanKey:        fmt.Sprintf("legacy_subscription_%d", sub.GroupID),
-			GroupID:        sub.GroupID,
-			AmountFen:      amountFen,
-			ValidityDays:   int(sub.ExpiresAt.Sub(sub.StartsAt).Hours() / 24),
-			OrderType:      PaymentOrderTypeSubscription,
-			Status:         status,
-			PayMethod:      fmt.Sprintf("legacy_subscription:%s", groupName),
-			PaidAt:         &sub.CreatedAt,
-			ExpiredAt:      sub.ExpiresAt,
-			CreatedAt:      sub.CreatedAt,
-			UpdatedAt:      sub.UpdatedAt,
+			OrderNo:      fmt.Sprintf("legacy-sub-%d", sub.ID),
+			UserID:       sub.UserID,
+			PlanKey:      fmt.Sprintf("legacy_subscription_%d", sub.GroupID),
+			GroupID:      sub.GroupID,
+			AmountFen:    amountFen,
+			ValidityDays: int(sub.ExpiresAt.Sub(sub.StartsAt).Hours() / 24),
+			OrderType:    PaymentOrderTypeSubscription,
+			Status:       legacySubscriptionOrderStatus(sub.Status),
+			PayMethod:    fmt.Sprintf("legacy_subscription:%s", groupName),
+			PaidAt:       &sub.CreatedAt,
+			ExpiredAt:    sub.ExpiresAt,
+			CreatedAt:    sub.CreatedAt,
+			UpdatedAt:    sub.UpdatedAt,
 		})
 	}
 
@@ -1024,6 +1019,17 @@ func (s *PaymentService) listLegacySubscriptionOrders(ctx context.Context, userI
 		PageSize: pageSize,
 		Pages:    (total + pageSize - 1) / pageSize,
 	}, nil
+}
+
+func legacySubscriptionOrderStatus(subscriptionStatus string) string {
+	switch subscriptionStatus {
+	case "", SubscriptionStatusActive, SubscriptionStatusExpired:
+		return PaymentOrderStatusPaid
+	case SubscriptionStatusSuspended:
+		return PaymentOrderStatusClosed
+	default:
+		return PaymentOrderStatusClosed
+	}
 }
 
 // ListAllOrders 列出所有订单（管理员）
