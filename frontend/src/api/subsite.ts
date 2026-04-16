@@ -20,7 +20,6 @@ export interface SubSiteOpenInfo {
   currency: string
   allow_custom_domain: boolean
   default_theme_template: string
-  default_custom_config?: string
   theme_templates: SubSiteThemeTemplateOption[]
 }
 
@@ -43,8 +42,6 @@ export interface OwnedSubSite {
   doc_url?: string
   home_content?: string
   theme_template?: string
-  theme_config?: string
-  custom_config?: string
   registration_mode?: 'open' | 'invite' | 'closed'
   enable_topup: boolean
   allow_sub_site: boolean

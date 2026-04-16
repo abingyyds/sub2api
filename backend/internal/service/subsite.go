@@ -70,7 +70,6 @@ type SubSiteOpenInfo struct {
 	Currency             string                       `json:"currency"`
 	AllowCustomDomain    bool                         `json:"allow_custom_domain"`
 	DefaultThemeTemplate string                       `json:"default_theme_template"`
-	DefaultCustomConfig  string                       `json:"default_custom_config,omitempty"`
 	ThemeTemplates       []SubSiteThemeTemplateOption `json:"theme_templates"`
 }
 
@@ -81,7 +80,6 @@ type PlatformSubSiteConfig struct {
 	ValidityDays         int                          `json:"validity_days"`
 	MaxLevel             int                          `json:"max_level"`
 	DefaultThemeTemplate string                       `json:"default_theme_template"`
-	DefaultCustomConfig  string                       `json:"default_custom_config,omitempty"`
 	ThemeTemplates       []SubSiteThemeTemplateOption `json:"theme_templates"`
 }
 
@@ -92,7 +90,6 @@ type UpdatePlatformSubSiteConfigInput struct {
 	ValidityDays         int    `json:"validity_days"`
 	MaxLevel             int    `json:"max_level"`
 	DefaultThemeTemplate string `json:"default_theme_template"`
-	DefaultCustomConfig  string `json:"default_custom_config"`
 }
 
 type SubSite struct {
@@ -114,8 +111,6 @@ type SubSite struct {
 	DocURL                string     `json:"doc_url,omitempty"`
 	HomeContent           string     `json:"home_content,omitempty"`
 	ThemeTemplate         string     `json:"theme_template,omitempty"`
-	ThemeConfig           string     `json:"theme_config,omitempty"`
-	CustomConfig          string     `json:"custom_config,omitempty"`
 	RegistrationMode      string     `json:"registration_mode,omitempty"`
 	EnableTopup           bool       `json:"enable_topup"`
 	AllowSubSite          bool       `json:"allow_sub_site"`
@@ -149,8 +144,6 @@ type CreateSubSiteInput struct {
 	DocURL                string     `json:"doc_url"`
 	HomeContent           string     `json:"home_content"`
 	ThemeTemplate         string     `json:"theme_template"`
-	ThemeConfig           string     `json:"theme_config"`
-	CustomConfig          string     `json:"custom_config"`
 	RegistrationMode      string     `json:"registration_mode"`
 	EnableTopup           *bool      `json:"enable_topup,omitempty"`
 	AllowSubSite          *bool      `json:"allow_sub_site,omitempty"`
@@ -177,8 +170,6 @@ type UpdateSubSiteInput struct {
 	DocURL                string     `json:"doc_url"`
 	HomeContent           string     `json:"home_content"`
 	ThemeTemplate         string     `json:"theme_template"`
-	ThemeConfig           string     `json:"theme_config"`
-	CustomConfig          string     `json:"custom_config"`
 	RegistrationMode      string     `json:"registration_mode"`
 	EnableTopup           *bool      `json:"enable_topup,omitempty"`
 	AllowSubSite          *bool      `json:"allow_sub_site,omitempty"`
@@ -203,8 +194,6 @@ type CreateSubSiteActivationInput struct {
 	DocURL                string  `json:"doc_url"`
 	HomeContent           string  `json:"home_content"`
 	ThemeTemplate         string  `json:"theme_template"`
-	ThemeConfig           string  `json:"theme_config"`
-	CustomConfig          string  `json:"custom_config"`
 	RegistrationMode      string  `json:"registration_mode"`
 	EnableTopup           *bool   `json:"enable_topup,omitempty"`
 	AllowSubSite          *bool   `json:"allow_sub_site,omitempty"`

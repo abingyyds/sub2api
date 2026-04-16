@@ -20,8 +20,6 @@ export interface AdminSubSite {
   doc_url?: string
   home_content?: string
   theme_template?: string
-  theme_config?: string
-  custom_config?: string
   registration_mode?: 'open' | 'invite' | 'closed'
   enable_topup: boolean
   allow_sub_site: boolean
@@ -55,8 +53,6 @@ export interface SaveSubSiteRequest {
   doc_url?: string
   home_content?: string
   theme_template?: string
-  theme_config?: string
-  custom_config?: string
   registration_mode?: 'open' | 'invite' | 'closed'
   enable_topup?: boolean
   allow_sub_site?: boolean
@@ -88,7 +84,6 @@ export interface PlatformSubSiteConfig {
   validity_days: number
   max_level: number
   default_theme_template: string
-  default_custom_config?: string
   theme_templates: Array<{ key: string; label: string; description: string }>
 }
 

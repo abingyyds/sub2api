@@ -277,6 +277,57 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/subsite-admin',
+    name: 'SubSiteAdminEntry',
+    redirect: () => {
+      // 入口由守卫动态重定向到第一个 owned 分站的 dashboard
+      return { path: '/subsite-admin/_entry' }
+    },
+    meta: { requiresAuth: true, requiresSubSiteOwner: true }
+  },
+  {
+    path: '/subsite-admin/_entry',
+    name: 'SubSiteAdminRedirect',
+    component: () => import('@/views/subsiteAdmin/EntryRedirectView.vue'),
+    meta: { requiresAuth: true, requiresSubSiteOwner: true, title: 'SubSite Admin' }
+  },
+  {
+    path: '/subsite-admin/:siteId(\\d+)/dashboard',
+    name: 'SubSiteAdminDashboard',
+    component: () => import('@/views/subsiteAdmin/DashboardView.vue'),
+    meta: { requiresAuth: true, requiresSubSiteOwner: true, title: 'SubSite Dashboard' }
+  },
+  {
+    path: '/subsite-admin/:siteId(\\d+)/users',
+    name: 'SubSiteAdminUsers',
+    component: () => import('@/views/subsiteAdmin/UsersView.vue'),
+    meta: { requiresAuth: true, requiresSubSiteOwner: true, title: 'SubSite Users' }
+  },
+  {
+    path: '/subsite-admin/:siteId(\\d+)/orders',
+    name: 'SubSiteAdminOrders',
+    component: () => import('@/views/subsiteAdmin/OrdersView.vue'),
+    meta: { requiresAuth: true, requiresSubSiteOwner: true, title: 'SubSite Orders' }
+  },
+  {
+    path: '/subsite-admin/:siteId(\\d+)/usage',
+    name: 'SubSiteAdminUsage',
+    component: () => import('@/views/subsiteAdmin/UsageView.vue'),
+    meta: { requiresAuth: true, requiresSubSiteOwner: true, title: 'SubSite Usage' }
+  },
+  {
+    path: '/subsite-admin/:siteId(\\d+)/ledger',
+    name: 'SubSiteAdminLedger',
+    component: () => import('@/views/subsiteAdmin/LedgerView.vue'),
+    meta: { requiresAuth: true, requiresSubSiteOwner: true, title: 'SubSite Ledger' }
+  },
+  {
+    path: '/subsite-admin/:siteId(\\d+)/settings',
+    name: 'SubSiteAdminSettings',
+    component: () => import('@/views/subsiteAdmin/SettingsView.vue'),
+    meta: { requiresAuth: true, requiresSubSiteOwner: true, title: 'SubSite Settings' }
+  },
+  {
     path: '/agent/sub-users',
     name: 'AgentSubUsers',
     component: () => import('@/views/user/AgentSubUsersView.vue'),
@@ -721,6 +772,29 @@ router.beforeEach(async (to, _from, next) => {
   if (requiresOrgAdmin && !authStore.isOrgAdmin) {
     next(authStore.isAdmin ? '/admin/dashboard' : '/dashboard')
     return
+  }
+
+  // Check sub-site owner requirement
+  const requiresSubSiteOwner = to.meta.requiresSubSiteOwner === true
+  if (requiresSubSiteOwner) {
+    // 如果 owned sites 尚未加载（例如首次直接访问 URL），尝试拉一次
+    if (authStore.ownedSites.length === 0) {
+      try {
+        await authStore.refreshOwnedSites()
+      } catch { /* 忽略，下一步会拒绝 */ }
+    }
+    if (!authStore.isSubSiteOwner) {
+      next('/dashboard')
+      return
+    }
+    const rawSiteId = to.params.siteId
+    if (rawSiteId !== undefined && rawSiteId !== '') {
+      const siteId = Number(rawSiteId)
+      if (!authStore.ownedSites.some((s) => s.id === siteId)) {
+        next('/dashboard')
+        return
+      }
+    }
   }
 
   // Sub-admin cannot access account management

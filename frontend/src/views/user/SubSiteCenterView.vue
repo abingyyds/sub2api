@@ -199,6 +199,23 @@
             <label class="input-label">首页内容</label>
             <textarea v-model="editForm.home_content" rows="5" class="input mt-1 w-full"></textarea>
           </div>
+          <div class="md:col-span-2">
+            <label class="input-label">主题模板</label>
+            <div class="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <label
+                v-for="tpl in themeTemplateOptions"
+                :key="tpl.key"
+                class="flex cursor-pointer flex-col gap-1 rounded-xl border px-3 py-2 text-left transition-colors"
+                :class="editForm.theme_template === tpl.key
+                  ? 'border-primary-500 bg-primary-50 dark:border-primary-400 dark:bg-primary-900/20'
+                  : 'border-gray-200 bg-white hover:border-primary-300 dark:border-dark-600 dark:bg-dark-800/60 dark:hover:border-primary-500'"
+              >
+                <input v-model="editForm.theme_template" :value="tpl.key" type="radio" class="sr-only" />
+                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ tpl.label }}</span>
+                <span class="text-xs text-gray-500 dark:text-dark-400">{{ tpl.description }}</span>
+              </label>
+            </div>
+          </div>
         </div>
 
         <div class="grid gap-4 rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-dark-700 dark:bg-dark-800/60 md:grid-cols-3">
@@ -312,7 +329,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import QRCode from 'qrcode'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import BaseDialog from '@/components/common/BaseDialog.vue'
@@ -342,7 +359,6 @@ const openInfo = ref<SubSiteOpenInfo>({
   currency: 'CNY',
   allow_custom_domain: true,
   default_theme_template: 'starter',
-  default_custom_config: '',
   theme_templates: [],
 })
 
@@ -374,6 +390,17 @@ const createSubSitePriceYuan = ref<number | null>(null)
 
 const editForm = ref<OwnedSubSite | null>(null)
 const editSubSitePriceYuan = ref<number | null>(null)
+
+const themeTemplateOptions = computed(() => {
+  const list = openInfo.value.theme_templates
+  if (Array.isArray(list) && list.length > 0) return list
+  return [
+    { key: 'starter', label: '起步版', description: '简洁默认布局' },
+    { key: 'aurora', label: '极光', description: '玻璃拟态，流光渐变' },
+    { key: 'summit', label: '峰顶', description: '杂志排版，衬线字体' },
+    { key: 'terminal', label: '终端', description: 'CLI 风格，等宽黑绿' },
+  ]
+})
 
 onMounted(async () => {
   await Promise.all([loadOpenInfo(), loadOwnedSites()])
@@ -513,6 +540,7 @@ async function handleSaveOwnedSite() {
       contact_info: editForm.value.contact_info || '',
       doc_url: editForm.value.doc_url || '',
       home_content: editForm.value.home_content || '',
+      theme_template: editForm.value.theme_template || 'starter',
       allow_sub_site: editForm.value.allow_sub_site,
       sub_site_price_fen: parseInputYuan(editSubSitePriceYuan.value) || 0,
       consume_rate_multiplier: Number(editForm.value.consume_rate_multiplier || 1),

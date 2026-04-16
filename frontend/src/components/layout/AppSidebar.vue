@@ -241,8 +241,18 @@ const mobileOpen = computed(() => appStore.mobileOpen)
 const isAdmin = computed(() => authStore.isAdmin)
 const isFullAdmin = computed(() => authStore.isFullAdmin)
 const isOrgAdmin = computed(() => authStore.isOrgAdmin)
+const isSubSiteOwner = computed(() => authStore.isSubSiteOwner)
 const isDark = ref(document.documentElement.classList.contains('dark'))
 const subSiteEntryEnabled = computed(() => appStore.cachedPublicSettings?.subsite_entry_enabled === true)
+
+const currentSubSiteId = computed(() => {
+  const rawParam = route.params.siteId
+  const paramSiteId = Array.isArray(rawParam) ? Number(rawParam[0]) : Number(rawParam)
+  if (Number.isFinite(paramSiteId) && paramSiteId > 0) {
+    if (authStore.ownedSites.some((s) => s.id === paramSiteId)) return paramSiteId
+  }
+  return authStore.ownedSites[0]?.id ?? 0
+})
 
 // Site settings from appStore (cached, no flicker)
 const siteName = computed(() => appStore.siteName)
@@ -650,6 +660,19 @@ const userNavGroups = computed(() => {
           : []),
       ]
     },
+    ...(isSubSiteOwner.value && currentSubSiteId.value
+      ? [{
+          title: '分站管理',
+          items: [
+            { path: `/subsite-admin/${currentSubSiteId.value}/dashboard`, label: '分站概览', icon: DashboardIcon },
+            { path: `/subsite-admin/${currentSubSiteId.value}/users`, label: '用户', icon: UsersIcon },
+            { path: `/subsite-admin/${currentSubSiteId.value}/orders`, label: '订单', icon: ReceiptIcon },
+            { path: `/subsite-admin/${currentSubSiteId.value}/usage`, label: '用量', icon: ChartIcon },
+            { path: `/subsite-admin/${currentSubSiteId.value}/ledger`, label: '池流水', icon: BookIcon },
+            { path: `/subsite-admin/${currentSubSiteId.value}/settings`, label: '分站设置', icon: CogIcon },
+          ] as NavItem[],
+        } as NavGroup]
+      : []),
     {
       title: t('nav.sectionHelp'),
       items: [

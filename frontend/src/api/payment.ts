@@ -83,8 +83,6 @@ export interface CreateSubSiteActivationInput {
   doc_url?: string
   home_content?: string
   theme_template?: string
-  theme_config?: string
-  custom_config?: string
   registration_mode?: 'open' | 'invite' | 'closed'
   enable_topup?: boolean
   allow_sub_site?: boolean

@@ -279,8 +279,6 @@ func (s *SubSiteService) applyInputToSite(site *SubSite, input CreateSubSiteInpu
 	site.DocURL = strings.TrimSpace(input.DocURL)
 	site.HomeContent = strings.TrimSpace(input.HomeContent)
 	site.ThemeTemplate = themeTemplate
-	site.ThemeConfig = strings.TrimSpace(input.ThemeConfig)
-	site.CustomConfig = strings.TrimSpace(input.CustomConfig)
 	site.RegistrationMode = registrationMode
 	site.EnableTopup = boolValue(input.EnableTopup, true)
 	site.AllowSubSite = boolValue(input.AllowSubSite, false)
@@ -418,8 +416,6 @@ func (s *SubSiteService) Update(ctx context.Context, input UpdateSubSiteInput) (
 		DocURL:                input.DocURL,
 		HomeContent:           input.HomeContent,
 		ThemeTemplate:         input.ThemeTemplate,
-		ThemeConfig:           input.ThemeConfig,
-		CustomConfig:          input.CustomConfig,
 		RegistrationMode:      input.RegistrationMode,
 		EnableTopup:           input.EnableTopup,
 		AllowSubSite:          input.AllowSubSite,
@@ -638,6 +634,9 @@ func (s *SubSiteService) ApplyPublicSettings(ctx context.Context, base *PublicSe
 	}
 	if site.HomeContent != "" {
 		cloned.HomeContent = site.HomeContent
+	}
+	if site.ThemeTemplate != "" {
+		cloned.ThemeTemplate = site.ThemeTemplate
 	}
 	return &cloned
 }

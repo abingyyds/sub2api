@@ -54,6 +54,7 @@ type Handlers struct {
 	Payment       *PaymentHandler
 	Agent         *AgentHandler
 	SubSite       *SubSiteHandler
+	SubSiteAdmin  *SubSiteAdminHandler
 }
 
 // BuildInfo contains build-time information

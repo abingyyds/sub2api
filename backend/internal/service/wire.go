@@ -289,4 +289,5 @@ var ProviderSet = wire.NewSet(
 	NewPaymentService,
 	NewAgentService,
 	NewSubSiteService,
+	NewSubSiteAdminService,
 )

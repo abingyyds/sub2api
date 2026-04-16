@@ -17,7 +17,6 @@ func (s *SubSiteService) GetPlatformConfig(ctx context.Context) (*PlatformSubSit
 		ValidityDays:         s.readSettingInt(ctx, SettingKeySubSiteActivationValidityDays, DefaultSubSiteValidityDays),
 		MaxLevel:             s.readSettingInt(ctx, SettingKeySubSiteMaxLevel, DefaultSubSiteMaxLevel),
 		DefaultThemeTemplate: normalizeThemeTemplate(s.readSettingString(ctx, SettingKeySubSiteDefaultThemeTemplate, SubSiteThemeTemplateStarter)),
-		DefaultCustomConfig:  s.readSettingString(ctx, SettingKeySubSiteDefaultCustomConfig, ""),
 		ThemeTemplates:       DefaultSubSiteThemeTemplates,
 	}
 	if cfg.ValidityDays <= 0 {
@@ -66,7 +65,6 @@ func (s *SubSiteService) UpdatePlatformConfig(ctx context.Context, input UpdateP
 		SettingKeySubSiteActivationValidityDays: fmt.Sprintf("%d", input.ValidityDays),
 		SettingKeySubSiteMaxLevel:               fmt.Sprintf("%d", clampMaxLevel(input.MaxLevel)),
 		SettingKeySubSiteDefaultThemeTemplate:   template,
-		SettingKeySubSiteDefaultCustomConfig:    strings.TrimSpace(input.DefaultCustomConfig),
 	}
 	if err := s.settingRepo.SetMultiple(ctx, updates); err != nil {
 		return nil, err
@@ -90,10 +88,6 @@ func (s *SubSiteService) GetOpenInfo(ctx context.Context) (*SubSiteOpenInfo, err
 		if defaultTemplate == "" {
 			defaultTemplate = platformCfg.DefaultThemeTemplate
 		}
-		defaultConfig := strings.TrimSpace(current.CustomConfig)
-		if defaultConfig == "" {
-			defaultConfig = platformCfg.DefaultCustomConfig
-		}
 		return &SubSiteOpenInfo{
 			Enabled:              enabled,
 			Scope:                "subsite",
@@ -106,7 +100,6 @@ func (s *SubSiteService) GetOpenInfo(ctx context.Context) (*SubSiteOpenInfo, err
 			Currency:             "CNY",
 			AllowCustomDomain:    true,
 			DefaultThemeTemplate: defaultTemplate,
-			DefaultCustomConfig:  defaultConfig,
 			ThemeTemplates:       DefaultSubSiteThemeTemplates,
 		}, nil
 	}
@@ -121,7 +114,6 @@ func (s *SubSiteService) GetOpenInfo(ctx context.Context) (*SubSiteOpenInfo, err
 		Currency:             "CNY",
 		AllowCustomDomain:    true,
 		DefaultThemeTemplate: platformCfg.DefaultThemeTemplate,
-		DefaultCustomConfig:  platformCfg.DefaultCustomConfig,
 		ThemeTemplates:       DefaultSubSiteThemeTemplates,
 	}, nil
 }
@@ -223,6 +215,22 @@ func (s *SubSiteService) GetOwnedSite(ctx context.Context, ownerUserID int64, si
 	return s.populateComputedFields(ctx, site, true)
 }
 
+// AuthorizeOwner 验证 user 是否是 siteID 的 owner，返回 site（不填充 computed fields）。
+// 用于中间件级鉴权 —— 要求 ownerUserID>0 且 siteID>0。
+func (s *SubSiteService) AuthorizeOwner(ctx context.Context, ownerUserID int64, siteID int64) (*SubSite, error) {
+	if ownerUserID <= 0 || siteID <= 0 {
+		return nil, ErrSubSiteForbidden
+	}
+	site, err := s.repo.GetByID(ctx, siteID)
+	if err != nil {
+		return nil, err
+	}
+	if site == nil || site.OwnerUserID != ownerUserID {
+		return nil, ErrSubSiteForbidden
+	}
+	return site, nil
+}
+
 func (s *SubSiteService) UpdateOwnedSite(ctx context.Context, ownerUserID int64, input UpdateOwnedSubSiteInput) (*SubSite, error) {
 	current, err := s.repo.GetByID(ctx, input.ID)
 	if err != nil {
@@ -281,8 +289,6 @@ func (s *SubSiteService) CreateActivationRequest(ctx context.Context, userID int
 	input.CustomDomain = customDomain
 	input.ThemeTemplate = themeTemplate
 	input.RegistrationMode = registrationMode
-	input.CustomConfig = strings.TrimSpace(input.CustomConfig)
-	input.ThemeConfig = strings.TrimSpace(input.ThemeConfig)
 	input.HomeContent = strings.TrimSpace(input.HomeContent)
 	input.SiteLogo = strings.TrimSpace(input.SiteLogo)
 	input.SiteFavicon = strings.TrimSpace(input.SiteFavicon)
@@ -340,8 +346,6 @@ func (s *SubSiteService) ActivatePaidOrder(ctx context.Context, order *PaymentOr
 		DocURL:                request.Site.DocURL,
 		HomeContent:           request.Site.HomeContent,
 		ThemeTemplate:         request.Site.ThemeTemplate,
-		ThemeConfig:           request.Site.ThemeConfig,
-		CustomConfig:          request.Site.CustomConfig,
 		RegistrationMode:      request.Site.RegistrationMode,
 		EnableTopup:           request.Site.EnableTopup,
 		AllowSubSite:          request.Site.AllowSubSite,

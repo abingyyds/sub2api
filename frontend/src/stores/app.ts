@@ -284,8 +284,6 @@ export const useAppStore = defineStore('app', () => {
         subsite_slug: '',
         subsite_domain: '',
         theme_template: '',
-        theme_config: '',
-        custom_config: '',
         registration_mode: 'open',
         enable_topup: true,
         allow_sub_site: false,

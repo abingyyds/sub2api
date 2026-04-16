@@ -51,10 +51,6 @@
               <option v-for="item in platformForm.theme_templates" :key="item.key" :value="item.key">{{ item.label }}</option>
             </select>
           </div>
-          <div class="md:col-span-2 xl:col-span-4">
-            <label class="input-label">默认自定义配置 JSON</label>
-            <textarea v-model="platformForm.default_custom_config" rows="4" class="input mt-1 w-full font-mono text-xs" placeholder='例如：{"hero_title":"欢迎来到你的分站"}'></textarea>
-          </div>
         </div>
       </section>
 
@@ -233,14 +229,6 @@
             <label class="input-label">首页内容</label>
             <textarea v-model="form.home_content" rows="5" class="input mt-1 w-full"></textarea>
           </div>
-          <div class="md:col-span-2">
-            <label class="input-label">主题配置 JSON</label>
-            <textarea v-model="form.theme_config" rows="4" class="input mt-1 w-full font-mono text-xs"></textarea>
-          </div>
-          <div class="md:col-span-2">
-            <label class="input-label">自定义配置 JSON</label>
-            <textarea v-model="form.custom_config" rows="5" class="input mt-1 w-full font-mono text-xs"></textarea>
-          </div>
         </div>
 
         <div class="grid gap-4 rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-dark-700 dark:bg-dark-800/60 md:grid-cols-3">
@@ -368,7 +356,6 @@ const platformForm = reactive<PlatformSubSiteConfig>({
   validity_days: 365,
   max_level: 2,
   default_theme_template: 'starter',
-  default_custom_config: '',
   theme_templates: []
 })
 const platformPriceYuan = ref<number | null>(388)
@@ -394,8 +381,6 @@ const form = reactive<SaveSubSiteRequest>({
   doc_url: '',
   home_content: '',
   theme_template: 'starter',
-  theme_config: '',
-  custom_config: '',
   registration_mode: 'open',
   enable_topup: true,
   allow_sub_site: false,
@@ -503,8 +488,6 @@ function resetForm() {
   form.doc_url = ''
   form.home_content = ''
   form.theme_template = platformForm.default_theme_template || 'starter'
-  form.theme_config = ''
-  form.custom_config = platformForm.default_custom_config || ''
   form.registration_mode = 'open'
   form.enable_topup = true
   form.allow_sub_site = false
@@ -534,8 +517,6 @@ function openEdit(item: AdminSubSite) {
   form.doc_url = item.doc_url || ''
   form.home_content = item.home_content || ''
   form.theme_template = item.theme_template || 'starter'
-  form.theme_config = item.theme_config || ''
-  form.custom_config = item.custom_config || ''
   form.registration_mode = item.registration_mode || 'open'
   form.enable_topup = item.enable_topup
   form.allow_sub_site = item.allow_sub_site
@@ -568,8 +549,6 @@ async function handleSave() {
       doc_url: form.doc_url || '',
       home_content: form.home_content || '',
       theme_template: form.theme_template || 'starter',
-      theme_config: form.theme_config || '',
-      custom_config: form.custom_config || '',
       registration_mode: form.registration_mode || 'open',
       enable_topup: form.enable_topup,
       allow_sub_site: form.allow_sub_site,

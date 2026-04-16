@@ -245,7 +245,6 @@ const (
 	SettingKeySubSiteActivationPriceFen     = "subsite_activation_price_fen"
 	SettingKeySubSiteActivationValidityDays = "subsite_activation_validity_days"
 	SettingKeySubSiteDefaultThemeTemplate   = "subsite_default_theme_template"
-	SettingKeySubSiteDefaultCustomConfig    = "subsite_default_custom_config"
 	SettingKeySubSiteMaxLevel               = "subsite_max_level"
 )
 

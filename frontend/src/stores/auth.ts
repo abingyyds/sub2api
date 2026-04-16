@@ -6,6 +6,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, readonly } from 'vue'
 import { authAPI, isTotp2FARequired, type LoginResponse } from '@/api'
+import { subSiteAPI, type OwnedSubSite } from '@/api/subsite'
 import type { User, LoginRequest, RegisterRequest, AuthResponse } from '@/types'
 
 const AUTH_TOKEN_KEY = 'auth_token'
@@ -18,6 +19,7 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const token = ref<string | null>(null)
   const runMode = ref<'standard' | 'simple'>('standard')
+  const ownedSites = ref<OwnedSubSite[]>([])
   let refreshIntervalId: ReturnType<typeof setInterval> | null = null
   let authCheckPromise: Promise<void> | null = null
 
@@ -40,6 +42,8 @@ export const useAuthStore = defineStore('auth', () => {
   const isOrgAdmin = computed(() => {
     return user.value?.role === 'org_admin'
   })
+
+  const isSubSiteOwner = computed(() => ownedSites.value.length > 0)
 
   // ==================== Actions ====================
 
@@ -250,6 +254,9 @@ export const useAuthStore = defineStore('auth', () => {
       // Update localStorage
       localStorage.setItem(AUTH_USER_KEY, JSON.stringify(userData))
 
+      // Fire-and-forget refresh of owned sub-sites — don't block auth flow on failure
+      refreshOwnedSites().catch(() => { /* 忽略错误，守卫会自然回退 */ })
+
       return userData
     } catch (error) {
       // If refresh fails with 401, clear auth state
@@ -257,6 +264,25 @@ export const useAuthStore = defineStore('auth', () => {
         clearAuth()
       }
       throw error
+    }
+  }
+
+  /**
+   * Load current user's owned sub-sites into store. Used by router guards
+   * and sidebar to decide whether to show the sub-site admin section.
+   */
+  async function refreshOwnedSites(): Promise<OwnedSubSite[]> {
+    if (!token.value) {
+      ownedSites.value = []
+      return []
+    }
+    try {
+      const sites = await subSiteAPI.listOwnedSites()
+      ownedSites.value = sites
+      return sites
+    } catch (_err) {
+      ownedSites.value = []
+      return []
     }
   }
 
@@ -271,6 +297,7 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = null
     user.value = null
     runMode.value = 'standard'
+    ownedSites.value = []
     localStorage.removeItem(AUTH_TOKEN_KEY)
     localStorage.removeItem(AUTH_USER_KEY)
   }
@@ -282,6 +309,7 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     token,
     runMode: readonly(runMode),
+    ownedSites,
 
     // Computed
     isAuthenticated,
@@ -289,6 +317,7 @@ export const useAuthStore = defineStore('auth', () => {
     isFullAdmin,
     isOrgAdmin,
     isSimpleMode,
+    isSubSiteOwner,
 
     // Actions
     login,
@@ -297,6 +326,7 @@ export const useAuthStore = defineStore('auth', () => {
     setToken,
     logout,
     checkAuth,
-    refreshUser
+    refreshUser,
+    refreshOwnedSites
   }
 })

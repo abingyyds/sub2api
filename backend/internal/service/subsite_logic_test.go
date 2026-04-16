@@ -14,8 +14,6 @@ func TestSubSiteService_ApplyPublicSettings_KeepsMainSiteConfig(t *testing.T) {
 		SiteName:         "Main",
 		SiteLogo:         "main-logo",
 		ThemeTemplate:    "main-theme",
-		ThemeConfig:      `{"accent":"main"}`,
-		CustomConfig:     `{"hero":"main"}`,
 		RegistrationMode: SubSiteRegistrationInvite,
 		EnableTopup:      true,
 		AllowSubSite:     false,
@@ -29,9 +27,7 @@ func TestSubSiteService_ApplyPublicSettings_KeepsMainSiteConfig(t *testing.T) {
 		SiteLogo:              "branch-logo",
 		SiteSubtitle:          "branch-subtitle",
 		HomeContent:           "<p>branch</p>",
-		ThemeTemplate:         "branch-theme",
-		ThemeConfig:           `{"accent":"branch"}`,
-		CustomConfig:          `{"hero":"branch"}`,
+		ThemeTemplate:         "aurora",
 		RegistrationMode:      SubSiteRegistrationClosed,
 		EnableTopup:           false,
 		AllowSubSite:          true,
@@ -50,9 +46,8 @@ func TestSubSiteService_ApplyPublicSettings_KeepsMainSiteConfig(t *testing.T) {
 	require.True(t, got.AllowSubSite)
 	require.Equal(t, 39900, got.SubSitePriceFen)
 
-	require.Equal(t, "main-theme", got.ThemeTemplate)
-	require.Equal(t, `{"accent":"main"}`, got.ThemeConfig)
-	require.Equal(t, `{"hero":"main"}`, got.CustomConfig)
+	// 分站自身 ThemeTemplate 覆盖主站默认，其他基础字段沿用主站
+	require.Equal(t, "aurora", got.ThemeTemplate)
 	require.Equal(t, SubSiteRegistrationInvite, got.RegistrationMode)
 	require.True(t, got.EnableTopup)
 }
