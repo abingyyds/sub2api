@@ -25,6 +25,10 @@
         </div>
         <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <label class="flex items-center gap-3 rounded-2xl border border-gray-100 px-4 py-3 text-sm text-gray-700 dark:border-dark-700 dark:text-dark-200">
+            <input v-model="platformForm.entry_enabled" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
+            展示分站系统入口
+          </label>
+          <label class="flex items-center gap-3 rounded-2xl border border-gray-100 px-4 py-3 text-sm text-gray-700 dark:border-dark-700 dark:text-dark-200">
             <input v-model="platformForm.enabled" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
             开启平台自助开通
           </label>
@@ -332,6 +336,7 @@ const filters = reactive({
 })
 
 const platformForm = reactive<PlatformSubSiteConfig>({
+  entry_enabled: false,
   enabled: true,
   activation_price_fen: 38800,
   validity_days: 365,
@@ -477,6 +482,7 @@ async function handleSavePlatform() {
     const next = await subSitesAPI.updatePlatformConfig(platformForm)
     Object.assign(platformForm, next)
     platformPriceYuan.value = next.activation_price_fen / 100
+    await appStore.fetchPublicSettings(true)
     appStore.showSuccess('平台分站配置已保存')
   } catch (error: any) {
     appStore.showError(error?.message || '保存平台分站配置失败')

@@ -253,6 +253,9 @@ function clearTimers() {
 }
 
 onMounted(async () => {
+  window.addEventListener('focus', handlePaymentReturn)
+  document.addEventListener('visibilitychange', handlePaymentVisibilityChange)
+
   try {
     const methods = await paymentAPI.getPayMethods()
     availablePayMethods.value = methods || []
@@ -264,7 +267,11 @@ onMounted(async () => {
   }
 })
 
-onUnmounted(() => clearTimers())
+onUnmounted(() => {
+  window.removeEventListener('focus', handlePaymentReturn)
+  document.removeEventListener('visibilitychange', handlePaymentVisibilityChange)
+  clearTimers()
+})
 
 // === Payment method helpers ===
 const WECHAT_ICON = '<rect width="24" height="24" rx="4" fill="#07C160"/><path d="M16.7 10.5c-.2 0-.4 0-.6.1.1-.4.1-.8.1-1.2 0-2.8-2.7-5-5.9-5C7 4.4 4.4 6.6 4.4 9.4c0 1.5.8 2.9 2.1 3.9l-.5 1.6 1.9-1c.6.2 1.2.3 1.8.3h.2c-.1-.3-.1-.7-.1-1 0-2.4 2.3-4.4 5.1-4.4l.2-.1c-.1-.1-.2-.2-.4-.2zm-3.3-2.2c.4 0 .7.3.7.7s-.3.7-.7.7-.7-.3-.7-.7.3-.7.7-.7zm-4.2 1.4c-.4 0-.7-.3-.7-.7s.3-.7.7-.7.7.3.7.7-.3.7-.7.7zm10.4 4.5c0-2.2-2.2-4-4.8-4s-4.8 1.8-4.8 4 2.2 4 4.8 4c.5 0 1-.1 1.5-.2l1.5.8-.4-1.3c1.2-.8 2.2-2 2.2-3.3zm-6.4-.6c-.3 0-.6-.3-.6-.6s.3-.6.6-.6.6.3.6.6-.3.6-.6.6zm3.2 0c-.3 0-.6-.3-.6-.6s.3-.6.6-.6.6.3.6.6-.3.6-.6.6z" fill="white"/>'
@@ -351,21 +358,39 @@ async function handleRecharge() {
 
 function startPolling() {
   pollTimer = setInterval(async () => {
-    try {
-      const order = await paymentAPI.queryOrder(currentOrderNo.value)
-      if (order.status === 'paid' && !paymentSuccessHandled.value) {
-        paymentSuccessHandled.value = true
-        paymentStatus.value = 'paid'
-        clearTimers()
-        await syncPaymentSuccessState()
-      } else if (order.status === 'closed') {
-        paymentStatus.value = 'closed'
-        clearTimers()
-      }
-    } catch {
-      // ignore poll errors
-    }
+    await checkCurrentOrderStatus()
   }, 3000)
+}
+
+async function checkCurrentOrderStatus() {
+  if (!showPaymentModal.value || paymentStatus.value !== 'pending' || !currentOrderNo.value) {
+    return
+  }
+
+  try {
+    const order = await paymentAPI.queryOrder(currentOrderNo.value)
+    if (order.status === 'paid' && !paymentSuccessHandled.value) {
+      paymentSuccessHandled.value = true
+      paymentStatus.value = 'paid'
+      clearTimers()
+      await syncPaymentSuccessState()
+    } else if (order.status === 'closed') {
+      paymentStatus.value = 'closed'
+      clearTimers()
+    }
+  } catch {
+    // ignore poll errors
+  }
+}
+
+function handlePaymentReturn() {
+  void checkCurrentOrderStatus()
+}
+
+function handlePaymentVisibilityChange() {
+  if (!document.hidden) {
+    void checkCurrentOrderStatus()
+  }
 }
 
 async function syncPaymentSuccessState() {

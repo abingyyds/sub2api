@@ -88,6 +88,7 @@ type SubSiteOpenInfo struct {
 }
 
 type PlatformSubSiteConfig struct {
+	EntryEnabled         bool                         `json:"entry_enabled"`
 	Enabled              bool                         `json:"enabled"`
 	ActivationPriceFen   int                          `json:"activation_price_fen"`
 	ValidityDays         int                          `json:"validity_days"`
@@ -97,6 +98,7 @@ type PlatformSubSiteConfig struct {
 }
 
 type UpdatePlatformSubSiteConfigInput struct {
+	EntryEnabled         bool   `json:"entry_enabled"`
 	Enabled              bool   `json:"enabled"`
 	ActivationPriceFen   int    `json:"activation_price_fen"`
 	ValidityDays         int    `json:"validity_days"`

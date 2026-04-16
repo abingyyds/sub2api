@@ -123,6 +123,7 @@ type PublicSettings struct {
 	LinuxDoOAuthEnabled  bool   `json:"linuxdo_oauth_enabled"`
 	ReferralEnabled      bool   `json:"referral_enabled"`
 	AgentEnabled         bool   `json:"agent_enabled"`
+	SubSiteEntryEnabled  bool   `json:"subsite_entry_enabled"`
 	IsSubSite            bool   `json:"is_subsite"`
 	SubSiteSlug          string `json:"subsite_slug"`
 	SubSiteDomain        string `json:"subsite_domain"`

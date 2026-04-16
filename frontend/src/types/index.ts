@@ -89,6 +89,7 @@ export interface PublicSettings {
   linuxdo_oauth_enabled: boolean
   referral_enabled: boolean
   agent_enabled?: boolean
+  subsite_entry_enabled?: boolean
   is_subsite?: boolean
   subsite_slug?: string
   subsite_domain?: string

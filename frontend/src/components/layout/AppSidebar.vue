@@ -242,6 +242,7 @@ const isAdmin = computed(() => authStore.isAdmin)
 const isFullAdmin = computed(() => authStore.isFullAdmin)
 const isOrgAdmin = computed(() => authStore.isOrgAdmin)
 const isDark = ref(document.documentElement.classList.contains('dark'))
+const subSiteEntryEnabled = computed(() => appStore.cachedPublicSettings?.subsite_entry_enabled === true)
 
 // Site settings from appStore (cached, no flicker)
 const siteName = computed(() => appStore.siteName)
@@ -644,7 +645,9 @@ const userNavGroups = computed(() => {
         { path: '/order-history', label: t('nav.orderHistory'), icon: ReceiptIcon },
         { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
         { path: '/agent', label: t('nav.agent'), icon: UsersIcon },
-        { path: '/subsites', label: '分站中心', icon: GlobeIcon },
+        ...(subSiteEntryEnabled.value
+          ? [{ path: '/subsites', label: '分站中心', icon: GlobeIcon }]
+          : []),
       ]
     },
     {
@@ -690,7 +693,9 @@ const personalNavItems = computed(() => {
     { path: '/order-history', label: t('nav.orderHistory'), icon: ReceiptIcon },
     { path: '/redeem', label: t('nav.redeem'), icon: GiftIcon, hideInSimpleMode: true },
     { path: '/agent', label: t('nav.agent'), icon: UsersIcon },
-    { path: '/subsites', label: '分站中心', icon: GlobeIcon },
+    ...(subSiteEntryEnabled.value
+      ? [{ path: '/subsites', label: '分站中心', icon: GlobeIcon }]
+      : []),
     { path: '/changelog', label: t('nav.changelog'), icon: MegaphoneIcon },
     { path: '/tutorial', label: t('nav.tutorial'), icon: BookIcon },
     { path: '/contact', label: t('nav.contact'), icon: ChatBubbleIcon },

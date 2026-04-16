@@ -1150,6 +1150,9 @@ function setActiveTab(tab: 'newcomer' | 'subscription' | 'recharge') {
 }
 
 onMounted(async () => {
+  window.addEventListener('focus', handlePaymentReturn)
+  document.addEventListener('visibilitychange', handlePaymentVisibilityChange)
+
   const requestedTab = route.query.tab
   if (requestedTab === 'newcomer' || requestedTab === 'subscription' || requestedTab === 'recharge') {
     activeTab.value = requestedTab
@@ -1167,6 +1170,8 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('focus', handlePaymentReturn)
+  document.removeEventListener('visibilitychange', handlePaymentVisibilityChange)
   clearTimers()
   if (promoValidateTimeout) {
     clearTimeout(promoValidateTimeout)
@@ -1387,21 +1392,39 @@ async function showQRModal(order: { order_no: string; code_url: string | null; a
 
 function startPolling() {
   pollTimer = setInterval(async () => {
-    try {
-      const order = await paymentAPI.queryOrder(currentOrderNo.value)
-      if (order.status === 'paid' && !paymentSuccessHandled.value) {
-        paymentSuccessHandled.value = true
-        paymentStatus.value = 'paid'
-        clearTimers()
-        await syncPaymentSuccessState()
-      } else if (order.status === 'closed') {
-        paymentStatus.value = 'closed'
-        clearTimers()
-      }
-    } catch {
-      // ignore poll errors
-    }
+    await checkCurrentOrderStatus()
   }, 3000)
+}
+
+async function checkCurrentOrderStatus() {
+  if (!showPaymentModal.value || paymentStatus.value !== 'pending' || !currentOrderNo.value) {
+    return
+  }
+
+  try {
+    const order = await paymentAPI.queryOrder(currentOrderNo.value)
+    if (order.status === 'paid' && !paymentSuccessHandled.value) {
+      paymentSuccessHandled.value = true
+      paymentStatus.value = 'paid'
+      clearTimers()
+      await syncPaymentSuccessState()
+    } else if (order.status === 'closed') {
+      paymentStatus.value = 'closed'
+      clearTimers()
+    }
+  } catch {
+    // ignore poll errors
+  }
+}
+
+function handlePaymentReturn() {
+  void checkCurrentOrderStatus()
+}
+
+function handlePaymentVisibilityChange() {
+  if (!document.hidden) {
+    void checkCurrentOrderStatus()
+  }
 }
 
 async function syncPaymentSuccessState() {

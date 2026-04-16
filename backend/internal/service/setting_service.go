@@ -82,6 +82,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyLinuxDoConnectEnabled,
 		SettingKeyReferralEnabled,
 		SettingKeyAgentEnabled,
+		SettingKeySubSiteEntryEnabled,
 	}
 
 	settings, err := s.settingRepo.GetMultiple(ctx, keys)
@@ -120,6 +121,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		LinuxDoOAuthEnabled:  linuxDoEnabled,
 		ReferralEnabled:      settings[SettingKeyReferralEnabled] == "true",
 		AgentEnabled:         settings[SettingKeyAgentEnabled] != "false",
+		SubSiteEntryEnabled:  settings[SettingKeySubSiteEntryEnabled] == "true",
 	}
 	if s.subSiteService != nil {
 		return s.subSiteService.ApplyPublicSettings(ctx, publicSettings), nil
@@ -167,6 +169,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		LinuxDoOAuthEnabled  bool   `json:"linuxdo_oauth_enabled"`
 		ReferralEnabled      bool   `json:"referral_enabled"`
 		AgentEnabled         bool   `json:"agent_enabled"`
+		SubSiteEntryEnabled  bool   `json:"subsite_entry_enabled"`
 		IsSubSite            bool   `json:"is_subsite"`
 		SubSiteSlug          string `json:"subsite_slug,omitempty"`
 		SubSiteDomain        string `json:"subsite_domain,omitempty"`
@@ -198,6 +201,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		LinuxDoOAuthEnabled:  settings.LinuxDoOAuthEnabled,
 		ReferralEnabled:      settings.ReferralEnabled,
 		AgentEnabled:         settings.AgentEnabled,
+		SubSiteEntryEnabled:  settings.SubSiteEntryEnabled,
 		IsSubSite:            settings.IsSubSite,
 		SubSiteSlug:          settings.SubSiteSlug,
 		SubSiteDomain:        settings.SubSiteDomain,

@@ -143,6 +143,7 @@ type PublicSettings struct {
 	EnableTopup          bool
 	AllowSubSite         bool
 	SubSitePriceFen      int
+	SubSiteEntryEnabled  bool
 	Version              string
 }
 

@@ -50,6 +50,7 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		LinuxDoOAuthEnabled:  settings.LinuxDoOAuthEnabled,
 		ReferralEnabled:      settings.ReferralEnabled,
 		AgentEnabled:         settings.AgentEnabled,
+		SubSiteEntryEnabled:  settings.SubSiteEntryEnabled,
 		IsSubSite:            settings.IsSubSite,
 		SubSiteSlug:          settings.SubSiteSlug,
 		SubSiteDomain:        settings.SubSiteDomain,
