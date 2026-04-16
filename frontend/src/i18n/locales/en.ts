@@ -3526,11 +3526,14 @@ export default {
       waitingPayment: 'Waiting for payment...',
       paymentSuccess: 'Payment successful! Subscription activated',
       rechargeSuccess: 'Recharge successful! Balance updated',
+      paymentSuccessToast: 'Payment successful. Your subscription is active and the page has been refreshed.',
+      rechargeSuccessToast: 'Recharge successful. Your balance has been updated and the page has been refreshed.',
       orderExpired: 'Order expired, please try again',
       expiresIn: 'Expires in {minutes}m {seconds}s',
       cancel: 'Cancel',
       viewSubscription: 'View Subscription',
       viewDashboard: 'View Dashboard',
+      viewOrderHistory: 'View Order History',
       createFailed: 'Failed to create order, please try again',
       noMethodsAvailable: 'No payment methods are currently available. Please ask the administrator to check the payment configuration.'
     }
@@ -3559,6 +3562,7 @@ export default {
       expiresIn: 'Expires in {minutes}m {seconds}s',
       cancel: 'Cancel',
       viewDashboard: 'View Dashboard',
+      viewOrderHistory: 'View Order History',
       createFailed: 'Failed to create order, please try again',
       noMethodsAvailable: 'No payment methods are currently available. Please ask the administrator to check the payment configuration.'
     }
@@ -3604,11 +3608,16 @@ export default {
     invoiceNotRequested: 'Not Requested',
     invoiceRequested: 'Pending',
     invoiceProcessed: 'Processed',
+    invoiceUnsupported: 'Unsupported',
     invoiceSubmitted: 'Invoice request submitted',
     invoiceError: 'Failed to submit invoice request',
     noOrderSelected: 'Please select at least one paid order',
     copyOrderNo: 'Copy Order No.',
     copied: 'Copied',
+    legacySubscriptionSource: 'Legacy subscription: {group}',
+    justPaid: 'Just paid',
+    paymentSuccessArrived: 'Payment completed. Your order history and account data have been refreshed automatically.',
+    refreshOrders: 'Refresh Orders',
   },
 
   // Contact Us

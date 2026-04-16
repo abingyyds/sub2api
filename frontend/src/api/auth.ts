@@ -222,8 +222,8 @@ export async function resetPassword(request: ResetPasswordRequest): Promise<Rese
 }
 
 export async function getActiveAnnouncements(): Promise<Announcement[]> {
-  const { data } = await apiClient.get<Announcement[]>('/settings/announcements')
-  return data
+  const { data } = await apiClient.get<Announcement[] | null>('/settings/announcements')
+  return Array.isArray(data) ? data : []
 }
 
 /**

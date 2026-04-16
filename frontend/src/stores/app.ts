@@ -336,9 +336,9 @@ export const useAppStore = defineStore('app', () => {
     announcementsLoading.value = true
     announcementsPromise = fetchActiveAnnouncementsAPI()
       .then((data) => {
-        announcements.value = data
+        announcements.value = Array.isArray(data) ? data : []
         announcementsLoaded.value = true
-        return data
+        return announcements.value
       })
       .catch((error) => {
         console.error('Failed to fetch announcements:', error)

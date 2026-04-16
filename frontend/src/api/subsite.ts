@@ -62,22 +62,40 @@ export type UpdateOwnedSubSiteRequest = CreateSubSiteActivationInput
 
 export async function getOpenInfo(): Promise<SubSiteOpenInfo> {
   const { data } = await apiClient.get<SubSiteOpenInfo>('/subsite/open-info')
-  return data
+  return {
+    ...data,
+    theme_templates: Array.isArray(data?.theme_templates) ? data.theme_templates : [],
+  }
 }
 
 export async function listOwnedSites(): Promise<OwnedSubSite[]> {
-  const { data } = await apiClient.get<OwnedSubSite[]>('/subsite/owned')
-  return data
+  const { data } = await apiClient.get<OwnedSubSite[] | null>('/subsite/owned')
+  if (!Array.isArray(data)) {
+    return []
+  }
+  return data.map((site) => ({
+    ...site,
+    group_price_overrides: Array.isArray(site.group_price_overrides) ? site.group_price_overrides : [],
+    recharge_price_overrides: Array.isArray(site.recharge_price_overrides) ? site.recharge_price_overrides : [],
+  }))
 }
 
 export async function getOwnedSite(id: number): Promise<OwnedSubSite> {
   const { data } = await apiClient.get<OwnedSubSite>(`/subsite/owned/${id}`)
-  return data
+  return {
+    ...data,
+    group_price_overrides: Array.isArray(data.group_price_overrides) ? data.group_price_overrides : [],
+    recharge_price_overrides: Array.isArray(data.recharge_price_overrides) ? data.recharge_price_overrides : [],
+  }
 }
 
 export async function updateOwnedSite(id: number, payload: UpdateOwnedSubSiteRequest): Promise<OwnedSubSite> {
   const { data } = await apiClient.put<OwnedSubSite>(`/subsite/owned/${id}`, payload)
-  return data
+  return {
+    ...data,
+    group_price_overrides: Array.isArray(data.group_price_overrides) ? data.group_price_overrides : [],
+    recharge_price_overrides: Array.isArray(data.recharge_price_overrides) ? data.recharge_price_overrides : [],
+  }
 }
 
 export const subSiteAPI = {

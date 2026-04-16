@@ -929,7 +929,101 @@ func (s *PaymentService) QueryOrder(ctx context.Context, userID int64, orderNo s
 
 // ListOrders 列出用户订单
 func (s *PaymentService) ListOrders(ctx context.Context, userID int64, params pagination.PaginationParams) ([]PaymentOrder, *pagination.PaginationResult, error) {
-	return s.orderRepo.ListByUserID(ctx, userID, params)
+	orders, paginationResult, err := s.orderRepo.ListByUserID(ctx, userID, params)
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(orders) > 0 || params.Page > 1 || s.subscriptionService == nil {
+		return orders, paginationResult, nil
+	}
+
+	legacyOrders, legacyPagination, legacyErr := s.listLegacySubscriptionOrders(ctx, userID, params)
+	if legacyErr != nil {
+		return orders, paginationResult, nil
+	}
+	return legacyOrders, legacyPagination, nil
+}
+
+func (s *PaymentService) listLegacySubscriptionOrders(ctx context.Context, userID int64, params pagination.PaginationParams) ([]PaymentOrder, *pagination.PaginationResult, error) {
+	subscriptions, err := s.subscriptionService.ListUserSubscriptions(ctx, userID)
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(subscriptions) == 0 {
+		return []PaymentOrder{}, &pagination.PaginationResult{
+			Total:    0,
+			Page:     params.Page,
+			PageSize: params.PageSize,
+			Pages:    1,
+		}, nil
+	}
+
+	sort.Slice(subscriptions, func(i, j int) bool {
+		return subscriptions[i].CreatedAt.After(subscriptions[j].CreatedAt)
+	})
+
+	total := len(subscriptions)
+	page := params.Page
+	if page < 1 {
+		page = 1
+	}
+	pageSize := params.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	start := (page - 1) * pageSize
+	if start >= total {
+		return []PaymentOrder{}, &pagination.PaginationResult{
+			Total:    int64(total),
+			Page:     page,
+			PageSize: pageSize,
+			Pages:    (total + pageSize - 1) / pageSize,
+		}, nil
+	}
+	end := start + pageSize
+	if end > total {
+		end = total
+	}
+
+	items := make([]PaymentOrder, 0, end-start)
+	for _, sub := range subscriptions[start:end] {
+		groupName := fmt.Sprintf("group_%d", sub.GroupID)
+		amountFen := 0
+		if sub.Group != nil {
+			if strings.TrimSpace(sub.Group.Name) != "" {
+				groupName = sub.Group.Name
+			}
+			amountFen = sub.Group.PriceFen
+		}
+
+		status := PaymentOrderStatusPaid
+		if sub.Status == SubscriptionStatusRevoked {
+			status = PaymentOrderStatusClosed
+		}
+
+		items = append(items, PaymentOrder{
+			OrderNo:        fmt.Sprintf("legacy-sub-%d", sub.ID),
+			UserID:         sub.UserID,
+			PlanKey:        fmt.Sprintf("legacy_subscription_%d", sub.GroupID),
+			GroupID:        sub.GroupID,
+			AmountFen:      amountFen,
+			ValidityDays:   int(sub.ExpiresAt.Sub(sub.StartsAt).Hours() / 24),
+			OrderType:      PaymentOrderTypeSubscription,
+			Status:         status,
+			PayMethod:      fmt.Sprintf("legacy_subscription:%s", groupName),
+			PaidAt:         &sub.CreatedAt,
+			ExpiredAt:      sub.ExpiresAt,
+			CreatedAt:      sub.CreatedAt,
+			UpdatedAt:      sub.UpdatedAt,
+		})
+	}
+
+	return items, &pagination.PaginationResult{
+		Total:    int64(total),
+		Page:     page,
+		PageSize: pageSize,
+		Pages:    (total + pageSize - 1) / pageSize,
+	}, nil
 }
 
 // ListAllOrders 列出所有订单（管理员）

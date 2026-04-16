@@ -46,8 +46,22 @@
           <p class="text-sm text-red-600 dark:text-red-400">{{ t('orderHistory.loadError') }}</p>
         </div>
 
+        <SlideIn v-if="!loading && !error && showSuccessBanner" direction="up" :delay="150">
+          <div class="rounded-2xl border border-green-200 bg-green-50 px-5 py-4 text-sm text-green-700 dark:border-green-800/30 dark:bg-green-900/10 dark:text-green-300">
+            <div class="flex items-center justify-between gap-4">
+              <span>{{ t('orderHistory.paymentSuccessArrived') }}</span>
+              <button
+                class="rounded-lg border border-green-300 px-3 py-1.5 text-xs font-medium text-green-700 transition hover:bg-green-100 dark:border-green-700 dark:text-green-300 dark:hover:bg-green-900/30"
+                @click="fetchOrders(currentPage)"
+              >
+                {{ t('orderHistory.refreshOrders') }}
+              </button>
+            </div>
+          </div>
+        </SlideIn>
+
         <!-- Empty state -->
-        <SlideIn v-else-if="orders.length === 0" direction="up" :delay="200">
+        <SlideIn v-if="!loading && !error && orders.length === 0" direction="up" :delay="200">
           <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft">
             <div class="flex flex-col items-center justify-center py-16 px-6 text-center">
               <div class="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-primary-100 dark:bg-primary-900/30">
@@ -60,7 +74,7 @@
         </SlideIn>
 
         <!-- Order list -->
-        <SlideIn v-else direction="up" :delay="200">
+        <SlideIn v-else-if="!loading && !error" direction="up" :delay="200">
           <div class="rounded-2xl border border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft overflow-hidden">
             <div class="overflow-x-auto">
               <table class="w-full text-left text-sm">
@@ -81,6 +95,7 @@
                     v-for="order in orders"
                     :key="order.order_no"
                     class="transition hover:bg-gray-50 dark:hover:bg-dark-800/50"
+                    :class="isHighlightedOrder(order.order_no) ? 'bg-green-50/80 dark:bg-green-900/10' : ''"
                   >
                     <!-- Checkbox for invoice mode -->
                     <td v-if="invoiceMode" class="px-4 py-3">
@@ -112,6 +127,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                           </svg>
                         </button>
+                        <span
+                          v-if="isHighlightedOrder(order.order_no)"
+                          class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                        >
+                          {{ t('orderHistory.justPaid') }}
+                        </span>
                       </div>
                     </td>
                     <!-- Type -->
@@ -294,6 +315,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { FadeIn, SlideIn } from '@/components/animations'
@@ -302,6 +324,8 @@ import { paymentAPI, type PaymentOrder } from '@/api/payment'
 
 const { t } = useI18n()
 const appStore = useAppStore()
+const route = useRoute()
+const router = useRouter()
 
 const loading = ref(true)
 const error = ref(false)
@@ -309,6 +333,8 @@ const orders = ref<PaymentOrder[]>([])
 const currentPage = ref(1)
 const totalPages = ref(1)
 const pageSize = 20
+const highlightedOrderNo = ref('')
+const showSuccessBanner = ref(false)
 
 // Invoice mode
 const invoiceMode = ref(false)
@@ -342,8 +368,12 @@ function toggleOrder(order: PaymentOrder) {
   }
 }
 
+function isLegacySubscriptionFallback(order: PaymentOrder): boolean {
+  return order.order_no.startsWith('legacy-sub-') || order.pay_method.startsWith('legacy_subscription:')
+}
+
 function canRequestInvoice(order: PaymentOrder) {
-  return order.status === 'paid' && !order.invoice_requested_at
+  return !isLegacySubscriptionFallback(order) && order.status === 'paid' && !order.invoice_requested_at
 }
 
 function getOrderType(order: PaymentOrder): 'recharge' | 'subscription' {
@@ -375,6 +405,9 @@ function statusText(status: string): string {
 }
 
 function payMethodText(method: string): string {
+  if (method.startsWith('legacy_subscription:')) {
+    return t('orderHistory.legacySubscriptionSource', { group: method.replace('legacy_subscription:', '') })
+  }
   switch (method) {
     case 'wechat': return t('orderHistory.payMethodWechat')
     case 'alipay': return t('orderHistory.payMethodAlipay')
@@ -385,12 +418,14 @@ function payMethodText(method: string): string {
 }
 
 function invoiceStatusText(order: PaymentOrder): string {
+  if (isLegacySubscriptionFallback(order)) return t('orderHistory.invoiceUnsupported')
   if (order.invoice_processed_at) return t('orderHistory.invoiceProcessed')
   if (order.invoice_requested_at) return t('orderHistory.invoiceRequested')
   return t('orderHistory.invoiceNotRequested')
 }
 
 function invoiceBadgeClass(order: PaymentOrder): string {
+  if (isLegacySubscriptionFallback(order)) return 'bg-gray-100 text-gray-500 dark:bg-dark-700 dark:text-dark-400'
   if (order.invoice_processed_at) return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
   if (order.invoice_requested_at) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
   return 'bg-gray-100 text-gray-600 dark:bg-dark-700 dark:text-dark-400'
@@ -407,6 +442,10 @@ function formatDate(dateStr: string): string {
   if (!dateStr) return '-'
   const d = new Date(dateStr)
   return d.toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+}
+
+function isHighlightedOrder(orderNo: string): boolean {
+  return highlightedOrderNo.value !== '' && highlightedOrderNo.value === orderNo
 }
 
 async function copyToClipboard(text: string) {
@@ -468,6 +507,19 @@ async function submitInvoice() {
 }
 
 onMounted(() => {
-  fetchOrders()
+  const highlight = typeof route.query.highlight === 'string' ? route.query.highlight : ''
+  highlightedOrderNo.value = highlight
+  showSuccessBanner.value = route.query.success === '1'
+
+  fetchOrders().finally(() => {
+    if (showSuccessBanner.value) {
+      router.replace({
+        query: {
+          ...route.query,
+          success: undefined,
+        }
+      })
+    }
+  })
 })
 </script>

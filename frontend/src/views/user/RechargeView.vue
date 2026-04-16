@@ -185,7 +185,7 @@
               class="btn btn-primary flex-1"
               @click="goToDashboard"
             >
-              {{ t('recharge.payment.viewDashboard') }}
+              {{ t('recharge.payment.viewOrderHistory') }}
             </button>
           </div>
         </div>
@@ -225,6 +225,7 @@ const paymentStatus = ref<'pending' | 'paid' | 'closed'>('pending')
 const currentOrderNo = ref('')
 const currentOrderAmount = ref('')
 const countdown = ref(0)
+const paymentSuccessHandled = ref(false)
 
 let pollTimer: ReturnType<typeof setInterval> | null = null
 let countdownTimer: ReturnType<typeof setInterval> | null = null
@@ -312,6 +313,7 @@ async function handleRecharge() {
       currentOrderNo.value = order.order_no
       currentOrderAmount.value = (order.amount_fen / 100).toFixed(order.amount_fen % 100 === 0 ? 0 : 2)
       paymentStatus.value = 'pending'
+      paymentSuccessHandled.value = false
       showPaymentModal.value = true
 
       const expiresAt = new Date(order.expired_at).getTime()
@@ -351,7 +353,8 @@ function startPolling() {
   pollTimer = setInterval(async () => {
     try {
       const order = await paymentAPI.queryOrder(currentOrderNo.value)
-      if (order.status === 'paid') {
+      if (order.status === 'paid' && !paymentSuccessHandled.value) {
+        paymentSuccessHandled.value = true
         paymentStatus.value = 'paid'
         clearTimers()
         await syncPaymentSuccessState()
@@ -368,6 +371,7 @@ function startPolling() {
 async function syncPaymentSuccessState() {
   try {
     await authStore.refreshUser()
+    appStore.showSuccess(t('pricing.payment.rechargeSuccessToast'), 5000)
   } catch (error) {
     console.error('Failed to refresh recharge success state:', error)
     appStore.showError('充值成功，但页面余额刷新失败，请手动刷新页面查看最新状态')
@@ -382,6 +386,12 @@ function cancelPayment() {
 function goToDashboard() {
   showPaymentModal.value = false
   clearTimers()
-  router.push('/dashboard')
+  router.push({
+    path: '/order-history',
+    query: {
+      highlight: currentOrderNo.value,
+      success: '1'
+    }
+  })
 }
 </script>

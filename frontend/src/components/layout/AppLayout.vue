@@ -54,7 +54,7 @@ const appStore = useAppStore()
 const authStore = useAuthStore()
 const sidebarCollapsed = computed(() => appStore.sidebarCollapsed)
 const isAdmin = computed(() => authStore.isAdmin)
-const announcements = computed(() => appStore.announcements)
+const announcements = computed(() => Array.isArray(appStore.announcements) ? appStore.announcements : [])
 const shouldRenderAnnouncementPopup = computed(() => announcements.value.length > 0)
 
 const { replayTour } = useOnboardingTour({
