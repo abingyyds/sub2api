@@ -45,6 +45,12 @@ const subSiteBaseSelect = `
 		COALESCE(s.enable_topup, TRUE),
 		COALESCE(s.allow_sub_site, FALSE),
 		COALESCE(s.sub_site_price_fen, 0),
+		COALESCE(s.consume_rate_multiplier, 1.0),
+		COALESCE(s.balance_fen, 0),
+		COALESCE(s.total_topup_fen, 0),
+		COALESCE(s.total_consumed_fen, 0),
+		COALESCE(s.allow_online_topup, TRUE),
+		COALESCE(s.allow_offline_topup, TRUE),
 		s.subscription_expired_at,
 		s.created_at,
 		s.updated_at,
@@ -182,13 +188,15 @@ func (r *subSiteRepository) Create(ctx context.Context, site *service.SubSite) e
 			site_logo, site_favicon, site_subtitle, announcement,
 			contact_info, doc_url, home_content, theme_template, theme_config, custom_config,
 			registration_mode, enable_topup, allow_sub_site, sub_site_price_fen,
+			consume_rate_multiplier, allow_online_topup, allow_offline_topup,
 			subscription_expired_at, created_at, updated_at
 		) VALUES (
 			$1, $2, $3, $4, $5, NULLIF($6, ''), $7,
 			$8, $9, $10, $11,
 			$12, $13, $14, $15, $16, $17,
-			$18, $19, $20, $21,
-			$22, NOW(), NOW()
+			$18, $19, $20, $21, $22,
+			$23, $24,
+			$25, NOW(), NOW()
 		)
 		RETURNING id, created_at, updated_at
 	`
@@ -197,6 +205,7 @@ func (r *subSiteRepository) Create(ctx context.Context, site *service.SubSite) e
 		site.SiteLogo, site.SiteFavicon, site.SiteSubtitle, site.Announcement,
 		site.ContactInfo, site.DocURL, site.HomeContent, site.ThemeTemplate, site.ThemeConfig, site.CustomConfig,
 		site.RegistrationMode, site.EnableTopup, site.AllowSubSite, site.SubSitePriceFen,
+		site.ConsumeRateMultiplier, site.AllowOnlineTopup, site.AllowOfflineTopup,
 		site.SubscriptionExpiredAt,
 	).Scan(&site.ID, &site.CreatedAt, &site.UpdatedAt)
 }
@@ -225,14 +234,18 @@ func (r *subSiteRepository) Update(ctx context.Context, site *service.SubSite) e
 			enable_topup = $20,
 			allow_sub_site = $21,
 			sub_site_price_fen = $22,
-			subscription_expired_at = $23,
+			consume_rate_multiplier = $23,
+			allow_online_topup = $24,
+			allow_offline_topup = $25,
+			subscription_expired_at = $26,
 			updated_at = NOW()
 		WHERE id = $1
 	`,
 		site.ID, site.OwnerUserID, site.ParentSubSiteID, site.Level, site.Name, site.Slug, site.CustomDomain, site.Status,
 		site.SiteLogo, site.SiteFavicon, site.SiteSubtitle, site.Announcement,
 		site.ContactInfo, site.DocURL, site.HomeContent, site.ThemeTemplate, site.ThemeConfig, site.CustomConfig,
-		site.RegistrationMode, site.EnableTopup, site.AllowSubSite, site.SubSitePriceFen,
+		site.RegistrationMode, site.EnableTopup, site.AllowSubSite, site.SubSitePriceFen, site.ConsumeRateMultiplier,
+		site.AllowOnlineTopup, site.AllowOfflineTopup,
 		site.SubscriptionExpiredAt,
 	)
 	if err != nil {
@@ -267,105 +280,132 @@ func (r *subSiteRepository) BindUser(ctx context.Context, siteID int64, userID i
 	return err
 }
 
-func (r *subSiteRepository) ReplaceGroupPriceOverrides(ctx context.Context, siteID int64, items []service.SubSiteGroupPriceOverride) error {
+func (r *subSiteRepository) GetBoundSubSiteByUserID(ctx context.Context, userID int64) (*service.SubSite, error) {
+	row := r.db.QueryRowContext(ctx, subSiteBaseSelect+`
+		INNER JOIN sub_site_users su ON su.sub_site_id = s.id
+		WHERE su.user_id = $1
+		LIMIT 1
+	`, userID)
+	return scanSubSite(row)
+}
+
+// AdjustBalance 原子调整分站余额池并写入流水。deltaFen 为正表示入账，负表示出账；
+// 写入逻辑：事务内先 UPDATE sub_sites 返回新余额，再 INSERT sub_site_ledger。
+// total_topup_fen / total_consumed_fen 根据 tx_type 分类累加，便于面板展示。
+// 允许扣成负余额（透支），上层业务可根据需要记 warn 或拦截。
+func (r *subSiteRepository) AdjustBalance(ctx context.Context, siteID int64, deltaFen int64, entry service.SubSiteLedgerEntry) (int64, error) {
+	if siteID <= 0 {
+		return 0, fmt.Errorf("invalid sub_site_id")
+	}
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	if _, err := tx.ExecContext(ctx, `DELETE FROM sub_site_group_prices WHERE sub_site_id = $1`, siteID); err != nil {
-		return err
-	}
-	for _, item := range items {
-		if item.GroupID <= 0 || item.PriceFen <= 0 {
-			continue
+	var (
+		isTopup    = deltaFen > 0 && (entry.TxType == service.SubSiteLedgerTopupOnline || entry.TxType == service.SubSiteLedgerTopupAdmin || entry.TxType == service.SubSiteLedgerManualCredit)
+		isConsume  = deltaFen < 0 && entry.TxType == service.SubSiteLedgerConsume
+		newBalance int64
+	)
+	updateQuery := `
+		UPDATE sub_sites
+		SET balance_fen = balance_fen + $2,
+			total_topup_fen = total_topup_fen + CASE WHEN $3 THEN $2 ELSE 0 END,
+			total_consumed_fen = total_consumed_fen + CASE WHEN $4 THEN -$2 ELSE 0 END,
+			updated_at = NOW()
+		WHERE id = $1
+		RETURNING balance_fen
+	`
+	if err := tx.QueryRowContext(ctx, updateQuery, siteID, deltaFen, isTopup, isConsume).Scan(&newBalance); err != nil {
+		if err == sql.ErrNoRows {
+			return 0, service.ErrSubSiteNotFound
 		}
-		if _, err := tx.ExecContext(ctx, `
-			INSERT INTO sub_site_group_prices (sub_site_id, group_id, price_fen, created_at, updated_at)
-			VALUES ($1, $2, $3, NOW(), NOW())
-		`, siteID, item.GroupID, item.PriceFen); err != nil {
-			return err
-		}
+		return 0, err
 	}
-	return tx.Commit()
+	if _, err := tx.ExecContext(ctx, `
+		INSERT INTO sub_site_ledger (
+			sub_site_id, tx_type, delta_fen, balance_after_fen,
+			related_user_id, related_usage_log_id, related_order_id, operator_id, note, created_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+	`,
+		siteID, entry.TxType, deltaFen, newBalance,
+		entry.RelatedUserID, entry.RelatedUsageLogID, entry.RelatedOrderID, entry.OperatorID, entry.Note,
+	); err != nil {
+		return 0, err
+	}
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+	return newBalance, nil
 }
 
-func (r *subSiteRepository) ListGroupPriceOverrides(ctx context.Context, siteID int64) ([]service.SubSiteGroupPriceOverride, error) {
-	rows, err := r.db.QueryContext(ctx, `
-		SELECT p.group_id, COALESCE(g.name, ''), p.price_fen, COALESCE(g.price_fen, 0)
-		FROM sub_site_group_prices p
-		LEFT JOIN groups g ON g.id = p.group_id
-		WHERE p.sub_site_id = $1
-		ORDER BY p.group_id ASC
-	`, siteID)
+func (r *subSiteRepository) ListLedger(ctx context.Context, siteID int64, params pagination.PaginationParams, txType string) ([]service.SubSiteLedgerEntry, *pagination.PaginationResult, error) {
+	var (
+		conds = []string{"sub_site_id = $1"}
+		args  = []any{siteID}
+	)
+	if txType = strings.TrimSpace(txType); txType != "" {
+		args = append(args, txType)
+		conds = append(conds, fmt.Sprintf("tx_type = $%d", len(args)))
+	}
+	where := strings.Join(conds, " AND ")
+
+	countQuery := `SELECT COUNT(*) FROM sub_site_ledger WHERE ` + where
+	var total int64
+	if err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&total); err != nil {
+		return nil, nil, err
+	}
+
+	selectArgs := append([]any{}, args...)
+	selectArgs = append(selectArgs, params.Limit(), params.Offset())
+	query := fmt.Sprintf(`
+		SELECT id, sub_site_id, tx_type, delta_fen, balance_after_fen,
+			related_user_id, related_usage_log_id, related_order_id, operator_id, COALESCE(note, ''), created_at
+		FROM sub_site_ledger
+		WHERE %s
+		ORDER BY id DESC
+		LIMIT $%d OFFSET $%d
+	`, where, len(args)+1, len(args)+2)
+	rows, err := r.db.QueryContext(ctx, query, selectArgs...)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer func() { _ = rows.Close() }()
 
-	var items []service.SubSiteGroupPriceOverride
+	var items []service.SubSiteLedgerEntry
 	for rows.Next() {
-		var item service.SubSiteGroupPriceOverride
-		if err := rows.Scan(&item.GroupID, &item.GroupName, &item.PriceFen, &item.BasePriceFen); err != nil {
-			return nil, err
+		var (
+			entry         service.SubSiteLedgerEntry
+			relUserID     sql.NullInt64
+			relUsageLogID sql.NullInt64
+			relOrderID    sql.NullInt64
+			operatorID    sql.NullInt64
+		)
+		if err := rows.Scan(
+			&entry.ID, &entry.SubSiteID, &entry.TxType, &entry.DeltaFen, &entry.BalanceAfterFen,
+			&relUserID, &relUsageLogID, &relOrderID, &operatorID, &entry.Note, &entry.CreatedAt,
+		); err != nil {
+			return nil, nil, err
 		}
-		items = append(items, item)
+		if relUserID.Valid {
+			entry.RelatedUserID = &relUserID.Int64
+		}
+		if relUsageLogID.Valid {
+			entry.RelatedUsageLogID = &relUsageLogID.Int64
+		}
+		if relOrderID.Valid {
+			entry.RelatedOrderID = &relOrderID.Int64
+		}
+		if operatorID.Valid {
+			entry.OperatorID = &operatorID.Int64
+		}
+		items = append(items, entry)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return items, nil
-}
-
-func (r *subSiteRepository) ReplaceRechargePriceOverrides(ctx context.Context, siteID int64, items []service.SubSiteRechargePriceOverride) error {
-	tx, err := r.db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = tx.Rollback() }()
-
-	if _, err := tx.ExecContext(ctx, `DELETE FROM sub_site_recharge_prices WHERE sub_site_id = $1`, siteID); err != nil {
-		return err
-	}
-	for _, item := range items {
-		if strings.TrimSpace(item.PlanKey) == "" || item.PayAmountFen <= 0 {
-			continue
-		}
-		if _, err := tx.ExecContext(ctx, `
-			INSERT INTO sub_site_recharge_prices (sub_site_id, plan_key, pay_amount_fen, created_at, updated_at)
-			VALUES ($1, $2, $3, NOW(), NOW())
-		`, siteID, strings.TrimSpace(item.PlanKey), item.PayAmountFen); err != nil {
-			return err
-		}
-	}
-	return tx.Commit()
-}
-
-func (r *subSiteRepository) ListRechargePriceOverrides(ctx context.Context, siteID int64) ([]service.SubSiteRechargePriceOverride, error) {
-	rows, err := r.db.QueryContext(ctx, `
-		SELECT plan_key, pay_amount_fen
-		FROM sub_site_recharge_prices
-		WHERE sub_site_id = $1
-		ORDER BY plan_key ASC
-	`, siteID)
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = rows.Close() }()
-
-	var items []service.SubSiteRechargePriceOverride
-	for rows.Next() {
-		var item service.SubSiteRechargePriceOverride
-		if err := rows.Scan(&item.PlanKey, &item.PayAmountFen); err != nil {
-			return nil, err
-		}
-		items = append(items, item)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+	return items, paginationResultFromTotal(total, params), nil
 }
 
 func (r *subSiteRepository) CreateActivationRequest(ctx context.Context, request *service.SubSiteActivationRequest) error {
@@ -486,6 +526,12 @@ func scanSubSite(row scanner) (*service.SubSite, error) {
 		&site.EnableTopup,
 		&site.AllowSubSite,
 		&site.SubSitePriceFen,
+		&site.ConsumeRateMultiplier,
+		&site.BalanceFen,
+		&site.TotalTopupFen,
+		&site.TotalConsumedFen,
+		&site.AllowOnlineTopup,
+		&site.AllowOfflineTopup,
 		&subscriptionExpiredAt,
 		&site.CreatedAt,
 		&site.UpdatedAt,

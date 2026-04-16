@@ -6,7 +6,7 @@
           <div>
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">分站中心</h1>
             <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
-              分站是独立站点体系，不和代理中心混用。这里可以自助开通分站、设置模板、设置对外售卖价格。
+              分站默认继承主站的套餐、配置和界面。这里只需要维护分站品牌信息，并设置消耗倍率。
             </p>
           </div>
           <div class="flex flex-wrap gap-2">
@@ -26,7 +26,7 @@
             <div>
               <h2 class="text-lg font-semibold text-gray-900 dark:text-white">开通新分站</h2>
               <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">
-                支付成功后自动创建分站，并带上你设置好的模板、开站规则和售价。
+                支付成功后自动创建分站，默认继承主站全部配置，只保留你的品牌信息和消耗倍率。
               </p>
             </div>
             <span
@@ -66,22 +66,6 @@
               <label class="input-label">副标题</label>
               <input v-model="createForm.site_subtitle" class="input mt-1 w-full" placeholder="一句话介绍你的分站" />
             </div>
-            <div>
-              <label class="input-label">模板</label>
-              <select v-model="createForm.theme_template" class="input mt-1 w-full">
-                <option v-for="item in openInfo.theme_templates" :key="item.key" :value="item.key">
-                  {{ item.label }}
-                </option>
-              </select>
-            </div>
-            <div>
-              <label class="input-label">注册模式</label>
-              <select v-model="createForm.registration_mode" class="input mt-1 w-full">
-                <option value="open">开放注册</option>
-                <option value="invite">邀请码注册</option>
-                <option value="closed">关闭注册</option>
-              </select>
-            </div>
             <div class="md:col-span-2">
               <label class="input-label">公告</label>
               <input v-model="createForm.announcement" class="input mt-1 w-full" placeholder="分站首页顶部公告" />
@@ -98,21 +82,9 @@
               <label class="input-label">首页内容</label>
               <textarea v-model="createForm.home_content" rows="5" class="input mt-1 w-full" placeholder="支持直接填 HTML，或填一个 https:// 页面地址用于 iframe 展示"></textarea>
             </div>
-            <div class="md:col-span-2">
-              <label class="input-label">主题配置 JSON</label>
-              <textarea v-model="createForm.theme_config" rows="4" class="input mt-1 w-full font-mono text-xs" placeholder='例如：{"accent":"aurora","hero_badge":"官方合作站"}'></textarea>
-            </div>
-            <div class="md:col-span-2">
-              <label class="input-label">自定义配置 JSON</label>
-              <textarea v-model="createForm.custom_config" rows="5" class="input mt-1 w-full font-mono text-xs" placeholder='例如：{"hero_title":"你的品牌标题","feature_tags":["稳定","高并发"]}'></textarea>
-            </div>
           </div>
 
           <div class="mt-6 grid gap-4 rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-dark-700 dark:bg-dark-800/60 md:grid-cols-3">
-            <label class="flex items-center gap-3 text-sm text-gray-700 dark:text-dark-200">
-              <input v-model="createForm.enable_topup" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
-              启用余额充值
-            </label>
             <label class="flex items-center gap-3 text-sm text-gray-700 dark:text-dark-200">
               <input v-model="createForm.allow_sub_site" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
               允许发展下级分站
@@ -121,51 +93,9 @@
               <label class="input-label">下级分站售价</label>
               <input v-model.number="createSubSitePriceYuan" type="number" min="0" step="1" class="input mt-1 w-full" placeholder="例如：399" />
             </div>
-          </div>
-
-          <div class="mt-6 space-y-4">
             <div>
-              <h3 class="text-sm font-semibold text-gray-900 dark:text-white">订阅套餐售价覆盖</h3>
-              <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">留空表示沿用平台默认售价。</p>
-              <div class="mt-3 space-y-3">
-                <div v-for="plan in baseSubscriptionPlans" :key="plan.key" class="grid gap-3 rounded-2xl border border-gray-100 px-4 py-3 dark:border-dark-700 md:grid-cols-[1fr_140px]">
-                  <div>
-                    <div class="font-medium text-gray-900 dark:text-white">{{ plan.name }}</div>
-                    <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">默认价：￥{{ fenToYuan(plan.amount_fen) }}</div>
-                  </div>
-                  <input
-                    :value="groupPriceInputs[plan.group_id] ?? ''"
-                    type="number"
-                    min="0"
-                    step="1"
-                    class="input w-full"
-                    placeholder="自定义售价"
-                    @input="updateGroupPrice(plan.group_id, $event)"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 class="text-sm font-semibold text-gray-900 dark:text-white">充值套餐售价覆盖</h3>
-              <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">留空表示沿用平台默认售价。</p>
-              <div class="mt-3 space-y-3">
-                <div v-for="plan in baseRechargePlans" :key="plan.key" class="grid gap-3 rounded-2xl border border-gray-100 px-4 py-3 dark:border-dark-700 md:grid-cols-[1fr_140px]">
-                  <div>
-                    <div class="font-medium text-gray-900 dark:text-white">{{ plan.name }}</div>
-                    <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">默认价：￥{{ fenToYuan(plan.pay_amount_fen) }} / 到账 ${{ plan.balance_amount.toFixed(2) }}</div>
-                  </div>
-                  <input
-                    :value="rechargePriceInputs[plan.key] ?? ''"
-                    type="number"
-                    min="0"
-                    step="1"
-                    class="input w-full"
-                    placeholder="自定义售价"
-                    @input="updateRechargePrice(plan.key, $event)"
-                  />
-                </div>
-              </div>
+              <label class="input-label">消耗倍率</label>
+              <input v-model.number="createForm.consume_rate_multiplier" type="number" min="1" step="0.1" class="input mt-1 w-full" placeholder="例如：1.5" />
             </div>
           </div>
 
@@ -207,11 +137,17 @@
                     <div v-if="site.custom_domain">域名：{{ site.custom_domain }}</div>
                     <div v-if="site.entry_url">入口：<a :href="site.entry_url" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:underline dark:text-primary-400">{{ site.entry_url }}</a></div>
                     <div>用户数：{{ site.user_count || 0 }}，下级分站：{{ site.child_site_count || 0 }}</div>
-                    <div>分站模板：{{ site.theme_template || 'starter' }}，下级分站售价：￥{{ fenToYuan(site.sub_site_price_fen || 0) }}</div>
+                    <div>消耗倍率：{{ Number(site.consume_rate_multiplier || 1).toFixed(2) }}x，下级分站售价：￥{{ fenToYuan(site.sub_site_price_fen || 0) }}</div>
+                    <div class="font-medium text-gray-900 dark:text-white">
+                      池余额：￥{{ fenToYuan(site.balance_fen || 0) }}
+                      <span class="ml-2 text-xs text-gray-500 dark:text-dark-400">累充 ￥{{ fenToYuan(site.total_topup_fen || 0) }} / 累消 ￥{{ fenToYuan(site.total_consumed_fen || 0) }}</span>
+                    </div>
                   </div>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                   <button class="btn btn-secondary btn-sm" @click="openEdit(site)">编辑分站</button>
+                  <button class="btn btn-secondary btn-sm" @click="openOfflineTopup(site)">线下加余额</button>
+                  <button class="btn btn-secondary btn-sm" @click="openOwnedLedger(site)">查看流水</button>
                 </div>
               </div>
             </div>
@@ -259,41 +195,13 @@
             <label class="input-label">文档地址</label>
             <input v-model="editForm.doc_url" class="input mt-1 w-full" />
           </div>
-          <div>
-            <label class="input-label">模板</label>
-            <select v-model="editForm.theme_template" class="input mt-1 w-full">
-              <option v-for="item in openInfo.theme_templates" :key="item.key" :value="item.key">
-                {{ item.label }}
-              </option>
-            </select>
-          </div>
-          <div>
-            <label class="input-label">注册模式</label>
-            <select v-model="editForm.registration_mode" class="input mt-1 w-full">
-              <option value="open">开放注册</option>
-              <option value="invite">邀请码注册</option>
-              <option value="closed">关闭注册</option>
-            </select>
-          </div>
           <div class="md:col-span-2">
             <label class="input-label">首页内容</label>
             <textarea v-model="editForm.home_content" rows="5" class="input mt-1 w-full"></textarea>
           </div>
-          <div class="md:col-span-2">
-            <label class="input-label">主题配置 JSON</label>
-            <textarea v-model="editForm.theme_config" rows="4" class="input mt-1 w-full font-mono text-xs"></textarea>
-          </div>
-          <div class="md:col-span-2">
-            <label class="input-label">自定义配置 JSON</label>
-            <textarea v-model="editForm.custom_config" rows="5" class="input mt-1 w-full font-mono text-xs"></textarea>
-          </div>
         </div>
 
         <div class="grid gap-4 rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-dark-700 dark:bg-dark-800/60 md:grid-cols-3">
-          <label class="flex items-center gap-3 text-sm text-gray-700 dark:text-dark-200">
-            <input v-model="editForm.enable_topup" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
-            启用余额充值
-          </label>
           <label class="flex items-center gap-3 text-sm text-gray-700 dark:text-dark-200">
             <input v-model="editForm.allow_sub_site" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
             允许发展下级分站
@@ -302,47 +210,9 @@
             <label class="input-label">下级分站售价</label>
             <input v-model.number="editSubSitePriceYuan" type="number" min="0" step="1" class="input mt-1 w-full" />
           </div>
-        </div>
-
-        <div>
-          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">订阅套餐售价覆盖</h3>
-          <div class="mt-3 space-y-3">
-            <div v-for="plan in baseSubscriptionPlans" :key="plan.key" class="grid gap-3 rounded-2xl border border-gray-100 px-4 py-3 dark:border-dark-700 md:grid-cols-[1fr_140px]">
-              <div>
-                <div class="font-medium text-gray-900 dark:text-white">{{ plan.name }}</div>
-                <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">默认价：￥{{ fenToYuan(plan.amount_fen) }}</div>
-              </div>
-              <input
-                :value="editGroupPriceInputs[plan.group_id] ?? ''"
-                type="number"
-                min="0"
-                step="1"
-                class="input w-full"
-                placeholder="自定义售价"
-                @input="updateEditGroupPrice(plan.group_id, $event)"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">充值套餐售价覆盖</h3>
-          <div class="mt-3 space-y-3">
-            <div v-for="plan in baseRechargePlans" :key="plan.key" class="grid gap-3 rounded-2xl border border-gray-100 px-4 py-3 dark:border-dark-700 md:grid-cols-[1fr_140px]">
-              <div>
-                <div class="font-medium text-gray-900 dark:text-white">{{ plan.name }}</div>
-                <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">默认价：￥{{ fenToYuan(plan.pay_amount_fen) }} / 到账 ${{ plan.balance_amount.toFixed(2) }}</div>
-              </div>
-              <input
-                :value="editRechargePriceInputs[plan.key] ?? ''"
-                type="number"
-                min="0"
-                step="1"
-                class="input w-full"
-                placeholder="自定义售价"
-                @input="updateEditRechargePrice(plan.key, $event)"
-              />
-            </div>
+          <div>
+            <label class="input-label">消耗倍率</label>
+            <input v-model.number="editForm.consume_rate_multiplier" type="number" min="1" step="0.1" class="input mt-1 w-full" />
           </div>
         </div>
       </div>
@@ -375,6 +245,69 @@
         </div>
       </div>
     </Teleport>
+
+    <BaseDialog :show="showOfflineDialog" title="线下给用户加余额" @close="showOfflineDialog = false">
+      <div v-if="offlineTarget" class="space-y-4">
+        <div class="rounded-2xl border border-gray-200 px-4 py-3 text-sm dark:border-dark-700">
+          <div class="font-medium text-gray-900 dark:text-white">{{ offlineTarget.name }}</div>
+          <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">当前池余额：￥{{ fenToYuan(offlineTarget.balance_fen || 0) }}</div>
+          <div class="text-xs text-gray-500 dark:text-dark-400">说明：给用户加余额的同时会从分站池按等额扣除。</div>
+        </div>
+        <div>
+          <label class="input-label">用户 ID</label>
+          <input v-model.number="offlineUserID" type="number" min="1" class="input mt-1 w-full" />
+        </div>
+        <div>
+          <label class="input-label">加余额金额（元）</label>
+          <input v-model.number="offlineAmountYuan" type="number" min="0" step="1" class="input mt-1 w-full" />
+        </div>
+        <div>
+          <label class="input-label">备注（可选）</label>
+          <input v-model="offlineNote" class="input mt-1 w-full" />
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-3">
+          <button class="btn btn-secondary" @click="showOfflineDialog = false">取消</button>
+          <button class="btn btn-primary" :disabled="offlineSubmitting" @click="handleOfflineTopup">{{ offlineSubmitting ? '提交中...' : '确认加余额' }}</button>
+        </div>
+      </template>
+    </BaseDialog>
+
+    <BaseDialog :show="showOwnedLedgerDialog" title="分站池流水" width="wide" @close="showOwnedLedgerDialog = false">
+      <div v-if="ownedLedgerTarget" class="space-y-3">
+        <div class="text-sm text-gray-600 dark:text-dark-300">
+          {{ ownedLedgerTarget.name }} · 当前余额 ￥{{ fenToYuan(ownedLedgerTarget.balance_fen || 0) }}
+        </div>
+        <div class="max-h-96 overflow-y-auto">
+          <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-dark-700">
+            <thead class="bg-gray-50 dark:bg-dark-800/60">
+              <tr>
+                <th class="px-3 py-2 text-left text-xs font-semibold uppercase">时间</th>
+                <th class="px-3 py-2 text-left text-xs font-semibold uppercase">类型</th>
+                <th class="px-3 py-2 text-right text-xs font-semibold uppercase">变动</th>
+                <th class="px-3 py-2 text-right text-xs font-semibold uppercase">变动后</th>
+                <th class="px-3 py-2 text-left text-xs font-semibold uppercase">备注</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-dark-800">
+              <tr v-for="row in ownedLedgerRows" :key="row.id">
+                <td class="px-3 py-2 text-xs text-gray-500 dark:text-dark-400">{{ formatLedgerDate(row.created_at) }}</td>
+                <td class="px-3 py-2 text-xs">{{ row.tx_type }}</td>
+                <td class="px-3 py-2 text-right text-xs" :class="row.delta_fen >= 0 ? 'text-emerald-600' : 'text-red-600'">
+                  {{ row.delta_fen >= 0 ? '+' : '' }}{{ fenToYuan(row.delta_fen) }}
+                </td>
+                <td class="px-3 py-2 text-right text-xs">{{ fenToYuan(row.balance_after_fen) }}</td>
+                <td class="px-3 py-2 text-xs text-gray-500 dark:text-dark-400">{{ row.note || '-' }}</td>
+              </tr>
+              <tr v-if="ownedLedgerRows.length === 0">
+                <td colspan="5" class="px-3 py-6 text-center text-xs text-gray-400">暂无流水</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </BaseDialog>
   </AppLayout>
 </template>
 
@@ -383,8 +316,8 @@ import { nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import QRCode from 'qrcode'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import BaseDialog from '@/components/common/BaseDialog.vue'
-import { paymentAPI, type CreateOrderResponse, type CreateSubSiteActivationInput, type PaymentPlan, type RechargePlan } from '@/api/payment'
-import { subSiteAPI, type OwnedSubSite, type SubSiteOpenInfo } from '@/api/subsite'
+import { paymentAPI, type CreateOrderResponse, type CreateSubSiteActivationInput } from '@/api/payment'
+import { subSiteAPI, type OwnedSubSite, type OwnedSubSiteLedgerEntry, type SubSiteOpenInfo } from '@/api/subsite'
 import { useAppStore } from '@/stores'
 
 const appStore = useAppStore()
@@ -398,8 +331,6 @@ const qrCanvas = ref<HTMLCanvasElement | null>(null)
 const pollTimer = ref<number | null>(null)
 
 const ownedSites = ref<OwnedSubSite[]>([])
-const baseSubscriptionPlans = ref<PaymentPlan[]>([])
-const baseRechargePlans = ref<RechargePlan[]>([])
 
 const openInfo = ref<SubSiteOpenInfo>({
   enabled: false,
@@ -434,28 +365,18 @@ const createForm = reactive<CreateSubSiteActivationInput>({
   contact_info: '',
   doc_url: '',
   home_content: '',
-  theme_template: 'starter',
-  theme_config: '',
-  custom_config: '',
-  registration_mode: 'open',
-  enable_topup: true,
   allow_sub_site: false,
   sub_site_price_fen: 0,
-  group_price_overrides: [],
-  recharge_price_overrides: [],
+  consume_rate_multiplier: 1,
 })
 
 const createSubSitePriceYuan = ref<number | null>(null)
-const groupPriceInputs = reactive<Record<number, string>>({})
-const rechargePriceInputs = reactive<Record<string, string>>({})
 
 const editForm = ref<OwnedSubSite | null>(null)
 const editSubSitePriceYuan = ref<number | null>(null)
-const editGroupPriceInputs = reactive<Record<number, string>>({})
-const editRechargePriceInputs = reactive<Record<string, string>>({})
 
 onMounted(async () => {
-  await Promise.all([loadOpenInfo(), loadBaseCatalog(), loadOwnedSites()])
+  await Promise.all([loadOpenInfo(), loadOwnedSites()])
 })
 
 onBeforeUnmount(() => {
@@ -465,27 +386,8 @@ onBeforeUnmount(() => {
 async function loadOpenInfo() {
   try {
     openInfo.value = await subSiteAPI.getOpenInfo()
-    if (!createForm.theme_template) {
-      createForm.theme_template = openInfo.value.default_theme_template || 'starter'
-    }
-    if (!createForm.custom_config) {
-      createForm.custom_config = openInfo.value.default_custom_config || ''
-    }
   } catch (error: any) {
     appStore.showError(error?.message || '加载分站开通信息失败')
-  }
-}
-
-async function loadBaseCatalog() {
-  try {
-    const [plans, rechargeInfo] = await Promise.all([
-      paymentAPI.getPlans(),
-      paymentAPI.getRechargeInfo(),
-    ])
-    baseSubscriptionPlans.value = plans.filter(plan => (plan.type || 'subscription') === 'subscription')
-    baseRechargePlans.value = rechargeInfo.plans || []
-  } catch (error: any) {
-    appStore.showError(error?.message || '加载售价基准失败')
   }
 }
 
@@ -515,42 +417,6 @@ function parseInputYuan(value: string | number | null | undefined): number | nul
   return Math.round(num * 100)
 }
 
-function buildGroupOverrides(source: Record<number, string>) {
-  return Object.entries(source)
-    .map(([groupId, value]) => {
-      const priceFen = parseInputYuan(value)
-      if (priceFen === null) return null
-      return { group_id: Number(groupId), price_fen: priceFen }
-    })
-    .filter(Boolean) as Array<{ group_id: number; price_fen: number }>
-}
-
-function buildRechargeOverrides(source: Record<string, string>) {
-  return Object.entries(source)
-    .map(([planKey, value]) => {
-      const priceFen = parseInputYuan(value)
-      if (priceFen === null) return null
-      return { plan_key: planKey, pay_amount_fen: priceFen }
-    })
-    .filter(Boolean) as Array<{ plan_key: string; pay_amount_fen: number }>
-}
-
-function updateGroupPrice(groupId: number, event: Event) {
-  groupPriceInputs[groupId] = (event.target as HTMLInputElement).value
-}
-
-function updateRechargePrice(planKey: string, event: Event) {
-  rechargePriceInputs[planKey] = (event.target as HTMLInputElement).value
-}
-
-function updateEditGroupPrice(groupId: number, event: Event) {
-  editGroupPriceInputs[groupId] = (event.target as HTMLInputElement).value
-}
-
-function updateEditRechargePrice(planKey: string, event: Event) {
-  editRechargePriceInputs[planKey] = (event.target as HTMLInputElement).value
-}
-
 function resetCreateForm() {
   createForm.name = ''
   createForm.slug = ''
@@ -562,23 +428,15 @@ function resetCreateForm() {
   createForm.contact_info = ''
   createForm.doc_url = ''
   createForm.home_content = ''
-  createForm.theme_template = openInfo.value.default_theme_template || 'starter'
-  createForm.theme_config = ''
-  createForm.custom_config = openInfo.value.default_custom_config || ''
-  createForm.registration_mode = 'open'
-  createForm.enable_topup = true
   createForm.allow_sub_site = false
   createForm.sub_site_price_fen = 0
+  createForm.consume_rate_multiplier = 1
   createSubSitePriceYuan.value = null
-  Object.keys(groupPriceInputs).forEach((key) => delete groupPriceInputs[Number(key)])
-  Object.keys(rechargePriceInputs).forEach((key) => delete rechargePriceInputs[key])
 }
 
 async function handleCreateActivationOrder() {
   const subSitePriceFen = parseInputYuan(createSubSitePriceYuan.value)
   createForm.sub_site_price_fen = subSitePriceFen ?? 0
-  createForm.group_price_overrides = buildGroupOverrides(groupPriceInputs)
-  createForm.recharge_price_overrides = buildRechargeOverrides(rechargePriceInputs)
 
   creatingOrder.value = true
   try {
@@ -630,15 +488,8 @@ function closePaymentModal() {
 
 function openEdit(site: OwnedSubSite) {
   editForm.value = JSON.parse(JSON.stringify(site)) as OwnedSubSite
+  editForm.value.consume_rate_multiplier = Number(site.consume_rate_multiplier || 1)
   editSubSitePriceYuan.value = site.sub_site_price_fen ? site.sub_site_price_fen / 100 : null
-  Object.keys(editGroupPriceInputs).forEach((key) => delete editGroupPriceInputs[Number(key)])
-  Object.keys(editRechargePriceInputs).forEach((key) => delete editRechargePriceInputs[key])
-  ;(site.group_price_overrides || []).forEach(item => {
-    editGroupPriceInputs[item.group_id] = item.price_fen ? String(item.price_fen / 100) : ''
-  })
-  ;(site.recharge_price_overrides || []).forEach(item => {
-    editRechargePriceInputs[item.plan_key] = item.pay_amount_fen ? String(item.pay_amount_fen / 100) : ''
-  })
   showEditDialog.value = true
 }
 
@@ -662,15 +513,9 @@ async function handleSaveOwnedSite() {
       contact_info: editForm.value.contact_info || '',
       doc_url: editForm.value.doc_url || '',
       home_content: editForm.value.home_content || '',
-      theme_template: editForm.value.theme_template || 'starter',
-      theme_config: editForm.value.theme_config || '',
-      custom_config: editForm.value.custom_config || '',
-      registration_mode: editForm.value.registration_mode || 'open',
-      enable_topup: editForm.value.enable_topup,
       allow_sub_site: editForm.value.allow_sub_site,
       sub_site_price_fen: parseInputYuan(editSubSitePriceYuan.value) || 0,
-      group_price_overrides: buildGroupOverrides(editGroupPriceInputs),
-      recharge_price_overrides: buildRechargeOverrides(editRechargePriceInputs),
+      consume_rate_multiplier: Number(editForm.value.consume_rate_multiplier || 1),
     }
     await subSiteAPI.updateOwnedSite(editForm.value.id, payload)
     appStore.showSuccess('分站已更新')
@@ -680,6 +525,75 @@ async function handleSaveOwnedSite() {
     appStore.showError(error?.message || '保存分站失败')
   } finally {
     savingSite.value = false
+  }
+}
+
+const showOfflineDialog = ref(false)
+const offlineTarget = ref<OwnedSubSite | null>(null)
+const offlineUserID = ref<number>(0)
+const offlineAmountYuan = ref<number>(0)
+const offlineNote = ref('')
+const offlineSubmitting = ref(false)
+
+function openOfflineTopup(site: OwnedSubSite) {
+  offlineTarget.value = site
+  offlineUserID.value = 0
+  offlineAmountYuan.value = 0
+  offlineNote.value = ''
+  showOfflineDialog.value = true
+}
+
+async function handleOfflineTopup() {
+  if (!offlineTarget.value) return
+  const amountFen = Math.round((offlineAmountYuan.value || 0) * 100)
+  if (!offlineUserID.value || offlineUserID.value <= 0) {
+    appStore.showError('请输入有效的用户 ID')
+    return
+  }
+  if (amountFen <= 0) {
+    appStore.showError('请输入有效金额')
+    return
+  }
+  offlineSubmitting.value = true
+  try {
+    await subSiteAPI.offlineTopupUser(offlineTarget.value.id, {
+      user_id: offlineUserID.value,
+      amount_fen: amountFen,
+      note: offlineNote.value
+    })
+    appStore.showSuccess('加余额成功')
+    showOfflineDialog.value = false
+    offlineTarget.value = null
+    await loadOwnedSites()
+  } catch (error: any) {
+    appStore.showError(error?.message || '加余额失败')
+  } finally {
+    offlineSubmitting.value = false
+  }
+}
+
+const showOwnedLedgerDialog = ref(false)
+const ownedLedgerTarget = ref<OwnedSubSite | null>(null)
+const ownedLedgerRows = ref<OwnedSubSiteLedgerEntry[]>([])
+
+async function openOwnedLedger(site: OwnedSubSite) {
+  ownedLedgerTarget.value = site
+  ownedLedgerRows.value = []
+  showOwnedLedgerDialog.value = true
+  try {
+    const res = await subSiteAPI.listOwnedLedger(site.id, 1, 50)
+    ownedLedgerRows.value = res.items || []
+  } catch (error: any) {
+    appStore.showError(error?.message || '加载流水失败')
+  }
+}
+
+function formatLedgerDate(v: string) {
+  if (!v) return '-'
+  try {
+    return new Date(v).toLocaleString('zh-CN', { hour12: false })
+  } catch {
+    return v
   }
 }
 </script>

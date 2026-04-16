@@ -101,6 +101,8 @@ func registerSubSiteRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		subSites.POST("", h.Admin.SubSite.Create)
 		subSites.PUT("/:id", h.Admin.SubSite.Update)
 		subSites.DELETE("/:id", h.Admin.SubSite.Delete)
+		subSites.POST("/:id/topup", h.Admin.SubSite.Topup)
+		subSites.GET("/:id/ledger", h.Admin.SubSite.Ledger)
 	}
 }
 

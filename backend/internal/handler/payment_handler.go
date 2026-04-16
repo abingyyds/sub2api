@@ -99,6 +99,12 @@ type CreateSubSiteActivationOrderRequest struct {
 	ActivationInput service.CreateSubSiteActivationInput `json:"activation_input"`
 }
 
+type CreateSubSiteTopupOrderRequest struct {
+	SiteID    int64  `json:"site_id" binding:"required"`
+	AmountFen int    `json:"amount_fen" binding:"required,gt=0"`
+	PayMethod string `json:"pay_method"`
+}
+
 type SubmitInvoiceRequest struct {
 	OrderNos    []string `json:"order_nos" binding:"required,min=1"`
 	CompanyName string   `json:"company_name" binding:"required"`
@@ -234,6 +240,40 @@ func (h *PaymentHandler) CreateSubSiteActivationOrder(c *gin.Context) {
 	}
 
 	order, err := h.paymentService.CreateSubSiteActivationOrder(c.Request.Context(), subject.UserID, req.ActivationInput, payMethod)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{
+		"order_no":   order.OrderNo,
+		"code_url":   order.CodeURL,
+		"amount_fen": order.AmountFen,
+		"expired_at": order.ExpiredAt,
+	})
+}
+
+// CreateSubSiteTopupOrder creates an order for sub-site pool online topup.
+// POST /api/v1/payment/subsite-topup
+func (h *PaymentHandler) CreateSubSiteTopupOrder(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "User not found in context")
+		return
+	}
+
+	var req CreateSubSiteTopupOrderRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "invalid request: site_id and amount_fen are required")
+		return
+	}
+
+	payMethod := req.PayMethod
+	if payMethod == "" {
+		payMethod = "wechat"
+	}
+
+	order, err := h.paymentService.CreateSubSiteTopupOrder(c.Request.Context(), subject.UserID, req.SiteID, req.AmountFen, payMethod)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return

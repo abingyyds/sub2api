@@ -32,6 +32,7 @@ var (
 	ErrSubSiteOpenDisabled         = infraerrors.Forbidden("SUBSITE_OPEN_DISABLED", "sub-site self-service opening is disabled")
 	ErrSubSiteActivationNotFound   = infraerrors.NotFound("SUBSITE_ACTIVATION_NOT_FOUND", "sub-site activation request not found")
 	ErrSubSiteForbidden            = infraerrors.Forbidden("SUBSITE_FORBIDDEN", "you do not have permission to manage this sub-site")
+	ErrSubSiteUserScopeMismatch    = infraerrors.Forbidden("SUBSITE_USER_SCOPE_MISMATCH", "your account is bound to a different site")
 )
 
 var subSiteSlugPattern = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
@@ -42,16 +43,16 @@ type SubSiteRepository interface {
 	GetByID(ctx context.Context, id int64) (*SubSite, error)
 	GetByDomain(ctx context.Context, domain string) (*SubSite, error)
 	GetBySlug(ctx context.Context, slug string) (*SubSite, error)
+	GetBoundSubSiteByUserID(ctx context.Context, userID int64) (*SubSite, error)
 	ExistsBySlug(ctx context.Context, slug string, excludeID int64) (bool, error)
 	ExistsByDomain(ctx context.Context, domain string, excludeID int64) (bool, error)
 	Create(ctx context.Context, site *SubSite) error
 	Update(ctx context.Context, site *SubSite) error
 	Delete(ctx context.Context, id int64) error
 	BindUser(ctx context.Context, siteID int64, userID int64, source string) error
-	ReplaceGroupPriceOverrides(ctx context.Context, siteID int64, items []SubSiteGroupPriceOverride) error
-	ListGroupPriceOverrides(ctx context.Context, siteID int64) ([]SubSiteGroupPriceOverride, error)
-	ReplaceRechargePriceOverrides(ctx context.Context, siteID int64, items []SubSiteRechargePriceOverride) error
-	ListRechargePriceOverrides(ctx context.Context, siteID int64) ([]SubSiteRechargePriceOverride, error)
+	// 分站余额池：原子增减，返回变动后余额（正数入账、负数出账；允许负余额：透支在业务层记 warn）
+	AdjustBalance(ctx context.Context, siteID int64, deltaFen int64, entry SubSiteLedgerEntry) (int64, error)
+	ListLedger(ctx context.Context, siteID int64, params pagination.PaginationParams, txType string) ([]SubSiteLedgerEntry, *pagination.PaginationResult, error)
 	CreateActivationRequest(ctx context.Context, request *SubSiteActivationRequest) error
 	GetActivationRequestByOrderID(ctx context.Context, orderID int64) (*SubSiteActivationRequest, error)
 	MarkActivationRequestCompleted(ctx context.Context, orderID int64, subSiteID int64) error
@@ -71,6 +72,8 @@ type SubSiteService struct {
 	cacheTTL        time.Duration
 	cacheMu         sync.RWMutex
 	hostCache       map[string]subSiteCacheEntry
+	boundCacheMu    sync.RWMutex
+	boundCache      map[int64]boundSubSiteEntry
 	onUpdate        func()
 }
 
@@ -83,6 +86,7 @@ func NewSubSiteService(repo SubSiteRepository, userRepo UserRepository, settingR
 		subdomainSuffix: normalizeHost(os.Getenv("SUBSITE_SUBDOMAIN_SUFFIX")),
 		cacheTTL:        time.Minute,
 		hostCache:       make(map[string]subSiteCacheEntry),
+		boundCache:      make(map[int64]boundSubSiteEntry),
 	}
 }
 
@@ -170,6 +174,13 @@ func normalizeRegistrationMode(mode string) string {
 	return mode
 }
 
+func normalizeConsumeRateMultiplier(multiplier float64) float64 {
+	if multiplier <= 0 {
+		return DefaultSubSiteConsumeRate
+	}
+	return multiplier
+}
+
 func isValidThemeTemplate(template string) bool {
 	for _, item := range DefaultSubSiteThemeTemplates {
 		if item.Key == template {
@@ -249,6 +260,9 @@ func (s *SubSiteService) applyInputToSite(site *SubSite, input CreateSubSiteInpu
 	site.EnableTopup = boolValue(input.EnableTopup, true)
 	site.AllowSubSite = boolValue(input.AllowSubSite, false)
 	site.SubSitePriceFen = input.SubSitePriceFen
+	site.ConsumeRateMultiplier = normalizeConsumeRateMultiplier(input.ConsumeRateMultiplier)
+	site.AllowOnlineTopup = boolValue(input.AllowOnlineTopup, true)
+	site.AllowOfflineTopup = boolValue(input.AllowOfflineTopup, true)
 	site.SubscriptionExpiredAt = input.SubscriptionExpiredAt
 }
 
@@ -257,19 +271,6 @@ func (s *SubSiteService) populateComputedFields(ctx context.Context, site *SubSi
 		return nil, nil
 	}
 	site.EntryURL = s.buildEntryURL(site)
-	if !includePricing {
-		return site, nil
-	}
-	groupOverrides, err := s.repo.ListGroupPriceOverrides(ctx, site.ID)
-	if err != nil {
-		return nil, err
-	}
-	rechargeOverrides, err := s.repo.ListRechargePriceOverrides(ctx, site.ID)
-	if err != nil {
-		return nil, err
-	}
-	site.GroupPriceOverrides = groupOverrides
-	site.RechargePriceOverrides = rechargeOverrides
 	return site, nil
 }
 
@@ -327,12 +328,6 @@ func (s *SubSiteService) Create(ctx context.Context, input CreateSubSiteInput) (
 	if err := s.repo.Create(ctx, site); err != nil {
 		return nil, err
 	}
-	if err := s.repo.ReplaceGroupPriceOverrides(ctx, site.ID, input.GroupPriceOverrides); err != nil {
-		return nil, err
-	}
-	if err := s.repo.ReplaceRechargePriceOverrides(ctx, site.ID, input.RechargePriceOverrides); err != nil {
-		return nil, err
-	}
 	s.invalidateCaches()
 	created, err := s.repo.GetByID(ctx, site.ID)
 	if err != nil {
@@ -384,41 +379,36 @@ func (s *SubSiteService) Update(ctx context.Context, input UpdateSubSiteInput) (
 	input.Slug = slug
 	input.CustomDomain = customDomain
 	createInput := CreateSubSiteInput{
-		OwnerUserID:            input.OwnerUserID,
-		ParentSubSiteID:        input.ParentSubSiteID,
-		Name:                   input.Name,
-		Slug:                   input.Slug,
-		CustomDomain:           input.CustomDomain,
-		Status:                 input.Status,
-		SiteLogo:               input.SiteLogo,
-		SiteFavicon:            input.SiteFavicon,
-		SiteSubtitle:           input.SiteSubtitle,
-		Announcement:           input.Announcement,
-		ContactInfo:            input.ContactInfo,
-		DocURL:                 input.DocURL,
-		HomeContent:            input.HomeContent,
-		ThemeTemplate:          input.ThemeTemplate,
-		ThemeConfig:            input.ThemeConfig,
-		CustomConfig:           input.CustomConfig,
-		RegistrationMode:       input.RegistrationMode,
-		EnableTopup:            input.EnableTopup,
-		AllowSubSite:           input.AllowSubSite,
-		SubSitePriceFen:        input.SubSitePriceFen,
-		SubscriptionExpiredAt:  input.SubscriptionExpiredAt,
-		GroupPriceOverrides:    input.GroupPriceOverrides,
-		RechargePriceOverrides: input.RechargePriceOverrides,
+		OwnerUserID:           input.OwnerUserID,
+		ParentSubSiteID:       input.ParentSubSiteID,
+		Name:                  input.Name,
+		Slug:                  input.Slug,
+		CustomDomain:          input.CustomDomain,
+		Status:                input.Status,
+		SiteLogo:              input.SiteLogo,
+		SiteFavicon:           input.SiteFavicon,
+		SiteSubtitle:          input.SiteSubtitle,
+		Announcement:          input.Announcement,
+		ContactInfo:           input.ContactInfo,
+		DocURL:                input.DocURL,
+		HomeContent:           input.HomeContent,
+		ThemeTemplate:         input.ThemeTemplate,
+		ThemeConfig:           input.ThemeConfig,
+		CustomConfig:          input.CustomConfig,
+		RegistrationMode:      input.RegistrationMode,
+		EnableTopup:           input.EnableTopup,
+		AllowSubSite:          input.AllowSubSite,
+		SubSitePriceFen:       input.SubSitePriceFen,
+		ConsumeRateMultiplier: input.ConsumeRateMultiplier,
+		AllowOnlineTopup:      input.AllowOnlineTopup,
+		AllowOfflineTopup:     input.AllowOfflineTopup,
+		SubscriptionExpiredAt: input.SubscriptionExpiredAt,
 	}
 	s.applyInputToSite(current, createInput, level, normalizeStatus(input.Status), themeTemplate, registrationMode)
 	if parent != nil {
 		current.ParentSubSiteName = parent.Name
 	}
 	if err := s.repo.Update(ctx, current); err != nil {
-		return nil, err
-	}
-	if err := s.repo.ReplaceGroupPriceOverrides(ctx, current.ID, input.GroupPriceOverrides); err != nil {
-		return nil, err
-	}
-	if err := s.repo.ReplaceRechargePriceOverrides(ctx, current.ID, input.RechargePriceOverrides); err != nil {
 		return nil, err
 	}
 	s.invalidateCaches()
@@ -444,6 +434,9 @@ func (s *SubSiteService) invalidateCaches() {
 	s.cacheMu.Lock()
 	s.hostCache = make(map[string]subSiteCacheEntry)
 	s.cacheMu.Unlock()
+	s.boundCacheMu.Lock()
+	s.boundCache = make(map[int64]boundSubSiteEntry)
+	s.boundCacheMu.Unlock()
 	if s.onUpdate != nil {
 		s.onUpdate()
 	}
@@ -589,11 +582,6 @@ func (s *SubSiteService) ApplyPublicSettings(ctx context.Context, base *PublicSe
 	cloned.IsSubSite = true
 	cloned.SubSiteSlug = site.Slug
 	cloned.SubSiteDomain = site.CustomDomain
-	cloned.ThemeTemplate = site.ThemeTemplate
-	cloned.ThemeConfig = site.ThemeConfig
-	cloned.CustomConfig = site.CustomConfig
-	cloned.RegistrationMode = site.RegistrationMode
-	cloned.EnableTopup = site.EnableTopup
 	cloned.AllowSubSite = site.AllowSubSite
 	cloned.SubSitePriceFen = site.SubSitePriceFen
 	if site.Name != "" {
@@ -635,6 +623,25 @@ func (s *SubSiteService) SiteNameOrEmpty(ctx context.Context) string {
 		return ""
 	}
 	return strings.TrimSpace(site.Name)
+}
+
+func (s *SubSiteService) CurrentConsumeRateMultiplier(ctx context.Context) float64 {
+	site, ok := s.GetCurrent(ctx)
+	if !ok || site == nil || site.Status != SubSiteStatusActive {
+		return DefaultSubSiteConsumeRate
+	}
+	return normalizeConsumeRateMultiplier(site.ConsumeRateMultiplier)
+}
+
+func currentSubSiteConsumeRateMultiplier(ctx context.Context) float64 {
+	if ctx == nil {
+		return DefaultSubSiteConsumeRate
+	}
+	site, ok := ctx.Value(ctxkey.SubSite).(*SubSite)
+	if !ok || site == nil || site.Status != SubSiteStatusActive {
+		return DefaultSubSiteConsumeRate
+	}
+	return normalizeConsumeRateMultiplier(site.ConsumeRateMultiplier)
 }
 
 func (s *SubSiteService) readSettingInt(ctx context.Context, key string, fallback int) int {

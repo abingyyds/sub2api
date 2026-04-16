@@ -71,21 +71,6 @@ export interface PaymentOrder {
 
 export type PayMethod = 'wechat' | 'alipay' | 'epay_alipay' | 'epay_wxpay'
 
-export interface SubSiteGroupPriceOverride {
-  group_id: number
-  group_name?: string
-  price_fen: number
-  base_price_fen?: number
-}
-
-export interface SubSiteRechargePriceOverride {
-  plan_key: string
-  name?: string
-  pay_amount_fen: number
-  base_pay_amount_fen?: number
-  balance_amount?: number
-}
-
 export interface CreateSubSiteActivationInput {
   name: string
   slug: string
@@ -104,8 +89,7 @@ export interface CreateSubSiteActivationInput {
   enable_topup?: boolean
   allow_sub_site?: boolean
   sub_site_price_fen?: number
-  group_price_overrides?: SubSiteGroupPriceOverride[]
-  recharge_price_overrides?: SubSiteRechargePriceOverride[]
+  consume_rate_multiplier?: number
 }
 
 const plansCache: CacheEntry<PaymentPlan[]> = {

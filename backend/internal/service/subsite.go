@@ -25,6 +25,7 @@ const (
 	DefaultSubSiteActivationPriceFen = 38800
 	DefaultSubSiteValidityDays       = 365
 	MaxSubSiteLevel                  = 2
+	DefaultSubSiteConsumeRate        = 1.0
 )
 
 type SubSiteThemeTemplateOption struct {
@@ -54,21 +55,6 @@ var DefaultSubSiteThemeTemplates = []SubSiteThemeTemplateOption{
 		Label:       "Terminal",
 		Description: "偏开发者风格模板，适合 Claude Code / Codex 场景",
 	},
-}
-
-type SubSiteGroupPriceOverride struct {
-	GroupID      int64  `json:"group_id"`
-	GroupName    string `json:"group_name,omitempty"`
-	PriceFen     int    `json:"price_fen"`
-	BasePriceFen int    `json:"base_price_fen,omitempty"`
-}
-
-type SubSiteRechargePriceOverride struct {
-	PlanKey          string  `json:"plan_key"`
-	Name             string  `json:"name,omitempty"`
-	PayAmountFen     int     `json:"pay_amount_fen"`
-	BasePayAmountFen int     `json:"base_pay_amount_fen,omitempty"`
-	BalanceAmount    float64 `json:"balance_amount,omitempty"`
 }
 
 type SubSiteOpenInfo struct {
@@ -107,115 +93,120 @@ type UpdatePlatformSubSiteConfigInput struct {
 }
 
 type SubSite struct {
-	ID                     int64                          `json:"id"`
-	OwnerUserID            int64                          `json:"owner_user_id"`
-	OwnerEmail             string                         `json:"owner_email,omitempty"`
-	ParentSubSiteID        *int64                         `json:"parent_sub_site_id,omitempty"`
-	ParentSubSiteName      string                         `json:"parent_sub_site_name,omitempty"`
-	Level                  int                            `json:"level"`
-	Name                   string                         `json:"name"`
-	Slug                   string                         `json:"slug"`
-	CustomDomain           string                         `json:"custom_domain,omitempty"`
-	Status                 string                         `json:"status"`
-	SiteLogo               string                         `json:"site_logo,omitempty"`
-	SiteFavicon            string                         `json:"site_favicon,omitempty"`
-	SiteSubtitle           string                         `json:"site_subtitle,omitempty"`
-	Announcement           string                         `json:"announcement,omitempty"`
-	ContactInfo            string                         `json:"contact_info,omitempty"`
-	DocURL                 string                         `json:"doc_url,omitempty"`
-	HomeContent            string                         `json:"home_content,omitempty"`
-	ThemeTemplate          string                         `json:"theme_template,omitempty"`
-	ThemeConfig            string                         `json:"theme_config,omitempty"`
-	CustomConfig           string                         `json:"custom_config,omitempty"`
-	RegistrationMode       string                         `json:"registration_mode,omitempty"`
-	EnableTopup            bool                           `json:"enable_topup"`
-	AllowSubSite           bool                           `json:"allow_sub_site"`
-	SubSitePriceFen        int                            `json:"sub_site_price_fen"`
-	SubscriptionExpiredAt  *time.Time                     `json:"subscription_expired_at,omitempty"`
-	UserCount              int64                          `json:"user_count,omitempty"`
-	ChildSiteCount         int64                          `json:"child_site_count,omitempty"`
-	EntryURL               string                         `json:"entry_url,omitempty"`
-	GroupPriceOverrides    []SubSiteGroupPriceOverride    `json:"group_price_overrides,omitempty"`
-	RechargePriceOverrides []SubSiteRechargePriceOverride `json:"recharge_price_overrides,omitempty"`
-	CreatedAt              time.Time                      `json:"created_at"`
-	UpdatedAt              time.Time                      `json:"updated_at"`
+	ID                    int64      `json:"id"`
+	OwnerUserID           int64      `json:"owner_user_id"`
+	OwnerEmail            string     `json:"owner_email,omitempty"`
+	ParentSubSiteID       *int64     `json:"parent_sub_site_id,omitempty"`
+	ParentSubSiteName     string     `json:"parent_sub_site_name,omitempty"`
+	Level                 int        `json:"level"`
+	Name                  string     `json:"name"`
+	Slug                  string     `json:"slug"`
+	CustomDomain          string     `json:"custom_domain,omitempty"`
+	Status                string     `json:"status"`
+	SiteLogo              string     `json:"site_logo,omitempty"`
+	SiteFavicon           string     `json:"site_favicon,omitempty"`
+	SiteSubtitle          string     `json:"site_subtitle,omitempty"`
+	Announcement          string     `json:"announcement,omitempty"`
+	ContactInfo           string     `json:"contact_info,omitempty"`
+	DocURL                string     `json:"doc_url,omitempty"`
+	HomeContent           string     `json:"home_content,omitempty"`
+	ThemeTemplate         string     `json:"theme_template,omitempty"`
+	ThemeConfig           string     `json:"theme_config,omitempty"`
+	CustomConfig          string     `json:"custom_config,omitempty"`
+	RegistrationMode      string     `json:"registration_mode,omitempty"`
+	EnableTopup           bool       `json:"enable_topup"`
+	AllowSubSite          bool       `json:"allow_sub_site"`
+	SubSitePriceFen       int        `json:"sub_site_price_fen"`
+	ConsumeRateMultiplier float64    `json:"consume_rate_multiplier"`
+	BalanceFen            int64      `json:"balance_fen"`
+	TotalTopupFen         int64      `json:"total_topup_fen"`
+	TotalConsumedFen      int64      `json:"total_consumed_fen"`
+	AllowOnlineTopup      bool       `json:"allow_online_topup"`
+	AllowOfflineTopup     bool       `json:"allow_offline_topup"`
+	SubscriptionExpiredAt *time.Time `json:"subscription_expired_at,omitempty"`
+	UserCount             int64      `json:"user_count,omitempty"`
+	ChildSiteCount        int64      `json:"child_site_count,omitempty"`
+	EntryURL              string     `json:"entry_url,omitempty"`
+	CreatedAt             time.Time  `json:"created_at"`
+	UpdatedAt             time.Time  `json:"updated_at"`
 }
 
 type CreateSubSiteInput struct {
-	OwnerUserID            int64                          `json:"owner_user_id"`
-	ParentSubSiteID        *int64                         `json:"parent_sub_site_id,omitempty"`
-	Name                   string                         `json:"name"`
-	Slug                   string                         `json:"slug"`
-	CustomDomain           string                         `json:"custom_domain"`
-	Status                 string                         `json:"status"`
-	SiteLogo               string                         `json:"site_logo"`
-	SiteFavicon            string                         `json:"site_favicon"`
-	SiteSubtitle           string                         `json:"site_subtitle"`
-	Announcement           string                         `json:"announcement"`
-	ContactInfo            string                         `json:"contact_info"`
-	DocURL                 string                         `json:"doc_url"`
-	HomeContent            string                         `json:"home_content"`
-	ThemeTemplate          string                         `json:"theme_template"`
-	ThemeConfig            string                         `json:"theme_config"`
-	CustomConfig           string                         `json:"custom_config"`
-	RegistrationMode       string                         `json:"registration_mode"`
-	EnableTopup            *bool                          `json:"enable_topup,omitempty"`
-	AllowSubSite           *bool                          `json:"allow_sub_site,omitempty"`
-	SubSitePriceFen        int                            `json:"sub_site_price_fen"`
-	SubscriptionExpiredAt  *time.Time                     `json:"subscription_expired_at,omitempty"`
-	GroupPriceOverrides    []SubSiteGroupPriceOverride    `json:"group_price_overrides,omitempty"`
-	RechargePriceOverrides []SubSiteRechargePriceOverride `json:"recharge_price_overrides,omitempty"`
+	OwnerUserID           int64      `json:"owner_user_id"`
+	ParentSubSiteID       *int64     `json:"parent_sub_site_id,omitempty"`
+	Name                  string     `json:"name"`
+	Slug                  string     `json:"slug"`
+	CustomDomain          string     `json:"custom_domain"`
+	Status                string     `json:"status"`
+	SiteLogo              string     `json:"site_logo"`
+	SiteFavicon           string     `json:"site_favicon"`
+	SiteSubtitle          string     `json:"site_subtitle"`
+	Announcement          string     `json:"announcement"`
+	ContactInfo           string     `json:"contact_info"`
+	DocURL                string     `json:"doc_url"`
+	HomeContent           string     `json:"home_content"`
+	ThemeTemplate         string     `json:"theme_template"`
+	ThemeConfig           string     `json:"theme_config"`
+	CustomConfig          string     `json:"custom_config"`
+	RegistrationMode      string     `json:"registration_mode"`
+	EnableTopup           *bool      `json:"enable_topup,omitempty"`
+	AllowSubSite          *bool      `json:"allow_sub_site,omitempty"`
+	SubSitePriceFen       int        `json:"sub_site_price_fen"`
+	ConsumeRateMultiplier float64    `json:"consume_rate_multiplier"`
+	AllowOnlineTopup      *bool      `json:"allow_online_topup,omitempty"`
+	AllowOfflineTopup     *bool      `json:"allow_offline_topup,omitempty"`
+	SubscriptionExpiredAt *time.Time `json:"subscription_expired_at,omitempty"`
 }
 
 type UpdateSubSiteInput struct {
-	ID                     int64                          `json:"id"`
-	OwnerUserID            int64                          `json:"owner_user_id"`
-	ParentSubSiteID        *int64                         `json:"parent_sub_site_id,omitempty"`
-	Name                   string                         `json:"name"`
-	Slug                   string                         `json:"slug"`
-	CustomDomain           string                         `json:"custom_domain"`
-	Status                 string                         `json:"status"`
-	SiteLogo               string                         `json:"site_logo"`
-	SiteFavicon            string                         `json:"site_favicon"`
-	SiteSubtitle           string                         `json:"site_subtitle"`
-	Announcement           string                         `json:"announcement"`
-	ContactInfo            string                         `json:"contact_info"`
-	DocURL                 string                         `json:"doc_url"`
-	HomeContent            string                         `json:"home_content"`
-	ThemeTemplate          string                         `json:"theme_template"`
-	ThemeConfig            string                         `json:"theme_config"`
-	CustomConfig           string                         `json:"custom_config"`
-	RegistrationMode       string                         `json:"registration_mode"`
-	EnableTopup            *bool                          `json:"enable_topup,omitempty"`
-	AllowSubSite           *bool                          `json:"allow_sub_site,omitempty"`
-	SubSitePriceFen        int                            `json:"sub_site_price_fen"`
-	SubscriptionExpiredAt  *time.Time                     `json:"subscription_expired_at,omitempty"`
-	GroupPriceOverrides    []SubSiteGroupPriceOverride    `json:"group_price_overrides,omitempty"`
-	RechargePriceOverrides []SubSiteRechargePriceOverride `json:"recharge_price_overrides,omitempty"`
+	ID                    int64      `json:"id"`
+	OwnerUserID           int64      `json:"owner_user_id"`
+	ParentSubSiteID       *int64     `json:"parent_sub_site_id,omitempty"`
+	Name                  string     `json:"name"`
+	Slug                  string     `json:"slug"`
+	CustomDomain          string     `json:"custom_domain"`
+	Status                string     `json:"status"`
+	SiteLogo              string     `json:"site_logo"`
+	SiteFavicon           string     `json:"site_favicon"`
+	SiteSubtitle          string     `json:"site_subtitle"`
+	Announcement          string     `json:"announcement"`
+	ContactInfo           string     `json:"contact_info"`
+	DocURL                string     `json:"doc_url"`
+	HomeContent           string     `json:"home_content"`
+	ThemeTemplate         string     `json:"theme_template"`
+	ThemeConfig           string     `json:"theme_config"`
+	CustomConfig          string     `json:"custom_config"`
+	RegistrationMode      string     `json:"registration_mode"`
+	EnableTopup           *bool      `json:"enable_topup,omitempty"`
+	AllowSubSite          *bool      `json:"allow_sub_site,omitempty"`
+	SubSitePriceFen       int        `json:"sub_site_price_fen"`
+	ConsumeRateMultiplier float64    `json:"consume_rate_multiplier"`
+	AllowOnlineTopup      *bool      `json:"allow_online_topup,omitempty"`
+	AllowOfflineTopup     *bool      `json:"allow_offline_topup,omitempty"`
+	SubscriptionExpiredAt *time.Time `json:"subscription_expired_at,omitempty"`
 }
 
 type UpdateOwnedSubSiteInput = UpdateSubSiteInput
 
 type CreateSubSiteActivationInput struct {
-	Name                   string                         `json:"name"`
-	Slug                   string                         `json:"slug"`
-	CustomDomain           string                         `json:"custom_domain"`
-	SiteLogo               string                         `json:"site_logo"`
-	SiteFavicon            string                         `json:"site_favicon"`
-	SiteSubtitle           string                         `json:"site_subtitle"`
-	Announcement           string                         `json:"announcement"`
-	ContactInfo            string                         `json:"contact_info"`
-	DocURL                 string                         `json:"doc_url"`
-	HomeContent            string                         `json:"home_content"`
-	ThemeTemplate          string                         `json:"theme_template"`
-	ThemeConfig            string                         `json:"theme_config"`
-	CustomConfig           string                         `json:"custom_config"`
-	RegistrationMode       string                         `json:"registration_mode"`
-	EnableTopup            *bool                          `json:"enable_topup,omitempty"`
-	AllowSubSite           *bool                          `json:"allow_sub_site,omitempty"`
-	SubSitePriceFen        int                            `json:"sub_site_price_fen"`
-	GroupPriceOverrides    []SubSiteGroupPriceOverride    `json:"group_price_overrides,omitempty"`
-	RechargePriceOverrides []SubSiteRechargePriceOverride `json:"recharge_price_overrides,omitempty"`
+	Name                  string  `json:"name"`
+	Slug                  string  `json:"slug"`
+	CustomDomain          string  `json:"custom_domain"`
+	SiteLogo              string  `json:"site_logo"`
+	SiteFavicon           string  `json:"site_favicon"`
+	SiteSubtitle          string  `json:"site_subtitle"`
+	Announcement          string  `json:"announcement"`
+	ContactInfo           string  `json:"contact_info"`
+	DocURL                string  `json:"doc_url"`
+	HomeContent           string  `json:"home_content"`
+	ThemeTemplate         string  `json:"theme_template"`
+	ThemeConfig           string  `json:"theme_config"`
+	CustomConfig          string  `json:"custom_config"`
+	RegistrationMode      string  `json:"registration_mode"`
+	EnableTopup           *bool   `json:"enable_topup,omitempty"`
+	AllowSubSite          *bool   `json:"allow_sub_site,omitempty"`
+	SubSitePriceFen       int     `json:"sub_site_price_fen"`
+	ConsumeRateMultiplier float64 `json:"consume_rate_multiplier"`
 }
 
 type SubSiteActivationRequest struct {
