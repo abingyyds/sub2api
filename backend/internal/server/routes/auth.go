@@ -23,6 +23,7 @@ func RegisterAuthRoutes(
 
 	// 公开接口
 	auth := v1.Group("/auth")
+	auth.Use(servermiddleware.NoStore())
 	{
 		auth.POST("/register", h.Auth.Register)
 		auth.POST("/login", h.Auth.Login)
@@ -54,6 +55,7 @@ func RegisterAuthRoutes(
 	// 需要认证的当前用户信息
 	authenticated := v1.Group("")
 	authenticated.Use(gin.HandlerFunc(jwtAuth))
+	authenticated.Use(servermiddleware.NoStore())
 	{
 		authenticated.GET("/auth/me", h.Auth.GetCurrentUser)
 	}

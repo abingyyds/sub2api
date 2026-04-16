@@ -19,6 +19,7 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(null)
   const runMode = ref<'standard' | 'simple'>('standard')
   let refreshIntervalId: ReturnType<typeof setInterval> | null = null
+  let authCheckPromise: Promise<void> | null = null
 
   // ==================== Computed ====================
 
@@ -45,24 +46,35 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * Initialize auth state from localStorage
    * Call this on app startup to restore session
-   * Also starts auto-refresh and immediately fetches latest user data
+   * Only trusts the persisted token; user identity must be confirmed by the server.
    */
-  function checkAuth(): void {
-    const savedToken = localStorage.getItem(AUTH_TOKEN_KEY)
-    const savedUser = localStorage.getItem(AUTH_USER_KEY)
+  async function checkAuth(): Promise<void> {
+    if (authCheckPromise) {
+      return authCheckPromise
+    }
 
-    if (savedToken && savedUser) {
+    authCheckPromise = (async () => {
       try {
-        token.value = savedToken
-        user.value = JSON.parse(savedUser)
+        const savedToken = localStorage.getItem(AUTH_TOKEN_KEY)
+        if (!savedToken) {
+          clearAuth()
+          return
+        }
 
-        // Start auto-refresh interval (first refresh will happen after interval)
+        token.value = savedToken
+        user.value = null
+
+        await refreshUser()
         startAutoRefresh()
       } catch (error) {
-        console.error('Failed to parse saved user data:', error)
+        console.error('Failed to restore authenticated user:', error)
         clearAuth()
+      } finally {
+        authCheckPromise = null
       }
-    }
+    })()
+
+    return authCheckPromise
   }
 
   /**
@@ -99,6 +111,8 @@ export const useAuthStore = defineStore('auth', () => {
    * @throws Error if login fails
    */
   async function login(credentials: LoginRequest): Promise<LoginResponse> {
+    clearAuth()
+
     try {
       const response = await authAPI.login(credentials)
 
@@ -126,6 +140,8 @@ export const useAuthStore = defineStore('auth', () => {
    * @throws Error if 2FA verification fails
    */
   async function login2FA(tempToken: string, totpCode: string): Promise<User> {
+    clearAuth()
+
     try {
       const response = await authAPI.login2FA({ temp_token: tempToken, totp_code: totpCode })
       setAuthFromResponse(response)
@@ -166,27 +182,12 @@ export const useAuthStore = defineStore('auth', () => {
    * @throws Error if registration fails
    */
   async function register(userData: RegisterRequest): Promise<User> {
+    clearAuth()
+
     try {
       const response = await authAPI.register(userData)
-
-      // Store token and user
-      token.value = response.access_token
-
-      // Extract run_mode if present
-      if (response.user.run_mode) {
-        runMode.value = response.user.run_mode
-      }
-      const { run_mode: _run_mode, ...userDataWithoutRunMode } = response.user
-      user.value = userDataWithoutRunMode
-
-      // Persist to localStorage
-      localStorage.setItem(AUTH_TOKEN_KEY, response.access_token)
-      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(userDataWithoutRunMode))
-
-      // Start auto-refresh interval
-      startAutoRefresh()
-
-      return userDataWithoutRunMode
+      setAuthFromResponse(response)
+      return user.value!
     } catch (error) {
       // Clear any partial state on error
       clearAuth()
@@ -269,6 +270,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     token.value = null
     user.value = null
+    runMode.value = 'standard'
     localStorage.removeItem(AUTH_TOKEN_KEY)
     localStorage.removeItem(AUTH_USER_KEY)
   }
