@@ -279,6 +279,7 @@ export const useAppStore = defineStore('app', () => {
         linuxdo_oauth_enabled: false,
         referral_enabled: false,
         agent_enabled: false,
+        subsite_entry_enabled: false,
         is_subsite: false,
         subsite_slug: '',
         subsite_domain: '',

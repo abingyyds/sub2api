@@ -64,6 +64,7 @@ export interface SaveSubSiteRequest {
 }
 
 export interface PlatformSubSiteConfig {
+  entry_enabled: boolean
   enabled: boolean
   activation_price_fen: number
   validity_days: number

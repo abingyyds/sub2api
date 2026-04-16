@@ -11,6 +11,7 @@ import (
 
 func (s *SubSiteService) GetPlatformConfig(ctx context.Context) (*PlatformSubSiteConfig, error) {
 	cfg := &PlatformSubSiteConfig{
+		EntryEnabled:         s.readSettingBool(ctx, SettingKeySubSiteEntryEnabled, false),
 		Enabled:              s.readSettingBool(ctx, SettingKeySubSiteSelfServiceEnabled, true),
 		ActivationPriceFen:   s.readSettingInt(ctx, SettingKeySubSiteActivationPriceFen, DefaultSubSiteActivationPriceFen),
 		ValidityDays:         s.readSettingInt(ctx, SettingKeySubSiteActivationValidityDays, DefaultSubSiteValidityDays),
@@ -42,6 +43,7 @@ func (s *SubSiteService) UpdatePlatformConfig(ctx context.Context, input UpdateP
 		return nil, infraerrors.ServiceUnavailable("SETTING_REPOSITORY_UNAVAILABLE", "setting repository is unavailable")
 	}
 	updates := map[string]string{
+		SettingKeySubSiteEntryEnabled:           fmt.Sprintf("%t", input.EntryEnabled),
 		SettingKeySubSiteSelfServiceEnabled:     fmt.Sprintf("%t", input.Enabled),
 		SettingKeySubSiteActivationPriceFen:     fmt.Sprintf("%d", input.ActivationPriceFen),
 		SettingKeySubSiteActivationValidityDays: fmt.Sprintf("%d", input.ValidityDays),

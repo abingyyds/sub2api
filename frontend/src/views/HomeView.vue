@@ -621,7 +621,11 @@ const registrationNotice = computed(() => {
   if (mode === 'closed') return '当前分站已关闭新用户注册。'
   return ''
 })
-const allowSubSiteOpen = computed(() => Boolean(appStore.cachedPublicSettings?.allow_sub_site && (appStore.cachedPublicSettings?.subsite_price_fen || 0) > 0))
+const allowSubSiteOpen = computed(() => Boolean(
+  appStore.cachedPublicSettings?.subsite_entry_enabled
+  && appStore.cachedPublicSettings?.allow_sub_site
+  && (appStore.cachedPublicSettings?.subsite_price_fen || 0) > 0
+))
 const subSiteOpenPrice = computed(() => fenToYuan(appStore.cachedPublicSettings?.subsite_price_fen || 0))
 const themeStyles = computed(() => {
   switch (themeTemplate.value) {

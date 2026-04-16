@@ -241,6 +241,7 @@ const (
 	// =========================
 
 	SettingKeySubSiteSelfServiceEnabled     = "subsite_self_service_enabled"
+	SettingKeySubSiteEntryEnabled           = "subsite_entry_enabled"
 	SettingKeySubSiteActivationPriceFen     = "subsite_activation_price_fen"
 	SettingKeySubSiteActivationValidityDays = "subsite_activation_validity_days"
 	SettingKeySubSiteDefaultThemeTemplate   = "subsite_default_theme_template"
