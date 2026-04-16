@@ -25,8 +25,10 @@ func setNoStoreHeaders(headers http.Header) {
 	}
 
 	headers.Set("Cache-Control", sensitiveCacheControl)
+	headers.Set("CDN-Cache-Control", "no-store")
 	headers.Set("Pragma", "no-cache")
 	headers.Set("Expires", "0")
+	headers.Set("Surrogate-Control", "no-store")
 	appendVary(headers, "Authorization")
 	appendVary(headers, "Cookie")
 }

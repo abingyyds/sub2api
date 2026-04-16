@@ -34,8 +34,8 @@ func RegisterUserRoutes(
 	}
 
 	authenticated := v1.Group("")
-	authenticated.Use(gin.HandlerFunc(jwtAuth))
 	authenticated.Use(middleware.NoStore())
+	authenticated.Use(gin.HandlerFunc(jwtAuth))
 	{
 		// 用户接口
 		user := authenticated.Group("/user")

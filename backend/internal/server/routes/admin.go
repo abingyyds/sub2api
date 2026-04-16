@@ -15,8 +15,8 @@ func RegisterAdminRoutes(
 	adminAuth middleware.AdminAuthMiddleware,
 ) {
 	admin := v1.Group("/admin")
-	admin.Use(gin.HandlerFunc(adminAuth))
 	admin.Use(middleware.NoStore())
+	admin.Use(gin.HandlerFunc(adminAuth))
 	{
 		// 仪表盘
 		registerDashboardRoutes(admin, h)

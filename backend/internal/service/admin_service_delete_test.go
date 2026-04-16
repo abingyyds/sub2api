@@ -337,11 +337,13 @@ func waitForInvalidations(t *testing.T, ch <-chan subscriptionInvalidateCall, ex
 
 func TestAdminService_DeleteUser_Success(t *testing.T) {
 	repo := &userRepoStub{user: &User{ID: 7, Role: RoleUser}}
-	svc := &adminServiceImpl{userRepo: repo}
+	cache := &userCacheStub{}
+	svc := &adminServiceImpl{userRepo: repo, userCache: cache}
 
 	err := svc.DeleteUser(context.Background(), 7)
 	require.NoError(t, err)
 	require.Equal(t, []int64{7}, repo.deletedIDs)
+	require.Equal(t, []int64{7}, cache.deletedIDs)
 }
 
 func TestAdminService_DeleteUser_NotFound(t *testing.T) {
