@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -286,7 +287,14 @@ func (r *subSiteRepository) GetBoundSubSiteByUserID(ctx context.Context, userID 
 		WHERE su.user_id = $1
 		LIMIT 1
 	`, userID)
-	return scanSubSite(row)
+	site, err := scanSubSite(row)
+	if err != nil {
+		if errors.Is(err, service.ErrSubSiteNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return site, nil
 }
 
 // AdjustBalance 原子调整分站余额池并写入流水。deltaFen 为正表示入账，负表示出账；
