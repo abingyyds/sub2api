@@ -88,9 +88,9 @@ type UpdateUserInput struct {
 	Balance         *float64 // 使用指针区分"未提供"和"设置为0"
 	Concurrency     *int     // 使用指针区分"未提供"和"设置为0"
 	Status          string
-	Role            string // 角色变更（仅完整管理员可操作）
-	CallerRole      string // 调用者角色
-	CallerID        int64  // 调用者用户ID
+	Role            string   // 角色变更（仅完整管理员可操作）
+	CallerRole      string   // 调用者角色
+	CallerID        int64    // 调用者用户ID
 	AllowedGroups   *[]int64 // 使用指针区分"未提供"和"设置为空数组"
 	DiscoverySource *string  // 来源渠道
 	InviterID       *int64   // 上级代理ID，nil表示不修改，指向0表示移除关系
@@ -308,6 +308,7 @@ type adminServiceImpl struct {
 	billingCacheService  *BillingCacheService
 	proxyProber          ProxyExitInfoProber
 	proxyLatencyCache    ProxyLatencyCache
+	userCache            UserCache
 	authCacheInvalidator APIKeyAuthCacheInvalidator
 }
 
@@ -323,6 +324,7 @@ func NewAdminService(
 	billingCacheService *BillingCacheService,
 	proxyProber ProxyExitInfoProber,
 	proxyLatencyCache ProxyLatencyCache,
+	userCache UserCache,
 	authCacheInvalidator APIKeyAuthCacheInvalidator,
 ) AdminService {
 	return &adminServiceImpl{
@@ -336,7 +338,17 @@ func NewAdminService(
 		billingCacheService:  billingCacheService,
 		proxyProber:          proxyProber,
 		proxyLatencyCache:    proxyLatencyCache,
+		userCache:            userCache,
 		authCacheInvalidator: authCacheInvalidator,
+	}
+}
+
+func (s *adminServiceImpl) invalidateUserCache(ctx context.Context, userID int64) {
+	if s.userCache == nil {
+		return
+	}
+	if err := s.userCache.Delete(ctx, userID); err != nil {
+		log.Printf("invalidate user cache failed: user_id=%d err=%v", userID, err)
 	}
 }
 
@@ -480,6 +492,7 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 	if err := s.userRepo.Update(ctx, user); err != nil {
 		return nil, err
 	}
+	s.invalidateUserCache(ctx, user.ID)
 	if s.authCacheInvalidator != nil {
 		if user.Concurrency != oldConcurrency || user.Status != oldStatus || user.Role != oldRole {
 			s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, user.ID)
@@ -523,6 +536,7 @@ func (s *adminServiceImpl) DeleteUser(ctx context.Context, id int64) error {
 		log.Printf("delete user failed: user_id=%d err=%v", id, err)
 		return err
 	}
+	s.invalidateUserCache(ctx, id)
 	if s.authCacheInvalidator != nil {
 		s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, id)
 	}
@@ -553,6 +567,7 @@ func (s *adminServiceImpl) UpdateUserBalance(ctx context.Context, userID int64, 
 	if err := s.userRepo.Update(ctx, user); err != nil {
 		return nil, err
 	}
+	s.invalidateUserCache(ctx, userID)
 	balanceDiff := user.Balance - oldBalance
 	if s.authCacheInvalidator != nil && balanceDiff != 0 {
 		s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, userID)
@@ -665,29 +680,29 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 	}
 
 	group := &Group{
-		Name:             input.Name,
-		Description:      input.Description,
-		Platform:         platform,
-		RateMultiplier:   input.RateMultiplier,
-		IsExclusive:      input.IsExclusive,
-		Status:           StatusActive,
-		SubscriptionType: subscriptionType,
-		DailyLimitUSD:    dailyLimit,
-		WeeklyLimitUSD:   weeklyLimit,
-		MonthlyLimitUSD:  monthlyLimit,
-		ImagePrice1K:     imagePrice1K,
-		ImagePrice2K:     imagePrice2K,
-		ImagePrice4K:     imagePrice4K,
-		ClaudeCodeOnly:   input.ClaudeCodeOnly,
-		FallbackGroupID:  input.FallbackGroupID,
-		ModelRouting:     input.ModelRouting,
-		PriceFen:         input.PriceFen,
-		Listed:           input.Listed,
+		Name:                input.Name,
+		Description:         input.Description,
+		Platform:            platform,
+		RateMultiplier:      input.RateMultiplier,
+		IsExclusive:         input.IsExclusive,
+		Status:              StatusActive,
+		SubscriptionType:    subscriptionType,
+		DailyLimitUSD:       dailyLimit,
+		WeeklyLimitUSD:      weeklyLimit,
+		MonthlyLimitUSD:     monthlyLimit,
+		ImagePrice1K:        imagePrice1K,
+		ImagePrice2K:        imagePrice2K,
+		ImagePrice4K:        imagePrice4K,
+		ClaudeCodeOnly:      input.ClaudeCodeOnly,
+		FallbackGroupID:     input.FallbackGroupID,
+		ModelRouting:        input.ModelRouting,
+		PriceFen:            input.PriceFen,
+		Listed:              input.Listed,
 		DefaultValidityDays: input.DefaultValidityDays,
-		PlanFeatures:     input.PlanFeatures,
-		Tags:             input.Tags,
-		DisplayPrice:     input.DisplayPrice,
-		DisplayDiscount:  input.DisplayDiscount,
+		PlanFeatures:        input.PlanFeatures,
+		Tags:                input.Tags,
+		DisplayPrice:        input.DisplayPrice,
+		DisplayDiscount:     input.DisplayDiscount,
 	}
 	if err := s.groupRepo.Create(ctx, group); err != nil {
 		return nil, err

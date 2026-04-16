@@ -67,8 +67,10 @@ func TestAdminService_UpdateUserBalance_InvalidatesAuthCache(t *testing.T) {
 	repo := &balanceUserRepoStub{userRepoStub: baseRepo}
 	redeemRepo := &balanceRedeemRepoStub{redeemRepoStub: &redeemRepoStub{}}
 	invalidator := &authCacheInvalidatorStub{}
+	cache := &userCacheStub{}
 	svc := &adminServiceImpl{
 		userRepo:             repo,
+		userCache:            cache,
 		redeemCodeRepo:       redeemRepo,
 		authCacheInvalidator: invalidator,
 	}
@@ -76,6 +78,7 @@ func TestAdminService_UpdateUserBalance_InvalidatesAuthCache(t *testing.T) {
 	_, err := svc.UpdateUserBalance(context.Background(), 7, 5, "add", "")
 	require.NoError(t, err)
 	require.Equal(t, []int64{7}, invalidator.userIDs)
+	require.Equal(t, []int64{7}, cache.deletedIDs)
 	require.Len(t, redeemRepo.created, 1)
 }
 
@@ -84,8 +87,10 @@ func TestAdminService_UpdateUserBalance_NoChangeNoInvalidate(t *testing.T) {
 	repo := &balanceUserRepoStub{userRepoStub: baseRepo}
 	redeemRepo := &balanceRedeemRepoStub{redeemRepoStub: &redeemRepoStub{}}
 	invalidator := &authCacheInvalidatorStub{}
+	cache := &userCacheStub{}
 	svc := &adminServiceImpl{
 		userRepo:             repo,
+		userCache:            cache,
 		redeemCodeRepo:       redeemRepo,
 		authCacheInvalidator: invalidator,
 	}
@@ -93,5 +98,6 @@ func TestAdminService_UpdateUserBalance_NoChangeNoInvalidate(t *testing.T) {
 	_, err := svc.UpdateUserBalance(context.Background(), 7, 10, "set", "")
 	require.NoError(t, err)
 	require.Empty(t, invalidator.userIDs)
+	require.Equal(t, []int64{7}, cache.deletedIDs)
 	require.Empty(t, redeemRepo.created)
 }

@@ -24,8 +24,10 @@ func TestNoStore(t *testing.T) {
 		router.ServeHTTP(rec, req)
 
 		assert.Equal(t, "no-store, no-cache, must-revalidate, private", rec.Header().Get("Cache-Control"))
+		assert.Equal(t, "no-store", rec.Header().Get("CDN-Cache-Control"))
 		assert.Equal(t, "no-cache", rec.Header().Get("Pragma"))
 		assert.Equal(t, "0", rec.Header().Get("Expires"))
+		assert.Equal(t, "no-store", rec.Header().Get("Surrogate-Control"))
 		assert.Equal(t, "Authorization, Cookie", rec.Header().Get("Vary"))
 	})
 

@@ -54,8 +54,8 @@ func RegisterAuthRoutes(
 
 	// 需要认证的当前用户信息
 	authenticated := v1.Group("")
-	authenticated.Use(gin.HandlerFunc(jwtAuth))
 	authenticated.Use(servermiddleware.NoStore())
+	authenticated.Use(gin.HandlerFunc(jwtAuth))
 	{
 		authenticated.GET("/auth/me", h.Auth.GetCurrentUser)
 	}
