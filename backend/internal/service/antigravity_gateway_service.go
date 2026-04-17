@@ -274,6 +274,8 @@ func logPrefix(sessionID, accountName string) string {
 
 // Antigravity 直接支持的模型（精确匹配透传）
 var antigravitySupportedModels = map[string]bool{
+	"claude-opus-4-7":            true,
+	"claude-opus-4-7-thinking":   true,
 	"claude-opus-4-5-thinking":   true,
 	"claude-sonnet-4-5":          true,
 	"claude-sonnet-4-5-thinking": true,
@@ -299,11 +301,12 @@ var antigravityPrefixMapping = []struct {
 	{"claude-3-5-sonnet", "claude-sonnet-4-5"},       // 旧版 claude-3-5-sonnet-xxx
 	{"claude-sonnet-4-5", "claude-sonnet-4-5"},       // claude-sonnet-4-5-xxx
 	{"claude-haiku-4-5", "claude-sonnet-4-5"},        // claude-haiku-4-5-xxx → sonnet
+	{"claude-opus-4-7", "claude-opus-4-7"},           // claude-opus-4-7-xxx
 	{"claude-opus-4-5", "claude-opus-4-5-thinking"},
 	{"claude-3-haiku", "claude-sonnet-4-5"}, // 旧版 claude-3-haiku-xxx → sonnet
 	{"claude-sonnet-4", "claude-sonnet-4-5"},
 	{"claude-haiku-4", "claude-sonnet-4-5"}, // → sonnet
-	{"claude-opus-4", "claude-opus-4-5-thinking"},
+	{"claude-opus-4", "claude-opus-4-7"},
 	{"gemini-3-pro", "gemini-3-pro-high"}, // gemini-3-pro, gemini-3-pro-preview 等
 }
 

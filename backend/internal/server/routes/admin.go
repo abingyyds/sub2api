@@ -89,6 +89,9 @@ func RegisterAdminRoutes(
 
 		// 分站管理
 		registerSubSiteRoutes(admin, h)
+
+		// 提现管理
+		registerWithdrawRoutes(admin, h)
 	}
 }
 
@@ -103,6 +106,16 @@ func registerSubSiteRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		subSites.DELETE("/:id", h.Admin.SubSite.Delete)
 		subSites.POST("/:id/topup", h.Admin.SubSite.Topup)
 		subSites.GET("/:id/ledger", h.Admin.SubSite.Ledger)
+		subSites.PUT("/:id/mode", h.Admin.SubSite.SetMode)
+	}
+}
+
+func registerWithdrawRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	withdraws := admin.Group("/withdraws")
+	{
+		withdraws.GET("", h.Withdraw.AdminList)
+		withdraws.POST("/:id/review", h.Withdraw.AdminReview)
+		withdraws.POST("/:id/pay", h.Withdraw.AdminPay)
 	}
 }
 

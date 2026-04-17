@@ -48,6 +48,8 @@ type SubSiteRepository interface {
 	ExistsByDomain(ctx context.Context, domain string, excludeID int64) (bool, error)
 	Create(ctx context.Context, site *SubSite) error
 	Update(ctx context.Context, site *SubSite) error
+	UpdateMode(ctx context.Context, siteID int64, newMode string) error
+	IncrementTotalWithdrawnFen(ctx context.Context, siteID int64, amountFen int64) error
 	Delete(ctx context.Context, id int64) error
 	BindUser(ctx context.Context, siteID int64, userID int64, source string) error
 	// 级联停用：把 sub_sites 中 parent 链包含 rootID 的所有后代（递归）status 置为 newStatus。
@@ -271,6 +273,7 @@ func (s *SubSiteService) applyInputToSite(site *SubSite, input CreateSubSiteInpu
 	site.Slug = normalizeSlug(input.Slug)
 	site.CustomDomain = normalizeDomain(input.CustomDomain)
 	site.Status = status
+	site.Mode = normalizeMode(input.Mode)
 	site.SiteLogo = strings.TrimSpace(input.SiteLogo)
 	site.SiteFavicon = strings.TrimSpace(input.SiteFavicon)
 	site.SiteSubtitle = strings.TrimSpace(input.SiteSubtitle)
@@ -286,7 +289,19 @@ func (s *SubSiteService) applyInputToSite(site *SubSite, input CreateSubSiteInpu
 	site.ConsumeRateMultiplier = normalizeConsumeRateMultiplier(input.ConsumeRateMultiplier)
 	site.AllowOnlineTopup = boolValue(input.AllowOnlineTopup, true)
 	site.AllowOfflineTopup = boolValue(input.AllowOfflineTopup, true)
+	site.OwnerPaymentConfig = input.OwnerPaymentConfig
 	site.SubscriptionExpiredAt = input.SubscriptionExpiredAt
+}
+
+// normalizeMode 把任意模式值对齐到枚举；未知或空回退 pool。
+// rate 模式要求 owner 显式选择（admin 端），pool 是默认。
+func normalizeMode(mode string) string {
+	switch strings.ToLower(strings.TrimSpace(mode)) {
+	case SubSiteModeRate:
+		return SubSiteModeRate
+	default:
+		return SubSiteModePool
+	}
 }
 
 func (s *SubSiteService) populateComputedFields(ctx context.Context, site *SubSite, includePricing bool) (*SubSite, error) {
@@ -408,6 +423,7 @@ func (s *SubSiteService) Update(ctx context.Context, input UpdateSubSiteInput) (
 		Slug:                  input.Slug,
 		CustomDomain:          input.CustomDomain,
 		Status:                input.Status,
+		Mode:                  input.Mode,
 		SiteLogo:              input.SiteLogo,
 		SiteFavicon:           input.SiteFavicon,
 		SiteSubtitle:          input.SiteSubtitle,
@@ -423,6 +439,7 @@ func (s *SubSiteService) Update(ctx context.Context, input UpdateSubSiteInput) (
 		ConsumeRateMultiplier: input.ConsumeRateMultiplier,
 		AllowOnlineTopup:      input.AllowOnlineTopup,
 		AllowOfflineTopup:     input.AllowOfflineTopup,
+		OwnerPaymentConfig:    input.OwnerPaymentConfig,
 		SubscriptionExpiredAt: input.SubscriptionExpiredAt,
 	}
 	s.applyInputToSite(current, createInput, level, normalizeStatus(input.Status), themeTemplate, registrationMode)
@@ -588,6 +605,10 @@ func (s *SubSiteService) GetCurrent(ctx context.Context) (*SubSite, bool) {
 		return nil, false
 	}
 	return site, true
+}
+
+func (s *SubSiteService) GetByID(ctx context.Context, id int64) (*SubSite, error) {
+	return s.repo.GetByID(ctx, id)
 }
 
 func (s *SubSiteService) BindCurrentUser(ctx context.Context, userID int64) error {

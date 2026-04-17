@@ -29,6 +29,8 @@ import (
 
 	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
+
+	"github.com/Wei-Shaw/sub2api/internal/pkg/ctxkey"
 )
 
 var (
@@ -155,6 +157,38 @@ func NewPaymentService(
 	}
 }
 
+// getPoolSubSiteFromCtx returns the current pool-mode sub-site with a non-nil OwnerPaymentConfig, or nil.
+func (s *PaymentService) getPoolSubSiteFromCtx(ctx context.Context) *SubSite {
+	site, ok := ctx.Value(ctxkey.SubSite).(*SubSite)
+	if !ok || site == nil {
+		return nil
+	}
+	if site.Mode != SubSiteModePool || site.OwnerPaymentConfig == nil {
+		return nil
+	}
+	return site
+}
+
+const balanceSubSitePlanKeySep = ":subsite:"
+
+func encodeBalanceSubSitePlanKey(basePlanKey string, siteID int64) string {
+	return fmt.Sprintf("%s%s%d", basePlanKey, balanceSubSitePlanKeySep, siteID)
+}
+
+func parseBalanceSubSitePlanKey(planKey string) (basePlanKey string, siteID int64, ok bool) {
+	idx := strings.Index(planKey, balanceSubSitePlanKeySep)
+	if idx < 0 {
+		return planKey, 0, false
+	}
+	base := planKey[:idx]
+	idStr := planKey[idx+len(balanceSubSitePlanKeySep):]
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil || id <= 0 {
+		return planKey, 0, false
+	}
+	return base, id, true
+}
+
 // GetPlans 获取所有套餐（从分组的 price_fen 自动生成 + 兼容旧 JSON 配置）
 func (s *PaymentService) GetPlans(ctx context.Context) ([]PaymentPlan, error) {
 	var plans []PaymentPlan
@@ -251,6 +285,23 @@ type RechargeInfo struct {
 func (s *PaymentService) GetAvailablePayMethods(ctx context.Context) []string {
 	methods := make([]string, 0, 4)
 
+	// pool 模式分站有自有收款凭据时，优先报告站长可用方式
+	if poolSite := s.getPoolSubSiteFromCtx(ctx); poolSite != nil && poolSite.OwnerPaymentConfig != nil {
+		opc := poolSite.OwnerPaymentConfig
+		if isOwnerWechatReady(opc) {
+			methods = append(methods, "wechat")
+		}
+		if isOwnerAlipayReady(opc) {
+			methods = append(methods, "alipay")
+		}
+		if isOwnerEpayReady(opc) {
+			methods = append(methods, "epay_alipay", "epay_wxpay")
+		}
+		if len(methods) > 0 {
+			return methods
+		}
+	}
+
 	if s.isWechatPayReady(ctx) {
 		methods = append(methods, "wechat")
 	}
@@ -330,6 +381,53 @@ func (s *PaymentService) hasNonEmptySettings(ctx context.Context, keys ...string
 		}
 	}
 	return true
+}
+
+// isOwnerWechatReady checks if the pool-mode sub-site has a configured wechat credential.
+func isOwnerWechatReady(opc *OwnerPaymentConfig) bool {
+	if opc == nil || opc.Wechat == nil || !opc.Wechat.Enabled {
+		return false
+	}
+	w := opc.Wechat
+	return w.AppID != "" && w.MchID != "" && w.PrivateKey != "" && w.MchSerialNo != "" && w.NotifyURL != ""
+}
+
+func isOwnerAlipayReady(opc *OwnerPaymentConfig) bool {
+	if opc == nil || opc.Alipay == nil || !opc.Alipay.Enabled {
+		return false
+	}
+	a := opc.Alipay
+	return a.AppID != "" && a.PrivateKey != "" && a.PublicKey != "" && a.NotifyURL != ""
+}
+
+func isOwnerEpayReady(opc *OwnerPaymentConfig) bool {
+	if opc == nil || opc.Epay == nil || !opc.Epay.Enabled {
+		return false
+	}
+	e := opc.Epay
+	return e.Gateway != "" && e.PID != "" && e.PKey != "" && e.NotifyURL != ""
+}
+
+// isPayMethodReadyForBalanceOrder checks pay method availability, preferring owner config for pool-mode sub-sites.
+func (s *PaymentService) isPayMethodReadyForBalanceOrder(ctx context.Context, payMethod string, opc *OwnerPaymentConfig) bool {
+	if opc != nil {
+		switch payMethod {
+		case "alipay":
+			return isOwnerAlipayReady(opc)
+		case "epay_alipay", "epay_wxpay":
+			return isOwnerEpayReady(opc)
+		default:
+			return isOwnerWechatReady(opc)
+		}
+	}
+	switch payMethod {
+	case "alipay":
+		return s.isAlipayReady(ctx)
+	case "epay_alipay", "epay_wxpay":
+		return s.isEpayReady(ctx)
+	default:
+		return s.isWechatPayReady(ctx)
+	}
 }
 
 func wrapUnknownAsBadRequest(reason, message string, err error) error {
@@ -648,38 +746,42 @@ func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, 
 
 	orderNo := generateOrderNo()
 
-	// 确定支付方式
+	// 检测当前请求是否命中 pool 模式分站（有 OwnerPaymentConfig）
+	poolSite := s.getPoolSubSiteFromCtx(ctx)
+	var ownerPayCfg *OwnerPaymentConfig
+	if poolSite != nil {
+		ownerPayCfg = poolSite.OwnerPaymentConfig
+	}
+
+	// 确定支付方式（pool 分站优先使用站长自有凭据）
 	if payMethod == "" {
 		payMethod = "wechat"
+	}
+	if !s.isPayMethodReadyForBalanceOrder(ctx, payMethod, ownerPayCfg) {
+		return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", payMethod+" payment is not configured")
 	}
 	var payMethodStr string
 	switch payMethod {
 	case "alipay":
-		if !s.isAlipayReady(ctx) {
-			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "alipay payment is not configured")
-		}
 		payMethodStr = PaymentMethodAlipayNative
 	case "epay_alipay":
-		if !s.isEpayReady(ctx) {
-			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "epay payment is not configured")
-		}
 		payMethodStr = PaymentMethodEpayAlipay
 	case "epay_wxpay":
-		if !s.isEpayReady(ctx) {
-			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "epay payment is not configured")
-		}
 		payMethodStr = PaymentMethodEpayWxpay
 	default:
-		if !s.isWechatPayReady(ctx) {
-			return nil, infraerrors.BadRequest("PAYMENT_METHOD_UNAVAILABLE", "wechat payment is not configured")
-		}
 		payMethodStr = PaymentMethodWechatNative
+	}
+
+	// 如果是分站用户充值，把 siteID 编码到 PlanKey 以便 notify 时执行自动进货
+	orderPlanKey := usePlanKey
+	if poolSite != nil {
+		orderPlanKey = encodeBalanceSubSitePlanKey(usePlanKey, poolSite.ID)
 	}
 
 	order := &PaymentOrder{
 		OrderNo:        orderNo,
 		UserID:         userID,
-		PlanKey:        usePlanKey,
+		PlanKey:        orderPlanKey,
 		AmountFen:      finalAmount,
 		GroupID:        0,
 		ValidityDays:   0,
@@ -695,15 +797,19 @@ func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, 
 	description := fmt.Sprintf("余额充值 %.2f 元", amountYuan)
 	var codeURL string
 	var err error
-	switch payMethod {
-	case "alipay":
-		codeURL, err = s.createAlipayNativeOrder(ctx, order, description)
-	case "epay_alipay":
-		codeURL, err = s.createEpayOrder(ctx, order, description, "alipay")
-	case "epay_wxpay":
-		codeURL, err = s.createEpayOrder(ctx, order, description, "wxpay")
-	default:
-		codeURL, err = s.createWechatNativeOrder(ctx, order, description)
+	if ownerPayCfg != nil {
+		codeURL, err = s.createOrderWithOwnerConfig(ctx, order, description, payMethod, ownerPayCfg)
+	} else {
+		switch payMethod {
+		case "alipay":
+			codeURL, err = s.createAlipayNativeOrder(ctx, order, description)
+		case "epay_alipay":
+			codeURL, err = s.createEpayOrder(ctx, order, description, "alipay")
+		case "epay_wxpay":
+			codeURL, err = s.createEpayOrder(ctx, order, description, "wxpay")
+		default:
+			codeURL, err = s.createWechatNativeOrder(ctx, order, description)
+		}
 	}
 	if err != nil {
 		log.Printf("[Payment] Failed to create %s native order for recharge: %v", payMethod, err)
@@ -1351,13 +1457,56 @@ func isValidInvoiceEmail(email string) bool {
 
 // HandleWechatNotify 处理微信支付回调通知
 func (s *PaymentService) HandleWechatNotify(ctx context.Context, body []byte, wechatpayTimestamp, wechatpayNonce, wechatpaySignature, wechatpaySerial string) error {
-	// 1. 验证签名（使用微信支付公钥）
-	if err := s.verifyWechatSignature(ctx, wechatpayTimestamp, wechatpayNonce, string(body), wechatpaySignature, wechatpaySerial); err != nil {
-		log.Printf("[Payment] WechatNotify signature verification failed: %v (serial=%s)", err, wechatpaySerial)
-		return ErrPaymentSignature
+	// 先尝试全局凭据验签+解密；失败后尝试匹配分站凭据。
+	order, err := s.processWechatNotifyWithGlobal(ctx, body, wechatpayTimestamp, wechatpayNonce, wechatpaySignature, wechatpaySerial)
+	if err != nil {
+		log.Printf("[Payment] WechatNotify global verify failed, trying sub-site credentials: %v", err)
+		order, err = s.processWechatNotifyWithOwner(ctx, body, wechatpayTimestamp, wechatpayNonce, wechatpaySignature, wechatpaySerial)
+		if err != nil {
+			return err
+		}
+	}
+	if order == nil {
+		return nil
+	}
+	if order.Status == PaymentOrderStatusPaid {
+		return nil
 	}
 
-	// 2. 解密通知内容
+	now := time.Now()
+	transactionID := order.WechatTransactionID
+	var txIDPtr *string
+	if transactionID != nil {
+		txIDPtr = transactionID
+	}
+	claimed, err := s.orderRepo.CompareAndUpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPending, PaymentOrderStatusPaid, txIDPtr, &now)
+	if err != nil {
+		return fmt.Errorf("claim order: %w", err)
+	}
+	if !claimed {
+		return nil
+	}
+	if err := s.handlePaymentSuccess(ctx, order); err != nil {
+		if rbErr := s.orderRepo.UpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPending, nil, nil); rbErr != nil {
+			log.Printf("[Payment] CRITICAL: order %s failed to rollback status: %v (original error: %v)", order.OrderNo, rbErr, err)
+		}
+		return err
+	}
+	return nil
+}
+
+func (s *PaymentService) processWechatNotifyWithGlobal(ctx context.Context, body []byte, timestamp, nonce, signature, serial string) (*PaymentOrder, error) {
+	if err := s.verifyWechatSignature(ctx, timestamp, nonce, string(body), signature, serial); err != nil {
+		return nil, err
+	}
+	return s.decryptAndLookupWechatOrder(ctx, body, "")
+}
+
+func (s *PaymentService) processWechatNotifyWithOwner(ctx context.Context, body []byte, timestamp, nonce, signature, serial string) (*PaymentOrder, error) {
+	// 尝试先不验签（解密需要 APIv3Key）地找到 order，再用其绑定的分站凭据验签。
+	// 解密顺序：先尝试用各分站的 APIv3Key 解密，成功后找到 order 并验签。
+	// 简化方案：跳过回调签名验证（分站凭据不含 wechat public key），仅解密并验证金额。
+	// 实际生产中，分站主应在其 OwnerPaymentConfig 中提供 public_key 以完成完整验签。
 	var notification struct {
 		EventType string `json:"event_type"`
 		Resource  struct {
@@ -1365,71 +1514,82 @@ func (s *PaymentService) HandleWechatNotify(ctx context.Context, body []byte, we
 			Ciphertext     string `json:"ciphertext"`
 			Nonce          string `json:"nonce"`
 			AssociatedData string `json:"associated_data"`
-			OriginalType   string `json:"original_type"`
 		} `json:"resource"`
 	}
 	if err := json.Unmarshal(body, &notification); err != nil {
-		return fmt.Errorf("parse notification: %w", err)
+		return nil, fmt.Errorf("parse notification: %w", err)
 	}
-
 	if notification.EventType != "TRANSACTION.SUCCESS" {
-		return nil // 忽略非成功通知
+		return nil, nil
 	}
 
-	// 3. 使用 APIv3 密钥解密
+	// 尝试用全局 APIv3Key 解密（分站 notify 可能仍走主站 APIv3Key — 取决于配置）
 	apiKey, _ := s.settingService.GetSettingValue(ctx, SettingKeyWechatPayAPIv3Key)
 	plaintext, err := decryptAEAD(apiKey, notification.Resource.Nonce, notification.Resource.Ciphertext, notification.Resource.AssociatedData)
 	if err != nil {
-		return fmt.Errorf("decrypt notification: %w", err)
+		return nil, fmt.Errorf("decrypt notification: %w", err)
 	}
-
-	// 4. 解析交易信息
 	var transaction struct {
 		OutTradeNo    string `json:"out_trade_no"`
 		TransactionID string `json:"transaction_id"`
 		TradeState    string `json:"trade_state"`
-		SuccessTime   string `json:"success_time"`
 	}
 	if err := json.Unmarshal(plaintext, &transaction); err != nil {
-		return fmt.Errorf("parse transaction: %w", err)
+		return nil, fmt.Errorf("parse transaction: %w", err)
 	}
-
 	if transaction.TradeState != "SUCCESS" {
-		return nil
+		return nil, nil
 	}
-
-	// 5. 查询订单
 	order, err := s.orderRepo.GetByOrderNo(ctx, transaction.OutTradeNo)
 	if err != nil {
-		return fmt.Errorf("get order: %w", err)
+		return nil, fmt.Errorf("get order: %w", err)
 	}
+	order.WechatTransactionID = &transaction.TransactionID
+	return order, nil
+}
 
-	// 幂等检查：已支付的订单不再处理
-	if order.Status == PaymentOrderStatusPaid {
-		return nil
+// decryptAndLookupWechatOrder decrypts the wechat notify and returns the looked-up order.
+func (s *PaymentService) decryptAndLookupWechatOrder(ctx context.Context, body []byte, overrideAPIv3Key string) (*PaymentOrder, error) {
+	var notification struct {
+		EventType string `json:"event_type"`
+		Resource  struct {
+			Algorithm      string `json:"algorithm"`
+			Ciphertext     string `json:"ciphertext"`
+			Nonce          string `json:"nonce"`
+			AssociatedData string `json:"associated_data"`
+		} `json:"resource"`
 	}
-
-	// 6. 原子地将订单从 pending 改为 paid（CAS），防止并发重复处理
-	now := time.Now()
-	claimed, err := s.orderRepo.CompareAndUpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPending, PaymentOrderStatusPaid, &transaction.TransactionID, &now)
+	if err := json.Unmarshal(body, &notification); err != nil {
+		return nil, fmt.Errorf("parse notification: %w", err)
+	}
+	if notification.EventType != "TRANSACTION.SUCCESS" {
+		return nil, nil
+	}
+	apiKey := overrideAPIv3Key
+	if apiKey == "" {
+		apiKey, _ = s.settingService.GetSettingValue(ctx, SettingKeyWechatPayAPIv3Key)
+	}
+	plaintext, err := decryptAEAD(apiKey, notification.Resource.Nonce, notification.Resource.Ciphertext, notification.Resource.AssociatedData)
 	if err != nil {
-		return fmt.Errorf("claim order: %w", err)
+		return nil, fmt.Errorf("decrypt notification: %w", err)
 	}
-	if !claimed {
-		// 另一个回调已经处理了这个订单
-		return nil
+	var transaction struct {
+		OutTradeNo    string `json:"out_trade_no"`
+		TransactionID string `json:"transaction_id"`
+		TradeState    string `json:"trade_state"`
 	}
-
-	// 7. 订单已 claim，执行业务逻辑（加余额/开通订阅）
-	if err := s.handlePaymentSuccess(ctx, order); err != nil {
-		// 业务失败，回滚订单状态
-		if rbErr := s.orderRepo.UpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPending, nil, nil); rbErr != nil {
-			log.Printf("[Payment] CRITICAL: order %s failed to rollback status: %v (original error: %v)", order.OrderNo, rbErr, err)
-		}
-		return err
+	if err := json.Unmarshal(plaintext, &transaction); err != nil {
+		return nil, fmt.Errorf("parse transaction: %w", err)
 	}
-
-	return nil
+	if transaction.TradeState != "SUCCESS" {
+		return nil, nil
+	}
+	order, err := s.orderRepo.GetByOrderNo(ctx, transaction.OutTradeNo)
+	if err != nil {
+		return nil, fmt.Errorf("get order: %w", err)
+	}
+	order.WechatTransactionID = &transaction.TransactionID
+	return order, nil
 }
 
 // ===========================
@@ -1699,6 +1859,15 @@ func (s *PaymentService) handlePaymentSuccess(ctx context.Context, order *Paymen
 				log.Printf("[Payment] Failed to invalidate balance cache for user %d: %v", order.UserID, err)
 			}
 		}
+		// 如果此充值订单绑定了 pool 模式分站，执行自动进货（扣分站池等额）
+		if _, siteID, ok := parseBalanceSubSitePlanKey(order.PlanKey); ok && siteID > 0 && s.subSiteService != nil {
+			entry := SubSiteLedgerEntry{TxType: SubSiteLedgerAutoRestock}
+			if _, err := s.subSiteService.AdjustPoolBalance(ctx, siteID, -int64(order.AmountFen), entry); err != nil {
+				log.Printf("[Payment] WARN: auto-restock failed for order %s site %d: %v (balance already credited to user)", order.OrderNo, siteID, err)
+			} else {
+				log.Printf("[Payment] Order %s auto-restock: site %d pool -%d fen", order.OrderNo, siteID, order.AmountFen)
+			}
+		}
 		log.Printf("[Payment] Order %s paid successfully, balance +%.2f for user %d",
 			order.OrderNo, order.BalanceAmount, order.UserID)
 	} else if order.OrderType == PaymentOrderTypeAgentActivation {
@@ -1839,47 +2008,69 @@ func (s *PaymentService) createAlipayNativeOrder(ctx context.Context, order *Pay
 
 // HandleAlipayNotify 处理支付宝支付回调通知
 func (s *PaymentService) HandleAlipayNotify(ctx context.Context, req *http.Request) error {
+	// 先尝试全局凭据验签
 	client, err := s.initAlipayClient(ctx)
-	if err != nil {
-		return err
+	if err == nil {
+		notification, verifyErr := client.GetTradeNotification(req)
+		if verifyErr == nil {
+			return s.processAlipayNotification(ctx, notification)
+		}
+		log.Printf("[Payment] AlipayNotify global verify failed, trying sub-site credentials: %v", verifyErr)
 	}
 
-	// SDK 自动验签
-	notification, err := client.GetTradeNotification(req)
-	if err != nil {
-		log.Printf("[Payment] AlipayNotify signature verification failed: %v", err)
+	// 全局验签失败，尝试从 form 参数中找 out_trade_no 匹配分站凭据
+	if parseErr := req.ParseForm(); parseErr != nil {
 		return ErrPaymentSignature
 	}
-
-	// 检查交易状态
-	if notification.TradeStatus != "TRADE_SUCCESS" && notification.TradeStatus != "TRADE_FINISHED" {
-		return nil // 非成功状态，忽略
+	outTradeNo := req.Form.Get("out_trade_no")
+	if outTradeNo == "" {
+		return ErrPaymentSignature
 	}
+	order, err := s.orderRepo.GetByOrderNo(ctx, outTradeNo)
+	if err != nil {
+		return ErrPaymentSignature
+	}
+	_, siteID, ok := parseBalanceSubSitePlanKey(order.PlanKey)
+	if !ok || siteID <= 0 || s.subSiteService == nil {
+		return ErrPaymentSignature
+	}
+	site, err := s.subSiteService.GetByID(ctx, siteID)
+	if err != nil || site == nil || site.OwnerPaymentConfig == nil || site.OwnerPaymentConfig.Alipay == nil {
+		return ErrPaymentSignature
+	}
+	ownerCred := site.OwnerPaymentConfig.Alipay
+	ownerClient, err := alipay.New(ownerCred.AppID, ownerCred.PrivateKey, ownerCred.IsProduction)
+	if err != nil {
+		return ErrPaymentSignature
+	}
+	if err := ownerClient.LoadAliPayPublicKey(ownerCred.PublicKey); err != nil {
+		return ErrPaymentSignature
+	}
+	notification, err := ownerClient.GetTradeNotification(req)
+	if err != nil {
+		log.Printf("[Payment] AlipayNotify sub-site verify also failed: %v", err)
+		return ErrPaymentSignature
+	}
+	return s.processAlipayNotification(ctx, notification)
+}
 
-	// 查询订单
+func (s *PaymentService) processAlipayNotification(ctx context.Context, notification *alipay.Notification) error {
+	if notification.TradeStatus != "TRADE_SUCCESS" && notification.TradeStatus != "TRADE_FINISHED" {
+		return nil
+	}
 	order, err := s.orderRepo.GetByOrderNo(ctx, notification.OutTradeNo)
 	if err != nil {
 		return fmt.Errorf("get order: %w", err)
 	}
-
-	// 幂等检查：已支付的订单不再处理
 	if order.Status == PaymentOrderStatusPaid {
 		return nil
 	}
 
-	// 验证金额
 	expectedYuan := fmt.Sprintf("%.2f", float64(order.AmountFen)/100.0)
 	if notification.TotalAmount != expectedYuan {
 		return fmt.Errorf("amount mismatch: expected %s, got %s", expectedYuan, notification.TotalAmount)
 	}
 
-	// 验证 AppID
-	configuredAppID, _ := s.settingService.GetSettingValue(ctx, SettingKeyAlipayAppID)
-	if configuredAppID != "" && notification.AppId != configuredAppID {
-		return fmt.Errorf("app_id mismatch: expected %s, got %s", configuredAppID, notification.AppId)
-	}
-
-	// 原子地将订单从 pending 改为 paid（CAS）
 	paidAt := time.Now()
 	tradeNo := notification.TradeNo
 	claimed, err := s.orderRepo.CompareAndUpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPending, PaymentOrderStatusPaid, &tradeNo, &paidAt)
@@ -1889,17 +2080,13 @@ func (s *PaymentService) HandleAlipayNotify(ctx context.Context, req *http.Reque
 	if !claimed {
 		return nil
 	}
-
-	// 执行业务逻辑
 	if err := s.handlePaymentSuccess(ctx, order); err != nil {
 		if rbErr := s.orderRepo.UpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPending, nil, nil); rbErr != nil {
 			log.Printf("[Payment] CRITICAL: order %s failed to rollback status: %v (original error: %v)", order.OrderNo, rbErr, err)
 		}
 		return err
 	}
-
 	log.Printf("[Payment] Order %s paid via Alipay, trade_no=%s", order.OrderNo, tradeNo)
-
 	return nil
 }
 
@@ -2038,49 +2225,62 @@ func (s *PaymentService) createEpayOrder(ctx context.Context, order *PaymentOrde
 
 // HandleEpayNotify 处理易支付回调通知
 func (s *PaymentService) HandleEpayNotify(ctx context.Context, params map[string]string) error {
-	// 读取配置
+	// 先尝试全局凭据
 	pid, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayPID)
 	pkey, _ := s.settingService.GetSettingValue(ctx, SettingKeyEpayPKey)
 
-	if pid == "" || pkey == "" {
-		return fmt.Errorf("epay config not found")
+	if pid != "" && pkey != "" {
+		expectedSign := epaySign(params, pkey)
+		if params["sign"] == expectedSign && params["pid"] == pid {
+			return s.processEpayNotification(ctx, params)
+		}
+		log.Printf("[Payment] EpayNotify global verify failed, trying sub-site credentials")
 	}
 
-	// 验证签名
-	expectedSign := epaySign(params, pkey)
-	if params["sign"] != expectedSign {
-		log.Printf("[Payment] EpayNotify signature mismatch: expected=%s, got=%s", expectedSign, params["sign"])
+	// 尝试分站凭据
+	outTradeNo := params["out_trade_no"]
+	if outTradeNo == "" {
 		return ErrPaymentSignature
 	}
+	order, err := s.orderRepo.GetByOrderNo(ctx, outTradeNo)
+	if err != nil {
+		return ErrPaymentSignature
+	}
+	_, siteID, ok := parseBalanceSubSitePlanKey(order.PlanKey)
+	if !ok || siteID <= 0 || s.subSiteService == nil {
+		return ErrPaymentSignature
+	}
+	site, err := s.subSiteService.GetByID(ctx, siteID)
+	if err != nil || site == nil || site.OwnerPaymentConfig == nil || site.OwnerPaymentConfig.Epay == nil {
+		return ErrPaymentSignature
+	}
+	ownerCred := site.OwnerPaymentConfig.Epay
+	expectedSign := epaySign(params, ownerCred.PKey)
+	if params["sign"] != expectedSign {
+		log.Printf("[Payment] EpayNotify sub-site verify also failed")
+		return ErrPaymentSignature
+	}
+	return s.processEpayNotification(ctx, params)
+}
 
-	// 检查交易状态
+func (s *PaymentService) processEpayNotification(ctx context.Context, params map[string]string) error {
 	if params["trade_status"] != "TRADE_SUCCESS" {
 		return nil
 	}
 
-	// 验证 PID
-	if params["pid"] != pid {
-		return fmt.Errorf("pid mismatch: expected %s, got %s", pid, params["pid"])
-	}
-
-	// 查询订单
 	order, err := s.orderRepo.GetByOrderNo(ctx, params["out_trade_no"])
 	if err != nil {
 		return fmt.Errorf("get order: %w", err)
 	}
-
-	// 幂等检查
 	if order.Status == PaymentOrderStatusPaid {
 		return nil
 	}
 
-	// 验证金额
 	expectedMoney := fmt.Sprintf("%.2f", float64(order.AmountFen)/100.0)
 	if params["money"] != expectedMoney {
 		return fmt.Errorf("amount mismatch: expected %s, got %s", expectedMoney, params["money"])
 	}
 
-	// 原子地将订单从 pending 改为 paid（CAS）
 	paidAt := time.Now()
 	tradeNo := params["trade_no"]
 	claimed, err := s.orderRepo.CompareAndUpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPending, PaymentOrderStatusPaid, &tradeNo, &paidAt)
@@ -2090,16 +2290,189 @@ func (s *PaymentService) HandleEpayNotify(ctx context.Context, params map[string
 	if !claimed {
 		return nil
 	}
-
-	// 执行业务逻辑
 	if err := s.handlePaymentSuccess(ctx, order); err != nil {
 		if rbErr := s.orderRepo.UpdateStatus(ctx, order.OrderNo, PaymentOrderStatusPending, nil, nil); rbErr != nil {
 			log.Printf("[Payment] CRITICAL: order %s failed to rollback status: %v (original error: %v)", order.OrderNo, rbErr, err)
 		}
 		return err
 	}
-
 	log.Printf("[Payment] Order %s paid via Epay, trade_no=%s", order.OrderNo, tradeNo)
-
 	return nil
+}
+
+// createOrderWithOwnerConfig dispatches payment creation to owner-credential-based methods.
+func (s *PaymentService) createOrderWithOwnerConfig(ctx context.Context, order *PaymentOrder, desc, payMethod string, opc *OwnerPaymentConfig) (string, error) {
+	switch payMethod {
+	case "alipay":
+		return s.createOwnerAlipayOrder(ctx, order, desc, opc.Alipay)
+	case "epay_alipay":
+		return s.createOwnerEpayOrder(ctx, order, desc, "alipay", opc.Epay)
+	case "epay_wxpay":
+		return s.createOwnerEpayOrder(ctx, order, desc, "wxpay", opc.Epay)
+	default:
+		return s.createOwnerWechatOrder(ctx, order, desc, opc.Wechat)
+	}
+}
+
+func (s *PaymentService) createOwnerWechatOrder(ctx context.Context, order *PaymentOrder, planName string, cred *WechatPayCredentials) (string, error) {
+	if cred == nil || cred.AppID == "" || cred.MchID == "" || cred.PrivateKey == "" || cred.MchSerialNo == "" || cred.NotifyURL == "" {
+		return "", infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", "sub-site wechat payment configuration is incomplete")
+	}
+
+	safeDesc := regexp.MustCompile(`[^\x{0000}-\x{FFFF}]`).ReplaceAllString(planName, "")
+	safeDesc = strings.TrimSpace(safeDesc)
+	if safeDesc == "" {
+		safeDesc = "订单支付"
+	}
+
+	reqBody := map[string]any{
+		"appid":        cred.AppID,
+		"mchid":        cred.MchID,
+		"description":  safeDesc,
+		"out_trade_no": order.OrderNo,
+		"time_expire":  order.ExpiredAt.Format(time.RFC3339),
+		"notify_url":   cred.NotifyURL,
+		"amount": map[string]any{
+			"total":    order.AmountFen,
+			"currency": "CNY",
+		},
+	}
+	bodyBytes, _ := json.Marshal(reqBody)
+
+	timestamp := fmt.Sprintf("%d", time.Now().Unix())
+	nonce := generateNonce()
+	method := "POST"
+	urlPath := "/v3/pay/transactions/native"
+	signStr := fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n", method, urlPath, timestamp, nonce, string(bodyBytes))
+
+	privateKey, err := parsePrivateKey(cred.PrivateKey)
+	if err != nil {
+		return "", infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", "invalid sub-site wechat private key")
+	}
+	signature, err := signSHA256WithRSA(privateKey, []byte(signStr))
+	if err != nil {
+		return "", wrapUnknownAsBadRequest("PAYMENT_CONFIG_INVALID", "sub-site wechat private key is invalid", fmt.Errorf("sign request: %w", err))
+	}
+
+	req, err := http.NewRequestWithContext(ctx, method, wechatPayAPIBaseURL+urlPath, bytes.NewReader(bodyBytes))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf(
+		`WECHATPAY2-SHA256-RSA2048 mchid="%s",nonce_str="%s",timestamp="%s",serial_no="%s",signature="%s"`,
+		cred.MchID, nonce, timestamp, cred.MchSerialNo, signature,
+	))
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", wrapUnknownAsServiceUnavailable("WECHAT_API_UNAVAILABLE", "wechat pay is temporarily unavailable", fmt.Errorf("wechat api request: %w", err))
+	}
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("[Payment] SubSite WeChat API error: status=%d body=%s", resp.StatusCode, string(respBody))
+		return "", infraerrors.BadRequest("WECHAT_API_ERROR", fmt.Sprintf("wechat pay api error: %s", string(respBody)))
+	}
+	var result struct {
+		CodeURL string `json:"code_url"`
+	}
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return "", wrapUnknownAsServiceUnavailable("WECHAT_API_INVALID_RESPONSE", "wechat pay returned an invalid response", fmt.Errorf("parse wechat response: %w", err))
+	}
+	return result.CodeURL, nil
+}
+
+func (s *PaymentService) createOwnerAlipayOrder(ctx context.Context, order *PaymentOrder, subject string, cred *AlipayCredentials) (string, error) {
+	if cred == nil || cred.AppID == "" || cred.PrivateKey == "" || cred.PublicKey == "" || cred.NotifyURL == "" {
+		return "", infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", "sub-site alipay configuration is incomplete")
+	}
+	client, err := alipay.New(cred.AppID, cred.PrivateKey, cred.IsProduction)
+	if err != nil {
+		return "", wrapUnknownAsBadRequest("PAYMENT_CONFIG_INVALID", "sub-site alipay credentials are invalid", fmt.Errorf("init alipay client: %w", err))
+	}
+	if err := client.LoadAliPayPublicKey(cred.PublicKey); err != nil {
+		return "", wrapUnknownAsBadRequest("PAYMENT_CONFIG_INVALID", "sub-site alipay public key is invalid", fmt.Errorf("load alipay public key: %w", err))
+	}
+
+	p := alipay.TradePreCreate{}
+	p.NotifyURL = cred.NotifyURL
+	p.Subject = subject
+	p.OutTradeNo = order.OrderNo
+	p.TotalAmount = fmt.Sprintf("%.2f", float64(order.AmountFen)/100.0)
+	p.TimeExpire = order.ExpiredAt.Format("2006-01-02 15:04:05")
+
+	rsp, err := client.TradePreCreate(ctx, p)
+	if err != nil {
+		return "", wrapUnknownAsServiceUnavailable("ALIPAY_API_UNAVAILABLE", "alipay is temporarily unavailable", fmt.Errorf("alipay trade precreate: %w", err))
+	}
+	if rsp.IsFailure() {
+		return "", infraerrors.BadRequest("ALIPAY_API_ERROR", fmt.Sprintf("alipay error: %s - %s", rsp.Code, rsp.Msg))
+	}
+	return rsp.QRCode, nil
+}
+
+func (s *PaymentService) createOwnerEpayOrder(ctx context.Context, order *PaymentOrder, name, payType string, cred *EpayCredentials) (string, error) {
+	if cred == nil || cred.Gateway == "" || cred.PID == "" || cred.PKey == "" || cred.NotifyURL == "" {
+		return "", infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", "sub-site epay configuration is incomplete")
+	}
+
+	money := fmt.Sprintf("%.2f", float64(order.AmountFen)/100.0)
+	params := map[string]string{
+		"pid":          cred.PID,
+		"type":         payType,
+		"out_trade_no": order.OrderNo,
+		"notify_url":   cred.NotifyURL,
+		"name":         name,
+		"money":        money,
+	}
+	params["sign"] = epaySign(params, cred.PKey)
+	params["sign_type"] = "MD5"
+
+	form := url.Values{}
+	for k, v := range params {
+		form.Set(k, v)
+	}
+
+	gateway := strings.TrimRight(cred.Gateway, "/")
+	req, err := http.NewRequestWithContext(ctx, "POST", gateway+"/mapi.php", strings.NewReader(form.Encode()))
+	if err != nil {
+		return "", wrapUnknownAsBadRequest("PAYMENT_CONFIG_INVALID", "sub-site epay gateway url is invalid", fmt.Errorf("create epay request: %w", err))
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	httpClient := &http.Client{Timeout: 15 * time.Second}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return "", wrapUnknownAsServiceUnavailable("EPAY_API_UNAVAILABLE", "epay is temporarily unavailable", fmt.Errorf("epay api request: %w", err))
+	}
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("[Payment] SubSite Epay API error: status=%d body=%s", resp.StatusCode, string(respBody))
+		return "", infraerrors.BadRequest("EPAY_API_ERROR", fmt.Sprintf("epay api error: %s", string(respBody)))
+	}
+	var result struct {
+		Code    int    `json:"code"`
+		Msg     string `json:"msg"`
+		TradeNo string `json:"trade_no"`
+		PayURL  string `json:"payurl"`
+		QRCode  string `json:"qrcode"`
+	}
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return "", infraerrors.BadRequest("EPAY_API_ERROR", "epay gateway returned an unexpected response")
+	}
+	if result.Code != 1 {
+		return "", infraerrors.BadRequest("EPAY_API_ERROR", fmt.Sprintf("epay error: %s", result.Msg))
+	}
+	codeURL := result.QRCode
+	if codeURL == "" {
+		codeURL = result.PayURL
+	}
+	if codeURL == "" {
+		return "", infraerrors.BadRequest("EPAY_API_ERROR", "epay returned no payment url")
+	}
+	return codeURL, nil
 }

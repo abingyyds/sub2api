@@ -231,6 +231,9 @@ func (s *SubSiteService) AuthorizeOwner(ctx context.Context, ownerUserID int64, 
 	return site, nil
 }
 
+// UpdateOwnedSite 分站主自助编辑。采用严格白名单：仅允许修改展示/风格/域名/倍率/分销价等非敏感字段；
+// 任何涉及订阅到期、模式、上级关系、开关总阀的改动都必须通过 admin 接口（UpdateSubSite / SetSubSiteMode）。
+// ConsumeRateMultiplier 服务端强制上限 MaxSubSiteConsumeRateMultiplier，避免 owner 将倍率设得离谱。
 func (s *SubSiteService) UpdateOwnedSite(ctx context.Context, ownerUserID int64, input UpdateOwnedSubSiteInput) (*SubSite, error) {
 	current, err := s.repo.GetByID(ctx, input.ID)
 	if err != nil {
@@ -239,10 +242,92 @@ func (s *SubSiteService) UpdateOwnedSite(ctx context.Context, ownerUserID int64,
 	if current.OwnerUserID != ownerUserID {
 		return nil, ErrSubSiteForbidden
 	}
-	input.OwnerUserID = ownerUserID
-	input.ParentSubSiteID = current.ParentSubSiteID
-	input.Status = current.Status
-	return s.Update(ctx, UpdateSubSiteInput(input))
+	if input.ConsumeRateMultiplier > 0 && input.ConsumeRateMultiplier > MaxSubSiteConsumeRateMultiplier {
+		return nil, infraerrors.BadRequest(
+			"SUBSITE_RATE_EXCEEDED",
+			fmt.Sprintf("consume rate multiplier cannot exceed %.2f", MaxSubSiteConsumeRateMultiplier),
+		)
+	}
+	// rate 模式下禁止配置 owner_payment_config（用户充值走主站）
+	if current.Mode == SubSiteModeRate && input.OwnerPaymentConfig != nil {
+		return nil, infraerrors.BadRequest(
+			"SUBSITE_OWNER_PAYMENT_MODE_INVALID",
+			"owner payment config is only available in pool mode",
+		)
+	}
+
+	// 组装 admin 级 UpdateSubSiteInput：白名单字段取自 input，敏感字段全部沿用 current。
+	merged := UpdateSubSiteInput{
+		ID:                    current.ID,
+		OwnerUserID:           current.OwnerUserID,
+		ParentSubSiteID:       current.ParentSubSiteID,
+		Name:                  input.Name,
+		Slug:                  input.Slug,
+		CustomDomain:          input.CustomDomain,
+		Status:                current.Status,
+		Mode:                  current.Mode,
+		SiteLogo:              input.SiteLogo,
+		SiteFavicon:           input.SiteFavicon,
+		SiteSubtitle:          input.SiteSubtitle,
+		Announcement:          input.Announcement,
+		ContactInfo:           input.ContactInfo,
+		DocURL:                input.DocURL,
+		HomeContent:           input.HomeContent,
+		ThemeTemplate:         input.ThemeTemplate,
+		RegistrationMode:      input.RegistrationMode,
+		EnableTopup:           boolPtr(current.EnableTopup),
+		AllowSubSite:          boolPtr(current.AllowSubSite),
+		SubSitePriceFen:       input.SubSitePriceFen,
+		ConsumeRateMultiplier: input.ConsumeRateMultiplier,
+		AllowOnlineTopup:      boolPtr(current.AllowOnlineTopup),
+		AllowOfflineTopup:     input.AllowOfflineTopup,
+		OwnerPaymentConfig:    input.OwnerPaymentConfig,
+		SubscriptionExpiredAt: current.SubscriptionExpiredAt,
+	}
+	if input.AllowOfflineTopup == nil {
+		merged.AllowOfflineTopup = boolPtr(current.AllowOfflineTopup)
+	}
+	// 未传 OwnerPaymentConfig 时保留现值；显式传空对象表示清空。
+	if input.OwnerPaymentConfig == nil {
+		merged.OwnerPaymentConfig = current.OwnerPaymentConfig
+	}
+	return s.Update(ctx, merged)
+}
+
+// SetSubSiteMode 平台管理员切换分站模式；要求 balance_fen == 0 且无 pending 提现，避免切换导致账目错乱。
+func (s *SubSiteService) SetSubSiteMode(ctx context.Context, siteID int64, newMode string, hasPendingWithdraw bool) (*SubSite, error) {
+	mode := strings.ToLower(strings.TrimSpace(newMode))
+	if mode != SubSiteModePool && mode != SubSiteModeRate {
+		return nil, infraerrors.BadRequest("SUBSITE_MODE_INVALID", "mode must be 'pool' or 'rate'")
+	}
+	site, err := s.repo.GetByID(ctx, siteID)
+	if err != nil {
+		return nil, err
+	}
+	if site.Mode == mode {
+		return s.populateComputedFields(ctx, site, true)
+	}
+	if site.BalanceFen != 0 {
+		return nil, infraerrors.BadRequest(
+			"SUBSITE_MODE_SWITCH_BLOCKED",
+			"sub-site balance must be zero before switching mode",
+		)
+	}
+	if hasPendingWithdraw {
+		return nil, infraerrors.BadRequest(
+			"SUBSITE_MODE_SWITCH_BLOCKED",
+			"cannot switch mode while there are pending withdraw requests",
+		)
+	}
+	if err := s.repo.UpdateMode(ctx, siteID, mode); err != nil {
+		return nil, err
+	}
+	s.invalidateCaches()
+	refreshed, err := s.repo.GetByID(ctx, siteID)
+	if err != nil {
+		return nil, err
+	}
+	return s.populateComputedFields(ctx, refreshed, true)
 }
 
 func (s *SubSiteService) CreateActivationRequest(ctx context.Context, userID int64, input CreateSubSiteActivationInput) (*SubSiteActivationRequest, *SubSiteOpenInfo, error) {

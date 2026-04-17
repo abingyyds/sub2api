@@ -29,5 +29,8 @@ export { agentAPI } from './agent'
 // Payment APIs
 export { paymentAPI } from './payment'
 
+// Withdraw APIs
+export { withdrawAPI } from './withdraw'
+
 // Default export
 export { default } from './client'

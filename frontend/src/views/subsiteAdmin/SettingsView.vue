@@ -1,7 +1,21 @@
 <template>
   <AppLayout>
     <div class="mx-auto max-w-4xl space-y-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">分站设置</h1>
+      <div class="flex items-center gap-3">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">分站设置</h1>
+        <span v-if="site?.mode" class="inline-flex rounded-full px-3 py-1 text-xs font-medium"
+          :class="site.mode === 'pool'
+            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+            : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'">
+          {{ site.mode === 'pool' ? '资金池模式' : '倍率分成模式' }}
+        </span>
+      </div>
+      <p v-if="site?.mode === 'pool'" class="text-sm text-gray-500 dark:text-dark-400">
+        资金池模式：需要预充余额池，用户余额由您从池内"进货"发放。可配置自有收款账号自动进货。
+      </p>
+      <p v-else-if="site?.mode === 'rate'" class="text-sm text-gray-500 dark:text-dark-400">
+        倍率分成模式：用户在主站充值，按您设置的倍率消费时，差额利润入账到分站可提现余额。
+      </p>
 
       <div v-if="loading" class="flex justify-center py-16">
         <LoadingSpinner />

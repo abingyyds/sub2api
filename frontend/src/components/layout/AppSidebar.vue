@@ -669,6 +669,8 @@ const userNavGroups = computed(() => {
             { path: `/subsite-admin/${currentSubSiteId.value}/orders`, label: '订单', icon: ReceiptIcon },
             { path: `/subsite-admin/${currentSubSiteId.value}/usage`, label: '用量', icon: ChartIcon },
             { path: `/subsite-admin/${currentSubSiteId.value}/ledger`, label: '池流水', icon: BookIcon },
+            { path: `/subsite-admin/${currentSubSiteId.value}/withdraw`, label: '利润提现', icon: ReceiptIcon },
+            { path: `/subsite-admin/${currentSubSiteId.value}/payment-config`, label: '收款账号', icon: CogIcon },
             { path: `/subsite-admin/${currentSubSiteId.value}/settings`, label: '分站设置', icon: CogIcon },
           ] as NavItem[],
         } as NavGroup]
@@ -751,6 +753,7 @@ const adminNavItems = computed(() => {
     { path: '/admin/orders', label: t('nav.orders'), icon: ShoppingBagIcon },
     { path: '/admin/agents', label: t('nav.agents'), icon: UsersIcon },
     { path: '/admin/subsites', label: '分站', icon: GlobeIcon },
+    { path: '/admin/withdraws', label: '提现审核', icon: ReceiptIcon },
     { path: '/admin/announcements', label: t('nav.announcements'), icon: MegaphoneIcon },
     { path: '/admin/organizations', label: t('nav.organizations'), icon: GlobeIcon },
   ]

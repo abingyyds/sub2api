@@ -34,6 +34,7 @@ export interface OwnedSubSite {
   slug: string
   custom_domain?: string
   status: 'pending' | 'active' | 'disabled'
+  mode: 'pool' | 'rate'
   site_logo?: string
   site_favicon?: string
   site_subtitle?: string
@@ -54,10 +55,18 @@ export interface OwnedSubSite {
   balance_fen?: number
   total_topup_fen?: number
   total_consumed_fen?: number
+  total_withdrawn_fen?: number
   allow_online_topup?: boolean
   allow_offline_topup?: boolean
+  owner_payment_config?: OwnerPaymentConfig | null
   created_at: string
   updated_at: string
+}
+
+export interface OwnerPaymentConfig {
+  wechat?: { enabled: boolean; app_id: string; mch_id: string; apiv3_key: string; mch_serial_no: string; public_key_id: string; public_key: string; private_key: string; notify_url: string }
+  alipay?: { enabled: boolean; app_id: string; private_key: string; public_key: string; notify_url: string; is_production: boolean }
+  epay?: { enabled: boolean; gateway: string; pid: string; pkey: string; notify_url: string }
 }
 
 export interface OwnedSubSiteLedgerEntry {

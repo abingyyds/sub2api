@@ -111,6 +111,7 @@ func ProvideHandlers(
 	agentHandler *AgentHandler,
 	subSiteHandler *SubSiteHandler,
 	subSiteAdminHandler *SubSiteAdminHandler,
+	withdrawHandler *WithdrawHandler,
 ) *Handlers {
 	return &Handlers{
 		Auth:          authHandler,
@@ -132,6 +133,7 @@ func ProvideHandlers(
 		Agent:         agentHandler,
 		SubSite:       subSiteHandler,
 		SubSiteAdmin:  subSiteAdminHandler,
+		Withdraw:      withdrawHandler,
 	}
 }
 
@@ -154,6 +156,7 @@ var ProviderSet = wire.NewSet(
 	NewAgentHandler,
 	NewSubSiteHandler,
 	NewSubSiteAdminHandler,
+	NewWithdrawHandler,
 	ProvideSettingHandler,
 
 	// Admin handlers

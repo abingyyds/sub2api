@@ -153,3 +153,39 @@ type AgentInfo struct {
 	TotalWithdrawn      float64    `json:"total_withdrawn"`
 	CreatedAt           time.Time  `json:"created_at"`
 }
+
+// 提现请求状态
+const (
+	WithdrawStatusPending  = "pending"
+	WithdrawStatusApproved = "approved"
+	WithdrawStatusRejected = "rejected"
+	WithdrawStatusPaid     = "paid"
+	WithdrawStatusCancelled = "cancelled"
+)
+
+// 提现来源
+const (
+	WithdrawSourceAgentCommission = "agent_commission"
+	WithdrawSourceSubSiteProfit   = "sub_site_profit"
+)
+
+// WithdrawRequest 提现请求（复用 agent_withdraw_requests 表）。
+type WithdrawRequest struct {
+	ID              int64      `json:"id"`
+	UserID          int64      `json:"user_id"`
+	Amount          float64    `json:"amount"`
+	AlipayName      string     `json:"alipay_name"`
+	AlipayAccount   string     `json:"alipay_account"`
+	AlipayQRImage   string     `json:"alipay_qr_image,omitempty"`
+	Status          string     `json:"status"`
+	ReviewNote      string     `json:"review_note,omitempty"`
+	SourceType      string     `json:"source_type"`
+	SourceSubSiteID *int64     `json:"source_sub_site_id,omitempty"`
+	CreatedAt       time.Time  `json:"created_at"`
+	ReviewedAt      *time.Time `json:"reviewed_at,omitempty"`
+	PaidAt          *time.Time `json:"paid_at,omitempty"`
+	CancelledAt     *time.Time `json:"cancelled_at,omitempty"`
+	// joined
+	UserEmail       string `json:"user_email,omitempty"`
+	SubSiteName     string `json:"sub_site_name,omitempty"`
+}

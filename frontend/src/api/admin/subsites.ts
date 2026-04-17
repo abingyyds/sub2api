@@ -12,6 +12,7 @@ export interface AdminSubSite {
   slug: string
   custom_domain?: string
   status: 'pending' | 'active' | 'disabled'
+  mode: 'pool' | 'rate'
   site_logo?: string
   site_favicon?: string
   site_subtitle?: string
@@ -32,6 +33,7 @@ export interface AdminSubSite {
   balance_fen?: number
   total_topup_fen?: number
   total_consumed_fen?: number
+  total_withdrawn_fen?: number
   allow_online_topup?: boolean
   allow_offline_topup?: boolean
   created_at: string
@@ -159,6 +161,11 @@ export async function listLedger(
   return data
 }
 
+export async function setMode(id: number, mode: 'pool' | 'rate'): Promise<AdminSubSite> {
+  const { data } = await apiClient.put<AdminSubSite>(`/admin/subsites/${id}/mode`, { mode })
+  return data
+}
+
 export const subSitesAPI = {
   list,
   create,
@@ -168,6 +175,7 @@ export const subSitesAPI = {
   updatePlatformConfig,
   topupPool,
   listLedger,
+  setMode,
 }
 
 export default subSitesAPI
