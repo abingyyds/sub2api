@@ -19,6 +19,10 @@ var (
 
 const outboxEventTimeout = 2 * time.Minute
 
+// 单条 outbox 事件连续失败超过该阈值即视为毒丸（poison pill），
+// 记录告警后跳过，避免阻塞 watermark 导致后续所有事件无法消费。
+const outboxEventMaxFailures = 5
+
 type SchedulerSnapshotService struct {
 	cache         SchedulerCache
 	outboxRepo    SchedulerOutboxRepository
@@ -31,6 +35,8 @@ type SchedulerSnapshotService struct {
 	fallbackLimit *fallbackLimiter
 	lagMu         sync.Mutex
 	lagFailures   int
+	eventFailMu   sync.Mutex
+	eventFailures map[int64]int
 }
 
 func NewSchedulerSnapshotService(
@@ -52,6 +58,7 @@ func NewSchedulerSnapshotService(
 		cfg:           cfg,
 		stopCh:        make(chan struct{}),
 		fallbackLimit: newFallbackLimiter(maxQPS),
+		eventFailures: make(map[int64]int),
 	}
 }
 
@@ -238,24 +245,55 @@ func (s *SchedulerSnapshotService) pollOutbox() {
 	}
 
 	watermarkForCheck := watermark
+	lastProcessedID := watermark
 	for _, event := range events {
 		eventCtx, cancel := context.WithTimeout(context.Background(), outboxEventTimeout)
 		err := s.handleOutboxEvent(eventCtx, event)
 		cancel()
 		if err != nil {
-			log.Printf("[Scheduler] outbox handle failed: id=%d type=%s err=%v", event.ID, event.EventType, err)
-			return
+			failures := s.recordEventFailure(event.ID)
+			if failures < outboxEventMaxFailures {
+				log.Printf("[Scheduler] outbox handle failed: id=%d type=%s failures=%d err=%v",
+					event.ID, event.EventType, failures, err)
+				// 暂停推进 watermark，下次轮询重试该事件
+				break
+			}
+			log.Printf("[Scheduler] outbox poison pill skipped: id=%d type=%s failures=%d err=%v",
+				event.ID, event.EventType, failures, err)
+			// 超过失败阈值，视为毒丸跳过，防止永久阻塞 watermark
+			s.clearEventFailure(event.ID)
+			lastProcessedID = event.ID
+			continue
+		}
+		s.clearEventFailure(event.ID)
+		lastProcessedID = event.ID
+	}
+
+	if lastProcessedID > watermark {
+		if err := s.cache.SetOutboxWatermark(ctx, lastProcessedID); err != nil {
+			log.Printf("[Scheduler] outbox watermark write failed: %v", err)
+		} else {
+			watermarkForCheck = lastProcessedID
 		}
 	}
 
-	lastID := events[len(events)-1].ID
-	if err := s.cache.SetOutboxWatermark(ctx, lastID); err != nil {
-		log.Printf("[Scheduler] outbox watermark write failed: %v", err)
-	} else {
-		watermarkForCheck = lastID
-	}
-
 	s.checkOutboxLag(ctx, events[0], watermarkForCheck)
+}
+
+func (s *SchedulerSnapshotService) recordEventFailure(id int64) int {
+	s.eventFailMu.Lock()
+	defer s.eventFailMu.Unlock()
+	if s.eventFailures == nil {
+		s.eventFailures = make(map[int64]int)
+	}
+	s.eventFailures[id]++
+	return s.eventFailures[id]
+}
+
+func (s *SchedulerSnapshotService) clearEventFailure(id int64) {
+	s.eventFailMu.Lock()
+	defer s.eventFailMu.Unlock()
+	delete(s.eventFailures, id)
 }
 
 func (s *SchedulerSnapshotService) handleOutboxEvent(ctx context.Context, event SchedulerOutboxEvent) error {
