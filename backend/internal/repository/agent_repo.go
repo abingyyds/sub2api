@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
@@ -546,5 +547,200 @@ func (r *agentRepository) UpdateReferralInviter(ctx context.Context, inviteeID, 
 		 VALUES ($1, $2, NULL, NOW())
 		 ON CONFLICT (invitee_id) DO UPDATE SET inviter_id = $1, commission_rate = NULL`,
 		newInviterID, inviteeID)
+	return err
+}
+
+// --- Withdraw CRUD ---
+
+func (r *agentRepository) CreateWithdrawRequest(ctx context.Context, req *service.WithdrawRequest) error {
+	return r.db.QueryRowContext(ctx, `
+		INSERT INTO agent_withdraw_requests (
+			user_id, amount, alipay_name, alipay_account, alipay_qr_image,
+			status, source_type, source_sub_site_id, created_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+		RETURNING id, created_at
+	`,
+		req.UserID, req.Amount, req.AlipayName, req.AlipayAccount, req.AlipayQRImage,
+		service.WithdrawStatusPending, req.SourceType, req.SourceSubSiteID,
+	).Scan(&req.ID, &req.CreatedAt)
+}
+
+func (r *agentRepository) GetWithdrawRequestByID(ctx context.Context, id int64) (*service.WithdrawRequest, error) {
+	var (
+		req             service.WithdrawRequest
+		sourceSubSiteID sql.NullInt64
+		reviewedAt      sql.NullTime
+		paidAt          sql.NullTime
+		cancelledAt     sql.NullTime
+	)
+	err := r.db.QueryRowContext(ctx, `
+		SELECT w.id, w.user_id, w.amount, w.alipay_name, w.alipay_account, w.alipay_qr_image,
+			w.status, COALESCE(w.review_note, ''), w.source_type, w.source_sub_site_id,
+			w.created_at, w.reviewed_at, w.paid_at, w.cancelled_at,
+			COALESCE(u.email, ''), COALESCE(ss.name, '')
+		FROM agent_withdraw_requests w
+		LEFT JOIN users u ON u.id = w.user_id
+		LEFT JOIN sub_sites ss ON ss.id = w.source_sub_site_id
+		WHERE w.id = $1
+	`, id).Scan(
+		&req.ID, &req.UserID, &req.Amount, &req.AlipayName, &req.AlipayAccount, &req.AlipayQRImage,
+		&req.Status, &req.ReviewNote, &req.SourceType, &sourceSubSiteID,
+		&req.CreatedAt, &reviewedAt, &paidAt, &cancelledAt,
+		&req.UserEmail, &req.SubSiteName,
+	)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	if sourceSubSiteID.Valid {
+		req.SourceSubSiteID = &sourceSubSiteID.Int64
+	}
+	if reviewedAt.Valid {
+		req.ReviewedAt = &reviewedAt.Time
+	}
+	if paidAt.Valid {
+		req.PaidAt = &paidAt.Time
+	}
+	if cancelledAt.Valid {
+		req.CancelledAt = &cancelledAt.Time
+	}
+	return &req, nil
+}
+
+func (r *agentRepository) UpdateWithdrawRequestStatus(ctx context.Context, id int64, newStatus string, reviewNote string) error {
+	var setClause string
+	switch newStatus {
+	case service.WithdrawStatusApproved, service.WithdrawStatusRejected:
+		setClause = "status = $2, review_note = $3, reviewed_at = NOW()"
+	case service.WithdrawStatusPaid:
+		setClause = "status = $2, review_note = $3, paid_at = NOW()"
+	case service.WithdrawStatusCancelled:
+		setClause = "status = $2, review_note = $3, cancelled_at = NOW()"
+	default:
+		setClause = "status = $2, review_note = $3"
+	}
+	res, err := r.db.ExecContext(ctx,
+		fmt.Sprintf("UPDATE agent_withdraw_requests SET %s WHERE id = $1", setClause),
+		id, newStatus, reviewNote,
+	)
+	if err != nil {
+		return err
+	}
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+func (r *agentRepository) ListWithdrawRequests(ctx context.Context, params pagination.PaginationParams, userID int64, sourceType, status string) ([]service.WithdrawRequest, *pagination.PaginationResult, error) {
+	conds := []string{"1=1"}
+	args := []any{}
+	if userID > 0 {
+		args = append(args, userID)
+		conds = append(conds, fmt.Sprintf("w.user_id = $%d", len(args)))
+	}
+	if sourceType != "" {
+		args = append(args, sourceType)
+		conds = append(conds, fmt.Sprintf("w.source_type = $%d", len(args)))
+	}
+	if status != "" {
+		args = append(args, status)
+		conds = append(conds, fmt.Sprintf("w.status = $%d", len(args)))
+	}
+	where := "WHERE " + strings.Join(conds, " AND ")
+
+	var total int64
+	if err := r.db.QueryRowContext(ctx,
+		"SELECT COUNT(*) FROM agent_withdraw_requests w "+where, args...,
+	).Scan(&total); err != nil {
+		return nil, nil, err
+	}
+
+	selectArgs := append([]any{}, args...)
+	selectArgs = append(selectArgs, params.Limit(), params.Offset())
+	query := fmt.Sprintf(`
+		SELECT w.id, w.user_id, w.amount, w.alipay_name, w.alipay_account, w.alipay_qr_image,
+			w.status, COALESCE(w.review_note, ''), w.source_type, w.source_sub_site_id,
+			w.created_at, w.reviewed_at, w.paid_at, w.cancelled_at,
+			COALESCE(u.email, ''), COALESCE(ss.name, '')
+		FROM agent_withdraw_requests w
+		LEFT JOIN users u ON u.id = w.user_id
+		LEFT JOIN sub_sites ss ON ss.id = w.source_sub_site_id
+		%s
+		ORDER BY w.id DESC
+		LIMIT $%d OFFSET $%d
+	`, where, len(args)+1, len(args)+2)
+
+	rows, err := r.db.QueryContext(ctx, query, selectArgs...)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer func() { _ = rows.Close() }()
+
+	var items []service.WithdrawRequest
+	for rows.Next() {
+		var (
+			req             service.WithdrawRequest
+			sourceSubSiteID sql.NullInt64
+			reviewedAt      sql.NullTime
+			paidAt          sql.NullTime
+			cancelledAt     sql.NullTime
+		)
+		if err := rows.Scan(
+			&req.ID, &req.UserID, &req.Amount, &req.AlipayName, &req.AlipayAccount, &req.AlipayQRImage,
+			&req.Status, &req.ReviewNote, &req.SourceType, &sourceSubSiteID,
+			&req.CreatedAt, &reviewedAt, &paidAt, &cancelledAt,
+			&req.UserEmail, &req.SubSiteName,
+		); err != nil {
+			return nil, nil, err
+		}
+		if sourceSubSiteID.Valid {
+			req.SourceSubSiteID = &sourceSubSiteID.Int64
+		}
+		if reviewedAt.Valid {
+			req.ReviewedAt = &reviewedAt.Time
+		}
+		if paidAt.Valid {
+			req.PaidAt = &paidAt.Time
+		}
+		if cancelledAt.Valid {
+			req.CancelledAt = &cancelledAt.Time
+		}
+		items = append(items, req)
+	}
+	return items, paginationResultFromTotal(total, params), rows.Err()
+}
+
+func (r *agentRepository) HasPendingWithdrawForSubSite(ctx context.Context, subSiteID int64) (bool, error) {
+	var exists bool
+	err := r.db.QueryRowContext(ctx,
+		`SELECT EXISTS(SELECT 1 FROM agent_withdraw_requests WHERE source_sub_site_id = $1 AND status = 'pending')`,
+		subSiteID,
+	).Scan(&exists)
+	return exists, err
+}
+
+func (r *agentRepository) AdjustWithdrawableBalance(ctx context.Context, userID int64, delta float64) error {
+	_, err := r.db.ExecContext(ctx, `
+		INSERT INTO agent_profiles (user_id, withdrawable_balance, created_at, updated_at)
+		VALUES ($1, GREATEST($2, 0), NOW(), NOW())
+		ON CONFLICT (user_id) DO UPDATE SET
+			withdrawable_balance = agent_profiles.withdrawable_balance + $2,
+			updated_at = NOW()
+	`, userID, delta)
+	return err
+}
+
+func (r *agentRepository) IncrementTotalWithdrawn(ctx context.Context, userID int64, amount float64) error {
+	_, err := r.db.ExecContext(ctx, `
+		INSERT INTO agent_profiles (user_id, total_withdrawn, created_at, updated_at)
+		VALUES ($1, $2, NOW(), NOW())
+		ON CONFLICT (user_id) DO UPDATE SET
+			total_withdrawn = agent_profiles.total_withdrawn + $2,
+			updated_at = NOW()
+	`, userID, amount)
 	return err
 }

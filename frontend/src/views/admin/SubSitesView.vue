@@ -129,11 +129,20 @@
                         : 'bg-gray-200 text-gray-700 dark:bg-dark-700 dark:text-dark-300'">
                     {{ item.status }}
                   </span>
+                  <div class="mt-1">
+                    <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium"
+                      :class="item.mode === 'rate'
+                        ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+                        : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'">
+                      {{ item.mode === 'rate' ? '倍率分成' : '资金池' }}
+                    </span>
+                  </div>
                 </td>
                 <td class="px-4 py-4 align-top text-right">
                   <div class="flex justify-end gap-2">
                     <button class="btn btn-secondary btn-sm" @click="openTopup(item)">充值</button>
                     <button class="btn btn-secondary btn-sm" @click="openLedger(item)">流水</button>
+                    <button class="btn btn-secondary btn-sm" @click="openSetMode(item)">切模式</button>
                     <button class="btn btn-secondary btn-sm" @click="openEdit(item)">编辑</button>
                     <button class="btn btn-secondary btn-sm text-red-600 dark:text-red-300" @click="askDelete(item)">删除</button>
                   </div>
@@ -322,6 +331,35 @@
           </table>
         </div>
       </div>
+    </BaseDialog>
+
+    <BaseDialog :show="showModeDialog" title="切换分站模式" @close="showModeDialog = false">
+      <div v-if="modeTarget" class="space-y-4">
+        <div class="rounded-2xl border border-gray-200 px-4 py-3 text-sm dark:border-dark-700">
+          <div class="font-medium text-gray-900 dark:text-white">{{ modeTarget.name }}</div>
+          <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">
+            当前模式：{{ modeTarget.mode === 'rate' ? '倍率分成' : '资金池' }} · 当前余额 ￥{{ fenToYuan(modeTarget.balance_fen || 0) }}
+          </div>
+        </div>
+        <div>
+          <label class="input-label">切换到</label>
+          <select v-model="modeTargetValue" class="input mt-1 w-full">
+            <option value="pool">资金池模式（pool）</option>
+            <option value="rate">倍率分成模式（rate）</option>
+          </select>
+        </div>
+        <div class="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-800/50 dark:bg-amber-900/20 dark:text-amber-200">
+          切换模式要求 balance_fen=0 且无 pending 提现申请。服务端会再次校验。
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-3">
+          <button class="btn btn-secondary" @click="showModeDialog = false">取消</button>
+          <button class="btn btn-primary" :disabled="modeSubmitting" @click="handleSetMode">
+            {{ modeSubmitting ? '提交中...' : '确认切换' }}
+          </button>
+        </div>
+      </template>
     </BaseDialog>
   </AppLayout>
 </template>
@@ -636,6 +674,33 @@ async function openLedger(item: AdminSubSite) {
     ledgerRows.value = res.items || []
   } catch (error: any) {
     appStore.showError(error?.message || '加载流水失败')
+  }
+}
+
+const showModeDialog = ref(false)
+const modeTarget = ref<AdminSubSite | null>(null)
+const modeTargetValue = ref<'pool' | 'rate'>('pool')
+const modeSubmitting = ref(false)
+
+function openSetMode(item: AdminSubSite) {
+  modeTarget.value = item
+  modeTargetValue.value = item.mode === 'rate' ? 'pool' : 'rate'
+  showModeDialog.value = true
+}
+
+async function handleSetMode() {
+  if (!modeTarget.value) return
+  modeSubmitting.value = true
+  try {
+    await subSitesAPI.setMode(modeTarget.value.id, modeTargetValue.value)
+    appStore.showSuccess('模式已切换')
+    showModeDialog.value = false
+    modeTarget.value = null
+    await loadData(page.value)
+  } catch (error: any) {
+    appStore.showError(error?.response?.data?.error || error?.message || '切换失败')
+  } finally {
+    modeSubmitting.value = false
   }
 }
 

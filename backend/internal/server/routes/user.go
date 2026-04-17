@@ -141,6 +141,14 @@ func RegisterUserRoutes(
 			agent.GET("/commissions", h.Agent.ListCommissions)
 		}
 
+		// 提现
+		withdraw := authenticated.Group("/withdraw")
+		{
+			withdraw.POST("/apply", h.Withdraw.Apply)
+			withdraw.GET("/list", h.Withdraw.List)
+			withdraw.POST("/:id/cancel", h.Withdraw.Cancel)
+		}
+
 		ownedSubSite := authenticated.Group("/subsite")
 		{
 			ownedSubSite.GET("/owned", h.SubSite.ListOwned)

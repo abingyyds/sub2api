@@ -55,6 +55,7 @@ type Handlers struct {
 	Agent         *AgentHandler
 	SubSite       *SubSiteHandler
 	SubSiteAdmin  *SubSiteAdminHandler
+	Withdraw      *WithdrawHandler
 }
 
 // BuildInfo contains build-time information

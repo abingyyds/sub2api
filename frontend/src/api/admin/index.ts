@@ -25,6 +25,7 @@ import discoverySourceStatsAPI from './discoverySourceStats'
 import ordersAPI from './orders'
 import agentsAPI from './agents'
 import subSitesAPI from './subsites'
+import withdrawsAPI from './withdraws'
 
 /**
  * Unified admin API object for convenient access
@@ -51,7 +52,8 @@ export const adminAPI = {
   discoverySourceStats: discoverySourceStatsAPI,
   orders: ordersAPI,
   agents: agentsAPI,
-  subSites: subSitesAPI
+  subSites: subSitesAPI,
+  withdraws: withdrawsAPI
 }
 
 export {
@@ -76,7 +78,8 @@ export {
   discoverySourceStatsAPI,
   ordersAPI,
   agentsAPI,
-  subSitesAPI
+  subSitesAPI,
+  withdrawsAPI
 }
 
 export default adminAPI

@@ -32,6 +32,7 @@ const subSiteBaseSelect = `
 		s.slug,
 		COALESCE(s.custom_domain, ''),
 		s.status,
+		COALESCE(s.mode, 'pool'),
 		COALESCE(s.site_logo, ''),
 		COALESCE(s.site_favicon, ''),
 		COALESCE(s.site_subtitle, ''),
@@ -48,8 +49,10 @@ const subSiteBaseSelect = `
 		COALESCE(s.balance_fen, 0),
 		COALESCE(s.total_topup_fen, 0),
 		COALESCE(s.total_consumed_fen, 0),
+		COALESCE(s.total_withdrawn_fen, 0),
 		COALESCE(s.allow_online_topup, TRUE),
 		COALESCE(s.allow_offline_topup, TRUE),
+		s.owner_payment_config,
 		s.subscription_expired_at,
 		s.created_at,
 		s.updated_at,
@@ -181,35 +184,47 @@ func (r *subSiteRepository) ExistsByDomain(ctx context.Context, domain string, e
 }
 
 func (r *subSiteRepository) Create(ctx context.Context, site *service.SubSite) error {
+	ownerPaymentJSON, err := marshalOwnerPaymentConfig(site.OwnerPaymentConfig)
+	if err != nil {
+		return err
+	}
+	mode := normalizeSubSiteMode(site.Mode)
+	site.Mode = mode
 	query := `
 		INSERT INTO sub_sites (
-			owner_user_id, parent_sub_site_id, level, name, slug, custom_domain, status,
+			owner_user_id, parent_sub_site_id, level, name, slug, custom_domain, status, mode,
 			site_logo, site_favicon, site_subtitle, announcement,
 			contact_info, doc_url, home_content, theme_template,
 			registration_mode, enable_topup, allow_sub_site, sub_site_price_fen,
 			consume_rate_multiplier, allow_online_topup, allow_offline_topup,
-			subscription_expired_at, created_at, updated_at
+			owner_payment_config, subscription_expired_at, created_at, updated_at
 		) VALUES (
-			$1, $2, $3, $4, $5, NULLIF($6, ''), $7,
-			$8, $9, $10, $11,
-			$12, $13, $14, $15,
-			$16, $17, $18, $19, $20,
-			$21, $22,
-			$23, NOW(), NOW()
+			$1, $2, $3, $4, $5, NULLIF($6, ''), $7, $8,
+			$9, $10, $11, $12,
+			$13, $14, $15, $16,
+			$17, $18, $19, $20,
+			$21, $22, $23,
+			$24::jsonb, $25, NOW(), NOW()
 		)
 		RETURNING id, created_at, updated_at
 	`
 	return r.db.QueryRowContext(ctx, query,
-		site.OwnerUserID, site.ParentSubSiteID, site.Level, site.Name, site.Slug, site.CustomDomain, site.Status,
+		site.OwnerUserID, site.ParentSubSiteID, site.Level, site.Name, site.Slug, site.CustomDomain, site.Status, mode,
 		site.SiteLogo, site.SiteFavicon, site.SiteSubtitle, site.Announcement,
 		site.ContactInfo, site.DocURL, site.HomeContent, site.ThemeTemplate,
 		site.RegistrationMode, site.EnableTopup, site.AllowSubSite, site.SubSitePriceFen,
 		site.ConsumeRateMultiplier, site.AllowOnlineTopup, site.AllowOfflineTopup,
-		site.SubscriptionExpiredAt,
+		ownerPaymentJSON, site.SubscriptionExpiredAt,
 	).Scan(&site.ID, &site.CreatedAt, &site.UpdatedAt)
 }
 
 func (r *subSiteRepository) Update(ctx context.Context, site *service.SubSite) error {
+	ownerPaymentJSON, err := marshalOwnerPaymentConfig(site.OwnerPaymentConfig)
+	if err != nil {
+		return err
+	}
+	mode := normalizeSubSiteMode(site.Mode)
+	site.Mode = mode
 	res, err := r.db.ExecContext(ctx, `
 		UPDATE sub_sites
 		SET owner_user_id = $2,
@@ -219,32 +234,68 @@ func (r *subSiteRepository) Update(ctx context.Context, site *service.SubSite) e
 			slug = $6,
 			custom_domain = NULLIF($7, ''),
 			status = $8,
-			site_logo = $9,
-			site_favicon = $10,
-			site_subtitle = $11,
-			announcement = $12,
-			contact_info = $13,
-			doc_url = $14,
-			home_content = $15,
-			theme_template = $16,
-			registration_mode = $17,
-			enable_topup = $18,
-			allow_sub_site = $19,
-			sub_site_price_fen = $20,
-			consume_rate_multiplier = $21,
-			allow_online_topup = $22,
-			allow_offline_topup = $23,
-			subscription_expired_at = $24,
+			mode = $9,
+			site_logo = $10,
+			site_favicon = $11,
+			site_subtitle = $12,
+			announcement = $13,
+			contact_info = $14,
+			doc_url = $15,
+			home_content = $16,
+			theme_template = $17,
+			registration_mode = $18,
+			enable_topup = $19,
+			allow_sub_site = $20,
+			sub_site_price_fen = $21,
+			consume_rate_multiplier = $22,
+			allow_online_topup = $23,
+			allow_offline_topup = $24,
+			owner_payment_config = $25::jsonb,
+			subscription_expired_at = $26,
 			updated_at = NOW()
 		WHERE id = $1
 	`,
-		site.ID, site.OwnerUserID, site.ParentSubSiteID, site.Level, site.Name, site.Slug, site.CustomDomain, site.Status,
+		site.ID, site.OwnerUserID, site.ParentSubSiteID, site.Level, site.Name, site.Slug, site.CustomDomain, site.Status, mode,
 		site.SiteLogo, site.SiteFavicon, site.SiteSubtitle, site.Announcement,
 		site.ContactInfo, site.DocURL, site.HomeContent, site.ThemeTemplate,
 		site.RegistrationMode, site.EnableTopup, site.AllowSubSite, site.SubSitePriceFen, site.ConsumeRateMultiplier,
 		site.AllowOnlineTopup, site.AllowOfflineTopup,
-		site.SubscriptionExpiredAt,
+		ownerPaymentJSON, site.SubscriptionExpiredAt,
 	)
+	if err != nil {
+		return err
+	}
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		return service.ErrSubSiteNotFound
+	}
+	return nil
+}
+
+// UpdateMode 仅更新 sub_sites.mode（由 admin 授权后使用），不触动其他字段。
+func (r *subSiteRepository) UpdateMode(ctx context.Context, siteID int64, newMode string) error {
+	mode := normalizeSubSiteMode(newMode)
+	res, err := r.db.ExecContext(ctx, `
+		UPDATE sub_sites SET mode = $2, updated_at = NOW() WHERE id = $1
+	`, siteID, mode)
+	if err != nil {
+		return err
+	}
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		return service.ErrSubSiteNotFound
+	}
+	return nil
+}
+
+// IncrementTotalWithdrawnFen 提现打款完成时累加分站已提现总额。
+func (r *subSiteRepository) IncrementTotalWithdrawnFen(ctx context.Context, siteID int64, amountFen int64) error {
+	if amountFen <= 0 {
+		return nil
+	}
+	res, err := r.db.ExecContext(ctx, `
+		UPDATE sub_sites SET total_withdrawn_fen = total_withdrawn_fen + $2, updated_at = NOW() WHERE id = $1
+	`, siteID, amountFen)
 	if err != nil {
 		return err
 	}
@@ -340,7 +391,12 @@ func (r *subSiteRepository) AdjustBalance(ctx context.Context, siteID int64, del
 	defer func() { _ = tx.Rollback() }()
 
 	var (
-		isTopup    = deltaFen > 0 && (entry.TxType == service.SubSiteLedgerTopupOnline || entry.TxType == service.SubSiteLedgerTopupAdmin || entry.TxType == service.SubSiteLedgerManualCredit)
+		// 累计入账：topup 常规 + 分站利润
+		isTopup = deltaFen > 0 && (entry.TxType == service.SubSiteLedgerTopupOnline ||
+			entry.TxType == service.SubSiteLedgerTopupAdmin ||
+			entry.TxType == service.SubSiteLedgerManualCredit ||
+			entry.TxType == service.SubSiteLedgerProfit)
+		// 累计出账：pool 模式消费扣池
 		isConsume  = deltaFen < 0 && entry.TxType == service.SubSiteLedgerConsume
 		newBalance int64
 	)
@@ -535,6 +591,7 @@ func scanSubSite(row scanner) (*service.SubSite, error) {
 	var (
 		site                  service.SubSite
 		parentID              sql.NullInt64
+		ownerPaymentRaw       []byte
 		subscriptionExpiredAt sql.NullTime
 	)
 	if err := row.Scan(
@@ -548,6 +605,7 @@ func scanSubSite(row scanner) (*service.SubSite, error) {
 		&site.Slug,
 		&site.CustomDomain,
 		&site.Status,
+		&site.Mode,
 		&site.SiteLogo,
 		&site.SiteFavicon,
 		&site.SiteSubtitle,
@@ -564,8 +622,10 @@ func scanSubSite(row scanner) (*service.SubSite, error) {
 		&site.BalanceFen,
 		&site.TotalTopupFen,
 		&site.TotalConsumedFen,
+		&site.TotalWithdrawnFen,
 		&site.AllowOnlineTopup,
 		&site.AllowOfflineTopup,
+		&ownerPaymentRaw,
 		&subscriptionExpiredAt,
 		&site.CreatedAt,
 		&site.UpdatedAt,
@@ -583,5 +643,45 @@ func scanSubSite(row scanner) (*service.SubSite, error) {
 	if subscriptionExpiredAt.Valid {
 		site.SubscriptionExpiredAt = &subscriptionExpiredAt.Time
 	}
+	site.Mode = normalizeSubSiteMode(site.Mode)
+	if cfg, err := unmarshalOwnerPaymentConfig(ownerPaymentRaw); err != nil {
+		return nil, err
+	} else {
+		site.OwnerPaymentConfig = cfg
+	}
 	return &site, nil
+}
+
+// normalizeSubSiteMode 把任意输入对齐到允许的枚举值；未知/空字符串回退 pool。
+func normalizeSubSiteMode(mode string) string {
+	switch strings.ToLower(strings.TrimSpace(mode)) {
+	case service.SubSiteModeRate:
+		return service.SubSiteModeRate
+	case service.SubSiteModePool, "":
+		return service.SubSiteModePool
+	default:
+		return service.SubSiteModePool
+	}
+}
+
+func marshalOwnerPaymentConfig(cfg *service.OwnerPaymentConfig) (any, error) {
+	if cfg == nil {
+		return nil, nil
+	}
+	data, err := json.Marshal(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return string(data), nil
+}
+
+func unmarshalOwnerPaymentConfig(raw []byte) (*service.OwnerPaymentConfig, error) {
+	if len(raw) == 0 {
+		return nil, nil
+	}
+	var cfg service.OwnerPaymentConfig
+	if err := json.Unmarshal(raw, &cfg); err != nil {
+		return nil, err
+	}
+	return &cfg, nil
 }

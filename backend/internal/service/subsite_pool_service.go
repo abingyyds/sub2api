@@ -73,7 +73,11 @@ func (s *SubSiteService) AdminTopupPool(ctx context.Context, siteID int64, amoun
 }
 
 // OfflineTopupUser 分站主给分站内用户线下加余额：user.balance += amount, sub_site.balance -= amount。
-// 前置校验：操作人是分站 owner、该 user 已绑定到本分站、allow_offline_topup=true、池余额足够。
+// 仅 pool 模式分站可用；rate 模式分站无独立进货池，用户充值应走主站通道。
+// 前置校验：操作人是分站 owner、该 user 已绑定到本分站、allow_offline_topup=true、池余额足够、mode=pool。
+// 为修复 parent 池透支：除 leaf 外，沿链上所有 pool 模式祖先同步扣等额（rate 祖先跳过）。
+// rate 祖先意味着该级不存在实体池；加用户余额的"基础成本"在用户后续 API 调用时由平台扣，
+// 此处不为 rate 祖先预扣。
 func (s *SubSiteService) OfflineTopupUser(ctx context.Context, ownerUserID, siteID, targetUserID int64, amountFen int64, note string) (*SubSite, error) {
 	if amountFen <= 0 {
 		return nil, infraerrors.BadRequest("SUBSITE_TOPUP_AMOUNT_INVALID", "topup amount must be positive")
@@ -87,6 +91,9 @@ func (s *SubSiteService) OfflineTopupUser(ctx context.Context, ownerUserID, site
 	}
 	if site.OwnerUserID != ownerUserID {
 		return nil, ErrSubSiteForbidden
+	}
+	if site.Mode != SubSiteModePool {
+		return nil, infraerrors.Forbidden("SUBSITE_OFFLINE_TOPUP_MODE_INVALID", "offline topup is only available in pool mode")
 	}
 	if !site.AllowOfflineTopup {
 		return nil, infraerrors.Forbidden("SUBSITE_OFFLINE_TOPUP_DISABLED", "offline topup is disabled for this sub-site")
@@ -105,19 +112,39 @@ func (s *SubSiteService) OfflineTopupUser(ctx context.Context, ownerUserID, site
 	if err := s.userRepo.UpdateBalance(ctx, targetUserID, float64(amountFen)/100.0); err != nil {
 		return nil, err
 	}
-	// 从池扣等额
+	// leaf 池扣
 	related := targetUserID
-	entry := SubSiteLedgerEntry{
+	leafEntry := SubSiteLedgerEntry{
 		TxType:        SubSiteLedgerOfflineUserTopup,
 		RelatedUserID: &related,
 		Note:          strings.TrimSpace(note),
 	}
 	op := ownerUserID
-	entry.OperatorID = &op
-	if _, err := s.AdjustPoolBalance(ctx, siteID, -amountFen, entry); err != nil {
-		// 线下加用户余额已成功，此处扣池失败留 warn（与 Step 4 扣费路径对齐的容错策略）
+	leafEntry.OperatorID = &op
+	if _, err := s.AdjustPoolBalance(ctx, siteID, -amountFen, leafEntry); err != nil {
 		log.Printf("[SubSitePool] offline topup pool debit failed, user=%d site=%d amount=%d: %v", targetUserID, siteID, amountFen, err)
 		return nil, err
+	}
+	// parent 链同步扣（仅 pool 祖先）：补齐后续消费路径中 DebitPoolForConsumption 会扣 parent 池的那一份"进货成本"。
+	// 若不扣 parent，DebitPoolForConsumption 将导致 parent 池透支。
+	if chain, err := s.GetSiteChain(ctx, siteID); err == nil {
+		for idx, ancestor := range chain {
+			if idx == 0 || ancestor == nil {
+				continue // 跳过 leaf，自身已扣
+			}
+			if ancestor.Mode != SubSiteModePool {
+				continue
+			}
+			ancestorEntry := SubSiteLedgerEntry{
+				TxType:        SubSiteLedgerOfflineUserTopup,
+				RelatedUserID: &related,
+				Note:          "[parent sync] " + strings.TrimSpace(note),
+			}
+			ancestorEntry.OperatorID = &op
+			if _, err := s.AdjustPoolBalance(ctx, ancestor.ID, -amountFen, ancestorEntry); err != nil {
+				log.Printf("[SubSitePool] offline topup parent debit failed, ancestor=%d leaf=%d amount=%d: %v", ancestor.ID, siteID, amountFen, err)
+			}
+		}
 	}
 	refreshed, err := s.repo.GetByID(ctx, site.ID)
 	if err != nil {
@@ -126,18 +153,27 @@ func (s *SubSiteService) OfflineTopupUser(ctx context.Context, ownerUserID, site
 	return s.populateComputedFields(ctx, refreshed, true)
 }
 
-// DebitPoolForConsumption 分站用户消费时沿 parent 链逐级从分站池扣 1× 基础成本。
-// 调用方已确认该用户绑定在 leafSiteID；amountUSD 为用户实际扣费（已经 × 复合倍率）；
-// compoundRate 为沿链累乘后的总倍率（用于反推基础成本）。
-// 每一个祖先池都扣 1× 基础成本，代表该层向平台购买的服务消耗。
-// 允许池透支（负余额）：与 userRepo.DeductBalance 的容忍策略对齐，仅记 warn。
-// 调用失败只打日志、不向上游冒泡，避免影响网关主路径。
+// DebitPoolForConsumption 分站用户消费时按链上每个分站的 mode 分别结算：
+//
+//   pool 模式：扣 1× 基础成本到分站池（代表该级向上游采购的"进货成本"）；
+//   rate 模式：不扣池，而是把本级"加价差额"作为分站主利润入账到同一 balance_fen。
+//
+// 利润公式（rate 级 i 按 leaf→root 索引，0 = leaf）：
+//   profit_i = base × (compound_i - compound_{i-1}),  compound_{-1} = 1.0
+// 其中 compound_i 为 leaf 到 i 级累计倍率乘积。
+// 这样从用户余额扣掉的 amountUSD = base × compoundRate 会按级别精确分配：
+//   - 纯 rate 链：Σ profit_i = base × (compoundRate - 1)，平台留 base
+//   - 含 pool 级：pool 级吃 base 扣池，rate 级按差额入账
+//
+// 允许池/利润账目透支（负余额），仅记 warn，避免影响网关主路径。
+// 失败不向上游冒泡。
 func (s *SubSiteService) DebitPoolForConsumption(ctx context.Context, leafSiteID, userID, usageLogID int64, amountUSD, compoundRate float64) {
 	if leafSiteID <= 0 || compoundRate <= 0 || amountUSD <= 0 {
 		return
 	}
-	basePartFen := int64((amountUSD / compoundRate) * 100.0)
-	if basePartFen <= 0 {
+	baseUSD := amountUSD / compoundRate
+	baseFen := int64(baseUSD * 100.0)
+	if baseFen <= 0 {
 		return
 	}
 	chain, err := s.GetSiteChain(ctx, leafSiteID)
@@ -145,8 +181,15 @@ func (s *SubSiteService) DebitPoolForConsumption(ctx context.Context, leafSiteID
 		log.Printf("[SubSitePool] consume chain lookup failed site=%d: %v", leafSiteID, err)
 		return
 	}
+	prevCompound := 1.0
 	for _, site := range chain {
-		entry := SubSiteLedgerEntry{TxType: SubSiteLedgerConsume}
+		if site == nil {
+			continue
+		}
+		siteRate := normalizeConsumeRateMultiplier(site.ConsumeRateMultiplier)
+		curCompound := prevCompound * siteRate
+
+		entry := SubSiteLedgerEntry{}
 		if userID > 0 {
 			u := userID
 			entry.RelatedUserID = &u
@@ -155,9 +198,26 @@ func (s *SubSiteService) DebitPoolForConsumption(ctx context.Context, leafSiteID
 			ul := usageLogID
 			entry.RelatedUsageLogID = &ul
 		}
-		if _, err := s.AdjustPoolBalance(ctx, site.ID, -basePartFen, entry); err != nil {
-			log.Printf("[SubSitePool] consume debit failed site=%d user=%d amount=%d: %v", site.ID, userID, basePartFen, err)
+
+		switch site.Mode {
+		case SubSiteModeRate:
+			// 按本级加价差额入账利润
+			profitFen := int64((curCompound - prevCompound) * baseUSD * 100.0)
+			if profitFen > 0 {
+				entry.TxType = SubSiteLedgerProfit
+				if _, err := s.AdjustPoolBalance(ctx, site.ID, profitFen, entry); err != nil {
+					log.Printf("[SubSitePool] profit credit failed site=%d user=%d amount=%d: %v", site.ID, userID, profitFen, err)
+				}
+			}
+		default:
+			// pool 模式：按旧逻辑扣 1× base
+			entry.TxType = SubSiteLedgerConsume
+			if _, err := s.AdjustPoolBalance(ctx, site.ID, -baseFen, entry); err != nil {
+				log.Printf("[SubSitePool] consume debit failed site=%d user=%d amount=%d: %v", site.ID, userID, baseFen, err)
+			}
 		}
+
+		prevCompound = curCompound
 	}
 }
 

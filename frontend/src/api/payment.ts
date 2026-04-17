@@ -88,6 +88,7 @@ export interface CreateSubSiteActivationInput {
   allow_sub_site?: boolean
   sub_site_price_fen?: number
   consume_rate_multiplier?: number
+  owner_payment_config?: import('./subsite').OwnerPaymentConfig | null
 }
 
 const plansCache: CacheEntry<PaymentPlan[]> = {

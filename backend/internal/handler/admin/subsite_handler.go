@@ -12,11 +12,12 @@ import (
 )
 
 type SubSiteHandler struct {
-	subSiteService *service.SubSiteService
+	subSiteService  *service.SubSiteService
+	withdrawService *service.WithdrawService
 }
 
-func NewSubSiteHandler(subSiteService *service.SubSiteService) *SubSiteHandler {
-	return &SubSiteHandler{subSiteService: subSiteService}
+func NewSubSiteHandler(subSiteService *service.SubSiteService, withdrawService *service.WithdrawService) *SubSiteHandler {
+	return &SubSiteHandler{subSiteService: subSiteService, withdrawService: withdrawService}
 }
 
 func (h *SubSiteHandler) GetPlatformConfig(c *gin.Context) {
@@ -151,4 +152,33 @@ func (h *SubSiteHandler) Ledger(c *gin.Context) {
 		items = []service.SubSiteLedgerEntry{}
 	}
 	response.Paginated(c, items, pag.Total, pag.Page, pag.PageSize)
+}
+
+type setModeRequest struct {
+	Mode string `json:"mode" binding:"required"`
+}
+
+// SetMode 管理员切换分站模式（pool ↔ rate）。
+func (h *SubSiteHandler) SetMode(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || id <= 0 {
+		response.BadRequest(c, "invalid sub-site ID")
+		return
+	}
+	var req setModeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "invalid request: "+err.Error())
+		return
+	}
+	hasPending, err := h.withdrawService.HasPendingWithdrawForSubSite(c.Request.Context(), id)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	site, err := h.subSiteService.SetSubSiteMode(c.Request.Context(), id, req.Mode, hasPending)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, site)
 }

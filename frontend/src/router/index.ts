@@ -328,6 +328,18 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresSubSiteOwner: true, title: 'SubSite Settings' }
   },
   {
+    path: '/subsite-admin/:siteId(\\d+)/withdraw',
+    name: 'SubSiteAdminWithdraw',
+    component: () => import('@/views/subsiteAdmin/WithdrawView.vue'),
+    meta: { requiresAuth: true, requiresSubSiteOwner: true, title: 'SubSite Withdraw' }
+  },
+  {
+    path: '/subsite-admin/:siteId(\\d+)/payment-config',
+    name: 'SubSiteAdminPaymentConfig',
+    component: () => import('@/views/subsiteAdmin/PaymentConfigView.vue'),
+    meta: { requiresAuth: true, requiresSubSiteOwner: true, title: 'SubSite Payment Config' }
+  },
+  {
     path: '/agent/sub-users',
     name: 'AgentSubUsers',
     component: () => import('@/views/user/AgentSubUsersView.vue'),
@@ -613,6 +625,17 @@ const routes: RouteRecordRaw[] = [
       requiresAdmin: true,
       title: 'Sub-site Management',
       descriptionKey: 'Sub-sites'
+    }
+  },
+  {
+    path: '/admin/withdraws',
+    name: 'AdminWithdraws',
+    component: () => import('@/views/admin/WithdrawsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Withdraw Management',
+      descriptionKey: 'Withdraws'
     }
   },
 

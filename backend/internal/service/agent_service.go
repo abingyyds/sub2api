@@ -44,6 +44,14 @@ type AgentRepository interface {
 	AddWalletLog(ctx context.Context, userID int64, balanceType, changeType string, amount float64, relatedUserID *int64, relatedOrderID *int64, remark string, unlockAt *time.Time) error
 	UpdateReferralCommissionRate(ctx context.Context, inviterID, inviteeID int64, rate float64) error
 	UpdateReferralInviter(ctx context.Context, inviteeID, newInviterID int64) error
+	// 提现
+	CreateWithdrawRequest(ctx context.Context, req *WithdrawRequest) error
+	GetWithdrawRequestByID(ctx context.Context, id int64) (*WithdrawRequest, error)
+	UpdateWithdrawRequestStatus(ctx context.Context, id int64, newStatus string, reviewNote string) error
+	ListWithdrawRequests(ctx context.Context, params pagination.PaginationParams, userID int64, sourceType, status string) ([]WithdrawRequest, *pagination.PaginationResult, error)
+	HasPendingWithdrawForSubSite(ctx context.Context, subSiteID int64) (bool, error)
+	AdjustWithdrawableBalance(ctx context.Context, userID int64, delta float64) error
+	IncrementTotalWithdrawn(ctx context.Context, userID int64, amount float64) error
 }
 
 // AgentService handles agent/affiliate business logic.
