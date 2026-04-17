@@ -1409,6 +1409,13 @@ const handleSubmit = async () => {
         return
       }
 
+      const modelMapping = buildModelMappingObject(modelRestrictionMode.value, allowedModels.value, modelMappings.value)
+      if (modelMapping) {
+        newCredentials.model_mapping = modelMapping
+      } else {
+        delete newCredentials.model_mapping
+      }
+
       updatePayload.credentials = newCredentials
     }
 
