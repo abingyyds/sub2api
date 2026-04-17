@@ -1078,9 +1078,27 @@ watch(
               ? 'https://generativelanguage.googleapis.com'
               : 'https://api.anthropic.com'
         editBaseUrl.value = platformDefaultUrl
-        modelRestrictionMode.value = 'whitelist'
-        modelMappings.value = []
-        allowedModels.value = []
+
+        // OAuth/setup-token accounts also support model_mapping — load from credentials
+        const existingMappings = credentials?.model_mapping as Record<string, string> | undefined
+        if (existingMappings && typeof existingMappings === 'object') {
+          const entries = Object.entries(existingMappings)
+          const isWhitelistMode = entries.length > 0 && entries.every(([from, to]) => from === to)
+          if (isWhitelistMode) {
+            modelRestrictionMode.value = 'whitelist'
+            allowedModels.value = entries.map(([from]) => from)
+            modelMappings.value = []
+          } else {
+            modelRestrictionMode.value = 'mapping'
+            modelMappings.value = entries.map(([from, to]) => ({ from, to }))
+            allowedModels.value = []
+          }
+        } else {
+          modelRestrictionMode.value = 'whitelist'
+          modelMappings.value = []
+          allowedModels.value = []
+        }
+
         customErrorCodesEnabled.value = false
         selectedErrorCodes.value = []
       }
