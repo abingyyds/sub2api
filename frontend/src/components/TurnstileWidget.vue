@@ -74,12 +74,20 @@ const loadScript = (): Promise<void> => {
     script.async = true
     script.defer = true
 
+    // 10 秒超时，国内网络环境下避免长时间阻塞
+    const timeout = setTimeout(() => {
+      console.warn('Turnstile script load timeout (10s), skipping verification')
+      reject(new Error('Turnstile load timeout'))
+    }, 10000)
+
     window.onTurnstileLoad = () => {
+      clearTimeout(timeout)
       scriptLoaded.value = true
       resolve()
     }
 
     script.onerror = () => {
+      clearTimeout(timeout)
       reject(new Error('Failed to load Turnstile script'))
     }
 

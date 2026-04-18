@@ -99,20 +99,6 @@
               </p>
             </div>
 
-        <!-- Turnstile Widget -->
-        <div v-if="turnstileEnabled && turnstileSiteKey">
-          <TurnstileWidget
-            ref="turnstileRef"
-            :site-key="turnstileSiteKey"
-            @verify="onTurnstileVerify"
-            @expire="onTurnstileExpire"
-            @error="onTurnstileError"
-          />
-          <p v-if="errors.turnstile" class="input-error-text mt-2 text-center">
-            {{ errors.turnstile }}
-          </p>
-        </div>
-
         <!-- Agreement Checkbox -->
         <div class="flex items-start gap-2">
           <input
@@ -153,7 +139,7 @@
         <MagneticButton>
           <button
             type="submit"
-            :disabled="isLoading || (turnstileEnabled && !turnstileToken) || !agreedToTerms"
+            :disabled="isLoading || !agreedToTerms"
             class="btn btn-primary w-full transition-all duration-300"
           >
             <svg
@@ -213,7 +199,6 @@ import { useI18n } from 'vue-i18n'
 import { AuthLayout } from '@/components/layout'
 import LinuxDoOAuthSection from '@/components/auth/LinuxDoOAuthSection.vue'
 import Icon from '@/components/icons/Icon.vue'
-import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import { redirectAfterAuth } from '@/utils/postAuthRedirect'
 import {
@@ -242,14 +227,8 @@ const showPassword = ref<boolean>(false)
 // Public settings
 const registrationEnabled = ref<boolean>(true)
 const emailVerifyEnabled = ref<boolean>(false)
-const turnstileEnabled = ref<boolean>(false)
-const turnstileSiteKey = ref<string>('')
 const siteName = ref<string>('cCoder.me')
 const linuxdoOAuthEnabled = ref<boolean>(false)
-
-// Turnstile
-const turnstileRef = ref<InstanceType<typeof TurnstileWidget> | null>(null)
-const turnstileToken = ref<string>('')
 
 const inviteCode = ref<string>('')
 const agreedToTerms = ref<boolean>(false)
@@ -261,8 +240,7 @@ const formData = reactive({
 
 const errors = reactive({
   email: '',
-  password: '',
-  turnstile: ''
+  password: ''
 })
 
 // ==================== Lifecycle ====================
@@ -278,8 +256,6 @@ onMounted(async () => {
     if (settings) {
       registrationEnabled.value = settings.registration_enabled
       emailVerifyEnabled.value = settings.email_verify_enabled
-      turnstileEnabled.value = settings.turnstile_enabled
-      turnstileSiteKey.value = settings.turnstile_site_key || ''
       siteName.value = settings.site_name || 'cCoder.me'
       linuxdoOAuthEnabled.value = settings.linuxdo_oauth_enabled
     }
@@ -289,23 +265,6 @@ onMounted(async () => {
     settingsLoaded.value = true
   }
 })
-
-// ==================== Turnstile Handlers ====================
-
-function onTurnstileVerify(token: string): void {
-  turnstileToken.value = token
-  errors.turnstile = ''
-}
-
-function onTurnstileExpire(): void {
-  turnstileToken.value = ''
-  errors.turnstile = t('auth.turnstileExpired')
-}
-
-function onTurnstileError(): void {
-  turnstileToken.value = ''
-  errors.turnstile = t('auth.turnstileFailed')
-}
 
 // ==================== Validation ====================
 
@@ -318,7 +277,6 @@ function validateForm(): boolean {
   // Reset errors
   errors.email = ''
   errors.password = ''
-  errors.turnstile = ''
 
   let isValid = true
 
@@ -337,12 +295,6 @@ function validateForm(): boolean {
     isValid = false
   } else if (formData.password.length < 6) {
     errors.password = t('auth.passwordMinLength')
-    isValid = false
-  }
-
-  // Turnstile validation
-  if (turnstileEnabled.value && !turnstileToken.value) {
-    errors.turnstile = t('auth.completeVerification')
     isValid = false
   }
 
@@ -371,7 +323,6 @@ async function handleRegister(): Promise<void> {
         JSON.stringify({
           email: formData.email,
           password: formData.password,
-          turnstile_token: turnstileToken.value,
           invite_code: inviteCode.value || undefined
         })
       )
@@ -385,7 +336,6 @@ async function handleRegister(): Promise<void> {
     await authStore.register({
       email: formData.email,
       password: formData.password,
-      turnstile_token: turnstileEnabled.value ? turnstileToken.value : undefined,
       invite_code: inviteCode.value || undefined
     })
 
@@ -395,12 +345,6 @@ async function handleRegister(): Promise<void> {
     // Redirect to pricing page so new users can purchase/recharge
     await redirectAfterAuth(router, '/pricing')
   } catch (error: unknown) {
-    // Reset Turnstile on error
-    if (turnstileRef.value) {
-      turnstileRef.value.reset()
-      turnstileToken.value = ''
-    }
-
     // Handle registration error
     const err = error as { message?: string; response?: { data?: { detail?: string } } }
 

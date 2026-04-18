@@ -69,20 +69,6 @@
           </div>
         </div>
 
-        <!-- Turnstile Widget for Resend -->
-        <div v-if="turnstileEnabled && turnstileSiteKey && showResendTurnstile">
-          <TurnstileWidget
-            ref="turnstileRef"
-            :site-key="turnstileSiteKey"
-            @verify="onTurnstileVerify"
-            @expire="onTurnstileExpire"
-            @error="onTurnstileError"
-          />
-          <p v-if="errors.turnstile" class="input-error-text mt-2 text-center">
-            {{ errors.turnstile }}
-          </p>
-        </div>
-
         <!-- Error Message -->
         <transition name="fade">
           <div
@@ -140,15 +126,10 @@
             v-else
             type="button"
             @click="handleResendCode"
-            :disabled="
-              isSendingCode || (turnstileEnabled && showResendTurnstile && !resendTurnstileToken)
-            "
+            :disabled="isSendingCode"
             class="text-sm text-primary-600 transition-colors hover:text-primary-500 disabled:cursor-not-allowed disabled:opacity-50 dark:text-primary-400 dark:hover:text-primary-300"
           >
             <span v-if="isSendingCode">{{ t('auth.sendingCode') }}</span>
-            <span v-else-if="turnstileEnabled && !showResendTurnstile">
-              {{ t('auth.clickToResend') }}
-            </span>
             <span v-else>{{ t('auth.resendCode') }}</span>
           </button>
         </div>
@@ -174,20 +155,15 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { AuthLayout } from '@/components/layout'
 import Icon from '@/components/icons/Icon.vue'
-import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import { sendVerifyCode } from '@/api/auth'
 import { redirectAfterAuth } from '@/utils/postAuthRedirect'
 
 const { t } = useI18n()
 
-// ==================== Router & Stores ====================
-
 const router = useRouter()
 const authStore = useAuthStore()
 const appStore = useAppStore()
-
-// ==================== State ====================
 
 const isLoading = ref<boolean>(false)
 const isSendingCode = ref<boolean>(false)
@@ -197,39 +173,24 @@ const verifyCode = ref<string>('')
 const countdown = ref<number>(0)
 let countdownTimer: ReturnType<typeof setInterval> | null = null
 
-// Registration data from sessionStorage
 const email = ref<string>('')
 const password = ref<string>('')
-const initialTurnstileToken = ref<string>('')
 const inviteCode = ref<string>('')
 const hasRegisterData = ref<boolean>(false)
 
-// Public settings
-const turnstileEnabled = ref<boolean>(false)
-const turnstileSiteKey = ref<string>('')
 const siteName = ref<string>('cCoder.me')
 
-// Turnstile for resend
-const turnstileRef = ref<InstanceType<typeof TurnstileWidget> | null>(null)
-const resendTurnstileToken = ref<string>('')
-const showResendTurnstile = ref<boolean>(false)
-
 const errors = ref({
-  code: '',
-  turnstile: ''
+  code: ''
 })
 
-// ==================== Lifecycle ====================
-
 onMounted(async () => {
-  // Load registration data from sessionStorage
   const registerDataStr = sessionStorage.getItem('register_data')
   if (registerDataStr) {
     try {
       const registerData = JSON.parse(registerDataStr)
       email.value = registerData.email || ''
       password.value = registerData.password || ''
-      initialTurnstileToken.value = registerData.turnstile_token || ''
       inviteCode.value = registerData.invite_code || ''
       hasRegisterData.value = !!(email.value && password.value)
     } catch {
@@ -237,19 +198,15 @@ onMounted(async () => {
     }
   }
 
-  // Load public settings
   try {
     const settings = await appStore.fetchPublicSettings()
     if (settings) {
-      turnstileEnabled.value = settings.turnstile_enabled
-      turnstileSiteKey.value = settings.turnstile_site_key || ''
       siteName.value = settings.site_name || 'cCoder.me'
     }
   } catch (error) {
     console.error('Failed to load public settings:', error)
   }
 
-  // Auto-send verification code if we have valid data
   if (hasRegisterData.value) {
     await sendCode()
   }
@@ -261,8 +218,6 @@ onUnmounted(() => {
     countdownTimer = null
   }
 })
-
-// ==================== Countdown ====================
 
 function startCountdown(seconds: number): void {
   countdown.value = seconds
@@ -283,43 +238,17 @@ function startCountdown(seconds: number): void {
   }, 1000)
 }
 
-// ==================== Turnstile Handlers ====================
-
-function onTurnstileVerify(token: string): void {
-  resendTurnstileToken.value = token
-  errors.value.turnstile = ''
-}
-
-function onTurnstileExpire(): void {
-  resendTurnstileToken.value = ''
-  errors.value.turnstile = 'Verification expired, please try again'
-}
-
-function onTurnstileError(): void {
-  resendTurnstileToken.value = ''
-  errors.value.turnstile = 'Verification failed, please try again'
-}
-
-// ==================== Send Code ====================
-
 async function sendCode(): Promise<void> {
   isSendingCode.value = true
   errorMessage.value = ''
 
   try {
     const response = await sendVerifyCode({
-      email: email.value,
-      // 优先使用重发时新获取的 token（因为初始 token 可能已被使用）
-      turnstile_token: resendTurnstileToken.value || initialTurnstileToken.value || undefined
+      email: email.value
     })
 
     codeSent.value = true
     startCountdown(response.countdown)
-
-    // Reset turnstile state（token 已使用，清除以避免重复使用）
-    initialTurnstileToken.value = ''
-    showResendTurnstile.value = false
-    resendTurnstileToken.value = ''
   } catch (error: unknown) {
     const err = error as { message?: string; response?: { data?: { detail?: string } } }
 
@@ -337,21 +266,7 @@ async function sendCode(): Promise<void> {
   }
 }
 
-// ==================== Handlers ====================
-
 async function handleResendCode(): Promise<void> {
-  // If turnstile is enabled and we haven't shown it yet, show it
-  if (turnstileEnabled.value && !showResendTurnstile.value) {
-    showResendTurnstile.value = true
-    return
-  }
-
-  // If turnstile is enabled but no token yet, wait
-  if (turnstileEnabled.value && !resendTurnstileToken.value) {
-    errors.value.turnstile = 'Please complete the verification'
-    return
-  }
-
   await sendCode()
 }
 
@@ -381,22 +296,17 @@ async function handleVerify(): Promise<void> {
   isLoading.value = true
 
   try {
-    // Register with verification code
     await authStore.register({
       email: email.value,
       password: password.value,
       verify_code: verifyCode.value.trim(),
-      turnstile_token: initialTurnstileToken.value || undefined,
       invite_code: inviteCode.value || undefined
     })
 
-    // Clear session data
     sessionStorage.removeItem('register_data')
 
-    // Show success toast
     appStore.showSuccess('Account created successfully! Welcome to ' + siteName.value + '.')
 
-    // Redirect to pricing page so new users can purchase/recharge
     await redirectAfterAuth(router, '/pricing')
   } catch (error: unknown) {
     const err = error as { message?: string; response?: { data?: { detail?: string } } }
@@ -416,10 +326,7 @@ async function handleVerify(): Promise<void> {
 }
 
 function handleBack(): void {
-  // Clear session data
   sessionStorage.removeItem('register_data')
-
-  // Go back to registration
   router.push('/register')
 }
 </script>

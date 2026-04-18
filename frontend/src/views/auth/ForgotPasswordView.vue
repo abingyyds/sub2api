@@ -69,20 +69,6 @@
           </p>
         </div>
 
-        <!-- Turnstile Widget -->
-        <div v-if="turnstileEnabled && turnstileSiteKey">
-          <TurnstileWidget
-            ref="turnstileRef"
-            :site-key="turnstileSiteKey"
-            @verify="onTurnstileVerify"
-            @expire="onTurnstileExpire"
-            @error="onTurnstileError"
-          />
-          <p v-if="errors.turnstile" class="input-error-text mt-2 text-center">
-            {{ errors.turnstile }}
-          </p>
-        </div>
-
         <!-- Error Message -->
         <transition name="fade">
           <div
@@ -103,7 +89,7 @@
         <!-- Submit Button -->
         <button
           type="submit"
-          :disabled="isLoading || (turnstileEnabled && !turnstileToken)"
+          :disabled="isLoading"
           class="btn btn-primary w-full"
         >
           <svg
@@ -148,101 +134,42 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { AuthLayout } from '@/components/layout'
 import Icon from '@/components/icons/Icon.vue'
-import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { useAppStore } from '@/stores'
 import { forgotPassword } from '@/api/auth'
 
 const { t } = useI18n()
 
-// ==================== Stores ====================
-
 const appStore = useAppStore()
-
-// ==================== State ====================
 
 const isLoading = ref<boolean>(false)
 const isSubmitted = ref<boolean>(false)
 const errorMessage = ref<string>('')
-
-// Public settings
-const turnstileEnabled = ref<boolean>(false)
-const turnstileSiteKey = ref<string>('')
-
-// Turnstile
-const turnstileRef = ref<InstanceType<typeof TurnstileWidget> | null>(null)
-const turnstileToken = ref<string>('')
 
 const formData = reactive({
   email: ''
 })
 
 const errors = reactive({
-  email: '',
-  turnstile: ''
+  email: ''
 })
-
-// ==================== Lifecycle ====================
-
-onMounted(async () => {
-  try {
-    const settings = await appStore.fetchPublicSettings()
-    if (settings) {
-      turnstileEnabled.value = settings.turnstile_enabled
-      turnstileSiteKey.value = settings.turnstile_site_key || ''
-    }
-  } catch (error) {
-    console.error('Failed to load public settings:', error)
-  }
-})
-
-// ==================== Turnstile Handlers ====================
-
-function onTurnstileVerify(token: string): void {
-  turnstileToken.value = token
-  errors.turnstile = ''
-}
-
-function onTurnstileExpire(): void {
-  turnstileToken.value = ''
-  errors.turnstile = t('auth.turnstileExpired')
-}
-
-function onTurnstileError(): void {
-  turnstileToken.value = ''
-  errors.turnstile = t('auth.turnstileFailed')
-}
-
-// ==================== Validation ====================
 
 function validateForm(): boolean {
   errors.email = ''
-  errors.turnstile = ''
 
-  let isValid = true
-
-  // Email validation
   if (!formData.email.trim()) {
     errors.email = t('auth.emailRequired')
-    isValid = false
+    return false
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
     errors.email = t('auth.invalidEmail')
-    isValid = false
+    return false
   }
 
-  // Turnstile validation
-  if (turnstileEnabled.value && !turnstileToken.value) {
-    errors.turnstile = t('auth.completeVerification')
-    isValid = false
-  }
-
-  return isValid
+  return true
 }
-
-// ==================== Form Handlers ====================
 
 async function handleSubmit(): Promise<void> {
   errorMessage.value = ''
@@ -255,19 +182,12 @@ async function handleSubmit(): Promise<void> {
 
   try {
     await forgotPassword({
-      email: formData.email,
-      turnstile_token: turnstileEnabled.value ? turnstileToken.value : undefined
+      email: formData.email
     })
 
     isSubmitted.value = true
     appStore.showSuccess(t('auth.resetEmailSent'))
   } catch (error: unknown) {
-    // Reset Turnstile on error
-    if (turnstileRef.value) {
-      turnstileRef.value.reset()
-      turnstileToken.value = ''
-    }
-
     const err = error as { message?: string; response?: { data?: { detail?: string } } }
 
     if (err.response?.data?.detail) {
