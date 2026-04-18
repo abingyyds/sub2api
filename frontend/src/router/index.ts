@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { useNavigationLoadingState } from '@/composables/useNavigationLoading'
 import { useRoutePrefetch } from '@/composables/useRoutePrefetch'
+import { buildChunkReloadUrl, isChunkLoadError } from './chunkLoad'
 
 /**
  * Route definitions with lazy loading
@@ -724,6 +725,8 @@ const router = createRouter({
  * Navigation guard: Authentication check
  */
 let authInitialized = false
+let lastRequestedLocation = window.location.pathname + window.location.search + window.location.hash
+const chunkReloadKey = 'chunk_reload_attempted'
 
 // 初始化导航加载状态和预加载
 const navigationLoading = useNavigationLoadingState()
@@ -731,6 +734,7 @@ const navigationLoading = useNavigationLoadingState()
 let routePrefetch: ReturnType<typeof useRoutePrefetch> | null = null
 
 router.beforeEach(async (to, _from, next) => {
+  lastRequestedLocation = to.fullPath
   // 开始导航加载状态
   navigationLoading.startNavigation()
 
@@ -853,6 +857,7 @@ router.beforeEach(async (to, _from, next) => {
 router.afterEach((to) => {
   // 结束导航加载状态
   navigationLoading.endNavigation()
+  sessionStorage.removeItem(chunkReloadKey)
 
   // 懒初始化预加载（首次导航时创建，传入 router 实例）
   if (!routePrefetch) {
@@ -867,26 +872,19 @@ router.afterEach((to) => {
  * Handles dynamic import failures caused by deployment updates
  */
 router.onError((error) => {
+  navigationLoading.endNavigation()
   console.error('Router error:', error)
 
-  // Check if this is a dynamic import failure (chunk loading error)
-  const isChunkLoadError =
-    error.message?.includes('Failed to fetch dynamically imported module') ||
-    error.message?.includes('Loading chunk') ||
-    error.message?.includes('Loading CSS chunk') ||
-    error.name === 'ChunkLoadError'
-
-  if (isChunkLoadError) {
+  if (isChunkLoadError(error)) {
     // Avoid infinite reload loop by checking sessionStorage
-    const reloadKey = 'chunk_reload_attempted'
-    const lastReload = sessionStorage.getItem(reloadKey)
+    const lastReload = sessionStorage.getItem(chunkReloadKey)
     const now = Date.now()
 
     // Allow reload if never attempted or more than 10 seconds ago
     if (!lastReload || now - parseInt(lastReload) > 10000) {
-      sessionStorage.setItem(reloadKey, now.toString())
-      console.warn('Chunk load error detected, reloading page to fetch latest version...')
-      window.location.reload()
+      sessionStorage.setItem(chunkReloadKey, now.toString())
+      console.warn('Chunk load error detected, hard reloading target route to fetch latest version...')
+      window.location.assign(buildChunkReloadUrl(lastRequestedLocation, now))
     } else {
       console.error('Chunk load error persists after reload. Please clear browser cache.')
     }

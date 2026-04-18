@@ -91,20 +91,6 @@
                 </div>
               </div>
 
-              <!-- Turnstile Widget -->
-              <div v-if="turnstileEnabled && turnstileSiteKey">
-                <TurnstileWidget
-                  ref="turnstileRef"
-                  :site-key="turnstileSiteKey"
-                  @verify="onTurnstileVerify"
-                  @expire="onTurnstileExpire"
-                  @error="onTurnstileError"
-                />
-                <p v-if="errors.turnstile" class="input-error-text mt-2 text-center">
-                  {{ errors.turnstile }}
-                </p>
-              </div>
-
               <!-- Error Message -->
               <transition name="fade">
                 <div
@@ -126,7 +112,7 @@
               <MagneticButton>
                 <button
                   type="submit"
-                  :disabled="isLoading || (turnstileEnabled && !turnstileToken)"
+                  :disabled="isLoading"
                   class="btn btn-primary w-full transition-all duration-300"
                 >
                   <svg
@@ -192,7 +178,6 @@ import { AuthLayout } from '@/components/layout'
 import LinuxDoOAuthSection from '@/components/auth/LinuxDoOAuthSection.vue'
 import TotpLoginModal from '@/components/auth/TotpLoginModal.vue'
 import Icon from '@/components/icons/Icon.vue'
-import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import { isTotp2FARequired } from '@/api/auth'
 import type { TotpLoginResponse } from '@/types'
@@ -218,14 +203,8 @@ const errorMessage = ref<string>('')
 const showPassword = ref<boolean>(false)
 
 // Public settings
-const turnstileEnabled = ref<boolean>(false)
-const turnstileSiteKey = ref<string>('')
 const linuxdoOAuthEnabled = ref<boolean>(false)
 const passwordResetEnabled = ref<boolean>(false)
-
-// Turnstile
-const turnstileRef = ref<InstanceType<typeof TurnstileWidget> | null>(null)
-const turnstileToken = ref<string>('')
 
 // 2FA state
 const show2FAModal = ref<boolean>(false)
@@ -240,8 +219,7 @@ const formData = reactive({
 
 const errors = reactive({
   email: '',
-  password: '',
-  turnstile: ''
+  password: ''
 })
 
 // ==================== Lifecycle ====================
@@ -258,8 +236,6 @@ onMounted(async () => {
   try {
     const settings = await appStore.fetchPublicSettings()
     if (settings) {
-      turnstileEnabled.value = settings.turnstile_enabled
-      turnstileSiteKey.value = settings.turnstile_site_key || ''
       linuxdoOAuthEnabled.value = settings.linuxdo_oauth_enabled
       passwordResetEnabled.value = settings.password_reset_enabled
     }
@@ -268,34 +244,14 @@ onMounted(async () => {
   }
 })
 
-// ==================== Turnstile Handlers ====================
-
-function onTurnstileVerify(token: string): void {
-  turnstileToken.value = token
-  errors.turnstile = ''
-}
-
-function onTurnstileExpire(): void {
-  turnstileToken.value = ''
-  errors.turnstile = t('auth.turnstileExpired')
-}
-
-function onTurnstileError(): void {
-  turnstileToken.value = ''
-  errors.turnstile = t('auth.turnstileFailed')
-}
-
 // ==================== Validation ====================
 
 function validateForm(): boolean {
-  // Reset errors
   errors.email = ''
   errors.password = ''
-  errors.turnstile = ''
 
   let isValid = true
 
-  // Email validation
   if (!formData.email.trim()) {
     errors.email = t('auth.emailRequired')
     isValid = false
@@ -304,18 +260,11 @@ function validateForm(): boolean {
     isValid = false
   }
 
-  // Password validation
   if (!formData.password) {
     errors.password = t('auth.passwordRequired')
     isValid = false
   } else if (formData.password.length < 6) {
     errors.password = t('auth.passwordMinLength')
-    isValid = false
-  }
-
-  // Turnstile validation
-  if (turnstileEnabled.value && !turnstileToken.value) {
-    errors.turnstile = t('auth.completeVerification')
     isValid = false
   }
 
@@ -339,8 +288,7 @@ async function handleLogin(): Promise<void> {
     // Call auth store login
     const response = await authStore.login({
       email: formData.email,
-      password: formData.password,
-      turnstile_token: turnstileEnabled.value ? turnstileToken.value : undefined
+      password: formData.password
     })
 
     // Check if 2FA is required
@@ -360,12 +308,6 @@ async function handleLogin(): Promise<void> {
     const redirectTo = router.currentRoute.value.query.redirect as string | undefined
     await redirectAfterAuth(router, redirectTo, '/pricing')
   } catch (error: unknown) {
-    // Reset Turnstile on error
-    if (turnstileRef.value) {
-      turnstileRef.value.reset()
-      turnstileToken.value = ''
-    }
-
     // Handle login error
     const err = error as { message?: string; response?: { data?: { detail?: string } } }
 

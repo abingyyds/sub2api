@@ -3,10 +3,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, defineAsyncComponent, onMounted } from 'vue'
 import { useAppStore } from '@/stores'
-import MarketingHomeView from '@/views/MarketingHomeView.vue'
-import HomeView from '@/views/HomeView.vue'
+
+const MarketingHomeView = defineAsyncComponent(() => import('@/views/MarketingHomeView.vue'))
+const HomeView = defineAsyncComponent(() => import('@/views/HomeView.vue'))
 
 const appStore = useAppStore()
 
