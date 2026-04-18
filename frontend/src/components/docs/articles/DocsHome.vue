@@ -7,7 +7,7 @@
 
     <!-- Full Docs Banner -->
     <a
-      href="https://ccoder-doc.vercel.app/"
+      href="https://docs.airiver.cn/"
       target="_blank"
       rel="noopener noreferrer"
       class="block rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white shadow-lg transition-all hover:shadow-xl hover:scale-[1.02] dark:from-primary-600 dark:to-primary-700"
@@ -25,7 +25,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
             </svg>
           </div>
-          <p class="mt-1 text-sm text-white/90">访问 ccoder-doc.vercel.app 查看更全面的教程、API 文档和最佳实践</p>
+          <p class="mt-1 text-sm text-white/90">访问 docs.airiver.cn 查看更全面的教程、API 文档和最佳实践</p>
         </div>
       </div>
     </a>
