@@ -223,17 +223,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick, shallowRef } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, shallowRef, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import QRCode from 'qrcode'
 import { useAuthStore, useAppStore } from '@/stores'
 import { paymentAPI } from '@/api/payment'
 import type { PaymentPlan } from '@/api/payment'
-import StarterHome from '@/components/themes/StarterHome.vue'
-import AuroraHome from '@/components/themes/AuroraHome.vue'
-import SummitHome from '@/components/themes/SummitHome.vue'
-import TerminalHome from '@/components/themes/TerminalHome.vue'
+
+const StarterHome = defineAsyncComponent(() => import('@/components/themes/StarterHome.vue'))
+const AuroraHome = defineAsyncComponent(() => import('@/components/themes/AuroraHome.vue'))
+const SummitHome = defineAsyncComponent(() => import('@/components/themes/SummitHome.vue'))
+const TerminalHome = defineAsyncComponent(() => import('@/components/themes/TerminalHome.vue'))
 
 const { t } = useI18n()
 const router = useRouter()
@@ -393,6 +393,7 @@ async function handleBuyPlan(plan: PaymentPlan) {
       if (order.code_url) {
         await nextTick()
         if (qrCanvas.value) {
+          const QRCode = (await import('qrcode')).default
           await QRCode.toCanvas(qrCanvas.value, order.code_url, {
             width: 192, margin: 2,
             color: { dark: '#000000', light: '#ffffff' },

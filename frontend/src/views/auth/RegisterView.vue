@@ -1,6 +1,5 @@
 <template>
   <AuthLayout>
-    <AnimatedBackground type="gradient-mesh" color="#8b5cf6" />
 
     <FadeIn :delay="100">
       <SlideIn direction="up" :delay="200">
@@ -204,8 +203,7 @@ import { redirectAfterAuth } from '@/utils/postAuthRedirect'
 import {
   FadeIn,
   SlideIn,
-  MagneticButton,
-  AnimatedBackground
+  MagneticButton
 } from '@/components/animations'
 
 const { t } = useI18n()
