@@ -271,7 +271,10 @@ func TestFrontendServer_ServeIndexHTML(t *testing.T) {
 
 		server.serveIndexHTML(c)
 
-		assert.Equal(t, "no-cache", w.Header().Get("Cache-Control"))
+		assert.Equal(t, "no-store, no-cache, must-revalidate", w.Header().Get("Cache-Control"))
+		assert.Equal(t, "no-store", w.Header().Get("CDN-Cache-Control"))
+		assert.Equal(t, "no-cache", w.Header().Get("Pragma"))
+		assert.Equal(t, "0", w.Header().Get("Expires"))
 	})
 
 	t.Run("fallback_on_settings_error", func(t *testing.T) {
@@ -440,6 +443,27 @@ func TestFrontendServer_Middleware(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Contains(t, w.Header().Get("Content-Type"), "image/png")
 	})
+
+	t.Run("returns_404_for_missing_assets", func(t *testing.T) {
+		provider := &mockSettingsProvider{
+			settings: map[string]string{"test": "value"},
+		}
+
+		server, err := NewFrontendServer(provider)
+		require.NoError(t, err)
+
+		router := gin.New()
+		router.Use(server.Middleware())
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/assets/missing-chunk.js", nil)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		assert.Equal(t, "no-store", w.Header().Get("Cache-Control"))
+		assert.NotContains(t, w.Header().Get("Content-Type"), "text/html")
+		assert.Equal(t, "Not Found", strings.TrimSpace(w.Body.String()))
+	})
 }
 
 func TestNewFrontendServer(t *testing.T) {
@@ -528,6 +552,22 @@ func TestServeEmbeddedFrontend(t *testing.T) {
 				assert.Contains(t, w.Header().Get("Content-Type"), "text/html")
 			})
 		}
+	})
+
+	t.Run("returns_404_for_missing_assets", func(t *testing.T) {
+		middleware := ServeEmbeddedFrontend()
+
+		router := gin.New()
+		router.Use(middleware)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/assets/missing-chunk.js", nil)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		assert.Equal(t, "no-store", w.Header().Get("Cache-Control"))
+		assert.NotContains(t, w.Header().Get("Content-Type"), "text/html")
+		assert.Equal(t, "Not Found", strings.TrimSpace(w.Body.String()))
 	})
 
 	t.Run("skips_api_routes", func(t *testing.T) {
