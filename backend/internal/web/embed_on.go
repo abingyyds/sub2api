@@ -10,6 +10,7 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
@@ -81,28 +82,38 @@ func (s *FrontendServer) InvalidateCache() {
 // Middleware returns the Gin middleware handler
 func (s *FrontendServer) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		path := c.Request.URL.Path
+		requestPath := c.Request.URL.Path
 
 		// Skip API routes
-		if strings.HasPrefix(path, "/api/") ||
-			strings.HasPrefix(path, "/v1/") ||
-			strings.HasPrefix(path, "/v1beta/") ||
-			strings.HasPrefix(path, "/antigravity/") ||
-			strings.HasPrefix(path, "/setup/") ||
-			path == "/health" ||
-			path == "/responses" {
+		if strings.HasPrefix(requestPath, "/api/") ||
+			strings.HasPrefix(requestPath, "/v1/") ||
+			strings.HasPrefix(requestPath, "/v1beta/") ||
+			strings.HasPrefix(requestPath, "/antigravity/") ||
+			strings.HasPrefix(requestPath, "/setup/") ||
+			requestPath == "/health" ||
+			requestPath == "/responses" {
 			c.Next()
 			return
 		}
 
-		cleanPath := strings.TrimPrefix(path, "/")
+		cleanPath := strings.TrimPrefix(requestPath, "/")
 		if cleanPath == "" {
 			cleanPath = "index.html"
 		}
 
-		// For index.html or SPA routes, serve with injected settings
-		if cleanPath == "index.html" || !s.fileExists(cleanPath) {
+		// For index.html or SPA routes, serve with injected settings.
+		// Do not fall back to index.html for missing asset/module files, otherwise browsers
+		// receive HTML with a JS MIME expectation and chunk loads break hard.
+		if cleanPath == "index.html" {
 			s.serveIndexHTML(c)
+			return
+		}
+		if !s.fileExists(cleanPath) {
+			if shouldServeSPAIndex(cleanPath) {
+				s.serveIndexHTML(c)
+			} else {
+				serveStaticNotFound(c)
+			}
 			return
 		}
 
@@ -140,7 +151,7 @@ func (s *FrontendServer) serveIndexHTML(c *gin.Context) {
 		content := replaceNoncePlaceholder(cached.Content, nonce)
 
 		c.Header("ETag", cached.ETag)
-		c.Header("Cache-Control", "no-cache") // Must revalidate
+		setHTMLCacheHeaders(c)
 		c.Data(http.StatusOK, "text/html; charset=utf-8", content)
 		c.Abort()
 		return
@@ -153,6 +164,7 @@ func (s *FrontendServer) serveIndexHTML(c *gin.Context) {
 	settings, err := s.settings.GetPublicSettingsForInjection(ctx)
 	if err != nil {
 		// Fallback: serve without injection
+		setHTMLCacheHeaders(c)
 		c.Data(http.StatusOK, "text/html; charset=utf-8", s.baseHTML)
 		c.Abort()
 		return
@@ -161,6 +173,7 @@ func (s *FrontendServer) serveIndexHTML(c *gin.Context) {
 	settingsJSON, err := json.Marshal(settings)
 	if err != nil {
 		// Fallback: serve without injection
+		setHTMLCacheHeaders(c)
 		c.Data(http.StatusOK, "text/html; charset=utf-8", s.baseHTML)
 		c.Abort()
 		return
@@ -176,7 +189,7 @@ func (s *FrontendServer) serveIndexHTML(c *gin.Context) {
 	if cached != nil {
 		c.Header("ETag", cached.ETag)
 	}
-	c.Header("Cache-Control", "no-cache")
+	setHTMLCacheHeaders(c)
 	c.Data(http.StatusOK, "text/html; charset=utf-8", content)
 	c.Abort()
 }
@@ -206,22 +219,27 @@ func ServeEmbeddedFrontend() gin.HandlerFunc {
 	fileServer := http.FileServer(http.FS(distFS))
 
 	return func(c *gin.Context) {
-		path := c.Request.URL.Path
+		requestPath := c.Request.URL.Path
 
-		if strings.HasPrefix(path, "/api/") ||
-			strings.HasPrefix(path, "/v1/") ||
-			strings.HasPrefix(path, "/v1beta/") ||
-			strings.HasPrefix(path, "/antigravity/") ||
-			strings.HasPrefix(path, "/setup/") ||
-			path == "/health" ||
-			path == "/responses" {
+		if strings.HasPrefix(requestPath, "/api/") ||
+			strings.HasPrefix(requestPath, "/v1/") ||
+			strings.HasPrefix(requestPath, "/v1beta/") ||
+			strings.HasPrefix(requestPath, "/antigravity/") ||
+			strings.HasPrefix(requestPath, "/setup/") ||
+			requestPath == "/health" ||
+			requestPath == "/responses" {
 			c.Next()
 			return
 		}
 
-		cleanPath := strings.TrimPrefix(path, "/")
+		cleanPath := strings.TrimPrefix(requestPath, "/")
 		if cleanPath == "" {
 			cleanPath = "index.html"
+		}
+
+		if cleanPath == "index.html" {
+			serveIndexHTML(c, distFS)
+			return
 		}
 
 		if file, err := distFS.Open(cleanPath); err == nil {
@@ -231,7 +249,11 @@ func ServeEmbeddedFrontend() gin.HandlerFunc {
 			return
 		}
 
-		serveIndexHTML(c, distFS)
+		if shouldServeSPAIndex(cleanPath) {
+			serveIndexHTML(c, distFS)
+		} else {
+			serveStaticNotFound(c)
+		}
 	}
 }
 
@@ -251,8 +273,35 @@ func serveIndexHTML(c *gin.Context, fsys fs.FS) {
 		return
 	}
 
+	setHTMLCacheHeaders(c)
 	c.Data(http.StatusOK, "text/html; charset=utf-8", content)
 	c.Abort()
+}
+
+func shouldServeSPAIndex(cleanPath string) bool {
+	if cleanPath == "" || cleanPath == "index.html" {
+		return true
+	}
+
+	if strings.HasPrefix(cleanPath, "assets/") {
+		return false
+	}
+
+	ext := strings.ToLower(path.Ext(cleanPath))
+	return ext == ""
+}
+
+func serveStaticNotFound(c *gin.Context) {
+	c.Header("Cache-Control", "no-store")
+	c.String(http.StatusNotFound, "Not Found")
+	c.Abort()
+}
+
+func setHTMLCacheHeaders(c *gin.Context) {
+	c.Header("Cache-Control", "no-store, no-cache, must-revalidate")
+	c.Header("CDN-Cache-Control", "no-store")
+	c.Header("Pragma", "no-cache")
+	c.Header("Expires", "0")
 }
 
 func HasEmbeddedFrontend() bool {
