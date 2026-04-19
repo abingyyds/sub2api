@@ -1,148 +1,141 @@
 <template>
   <div>
     <AuthLayout>
+      <div class="space-y-6">
+        <!-- Title -->
+        <div class="text-center">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+            {{ t('auth.welcomeBack') }}
+          </h2>
+          <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
+            {{ t('auth.signInToAccount') }}
+          </p>
+        </div>
 
-      <FadeIn :delay="100">
-        <SlideIn direction="up" :delay="200">
-          <div class="space-y-6">
-            <!-- Title -->
-            <div class="text-center">
-              <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-                {{ t('auth.welcomeBack') }}
-              </h2>
-              <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
-                {{ t('auth.signInToAccount') }}
-              </p>
+        <!-- LinuxDo Connect OAuth 登录 -->
+        <LinuxDoOAuthSection v-if="linuxdoOAuthEnabled" :disabled="isLoading" />
+
+        <!-- Login Form -->
+        <form @submit.prevent="handleLogin" class="space-y-5">
+          <!-- Email Input -->
+          <div>
+            <label for="email" class="input-label">
+              {{ t('auth.emailLabel') }}
+            </label>
+            <div class="relative">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                <Icon name="mail" size="md" class="text-gray-400 dark:text-dark-500" />
+              </div>
+              <input
+                id="email"
+                v-model="formData.email"
+                type="email"
+                required
+                autofocus
+                autocomplete="email"
+                :disabled="isLoading"
+                class="input pl-11 transition-all duration-300 focus:ring-2 focus:ring-primary-500"
+                :class="{ 'input-error animate-shake': errors.email }"
+                :placeholder="t('auth.emailPlaceholder')"
+              />
             </div>
+            <p v-if="errors.email" class="input-error-text">
+              {{ errors.email }}
+            </p>
+          </div>
 
-            <!-- LinuxDo Connect OAuth 登录 -->
-            <LinuxDoOAuthSection v-if="linuxdoOAuthEnabled" :disabled="isLoading" />
+          <!-- Password Input -->
+          <div>
+            <label for="password" class="input-label">
+              {{ t('auth.passwordLabel') }}
+            </label>
+            <div class="relative">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                <Icon name="lock" size="md" class="text-gray-400 dark:text-dark-500" />
+              </div>
+              <input
+                id="password"
+                v-model="formData.password"
+                :type="showPassword ? 'text' : 'password'"
+                required
+                autocomplete="current-password"
+                :disabled="isLoading"
+                class="input pl-11 pr-11 transition-all duration-300 focus:ring-2 focus:ring-primary-500"
+                :class="{ 'input-error animate-shake': errors.password }"
+                :placeholder="t('auth.passwordPlaceholder')"
+              />
+              <button
+                type="button"
+                @click="showPassword = !showPassword"
+                class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-dark-300"
+              >
+                <Icon v-if="showPassword" name="eyeOff" size="md" />
+                <Icon v-else name="eye" size="md" />
+              </button>
+            </div>
+            <div class="mt-1 flex items-center justify-between">
+              <p v-if="errors.password" class="input-error-text">
+                {{ errors.password }}
+              </p>
+              <span v-else></span>
+              <router-link
+                v-if="passwordResetEnabled"
+                to="/forgot-password"
+                class="text-sm font-medium text-primary-600 transition-colors hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+              >
+                {{ t('auth.forgotPassword') }}
+              </router-link>
+            </div>
+          </div>
 
-            <!-- Login Form -->
-            <form @submit.prevent="handleLogin" class="space-y-5">
-              <!-- Email Input -->
-              <div>
-                <label for="email" class="input-label">
-                  {{ t('auth.emailLabel') }}
-                </label>
-                <div class="relative">
-                  <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                    <Icon name="mail" size="md" class="text-gray-400 dark:text-dark-500" />
-                  </div>
-                  <input
-                    id="email"
-                    v-model="formData.email"
-                    type="email"
-                    required
-                    autofocus
-                    autocomplete="email"
-                    :disabled="isLoading"
-                    class="input pl-11 transition-all duration-300 focus:ring-2 focus:ring-primary-500"
-                    :class="{ 'input-error animate-shake': errors.email }"
-                    :placeholder="t('auth.emailPlaceholder')"
-                  />
+          <!-- Error Message -->
+          <transition name="fade">
+            <div
+              v-if="errorMessage"
+              class="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800/50 dark:bg-red-900/20"
+            >
+              <div class="flex items-start gap-3">
+                <div class="flex-shrink-0">
+                  <Icon name="exclamationCircle" size="md" class="text-red-500" />
                 </div>
-                <p v-if="errors.email" class="input-error-text">
-                  {{ errors.email }}
+                <p class="text-sm text-red-700 dark:text-red-400">
+                  {{ errorMessage }}
                 </p>
               </div>
+            </div>
+          </transition>
 
-              <!-- Password Input -->
-              <div>
-                <label for="password" class="input-label">
-                  {{ t('auth.passwordLabel') }}
-                </label>
-                <div class="relative">
-                  <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                    <Icon name="lock" size="md" class="text-gray-400 dark:text-dark-500" />
-                  </div>
-                  <input
-                    id="password"
-                    v-model="formData.password"
-                    :type="showPassword ? 'text' : 'password'"
-                    required
-                    autocomplete="current-password"
-                    :disabled="isLoading"
-                    class="input pl-11 pr-11 transition-all duration-300 focus:ring-2 focus:ring-primary-500"
-                    :class="{ 'input-error animate-shake': errors.password }"
-                    :placeholder="t('auth.passwordPlaceholder')"
-                  />
-                  <button
-                    type="button"
-                    @click="showPassword = !showPassword"
-                    class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-dark-300"
-                  >
-                    <Icon v-if="showPassword" name="eyeOff" size="md" />
-                    <Icon v-else name="eye" size="md" />
-                  </button>
-                </div>
-                <div class="mt-1 flex items-center justify-between">
-                  <p v-if="errors.password" class="input-error-text">
-                    {{ errors.password }}
-                  </p>
-                  <span v-else></span>
-                  <router-link
-                    v-if="passwordResetEnabled"
-                    to="/forgot-password"
-                    class="text-sm font-medium text-primary-600 transition-colors hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
-                  >
-                    {{ t('auth.forgotPassword') }}
-                  </router-link>
-                </div>
-              </div>
-
-              <!-- Error Message -->
-              <transition name="fade">
-                <div
-                  v-if="errorMessage"
-                  class="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800/50 dark:bg-red-900/20"
-                >
-                  <div class="flex items-start gap-3">
-                    <div class="flex-shrink-0">
-                      <Icon name="exclamationCircle" size="md" class="text-red-500" />
-                    </div>
-                    <p class="text-sm text-red-700 dark:text-red-400">
-                      {{ errorMessage }}
-                    </p>
-                  </div>
-                </div>
-              </transition>
-
-              <!-- Submit Button -->
-              <MagneticButton>
-                <button
-                  type="submit"
-                  :disabled="isLoading"
-                  class="btn btn-primary w-full transition-all duration-300"
-                >
-                  <svg
-                    v-if="isLoading"
-                    class="-ml-1 mr-2 h-4 w-4 animate-spin text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      class="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      stroke-width="4"
-                    ></circle>
-                    <path
-                      class="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  <Icon v-else name="login" size="md" class="mr-2" />
-                  {{ isLoading ? t('auth.signingIn') : t('auth.signIn') }}
-                </button>
-              </MagneticButton>
-            </form>
-          </div>
-        </SlideIn>
-      </FadeIn>
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            :disabled="isLoading"
+            class="btn btn-primary w-full transition-all duration-300"
+          >
+            <svg
+              v-if="isLoading"
+              class="-ml-1 mr-2 h-4 w-4 animate-spin text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            <Icon v-else name="login" size="md" class="mr-2" />
+            {{ isLoading ? t('auth.signingIn') : t('auth.signIn') }}
+          </button>
+        </form>
+      </div>
 
       <!-- Footer -->
       <template #footer>
@@ -171,24 +164,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { defineAsyncComponent, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { AuthLayout } from '@/components/layout'
-import LinuxDoOAuthSection from '@/components/auth/LinuxDoOAuthSection.vue'
-import TotpLoginModal from '@/components/auth/TotpLoginModal.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import { isTotp2FARequired } from '@/api/auth'
 import type { TotpLoginResponse } from '@/types'
 import { redirectAfterAuth } from '@/utils/postAuthRedirect'
-import {
-  FadeIn,
-  SlideIn,
-  MagneticButton
-} from '@/components/animations'
 
 const { t } = useI18n()
+
+const LinuxDoOAuthSection = defineAsyncComponent(
+  () => import('@/components/auth/LinuxDoOAuthSection.vue')
+)
+const TotpLoginModal = defineAsyncComponent(() => import('@/components/auth/TotpLoginModal.vue'))
+
+type TotpModalRef = {
+  setVerifying: (verifying: boolean) => void
+  setError: (message: string) => void
+}
 
 // ==================== Router & Stores ====================
 
@@ -210,7 +206,7 @@ const passwordResetEnabled = ref<boolean>(false)
 const show2FAModal = ref<boolean>(false)
 const totpTempToken = ref<string>('')
 const totpUserEmailMasked = ref<string>('')
-const totpModalRef = ref<InstanceType<typeof TotpLoginModal> | null>(null)
+const totpModalRef = ref<TotpModalRef | null>(null)
 
 const formData = reactive({
   email: '',

@@ -439,9 +439,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, defineAsyncComponent } from 'vue'
+import { ref, computed, reactive, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
+import { useAuthStore } from '@/stores/auth'
 import { usageAPI, keysAPI } from '@/api'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import TablePageLayout from '@/components/layout/TablePageLayout.vue'
@@ -460,8 +461,28 @@ const GlowCard = defineAsyncComponent(() => import('@/components/animations/Glow
 
 const { t } = useI18n()
 const appStore = useAppStore()
+const authStore = useAuthStore()
+
+const API_KEYS_CACHE_TTL_MS = 5 * 60 * 1000
+const USAGE_STATS_CACHE_TTL_MS = 60 * 1000
+
+let cachedApiKeys: ApiKey[] | null = null
+let cachedApiKeysExpiresAt = 0
+let cachedApiKeysUserKey: string | null = null
+let apiKeysPromise: Promise<ApiKey[]> | null = null
+let apiKeysPromiseUserKey: string | null = null
+
+type UsageStatsCacheEntry = {
+  data: UsageStatsResponse
+  expiresAt: number
+}
+
+const usageStatsCache = new Map<string, UsageStatsCacheEntry>()
+const usageStatsPromises = new Map<string, Promise<UsageStatsResponse>>()
 
 let abortController: AbortController | null = null
+let usageStatsRequestId = 0
+let apiKeysPrefetchTimer: number | null = null
 
 // Tooltip state
 const tooltipVisible = ref(false)
@@ -584,6 +605,79 @@ const formatCacheTokens = (value: number): string => {
   return value.toLocaleString()
 }
 
+const getUsageCacheUserKey = () => String(authStore.user?.id ?? 'anonymous')
+
+const buildUsageStatsCacheKey = (
+  startDateValue: string,
+  endDateValue: string,
+  apiKeyId?: number
+) => `${getUsageCacheUserKey()}:${startDateValue}:${endDateValue}:${apiKeyId ?? 'all'}`
+
+const getCachedApiKeys = async (force = false): Promise<ApiKey[]> => {
+  const now = Date.now()
+  const userKey = getUsageCacheUserKey()
+
+  if (!force && cachedApiKeysUserKey === userKey && cachedApiKeys && cachedApiKeysExpiresAt > now) {
+    return cachedApiKeys
+  }
+
+  if (!force && apiKeysPromise && apiKeysPromiseUserKey === userKey) {
+    return apiKeysPromise
+  }
+
+  apiKeysPromise = keysAPI.list(1, 100)
+    .then((response) => {
+      cachedApiKeys = response.items
+      cachedApiKeysExpiresAt = Date.now() + API_KEYS_CACHE_TTL_MS
+      cachedApiKeysUserKey = userKey
+      return cachedApiKeys
+    })
+    .finally(() => {
+      apiKeysPromise = null
+      apiKeysPromiseUserKey = null
+    })
+
+  apiKeysPromiseUserKey = userKey
+  return apiKeysPromise
+}
+
+const getCachedUsageStats = async (
+  startDateValue: string,
+  endDateValue: string,
+  apiKeyId?: number,
+  force = false
+): Promise<UsageStatsResponse> => {
+  const cacheKey = buildUsageStatsCacheKey(startDateValue, endDateValue, apiKeyId)
+  const now = Date.now()
+  const cachedEntry = usageStatsCache.get(cacheKey)
+
+  if (!force && cachedEntry && cachedEntry.expiresAt > now) {
+    return cachedEntry.data
+  }
+
+  if (!force) {
+    const inFlightPromise = usageStatsPromises.get(cacheKey)
+    if (inFlightPromise) {
+      return inFlightPromise
+    }
+  }
+
+  const requestPromise = usageAPI.getStatsByDateRange(startDateValue, endDateValue, apiKeyId)
+    .then((stats) => {
+      usageStatsCache.set(cacheKey, {
+        data: stats,
+        expiresAt: Date.now() + USAGE_STATS_CACHE_TTL_MS
+      })
+      return stats
+    })
+    .finally(() => {
+      usageStatsPromises.delete(cacheKey)
+    })
+
+  usageStatsPromises.set(cacheKey, requestPromise)
+  return requestPromise
+}
+
 const loadUsageLogs = async () => {
   if (abortController) {
     abortController.abort()
@@ -624,24 +718,31 @@ const loadUsageLogs = async () => {
 
 const loadApiKeys = async () => {
   try {
-    const response = await keysAPI.list(1, 100)
-    apiKeys.value = response.items
+    apiKeys.value = await getCachedApiKeys()
   } catch (error) {
     console.error('Failed to load API keys:', error)
   }
 }
 
 const loadUsageStats = async () => {
+  const requestId = ++usageStatsRequestId
   try {
     const apiKeyId = filters.value.api_key_id ? Number(filters.value.api_key_id) : undefined
-    const stats = await usageAPI.getStatsByDateRange(
-      filters.value.start_date || startDate.value,
-      filters.value.end_date || endDate.value,
+    const selectedStartDate = filters.value.start_date || startDate.value
+    const selectedEndDate = filters.value.end_date || endDate.value
+    const stats = await getCachedUsageStats(
+      selectedStartDate,
+      selectedEndDate,
       apiKeyId
     )
+    if (requestId !== usageStatsRequestId) {
+      return
+    }
     usageStats.value = stats
   } catch (error) {
-    console.error('Failed to load usage stats:', error)
+    if (requestId === usageStatsRequestId) {
+      console.error('Failed to load usage stats:', error)
+    }
   }
 }
 
@@ -820,9 +921,39 @@ const hideTokenTooltip = () => {
   tokenTooltipData.value = null
 }
 
+const scheduleApiKeysLoad = () => {
+  if (
+    cachedApiKeysUserKey === getUsageCacheUserKey()
+    && cachedApiKeys
+    && cachedApiKeysExpiresAt > Date.now()
+  ) {
+    apiKeys.value = cachedApiKeys
+    return
+  }
+
+  const loadKeys = () => {
+    void loadApiKeys()
+  }
+
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(loadKeys, { timeout: 2500 })
+    return
+  }
+
+  apiKeysPrefetchTimer = window.setTimeout(loadKeys, 300)
+}
+
 onMounted(() => {
-  loadApiKeys()
-  loadUsageLogs()
-  loadUsageStats()
+  scheduleApiKeysLoad()
+  void loadUsageLogs()
+  void loadUsageStats()
+})
+
+onUnmounted(() => {
+  abortController?.abort()
+  if (apiKeysPrefetchTimer !== null) {
+    window.clearTimeout(apiKeysPrefetchTimer)
+    apiKeysPrefetchTimer = null
+  }
 })
 </script>

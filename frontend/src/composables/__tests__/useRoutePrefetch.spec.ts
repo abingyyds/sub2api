@@ -6,6 +6,11 @@ import type { RouteLocationNormalized, Router, RouteRecordNormalized } from 'vue
 
 import { useRoutePrefetch, _adminPrefetchMap, _userPrefetchMap } from '../useRoutePrefetch'
 
+type MockNetworkInformation = {
+  saveData?: boolean
+  effectiveType?: string
+}
+
 // Mock 路由对象
 const createMockRoute = (path: string): RouteLocationNormalized => ({
   path,
@@ -45,6 +50,8 @@ const createMockRouter = (): Router => {
 describe('useRoutePrefetch', () => {
   let originalRequestIdleCallback: typeof window.requestIdleCallback
   let originalCancelIdleCallback: typeof window.cancelIdleCallback
+  let originalConnection: MockNetworkInformation | undefined
+  let originalDeviceMemory: number | undefined
   let mockRouter: Router
 
   beforeEach(() => {
@@ -53,6 +60,20 @@ describe('useRoutePrefetch', () => {
     // 保存原始函数
     originalRequestIdleCallback = window.requestIdleCallback
     originalCancelIdleCallback = window.cancelIdleCallback
+    originalConnection = (navigator as Navigator & { connection?: MockNetworkInformation }).connection
+    originalDeviceMemory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory
+
+    Object.defineProperty(navigator, 'connection', {
+      configurable: true,
+      value: {
+        saveData: false,
+        effectiveType: '4g'
+      }
+    })
+    Object.defineProperty(navigator, 'deviceMemory', {
+      configurable: true,
+      value: 8
+    })
 
     // Mock requestIdleCallback 立即执行
     vi.stubGlobal('requestIdleCallback', (cb: IdleRequestCallback) => {
@@ -67,6 +88,14 @@ describe('useRoutePrefetch', () => {
     // 恢复原始函数
     window.requestIdleCallback = originalRequestIdleCallback
     window.cancelIdleCallback = originalCancelIdleCallback
+    Object.defineProperty(navigator, 'connection', {
+      configurable: true,
+      value: originalConnection
+    })
+    Object.defineProperty(navigator, 'deviceMemory', {
+      configurable: true,
+      value: originalDeviceMemory
+    })
   })
 
   describe('_isAdminRoute', () => {
@@ -226,6 +255,32 @@ describe('useRoutePrefetch', () => {
 
       // 不应该抛出异常
       expect(() => triggerPrefetch(route)).not.toThrow()
+    })
+  })
+
+  describe('重页面预热策略', () => {
+    it('网络良好时允许预热一个重页面', () => {
+      const { _getPrefetchConfig } = useRoutePrefetch(mockRouter)
+      const route = createMockRoute('/dashboard')
+      const config = _getPrefetchConfig(route)
+
+      expect(config).toHaveLength(2)
+    })
+
+    it('弱网时跳过重页面预热', () => {
+      Object.defineProperty(navigator, 'connection', {
+        configurable: true,
+        value: {
+          saveData: false,
+          effectiveType: '3g'
+        }
+      })
+
+      const { _getPrefetchConfig } = useRoutePrefetch(mockRouter)
+      const route = createMockRoute('/dashboard')
+      const config = _getPrefetchConfig(route)
+
+      expect(config).toHaveLength(0)
     })
   })
 

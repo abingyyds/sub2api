@@ -1,18 +1,19 @@
 <template>
-  <AppLayout>
-    <FadeIn>
-      <div class="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
 
         <!-- Section 1: 新建 API Key - Group Cards -->
-        <SlideIn direction="up" :delay="100">
-          <div>
+        <section>
             <div class="mb-4">
               <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('keys.newApiKey') }}</h2>
               <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('keys.newApiKeyDesc') }}</p>
             </div>
 
             <!-- Groups by Platform -->
-            <div v-for="platformGroup in groupedByPlatform" :key="platformGroup.platform" class="mb-6">
+            <div
+              v-for="platformGroup in groupedByPlatform"
+              :key="platformGroup.platform"
+              class="keys-platform-group mb-6"
+            >
               <div class="mb-3 flex items-center gap-2">
                 <PlatformIcon :platform="platformGroup.platform" size="md" />
                 <h3 class="font-medium text-gray-800 dark:text-gray-200">
@@ -25,7 +26,7 @@
 
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 <div
-                  v-for="group in platformGroup.groups"
+                  v-for="group in visiblePlatformGroups(platformGroup)"
                   :key="group.id"
                   :class="[
                     'relative flex flex-col rounded-xl border p-4 transition-all duration-200',
@@ -79,21 +80,12 @@
                     <button
                       v-if="!isGroupUnavailable(group)"
                       @click="quickCreateKey(group)"
-                      :disabled="quickCreating === group.id"
                       class="flex items-center gap-1 rounded-lg bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700 transition-colors hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/40"
                     >
-                      <template v-if="quickCreating === group.id">
-                        <svg class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                      </template>
-                      <template v-else>
-                        {{ t('keys.create') }}
-                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                        </svg>
-                      </template>
+                      {{ t('keys.create') }}
+                      <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                      </svg>
                     </button>
                     <span v-else class="text-xs font-medium text-gray-400 dark:text-gray-500">
                       {{ t('keys.unavailable') }}
@@ -126,43 +118,53 @@
                   <span class="mt-1 text-[11px] text-amber-500/70 dark:text-amber-500/50">{{ t('keys.rechargeDesc') }}</span>
                 </router-link>
               </div>
+
+              <div v-if="shouldShowPlatformToggle(platformGroup)" class="mt-3 flex justify-end">
+                <button
+                  class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-primary-300 hover:text-primary-700 dark:border-dark-700 dark:text-dark-300 dark:hover:border-primary-700 dark:hover:text-primary-400"
+                  @click="togglePlatformExpanded(platformGroup.platform)"
+                >
+                  {{ isPlatformExpanded(platformGroup.platform) ? t('common.collapse') : t('common.more') }}
+                  <span
+                    v-if="!isPlatformExpanded(platformGroup.platform)"
+                    class="text-gray-400 dark:text-dark-400"
+                  >
+                    +{{ hiddenPlatformGroupCount(platformGroup) }}
+                  </span>
+                </button>
+              </div>
             </div>
 
             <!-- Empty state when no groups -->
             <div v-if="groupedByPlatform.length === 0 && !loading" class="rounded-xl border border-dashed border-gray-300 p-8 text-center dark:border-dark-600">
               <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('keys.noGroup') }}</p>
             </div>
-          </div>
-        </SlideIn>
+        </section>
 
         <!-- Section 2: Keys 管理 -->
-        <SlideIn direction="up" :delay="200">
-          <div>
+        <section ref="keysManagementSectionRef" class="keys-table-section">
             <div class="mb-4 flex items-center justify-between">
               <div>
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('keys.keysManagement') }}</h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('keys.keysCount', { count: pagination.total }) }}</p>
               </div>
               <div class="flex gap-2">
-                <MagneticButton>
-                  <button
-                    @click="loadApiKeys"
-                    :disabled="loading"
-                    class="btn btn-secondary"
-                    :title="t('common.refresh')"
-                  >
-                    <Icon name="refresh" size="md" :class="loading ? 'animate-spin' : ''" />
-                  </button>
-                </MagneticButton>
-                <MagneticButton>
-                  <button @click="showCreateModal = true" class="btn btn-primary" data-tour="keys-create-btn">
-                    <Icon name="plus" size="md" class="mr-2" />
-                    {{ t('keys.createKey') }}
-                  </button>
-                </MagneticButton>
+                <button
+                  @click="loadApiKeys"
+                  :disabled="loading"
+                  class="btn btn-secondary"
+                  :title="t('common.refresh')"
+                >
+                  <Icon name="refresh" size="md" :class="loading ? 'animate-spin' : ''" />
+                </button>
+                <button @click="openCreateModal()" class="btn btn-primary" data-tour="keys-create-btn">
+                  <Icon name="plus" size="md" class="mr-2" />
+                  {{ t('keys.createKey') }}
+                </button>
               </div>
             </div>
 
+        <template v-if="renderKeysManagementSection">
         <DataTable :columns="columns" :data="apiKeys" :loading="loading">
           <template #cell-key="{ value, row }">
             <div class="flex items-center gap-2">
@@ -243,13 +245,13 @@
               <div class="flex items-center gap-1.5">
                 <span class="text-gray-500 dark:text-gray-400">{{ t('keys.today') }}:</span>
                 <span class="font-medium text-gray-900 dark:text-white">
-                  ${{ (usageStats[row.id]?.today_actual_cost ?? 0).toFixed(4) }}
+                  {{ formatUsageValue(row.id, 'today_actual_cost') }}
                 </span>
               </div>
               <div class="mt-0.5 flex items-center gap-1.5">
                 <span class="text-gray-500 dark:text-gray-400">{{ t('keys.total') }}:</span>
                 <span class="font-medium text-gray-900 dark:text-white">
-                  ${{ (usageStats[row.id]?.total_actual_cost ?? 0).toFixed(4) }}
+                  {{ formatUsageValue(row.id, 'total_actual_cost') }}
                 </span>
               </div>
             </div>
@@ -321,7 +323,7 @@
               :title="t('keys.noKeysYet')"
               :description="t('keys.createFirstKey')"
               :action-text="t('keys.createKey')"
-              @action="showCreateModal = true"
+              @action="openCreateModal()"
             />
           </template>
         </DataTable>
@@ -335,16 +337,29 @@
           @update:pageSize="handlePageSizeChange"
           class="mt-4"
         />
+        </template>
+        <div
+          v-else
+          class="rounded-xl border border-gray-200 bg-white p-5 dark:border-dark-700 dark:bg-dark-900"
+        >
+          <div class="space-y-3">
+            <div class="h-4 w-40 animate-pulse rounded bg-gray-200 dark:bg-dark-700"></div>
+            <div class="h-4 w-full animate-pulse rounded bg-gray-100 dark:bg-dark-800"></div>
+            <div class="h-4 w-11/12 animate-pulse rounded bg-gray-100 dark:bg-dark-800"></div>
+            <div class="h-4 w-10/12 animate-pulse rounded bg-gray-100 dark:bg-dark-800"></div>
           </div>
-        </SlideIn>
+        </div>
+        </section>
 
         <!-- Section 3: FAQ -->
-        <SlideIn direction="up" :delay="300">
-          <div>
+        <section ref="faqSectionRef" class="keys-faq-section">
             <div class="mb-4">
               <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('keys.faq.title') }}</h2>
             </div>
-            <div class="divide-y divide-gray-200 rounded-xl border border-gray-200 bg-white dark:divide-dark-700 dark:border-dark-700 dark:bg-dark-900">
+            <div
+              v-if="renderFaqSection"
+              class="divide-y divide-gray-200 rounded-xl border border-gray-200 bg-white dark:divide-dark-700 dark:border-dark-700 dark:bg-dark-900"
+            >
               <details v-for="(item, idx) in faqItems" :key="idx" class="group">
                 <summary class="flex cursor-pointer items-center justify-between px-5 py-4 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-50 dark:text-white dark:hover:bg-dark-800 [&::-webkit-details-marker]:hidden">
                   {{ item.q }}
@@ -355,224 +370,31 @@
                 <div class="px-5 pb-4 text-sm leading-relaxed text-gray-600 dark:text-gray-400" v-html="item.a"></div>
               </details>
             </div>
-          </div>
-        </SlideIn>
+            <div
+              v-else
+              class="rounded-xl border border-gray-200 bg-white p-5 dark:border-dark-700 dark:bg-dark-900"
+            >
+              <div class="space-y-3">
+                <div class="h-4 w-2/3 animate-pulse rounded bg-gray-200 dark:bg-dark-700"></div>
+                <div class="h-4 w-5/6 animate-pulse rounded bg-gray-100 dark:bg-dark-800"></div>
+                <div class="h-4 w-3/4 animate-pulse rounded bg-gray-100 dark:bg-dark-800"></div>
+              </div>
+            </div>
+        </section>
 
-      </div>
-    </FadeIn>
-
-    <!-- Create/Edit Modal -->
-    <BaseDialog
+    <KeyEditorDialog
+      v-if="showCreateModal || showEditModal"
       :show="showCreateModal || showEditModal"
-      :title="showEditModal ? t('keys.editKey') : t('keys.createKey')"
-      width="normal"
+      :groups="groups"
+      :selected-key="showEditModal ? selectedKey : null"
+      :initial-group-id="createModalGroupId"
       @close="closeModals"
-    >
-      <form id="key-form" @submit.prevent="handleSubmit" class="space-y-5">
-        <!-- Pre-selected Group Info (when creating from group card) -->
-        <div v-if="!showEditModal && preSelectedGroup" class="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-dark-600 dark:bg-dark-800/50">
-          <p class="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('keys.groupInfo') }}</p>
-          <div class="flex items-center gap-3">
-            <GroupBadge
-              :name="preSelectedGroup.name"
-              :platform="preSelectedGroup.platform"
-              :subscription-type="preSelectedGroup.subscription_type"
-              :rate-multiplier="preSelectedGroup.rate_multiplier"
-            />
-          </div>
-          <p v-if="preSelectedGroup.description" class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ preSelectedGroup.description }}</p>
-        </div>
-
-        <div>
-          <label class="input-label">{{ t('keys.nameLabel') }}</label>
-          <input
-            v-model="formData.name"
-            type="text"
-            class="input"
-            :placeholder="t('keys.namePlaceholder')"
-            data-tour="key-form-name"
-          />
-        </div>
-
-        <div>
-          <label class="input-label">{{ t('keys.groupLabel') }}</label>
-          <Select
-            v-model="formData.group_id"
-            :options="groupOptions"
-            :placeholder="t('keys.selectGroup')"
-            data-tour="key-form-group"
-          >
-            <template #selected="{ option }">
-              <GroupBadge
-                v-if="option"
-                :name="(option as unknown as GroupOption).label"
-                :platform="(option as unknown as GroupOption).platform"
-                :subscription-type="(option as unknown as GroupOption).subscriptionType"
-                :rate-multiplier="(option as unknown as GroupOption).rate"
-              />
-              <span v-else class="text-gray-400">{{ t('keys.selectGroup') }}</span>
-            </template>
-            <template #option="{ option, selected }">
-              <GroupOptionItem
-                :name="(option as unknown as GroupOption).label"
-                :platform="(option as unknown as GroupOption).platform"
-                :subscription-type="(option as unknown as GroupOption).subscriptionType"
-                :rate-multiplier="(option as unknown as GroupOption).rate"
-                :description="(option as unknown as GroupOption).description"
-                :selected="selected"
-              />
-            </template>
-          </Select>
-        </div>
-
-        <!-- Custom Key Section (only for create) -->
-        <div v-if="!showEditModal" class="space-y-3">
-          <div class="flex items-center justify-between">
-            <label class="input-label mb-0">{{ t('keys.customKeyLabel') }}</label>
-            <button
-              type="button"
-              @click="formData.use_custom_key = !formData.use_custom_key"
-              :class="[
-                'relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
-                formData.use_custom_key ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
-              ]"
-            >
-              <span
-                :class="[
-                  'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                  formData.use_custom_key ? 'translate-x-4' : 'translate-x-0'
-                ]"
-              />
-            </button>
-          </div>
-          <div v-if="formData.use_custom_key">
-            <input
-              v-model="formData.custom_key"
-              type="text"
-              class="input font-mono"
-              :placeholder="t('keys.customKeyPlaceholder')"
-              :class="{ 'border-red-500 dark:border-red-500': customKeyError }"
-            />
-            <p v-if="customKeyError" class="mt-1 text-sm text-red-500">{{ customKeyError }}</p>
-            <p v-else class="input-hint">{{ t('keys.customKeyHint') }}</p>
-          </div>
-        </div>
-
-        <div v-if="showEditModal">
-          <label class="input-label">{{ t('keys.statusLabel') }}</label>
-          <Select
-            v-model="formData.status"
-            :options="statusOptions"
-            :placeholder="t('keys.selectStatus')"
-          />
-        </div>
-
-        <!-- Usage Limit Section -->
-        <div>
-          <label class="input-label">{{ t('keys.usageLimitLabel') }}</label>
-          <input
-            v-model.number="formData.usage_limit"
-            type="number"
-            min="0"
-            step="0.01"
-            class="input"
-            :placeholder="t('keys.usageLimitPlaceholder')"
-          />
-          <p class="input-hint">{{ t('keys.usageLimitHint') }}</p>
-        </div>
-
-        <!-- IP Restriction Section -->
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <label class="input-label mb-0">{{ t('keys.ipRestriction') }}</label>
-            <button
-              type="button"
-              @click="formData.enable_ip_restriction = !formData.enable_ip_restriction"
-              :class="[
-                'relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
-                formData.enable_ip_restriction ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
-              ]"
-            >
-              <span
-                :class="[
-                  'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-                  formData.enable_ip_restriction ? 'translate-x-4' : 'translate-x-0'
-                ]"
-              />
-            </button>
-          </div>
-
-          <div v-if="formData.enable_ip_restriction" class="space-y-4 pt-2">
-            <div>
-              <label class="input-label">{{ t('keys.ipWhitelist') }}</label>
-              <textarea
-                v-model="formData.ip_whitelist"
-                rows="3"
-                class="input font-mono text-sm"
-                :placeholder="t('keys.ipWhitelistPlaceholder')"
-              />
-              <p class="input-hint">{{ t('keys.ipWhitelistHint') }}</p>
-            </div>
-
-            <div>
-              <label class="input-label">{{ t('keys.ipBlacklist') }}</label>
-              <textarea
-                v-model="formData.ip_blacklist"
-                rows="3"
-                class="input font-mono text-sm"
-                :placeholder="t('keys.ipBlacklistPlaceholder')"
-              />
-              <p class="input-hint">{{ t('keys.ipBlacklistHint') }}</p>
-            </div>
-          </div>
-        </div>
-      </form>
-      <template #footer>
-        <div class="flex justify-end gap-3">
-          <button @click="closeModals" type="button" class="btn btn-secondary">
-            {{ t('common.cancel') }}
-          </button>
-          <button
-            form="key-form"
-            type="submit"
-            :disabled="submitting"
-            class="btn btn-primary"
-            data-tour="key-form-submit"
-          >
-            <svg
-              v-if="submitting"
-              class="-ml-1 mr-2 h-4 w-4 animate-spin"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="4"
-              ></circle>
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            {{
-              submitting
-                ? t('keys.saving')
-                : showEditModal
-                  ? t('common.update')
-                  : t('common.create')
-            }}
-          </button>
-        </div>
-      </template>
-    </BaseDialog>
+      @saved="handleKeySaved"
+    />
 
     <!-- Delete Confirmation Dialog -->
     <ConfirmDialog
+      v-if="showDeleteDialog"
       :show="showDeleteDialog"
       :title="t('keys.deleteKey')"
       :message="t('keys.deleteConfirmMessage', { name: selectedKey?.name })"
@@ -585,15 +407,17 @@
 
     <!-- Use Key Modal -->
     <UseKeyModal
+      v-if="showUseKeyModal && selectedKey"
       :show="showUseKeyModal"
-      :api-key="selectedKey?.key || ''"
+      :api-key="selectedKey.key"
       :base-url="publicSettings?.api_base_url || ''"
-      :platform="selectedKey?.group?.platform || null"
+      :platform="selectedKey.group?.platform || null"
       @close="closeUseKeyModal"
     />
 
     <!-- CCS Client Selection Dialog for Antigravity -->
     <BaseDialog
+      v-if="showCcsClientSelect"
       :show="showCcsClientSelect"
       :title="t('keys.ccsClientSelect.title')"
       width="narrow"
@@ -677,40 +501,37 @@
         </div>
       </div>
     </Teleport>
-  </AppLayout>
+  </div>
 </template>
 
 <script setup lang="ts">
-	import { ref, computed, onMounted, onUnmounted, defineAsyncComponent, type ComponentPublicInstance } from 'vue'
+	import { ref, computed, onMounted, onUnmounted, defineAsyncComponent, nextTick, type ComponentPublicInstance } from 'vue'
 	import { useI18n } from 'vue-i18n'
 	import { useAppStore } from '@/stores/app'
-	import { useOnboardingStore } from '@/stores/onboarding'
 	import { useClipboard } from '@/composables/useClipboard'
 const { t } = useI18n()
-import { keysAPI, authAPI, usageAPI, userGroupsAPI } from '@/api'
-import AppLayout from '@/components/layout/AppLayout.vue'
-	import DataTable from '@/components/common/DataTable.vue'
-	import Pagination from '@/components/common/Pagination.vue'
-	import EmptyState from '@/components/common/EmptyState.vue'
-	import Select from '@/components/common/Select.vue'
+import { keysAPI, usageAPI, userGroupsAPI } from '@/api'
 	import Icon from '@/components/icons/Icon.vue'
 	import GroupBadge from '@/components/common/GroupBadge.vue'
 	import GroupOptionItem from '@/components/common/GroupOptionItem.vue'
 	import PlatformIcon from '@/components/common/PlatformIcon.vue'
-	import { FadeIn, SlideIn, MagneticButton } from '@/components/animations'
 
 	// 弹窗组件异步加载，用户交互时才加载
+	const DataTable = defineAsyncComponent(() => import('@/components/common/DataTable.vue'))
+	const Pagination = defineAsyncComponent(() => import('@/components/common/Pagination.vue'))
+	const EmptyState = defineAsyncComponent(() => import('@/components/common/EmptyState.vue'))
 	const BaseDialog = defineAsyncComponent(() => import('@/components/common/BaseDialog.vue'))
 	const ConfirmDialog = defineAsyncComponent(() => import('@/components/common/ConfirmDialog.vue'))
+	const KeyEditorDialog = defineAsyncComponent(() => import('@/components/keys/KeyEditorDialog.vue'))
 	const UseKeyModal = defineAsyncComponent(() => import('@/components/keys/UseKeyModal.vue'))
 
-	import type { ApiKey, Group, PublicSettings, SubscriptionType, GroupPlatform } from '@/types'
+	import type { ApiKey, Group, GroupPlatform, SelectOption, SubscriptionType } from '@/types'
 import type { Column } from '@/components/common/types'
 import type { BatchApiKeyUsageStats } from '@/api/usage'
 import { formatDateTime } from '@/utils/format'
 
-interface GroupOption {
-  value: number
+interface GroupOption extends SelectOption {
+  value: number | null
   label: string
   description: string | null
   rate: number
@@ -718,8 +539,92 @@ interface GroupOption {
   platform: GroupPlatform
 }
 
+const AVAILABLE_GROUPS_CACHE_TTL_MS = 5 * 60 * 1000
+const AVAILABLE_GROUPS_SESSION_CACHE_KEY = 'sub2api:available-groups'
+const INITIAL_VISIBLE_GROUPS_PER_PLATFORM = 6
+
+let cachedAvailableGroups: Group[] | null = null
+let cachedAvailableGroupsExpiresAt = 0
+let availableGroupsPromise: Promise<Group[]> | null = null
+
+interface AvailableGroupsCachePayload {
+  expiresAt: number
+  groups: Group[]
+}
+
+const readAvailableGroupsSessionCache = (): AvailableGroupsCachePayload | null => {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  try {
+    const raw = window.sessionStorage.getItem(AVAILABLE_GROUPS_SESSION_CACHE_KEY)
+    if (!raw) {
+      return null
+    }
+
+    const payload = JSON.parse(raw) as AvailableGroupsCachePayload
+    if (!Array.isArray(payload.groups) || payload.expiresAt <= Date.now()) {
+      window.sessionStorage.removeItem(AVAILABLE_GROUPS_SESSION_CACHE_KEY)
+      return null
+    }
+
+    return payload
+  } catch {
+    return null
+  }
+}
+
+const writeAvailableGroupsSessionCache = (groups: Group[], expiresAt: number) => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    window.sessionStorage.setItem(
+      AVAILABLE_GROUPS_SESSION_CACHE_KEY,
+      JSON.stringify({ groups, expiresAt })
+    )
+  } catch {
+    // Ignore storage quota errors and keep the in-memory cache.
+  }
+}
+
+async function getCachedAvailableGroups(force = false): Promise<Group[]> {
+  const now = Date.now()
+
+  if (!force && cachedAvailableGroups && cachedAvailableGroupsExpiresAt > now) {
+    return cachedAvailableGroups
+  }
+
+  if (!force && !cachedAvailableGroups) {
+    const cachedPayload = readAvailableGroupsSessionCache()
+    if (cachedPayload) {
+      cachedAvailableGroups = cachedPayload.groups
+      cachedAvailableGroupsExpiresAt = cachedPayload.expiresAt
+      return cachedAvailableGroups
+    }
+  }
+
+  if (!force && availableGroupsPromise) {
+    return availableGroupsPromise
+  }
+
+  availableGroupsPromise = userGroupsAPI.getAvailable()
+    .then((data) => {
+      cachedAvailableGroups = data
+      cachedAvailableGroupsExpiresAt = Date.now() + AVAILABLE_GROUPS_CACHE_TTL_MS
+      writeAvailableGroupsSessionCache(data, cachedAvailableGroupsExpiresAt)
+      return data
+    })
+    .finally(() => {
+      availableGroupsPromise = null
+    })
+
+  return availableGroupsPromise
+}
+
 const appStore = useAppStore()
-const onboardingStore = useOnboardingStore()
 const { copyToClipboard: clipboardCopy } = useClipboard()
 
 const columns = computed<Column[]>(() => [
@@ -735,7 +640,6 @@ const columns = computed<Column[]>(() => [
 const apiKeys = ref<ApiKey[]>([])
 const groups = ref<Group[]>([])
 const loading = ref(false)
-const submitting = ref(false)
 const usageStats = ref<Record<string, BatchApiKeyUsageStats>>({})
 
 const pagination = ref({
@@ -750,15 +654,46 @@ const showEditModal = ref(false)
 const showDeleteDialog = ref(false)
 const showUseKeyModal = ref(false)
 const showCcsClientSelect = ref(false)
+const createModalGroupId = ref<number | null>(null)
+const renderKeysManagementSection = ref(false)
+const renderFaqSection = ref(false)
+const expandedPlatformSections = ref<GroupPlatform[]>([])
 const pendingCcsRow = ref<ApiKey | null>(null)
 const selectedKey = ref<ApiKey | null>(null)
 const copiedKeyId = ref<number | null>(null)
 const groupSelectorKeyId = ref<number | null>(null)
-const publicSettings = ref<PublicSettings | null>(null)
+const publicSettings = computed(() => appStore.cachedPublicSettings)
 const dropdownRef = ref<HTMLElement | null>(null)
 const dropdownPosition = ref<{ top: number; left: number } | null>(null)
 const groupButtonRefs = ref<Map<number, HTMLElement>>(new Map())
+const keysManagementSectionRef = ref<HTMLElement | null>(null)
+const faqSectionRef = ref<HTMLElement | null>(null)
 let abortController: AbortController | null = null
+let loadRequestId = 0
+let usageStatsIdleHandle: number | ReturnType<typeof setTimeout> | null = null
+let keysManagementObserver: IntersectionObserver | null = null
+let faqObserver: IntersectionObserver | null = null
+
+const scheduleIdleCallback = (
+  callback: IdleRequestCallback,
+  options?: IdleRequestOptions
+): number | ReturnType<typeof setTimeout> => {
+  if (typeof window.requestIdleCallback === 'function') {
+    return window.requestIdleCallback(callback, options)
+  }
+
+  return window.setTimeout(() => {
+    callback({ didTimeout: false, timeRemaining: () => 50 })
+  }, 120)
+}
+
+const cancelIdleCallbackHandle = (handle: number | ReturnType<typeof setTimeout>) => {
+  if (typeof window.cancelIdleCallback === 'function' && typeof handle === 'number') {
+    window.cancelIdleCallback(handle)
+  } else {
+    clearTimeout(handle)
+  }
+}
 
 // Get the currently selected key for group change
 const selectedKeyForGroup = computed(() => {
@@ -774,41 +709,8 @@ const setGroupButtonRef = (keyId: number, el: Element | ComponentPublicInstance 
   }
 }
 
-const formData = ref({
-  name: '',
-  group_id: null as number | null,
-  status: 'active' as 'active' | 'inactive',
-  use_custom_key: false,
-  custom_key: '',
-  enable_ip_restriction: false,
-  ip_whitelist: '',
-  ip_blacklist: '',
-  usage_limit: null as number | null
-})
-
-// 自定义Key验证
-const customKeyError = computed(() => {
-  if (!formData.value.use_custom_key || !formData.value.custom_key) {
-    return ''
-  }
-  const key = formData.value.custom_key
-  if (key.length < 16) {
-    return t('keys.customKeyTooShort')
-  }
-  // 检查字符：只允许字母、数字、下划线、连字符
-  if (!/^[a-zA-Z0-9_-]+$/.test(key)) {
-    return t('keys.customKeyInvalidChars')
-  }
-  return ''
-})
-
-const statusOptions = computed(() => [
-  { value: 'active', label: t('common.active') },
-  { value: 'inactive', label: t('common.inactive') }
-])
-
 // Convert groups to Select options format with rate multiplier and subscription type
-const groupOptions = computed(() =>
+const groupOptions = computed<GroupOption[]>(() =>
   groups.value.map((group) => ({
     value: group.id,
     label: group.name,
@@ -821,13 +723,6 @@ const groupOptions = computed(() =>
 
 // Group cards organized by platform
 const platformOrder: GroupPlatform[] = ['anthropic', 'openai', 'gemini', 'antigravity', 'multi']
-const quickCreating = ref<number | null>(null)
-
-// Pre-selected group when creating from group card
-const preSelectedGroup = computed(() => {
-  if (showEditModal.value || !formData.value.group_id) return null
-  return groups.value.find(g => g.id === formData.value.group_id) || null
-})
 
 interface PlatformGrouping {
   platform: GroupPlatform
@@ -847,6 +742,35 @@ const groupedByPlatform = computed<PlatformGrouping[]>(() => {
     .filter(p => platformMap.has(p))
     .map(p => ({ platform: p, groups: platformMap.get(p)! }))
 })
+
+const isPlatformExpanded = (platform: GroupPlatform) => {
+  return expandedPlatformSections.value.includes(platform)
+}
+
+const togglePlatformExpanded = (platform: GroupPlatform) => {
+  expandedPlatformSections.value = isPlatformExpanded(platform)
+    ? expandedPlatformSections.value.filter((item) => item !== platform)
+    : [...expandedPlatformSections.value, platform]
+}
+
+const visiblePlatformGroups = (platformGroup: PlatformGrouping) => {
+  if (
+    isPlatformExpanded(platformGroup.platform) ||
+    platformGroup.groups.length <= INITIAL_VISIBLE_GROUPS_PER_PLATFORM
+  ) {
+    return platformGroup.groups
+  }
+
+  return platformGroup.groups.slice(0, INITIAL_VISIBLE_GROUPS_PER_PLATFORM)
+}
+
+const hiddenPlatformGroupCount = (platformGroup: PlatformGrouping) => {
+  return Math.max(platformGroup.groups.length - INITIAL_VISIBLE_GROUPS_PER_PLATFORM, 0)
+}
+
+const shouldShowPlatformToggle = (platformGroup: PlatformGrouping) => {
+  return platformGroup.groups.length > INITIAL_VISIBLE_GROUPS_PER_PLATFORM
+}
 
 // Special tags that get highlighted styling (推荐, 暂不可用, 备用)
 const specialTagKeywords: Record<string, string> = {
@@ -875,19 +799,15 @@ const isGroupUnavailable = (group: Group) => {
   return tags.some(tag => tag === '暂不可用' || tag === 'Unavailable')
 }
 
-const quickCreateKey = (group: Group) => {
-  formData.value = {
-    name: '',
-    group_id: group.id,
-    status: 'active',
-    use_custom_key: false,
-    custom_key: '',
-    enable_ip_restriction: false,
-    ip_whitelist: '',
-    ip_blacklist: '',
-    usage_limit: null
-  }
+const openCreateModal = (groupId: number | null = null) => {
+  createModalGroupId.value = groupId
+  selectedKey.value = null
+  showEditModal.value = false
   showCreateModal.value = true
+}
+
+const quickCreateKey = (group: Group) => {
+  openCreateModal(group.id)
 }
 
 // FAQ items
@@ -914,10 +834,48 @@ const copyToClipboard = async (text: string, keyId: number) => {
   }
 }
 
+const formatUsageValue = (
+  keyId: number,
+  field: keyof Pick<BatchApiKeyUsageStats, 'today_actual_cost' | 'total_actual_cost'>
+) => {
+  const stats = usageStats.value[keyId]
+  if (!stats) {
+    return '...'
+  }
+
+  return `$${stats[field].toFixed(4)}`
+}
+
 const isAbortError = (error: unknown) => {
   if (!error || typeof error !== 'object') return false
   const { name, code } = error as { name?: string; code?: string }
   return name === 'AbortError' || code === 'ERR_CANCELED'
+}
+
+const loadUsageStatsForKeys = async (
+  keyList: ApiKey[],
+  signal: AbortSignal,
+  requestId: number
+) => {
+  if (keyList.length === 0) {
+    if (requestId === loadRequestId) {
+      usageStats.value = {}
+    }
+    return
+  }
+
+  try {
+    const usageResponse = await usageAPI.getDashboardApiKeysUsage(
+      keyList.map((key) => key.id),
+      { signal }
+    )
+    if (signal.aborted || requestId !== loadRequestId) return
+    usageStats.value = usageResponse.stats
+  } catch (error) {
+    if (!isAbortError(error)) {
+      console.error('Failed to load usage stats:', error)
+    }
+  }
 }
 
 const loadApiKeys = async () => {
@@ -925,29 +883,26 @@ const loadApiKeys = async () => {
   const controller = new AbortController()
   abortController = controller
   const { signal } = controller
+  const requestId = ++loadRequestId
   loading.value = true
+  usageStats.value = {}
   try {
     const response = await keysAPI.list(pagination.value.page, pagination.value.page_size, {
       signal
     })
-    if (signal.aborted) return
+    if (signal.aborted || requestId !== loadRequestId) return
     apiKeys.value = response.items
     pagination.value.total = response.total
     pagination.value.pages = response.pages
 
-    // Load usage stats for all API keys in the list
-    if (response.items.length > 0) {
-      const keyIds = response.items.map((k) => k.id)
-      try {
-        const usageResponse = await usageAPI.getDashboardApiKeysUsage(keyIds, { signal })
-        if (signal.aborted) return
-        usageStats.value = usageResponse.stats
-      } catch (e) {
-        if (!isAbortError(e)) {
-          console.error('Failed to load usage stats:', e)
-        }
-      }
+    if (usageStatsIdleHandle !== null) {
+      cancelIdleCallbackHandle(usageStatsIdleHandle)
     }
+
+    usageStatsIdleHandle = scheduleIdleCallback(() => {
+      usageStatsIdleHandle = null
+      void loadUsageStatsForKeys(response.items, signal, requestId)
+    }, { timeout: 800 })
   } catch (error) {
     if (isAbortError(error)) {
       return
@@ -962,7 +917,7 @@ const loadApiKeys = async () => {
 
 const loadGroups = async () => {
   try {
-    groups.value = await userGroupsAPI.getAvailable()
+    groups.value = await getCachedAvailableGroups()
   } catch (error) {
     console.error('Failed to load groups:', error)
   }
@@ -970,7 +925,7 @@ const loadGroups = async () => {
 
 const loadPublicSettings = async () => {
   try {
-    publicSettings.value = await authAPI.getPublicSettings()
+    await appStore.fetchPublicSettings()
   } catch (error) {
     console.error('Failed to load public settings:', error)
   }
@@ -979,6 +934,9 @@ const loadPublicSettings = async () => {
 const openUseKeyModal = (key: ApiKey) => {
   selectedKey.value = key
   showUseKeyModal.value = true
+  if (!publicSettings.value) {
+    void loadPublicSettings()
+  }
 }
 
 const closeUseKeyModal = () => {
@@ -999,18 +957,8 @@ const handlePageSizeChange = (pageSize: number) => {
 
 const editKey = (key: ApiKey) => {
   selectedKey.value = key
-  const hasIPRestriction = (key.ip_whitelist?.length > 0) || (key.ip_blacklist?.length > 0)
-  formData.value = {
-    name: key.name,
-    group_id: key.group_id,
-    status: key.status,
-    use_custom_key: false,
-    custom_key: '',
-    enable_ip_restriction: hasIPRestriction,
-    ip_whitelist: (key.ip_whitelist || []).join('\n'),
-    ip_blacklist: (key.ip_blacklist || []).join('\n'),
-    usage_limit: key.usage_limit
-  }
+  createModalGroupId.value = null
+  showCreateModal.value = false
   showEditModal.value = true
 }
 
@@ -1072,70 +1020,6 @@ const confirmDelete = (key: ApiKey) => {
   showDeleteDialog.value = true
 }
 
-const handleSubmit = async () => {
-  // Validate group_id is required
-  if (formData.value.group_id === null) {
-    appStore.showError(t('keys.groupRequired'))
-    return
-  }
-
-  // Validate custom key if enabled
-  if (!showEditModal.value && formData.value.use_custom_key) {
-    if (!formData.value.custom_key) {
-      appStore.showError(t('keys.customKeyRequired'))
-      return
-    }
-    if (customKeyError.value) {
-      appStore.showError(customKeyError.value)
-      return
-    }
-  }
-
-  // Parse IP lists only if IP restriction is enabled
-  const parseIPList = (text: string): string[] =>
-    text.split('\n').map(ip => ip.trim()).filter(ip => ip.length > 0)
-  const ipWhitelist = formData.value.enable_ip_restriction ? parseIPList(formData.value.ip_whitelist) : []
-  const ipBlacklist = formData.value.enable_ip_restriction ? parseIPList(formData.value.ip_blacklist) : []
-
-  submitting.value = true
-  try {
-    if (showEditModal.value && selectedKey.value) {
-      await keysAPI.update(selectedKey.value.id, {
-        name: formData.value.name,
-        group_id: formData.value.group_id,
-        status: formData.value.status,
-        ip_whitelist: ipWhitelist,
-        ip_blacklist: ipBlacklist,
-        usage_limit: formData.value.usage_limit
-      })
-      appStore.showSuccess(t('keys.keyUpdatedSuccess'))
-    } else {
-      const customKey = formData.value.use_custom_key ? formData.value.custom_key : undefined
-      await keysAPI.create(
-        formData.value.name,
-        formData.value.group_id,
-        customKey,
-        ipWhitelist,
-        ipBlacklist,
-        formData.value.usage_limit
-      )
-      appStore.showSuccess(t('keys.keyCreatedSuccess'))
-      // Only advance tour if active, on submit step, and creation succeeded
-      if (onboardingStore.isCurrentStep('[data-tour="key-form-submit"]')) {
-        onboardingStore.nextStep(500)
-      }
-    }
-    closeModals()
-    loadApiKeys()
-  } catch (error: any) {
-    const errorMsg = error.response?.data?.detail || t('keys.failedToSave')
-    appStore.showError(errorMsg)
-    // Don't advance tour on error
-  } finally {
-    submitting.value = false
-  }
-}
-
 /**
  * 处理删除 API Key 的操作
  * 优化：错误处理改进，优先显示后端返回的具体错误消息（如权限不足等），
@@ -1159,18 +1043,12 @@ const handleDelete = async () => {
 const closeModals = () => {
   showCreateModal.value = false
   showEditModal.value = false
+  createModalGroupId.value = null
   selectedKey.value = null
-  formData.value = {
-    name: '',
-    group_id: null,
-    status: 'active',
-    use_custom_key: false,
-    custom_key: '',
-    enable_ip_restriction: false,
-    ip_whitelist: '',
-    ip_blacklist: '',
-    usage_limit: null
-  }
+}
+
+const handleKeySaved = () => {
+  void loadApiKeys()
 }
 
 const importToCcswitch = (row: ApiKey) => {
@@ -1271,14 +1149,86 @@ const closeCcsClientSelect = () => {
   pendingCcsRow.value = null
 }
 
-onMounted(() => {
+const observeDeferredSection = (
+  target: HTMLElement | null,
+  onVisible: () => void,
+  rootMargin: string
+) => {
+  if (!target) {
+    onVisible()
+    return null
+  }
+
+  if (typeof window === 'undefined' || typeof window.IntersectionObserver !== 'function') {
+    onVisible()
+    return null
+  }
+
+  const observer = new window.IntersectionObserver(
+    (entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        onVisible()
+        observer.disconnect()
+      }
+    },
+    { rootMargin }
+  )
+
+  observer.observe(target)
+  return observer
+}
+
+onMounted(async () => {
   loadApiKeys()
   loadGroups()
-  loadPublicSettings()
   document.addEventListener('click', closeGroupSelector)
+
+  await nextTick()
+
+  keysManagementObserver = observeDeferredSection(
+    keysManagementSectionRef.value,
+    () => {
+      renderKeysManagementSection.value = true
+    },
+    '320px 0px'
+  )
+
+  faqObserver = observeDeferredSection(
+    faqSectionRef.value,
+    () => {
+      renderFaqSection.value = true
+    },
+    '240px 0px'
+  )
 })
 
 onUnmounted(() => {
+  if (usageStatsIdleHandle !== null) {
+    cancelIdleCallbackHandle(usageStatsIdleHandle)
+  }
+  abortController?.abort()
+  keysManagementObserver?.disconnect()
+  faqObserver?.disconnect()
   document.removeEventListener('click', closeGroupSelector)
 })
 </script>
+
+<style scoped>
+.keys-platform-group,
+.keys-table-section,
+.keys-faq-section {
+  content-visibility: auto;
+}
+
+.keys-platform-group {
+  contain-intrinsic-size: 420px;
+}
+
+.keys-table-section {
+  contain-intrinsic-size: 720px;
+}
+
+.keys-faq-section {
+  contain-intrinsic-size: 360px;
+}
+</style>

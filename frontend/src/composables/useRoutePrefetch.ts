@@ -52,7 +52,8 @@ const HEAVY_ROUTE_PREFIXES = [
   '/admin/orders'
 ]
 
-const MAX_PREFETCH_TARGETS = 1
+const MAX_LIGHT_PREFETCH_TARGETS = 1
+const MAX_HEAVY_PREFETCH_TARGETS = 2
 
 /**
  * requestIdleCallback 的返回类型
@@ -111,6 +112,33 @@ const isPrefetchAllowedOnNetwork = (): boolean => {
   return !['slow-2g', '2g', '3g'].includes(connection.effectiveType || '')
 }
 
+const isAggressivePrefetchAllowed = (): boolean => {
+  if (typeof navigator === 'undefined') {
+    return false
+  }
+
+  const connection = (
+    navigator as Navigator & {
+      connection?: {
+        saveData?: boolean
+        effectiveType?: string
+      }
+      deviceMemory?: number
+    }
+  )
+
+  if (connection.connection?.saveData) {
+    return false
+  }
+
+  const effectiveType = connection.connection?.effectiveType || ''
+  if (['slow-2g', '2g', '3g'].includes(effectiveType)) {
+    return false
+  }
+
+  return connection.deviceMemory === undefined || connection.deviceMemory >= 4
+}
+
 /**
  * 路由预加载组合式函数
  *
@@ -122,6 +150,7 @@ export function useRoutePrefetch(router?: Router) {
 
   // 已预加载的路由集合
   const prefetchedRoutes = ref<Set<string>>(new Set())
+  const prefetchedTargets = ref<Set<string>>(new Set())
 
   /**
    * 从路由配置中获取组件的 import 函数
@@ -146,13 +175,24 @@ export function useRoutePrefetch(router?: Router) {
    * 获取当前路由应该预加载的路由路径列表
    */
   const getPrefetchPaths = (route: RouteLocationNormalized): string[] => {
-    if (!isPrefetchAllowedOnNetwork() || isHeavyRoute(route.path)) {
+    if (!isPrefetchAllowedOnNetwork()) {
       return []
     }
 
-    return (PREFETCH_ADJACENCY[route.path] || [])
+    const configuredPaths = PREFETCH_ADJACENCY[route.path] || []
+    const lightPaths = configuredPaths
       .filter((path) => !isHeavyRoute(path))
-      .slice(0, MAX_PREFETCH_TARGETS)
+      .slice(0, MAX_LIGHT_PREFETCH_TARGETS)
+
+    if (!isAggressivePrefetchAllowed()) {
+      return lightPaths
+    }
+
+    const heavyPaths = configuredPaths
+      .filter((path) => isHeavyRoute(path) && !lightPaths.includes(path))
+      .slice(0, MAX_HEAVY_PREFETCH_TARGETS)
+
+    return [...lightPaths, ...heavyPaths]
   }
 
   /**
@@ -198,9 +238,13 @@ export function useRoutePrefetch(router?: Router) {
         // 获取需要预加载的组件 import 函数
         const importFns: ComponentImportFn[] = []
         for (const path of prefetchPaths) {
+          if (prefetchedTargets.value.has(path)) {
+            continue
+          }
           const importFn = getComponentImporter(path)
           if (importFn) {
             importFns.push(importFn)
+            prefetchedTargets.value.add(path)
           }
         }
 
@@ -208,6 +252,8 @@ export function useRoutePrefetch(router?: Router) {
           Promise.all(importFns.map(prefetchComponent)).then(() => {
             prefetchedRoutes.value.add(routePath)
           })
+        } else {
+          prefetchedRoutes.value.add(routePath)
         }
       },
       { timeout: 5000 }
@@ -220,6 +266,7 @@ export function useRoutePrefetch(router?: Router) {
   const resetPrefetchState = (): void => {
     cancelPendingPrefetch()
     prefetchedRoutes.value.clear()
+    prefetchedTargets.value.clear()
   }
 
   /**
