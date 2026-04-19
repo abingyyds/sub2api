@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { buildChunkReloadUrl, CHUNK_RELOAD_QUERY_KEY, isChunkLoadError } from '../chunkLoad'
+import {
+  buildChunkReloadUrl,
+  CHUNK_RELOAD_QUERY_KEY,
+  isChunkLoadError
+} from '../chunkLoad'
 
 describe('chunkLoad helpers', () => {
   it('identifies common dynamic import failures across browsers', () => {
     expect(isChunkLoadError(new Error('Failed to fetch dynamically imported module'))).toBe(true)
     expect(isChunkLoadError(new Error('Importing a module script failed.'))).toBe(true)
     expect(isChunkLoadError(new Error('error loading dynamically imported module'))).toBe(true)
+    expect(isChunkLoadError({ payload: new Error('Unable to preload CSS for /assets/app.css') })).toBe(true)
 
     const namedError = new Error('Loading chunk 12 failed')
     namedError.name = 'ChunkLoadError'

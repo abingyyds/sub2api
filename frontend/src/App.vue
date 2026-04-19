@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { RouterView, useRouter, useRoute } from 'vue-router'
-import { onMounted, ref, watch } from 'vue'
-import Toast from '@/components/common/Toast.vue'
+import { RouterView, useRouter, useRoute, type RouteLocationNormalizedLoaded } from 'vue-router'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import NavigationProgress from '@/components/common/NavigationProgress.vue'
-import DiscoverySourceModal from '@/components/auth/DiscoverySourceModal.vue'
 import { useAppStore, useAuthStore, useSubscriptionStore } from '@/stores'
 import { getSetupStatus } from '@/api/setup'
+
+const Toast = defineAsyncComponent(() => import('@/components/common/Toast.vue'))
+const DiscoverySourceModal = defineAsyncComponent(
+  () => import('@/components/auth/DiscoverySourceModal.vue')
+)
+const AppLayout = defineAsyncComponent(() => import('@/components/layout/AppLayout.vue'))
 
 const router = useRouter()
 const route = useRoute()
@@ -14,6 +18,14 @@ const authStore = useAuthStore()
 const subscriptionStore = useSubscriptionStore()
 
 const showDiscoverySource = ref(false)
+const shouldRenderToast = computed(() => appStore.toasts.length > 0)
+const shouldRenderDiscoverySource = computed(
+  () => authStore.isAuthenticated && showDiscoverySource.value
+)
+
+function shouldUseAppLayout(routeToRender: RouteLocationNormalizedLoaded): boolean {
+  return routeToRender.meta.requiresAuth !== false && routeToRender.name !== 'NotFound'
+}
 
 /**
  * Update favicon dynamically
@@ -91,11 +103,18 @@ onMounted(() => {
 
 <template>
   <NavigationProgress />
-  <RouterView v-slot="{ Component }">
+  <RouterView v-slot="{ Component, route: routeToRender }">
     <Transition name="page" mode="out-in">
-      <component :is="Component" />
+      <AppLayout v-if="shouldUseAppLayout(routeToRender)">
+        <component :is="Component" />
+      </AppLayout>
+      <component :is="Component" v-else />
     </Transition>
   </RouterView>
-  <Toast />
-  <DiscoverySourceModal :show="showDiscoverySource" @close="showDiscoverySource = false" />
+  <Toast v-if="shouldRenderToast" />
+  <DiscoverySourceModal
+    v-if="shouldRenderDiscoverySource"
+    :show="showDiscoverySource"
+    @close="showDiscoverySource = false"
+  />
 </template>

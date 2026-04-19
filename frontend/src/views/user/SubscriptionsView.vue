@@ -196,10 +196,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useAppStore } from '@/stores/app'
-import subscriptionsAPI from '@/api/subscriptions'
+import { useAppStore, useSubscriptionStore } from '@/stores'
 import type { UserSubscription } from '@/types'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import Icon from '@/components/icons/Icon.vue'
@@ -208,19 +207,21 @@ import { FadeIn, SlideIn, StaggerContainer, GlowCard, MagneticButton } from '@/c
 
 const { t } = useI18n()
 const appStore = useAppStore()
+const subscriptionStore = useSubscriptionStore()
+const initialLoadAttempted = ref(false)
 
-const subscriptions = ref<UserSubscription[]>([])
-const loading = ref(true)
+const subscriptions = computed<UserSubscription[]>(() => subscriptionStore.allSubscriptions)
+const loading = computed(() => (
+  (!subscriptionStore.allLoaded && !initialLoadAttempted.value)
+  || (subscriptionStore.allLoading && subscriptions.value.length === 0)
+))
 
 async function loadSubscriptions() {
   try {
-    loading.value = true
-    subscriptions.value = await subscriptionsAPI.getMySubscriptions()
+    await subscriptionStore.fetchMySubscriptions()
   } catch (error) {
     console.error('Failed to load subscriptions:', error)
     appStore.showError(t('userSubscriptions.failedToLoad'))
-  } finally {
-    loading.value = false
   }
 }
 
@@ -299,6 +300,8 @@ function formatResetTime(windowStart: string | null, windowHours: number): strin
 }
 
 onMounted(() => {
-  loadSubscriptions()
+  void loadSubscriptions().finally(() => {
+    initialLoadAttempted.value = true
+  })
 })
 </script>

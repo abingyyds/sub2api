@@ -110,26 +110,9 @@ export default defineConfig(({ mode }) => {
             return 'vendor-misc'
           }
 
-          // 动画组件单独分包（按需加载）
-          if (id.includes('/components/animations/')) {
-            return 'animations'
-          }
-
-          // 表格页常用组件合并，减少页面级碎片请求
-          if (
-            id.includes('/components/common/DataTable.vue') ||
-            id.includes('/components/common/Pagination.vue') ||
-            id.includes('/components/common/Select.vue') ||
-            id.includes('/components/common/EmptyState.vue') ||
-            id.includes('/components/common/DateRangePicker.vue') ||
-            id.includes('/components/layout/TablePageLayout.vue') ||
-            id.includes('/utils/format.ts')
-          ) {
-            return 'table-ui'
-          }
-
-          // 应用代码：按入口点自动分包，不手动干预
-          // 这样可以避免循环依赖，同时保持合理的 chunk 数量
+          // 应用代码交给 Rollup 自动分包。
+          // 手动把 animations / table-ui 打成公共块会让入口页被动预加载它们，
+          // 反而拖慢登录页、模型广场等轻页面的首屏。
         }
       }
     }

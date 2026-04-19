@@ -533,6 +533,42 @@ import UserApiKeysModal from '@/components/admin/user/UserApiKeysModal.vue'
 import UserAllowedGroupsModal from '@/components/admin/user/UserAllowedGroupsModal.vue'
 import UserBalanceModal from '@/components/admin/user/UserBalanceModal.vue'
 
+const ATTRIBUTE_DEFINITIONS_CACHE_TTL_MS = 5 * 60 * 1000
+
+let cachedAttributeDefinitions: UserAttributeDefinition[] | null = null
+let cachedAttributeDefinitionsExpiresAt = 0
+let attributeDefinitionsPromise: Promise<UserAttributeDefinition[]> | null = null
+
+const getCachedAttributeDefinitions = async (force = false): Promise<UserAttributeDefinition[]> => {
+  const now = Date.now()
+
+  if (!force && cachedAttributeDefinitions && cachedAttributeDefinitionsExpiresAt > now) {
+    return cachedAttributeDefinitions
+  }
+
+  if (!force && attributeDefinitionsPromise) {
+    return attributeDefinitionsPromise
+  }
+
+  attributeDefinitionsPromise = adminAPI.userAttributes.listEnabledDefinitions()
+    .then((definitions) => {
+      cachedAttributeDefinitions = definitions
+      cachedAttributeDefinitionsExpiresAt = Date.now() + ATTRIBUTE_DEFINITIONS_CACHE_TTL_MS
+      return definitions
+    })
+    .finally(() => {
+      attributeDefinitionsPromise = null
+    })
+
+  return attributeDefinitionsPromise
+}
+
+const invalidateAttributeDefinitionsCache = () => {
+  cachedAttributeDefinitions = null
+  cachedAttributeDefinitionsExpiresAt = 0
+  attributeDefinitionsPromise = null
+}
+
 const appStore = useAppStore()
 
 // Generate dynamic attribute columns from enabled definitions
@@ -767,6 +803,7 @@ const editingUser = ref<AdminUser | null>(null)
 const deletingUser = ref<AdminUser | null>(null)
 const viewingUser = ref<AdminUser | null>(null)
 let abortController: AbortController | null = null
+let usersRequestId = 0
 
 // Action Menu State
 const activeMenuId = ref<number | null>(null)
@@ -863,22 +900,71 @@ const getDaysRemaining = (expiresAt: string): number => {
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24))
 }
 
-const loadAttributeDefinitions = async () => {
+const loadAttributeDefinitions = async (force = false) => {
   try {
-    attributeDefinitions.value = await adminAPI.userAttributes.listEnabledDefinitions()
+    const definitions = await getCachedAttributeDefinitions(force)
+    attributeDefinitions.value = definitions
+    return definitions
   } catch (e) {
     console.error('Failed to load attribute definitions:', e)
+    return [] as UserAttributeDefinition[]
   }
 }
 
 // Handle attributes modal close - reload definitions and users
 const handleAttributesModalClose = async () => {
   showAttributesModal.value = false
-  await loadAttributeDefinitions()
-  loadUsers()
+  invalidateAttributeDefinitionsCache()
+  await loadAttributeDefinitions(true)
+  void loadUsers()
+}
+
+const loadUserSupplementaryData = async (
+  userIds: number[],
+  requestId: number,
+  options: {
+    includeUsage?: boolean
+    includeAttributes?: boolean
+  } = {}
+) => {
+  const { includeUsage = true, includeAttributes = true } = options
+  const tasks: Promise<void>[] = []
+
+  if (includeUsage) {
+    tasks.push(
+      adminAPI.dashboard.getBatchUsersUsage(userIds)
+        .then((usageResponse) => {
+          if (requestId !== usersRequestId) return
+          usageStats.value = usageResponse.stats
+        })
+        .catch((e) => {
+          if (requestId !== usersRequestId) return
+          console.error('Failed to load usage stats:', e)
+        })
+    )
+  }
+
+  if (includeAttributes && attributeDefinitions.value.length > 0) {
+    tasks.push(
+      adminAPI.userAttributes.getBatchUserAttributes(userIds)
+        .then((attrResponse) => {
+          if (requestId !== usersRequestId) return
+          userAttributeValues.value = attrResponse.attributes
+        })
+        .catch((e) => {
+          if (requestId !== usersRequestId) return
+          console.error('Failed to load user attribute values:', e)
+        })
+    )
+  }
+
+  if (tasks.length > 0) {
+    await Promise.allSettled(tasks)
+  }
 }
 
 const loadUsers = async () => {
+  const requestId = ++usersRequestId
   abortController?.abort()
   const currentAbortController = new AbortController()
   abortController = currentAbortController
@@ -912,38 +998,15 @@ const loadUsers = async () => {
     users.value = response.items
     pagination.total = response.total
     pagination.pages = response.pages
+    usageStats.value = {}
+    userAttributeValues.value = {}
 
-    // Load usage stats and attribute values for all users in the list
     if (response.items.length > 0) {
       const userIds = response.items.map((u) => u.id)
-      // Load usage stats
-      try {
-        const usageResponse = await adminAPI.dashboard.getBatchUsersUsage(userIds)
-        if (signal.aborted) {
-          return
-        }
-        usageStats.value = usageResponse.stats
-      } catch (e) {
-        if (signal.aborted) {
-          return
-        }
-        console.error('Failed to load usage stats:', e)
-      }
-      // Load attribute values
-      if (attributeDefinitions.value.length > 0) {
-        try {
-          const attrResponse = await adminAPI.userAttributes.getBatchUserAttributes(userIds)
-          if (signal.aborted) {
-            return
-          }
-          userAttributeValues.value = attrResponse.attributes
-        } catch (e) {
-          if (signal.aborted) {
-            return
-          }
-          console.error('Failed to load user attribute values:', e)
-        }
-      }
+      void loadUserSupplementaryData(userIds, requestId, {
+        includeUsage: true,
+        includeAttributes: attributeDefinitions.value.length > 0
+      })
     }
   } catch (error: any) {
     const errorInfo = error as { name?: string; code?: string }
@@ -954,7 +1017,7 @@ const loadUsers = async () => {
     appStore.showError(message)
     console.error('Error loading users:', error)
   } finally {
-    if (abortController === currentAbortController) {
+    if (abortController === currentAbortController && requestId === usersRequestId) {
       loading.value = false
     }
   }
@@ -1116,11 +1179,19 @@ const handleScroll = () => {
   closeActionMenu()
 }
 
-onMounted(async () => {
-  await loadAttributeDefinitions()
+onMounted(() => {
   loadSavedFilters()
   loadSavedColumns()
-  loadUsers()
+  void loadAttributeDefinitions().then((definitions) => {
+    if (definitions.length > 0 && users.value.length > 0) {
+      void loadUserSupplementaryData(
+        users.value.map((user) => user.id),
+        usersRequestId,
+        { includeUsage: false, includeAttributes: true }
+      )
+    }
+  })
+  void loadUsers()
   document.addEventListener('click', handleClickOutside)
   window.addEventListener('scroll', handleScroll, true)
 })

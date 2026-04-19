@@ -14,7 +14,7 @@
             :loading="loading"
             @refresh="load"
             @sync="showSync = true"
-            @create="showCreate = true"
+            @create="openCreateModal"
           >
             <template #after>
               <!-- Auto Refresh Dropdown -->
@@ -100,7 +100,7 @@
         </div>
       </template>
       <template #table>
-        <AccountBulkActionsBar :selected-ids="selIds" @delete="handleBulkDelete" @edit="showBulkEdit = true" @clear="selIds = []" @select-page="selectPage" @toggle-schedulable="handleBulkToggleSchedulable" />
+        <AccountBulkActionsBar :selected-ids="selIds" @delete="handleBulkDelete" @edit="openBulkEditModal" @clear="selIds = []" @select-page="selectPage" @toggle-schedulable="handleBulkToggleSchedulable" />
         <DataTable
           :columns="cols"
           :data="accounts"
@@ -257,6 +257,44 @@ import Icon from '@/components/icons/Icon.vue'
 import { formatDateTime, formatRelativeTime } from '@/utils/format'
 import type { Account, Proxy, AdminGroup, WindowStats } from '@/types'
 
+const ACCOUNT_METADATA_CACHE_TTL_MS = 5 * 60 * 1000
+
+type AccountMetadataCache = {
+  proxies: Proxy[]
+  groups: AdminGroup[]
+}
+
+let cachedAccountMetadata: AccountMetadataCache | null = null
+let cachedAccountMetadataExpiresAt = 0
+let accountMetadataPromise: Promise<AccountMetadataCache> | null = null
+
+async function getCachedAccountMetadata(force = false): Promise<AccountMetadataCache> {
+  const now = Date.now()
+
+  if (!force && cachedAccountMetadata && cachedAccountMetadataExpiresAt > now) {
+    return cachedAccountMetadata
+  }
+
+  if (!force && accountMetadataPromise) {
+    return accountMetadataPromise
+  }
+
+  accountMetadataPromise = Promise.all([
+    adminAPI.proxies.getAll(),
+    adminAPI.groups.getAll()
+  ])
+    .then(([proxies, groups]) => {
+      cachedAccountMetadata = { proxies, groups }
+      cachedAccountMetadataExpiresAt = Date.now() + ACCOUNT_METADATA_CACHE_TTL_MS
+      return cachedAccountMetadata
+    })
+    .finally(() => {
+      accountMetadataPromise = null
+    })
+
+  return accountMetadataPromise
+}
+
 const { t } = useI18n()
 const appStore = useAppStore()
 const authStore = useAuthStore()
@@ -281,6 +319,25 @@ const testingAcc = ref<Account | null>(null)
 const statsAcc = ref<Account | null>(null)
 const togglingSchedulable = ref<number | null>(null)
 const menu = reactive<{show:boolean, acc:Account|null, pos:{top:number, left:number}|null}>({ show: false, acc: null, pos: null })
+let todayStatsRequestId = 0
+let accountMetadataPrefetchTimer: number | null = null
+
+const applyAccountMetadata = (metadata: AccountMetadataCache) => {
+  proxies.value = metadata.proxies
+  groups.value = metadata.groups
+}
+
+const ensureAccountMetadataLoaded = async (force = false) => {
+  if (!force && proxies.value.length > 0 && groups.value.length > 0) {
+    return
+  }
+
+  try {
+    applyAccountMetadata(await getCachedAccountMetadata(force))
+  } catch (error) {
+    console.error('Failed to load proxies/groups:', error)
+  }
+}
 
 // Column settings
 const showColumnDropdown = ref(false)
@@ -414,21 +471,30 @@ const todayStatsMap = ref<Record<number, WindowStats>>({})
 const todayStatsLoading = ref(false)
 
 const loadBatchTodayStats = async (accs: Account[]) => {
-  if (accs.length === 0) return
+  const requestId = ++todayStatsRequestId
+  if (accs.length === 0) {
+    todayStatsMap.value = {}
+    todayStatsLoading.value = false
+    return
+  }
   todayStatsLoading.value = true
   try {
-    todayStatsMap.value = await adminAPI.accounts.batchGetTodayStats(accs.map(a => a.id))
+    const stats = await adminAPI.accounts.batchGetTodayStats(accs.map(a => a.id))
+    if (requestId !== todayStatsRequestId) return
+    todayStatsMap.value = stats
   } catch (e) {
-    console.error('Failed to batch load today stats:', e)
+    if (requestId === todayStatsRequestId) {
+      console.error('Failed to batch load today stats:', e)
+    }
   } finally {
-    todayStatsLoading.value = false
+    if (requestId === todayStatsRequestId) {
+      todayStatsLoading.value = false
+    }
   }
 }
 
 watch(accounts, (newAccounts) => {
-  if (newAccounts.length > 0) {
-    loadBatchTodayStats(newAccounts)
-  }
+  void loadBatchTodayStats(newAccounts)
 })
 
 const isAnyModalOpen = computed(() => {
@@ -508,7 +574,19 @@ const cols = computed(() =>
   )
 )
 
-const handleEdit = (a: Account) => { edAcc.value = a; showEdit.value = true }
+const openCreateModal = async () => {
+  await ensureAccountMetadataLoaded()
+  showCreate.value = true
+}
+const openBulkEditModal = async () => {
+  await ensureAccountMetadataLoaded()
+  showBulkEdit.value = true
+}
+const handleEdit = async (a: Account) => {
+  await ensureAccountMetadataLoaded()
+  edAcc.value = a
+  showEdit.value = true
+}
 const openMenu = (a: Account, e: MouseEvent) => {
   menu.acc = a
 
@@ -726,15 +804,22 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 }
 
-onMounted(async () => {
-  load()
-  try {
-    const [p, g] = await Promise.all([adminAPI.proxies.getAll(), adminAPI.groups.getAll()])
-    proxies.value = p
-    groups.value = g
-  } catch (error) {
-    console.error('Failed to load proxies/groups:', error)
+const scheduleAccountMetadataPrefetch = () => {
+  const loadMetadata = () => {
+    void ensureAccountMetadataLoaded()
   }
+
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(loadMetadata, { timeout: 2000 })
+    return
+  }
+
+  accountMetadataPrefetchTimer = window.setTimeout(loadMetadata, 300)
+}
+
+onMounted(() => {
+  void load()
+  scheduleAccountMetadataPrefetch()
   window.addEventListener('scroll', handleScroll, true)
   document.addEventListener('click', handleClickOutside)
 
@@ -747,6 +832,10 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  if (accountMetadataPrefetchTimer !== null) {
+    window.clearTimeout(accountMetadataPrefetchTimer)
+    accountMetadataPrefetchTimer = null
+  }
   window.removeEventListener('scroll', handleScroll, true)
   document.removeEventListener('click', handleClickOutside)
 })

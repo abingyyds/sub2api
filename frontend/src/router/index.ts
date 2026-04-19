@@ -8,7 +8,12 @@ import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { useNavigationLoadingState } from '@/composables/useNavigationLoading'
 import { useRoutePrefetch } from '@/composables/useRoutePrefetch'
-import { buildChunkReloadUrl, isChunkLoadError } from './chunkLoad'
+import {
+  CHUNK_RELOAD_STORAGE_KEY,
+  installChunkRecoveryListeners,
+  isChunkLoadError,
+  recoverFromChunkError
+} from './chunkLoad'
 
 /**
  * Route definitions with lazy loading
@@ -726,7 +731,7 @@ const router = createRouter({
  */
 let authInitialized = false
 let lastRequestedLocation = window.location.pathname + window.location.search + window.location.hash
-const chunkReloadKey = 'chunk_reload_attempted'
+installChunkRecoveryListeners(() => lastRequestedLocation)
 
 // 初始化导航加载状态和预加载
 const navigationLoading = useNavigationLoadingState()
@@ -857,7 +862,7 @@ router.beforeEach(async (to, _from, next) => {
 router.afterEach((to) => {
   // 结束导航加载状态
   navigationLoading.endNavigation()
-  sessionStorage.removeItem(chunkReloadKey)
+  sessionStorage.removeItem(CHUNK_RELOAD_STORAGE_KEY)
 
   // 懒初始化预加载（首次导航时创建，传入 router 实例）
   if (!routePrefetch) {
@@ -875,19 +880,10 @@ router.onError((error) => {
   navigationLoading.endNavigation()
   console.error('Router error:', error)
 
-  if (isChunkLoadError(error)) {
-    // Avoid infinite reload loop by checking sessionStorage
-    const lastReload = sessionStorage.getItem(chunkReloadKey)
-    const now = Date.now()
-
-    // Allow reload if never attempted or more than 10 seconds ago
-    if (!lastReload || now - parseInt(lastReload) > 10000) {
-      sessionStorage.setItem(chunkReloadKey, now.toString())
-      console.warn('Chunk load error detected, hard reloading target route to fetch latest version...')
-      window.location.assign(buildChunkReloadUrl(lastRequestedLocation, now))
-    } else {
-      console.error('Chunk load error persists after reload. Please clear browser cache.')
-    }
+  if (recoverFromChunkError(lastRequestedLocation, error)) {
+    console.warn('Chunk load error detected, hard reloading target route to fetch latest version...')
+  } else if (isChunkLoadError(error)) {
+    console.error('Chunk load error persists after reload. Please clear browser cache.')
   }
 })
 

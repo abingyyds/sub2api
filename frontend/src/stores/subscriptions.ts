@@ -11,24 +11,82 @@ import type { UserSubscription } from '@/types'
 // Cache TTL: 60 seconds
 const CACHE_TTL_MS = 60_000
 
-// Request generation counter to invalidate stale in-flight responses
-let requestGeneration = 0
+// Request generation counters to invalidate stale in-flight responses
+let activeRequestGeneration = 0
+let allRequestGeneration = 0
 
 export const useSubscriptionStore = defineStore('subscriptions', () => {
   // State
   const activeSubscriptions = ref<UserSubscription[]>([])
+  const allSubscriptions = ref<UserSubscription[]>([])
   const loading = ref(false)
+  const allLoading = ref(false)
   const loaded = ref(false)
+  const allLoaded = ref(false)
   const lastFetchedAt = ref<number | null>(null)
+  const allLastFetchedAt = ref<number | null>(null)
 
   // In-flight request deduplication
   let activePromise: Promise<UserSubscription[]> | null = null
+  let allPromise: Promise<UserSubscription[]> | null = null
 
   // Auto-refresh interval
   let pollerInterval: ReturnType<typeof setInterval> | null = null
 
   // Computed
   const hasActiveSubscriptions = computed(() => activeSubscriptions.value.length > 0)
+
+  /**
+   * Fetch all subscriptions with caching and deduplication
+   * @param force - Force refresh even if cache is valid
+   */
+  async function fetchMySubscriptions(force = false): Promise<UserSubscription[]> {
+    const now = Date.now()
+
+    if (
+      !force &&
+      allLoaded.value &&
+      allLastFetchedAt.value &&
+      now - allLastFetchedAt.value < CACHE_TTL_MS
+    ) {
+      return allSubscriptions.value
+    }
+
+    if (allPromise && !force) {
+      return allPromise
+    }
+
+    const currentGeneration = ++allRequestGeneration
+
+    allLoading.value = true
+    const requestPromise = subscriptionsAPI
+      .getMySubscriptions()
+      .then((data) => {
+        if (currentGeneration === allRequestGeneration) {
+          allSubscriptions.value = data
+          allLoaded.value = true
+          allLastFetchedAt.value = Date.now()
+          activeSubscriptions.value = data.filter((subscription) => subscription.status === 'active')
+          loaded.value = true
+          lastFetchedAt.value = allLastFetchedAt.value
+        }
+        return data
+      })
+      .catch((error) => {
+        console.error('Failed to fetch subscriptions:', error)
+        throw error
+      })
+      .finally(() => {
+        if (allPromise === requestPromise) {
+          allLoading.value = false
+          allPromise = null
+        }
+      })
+
+    allPromise = requestPromise
+
+    return allPromise
+  }
 
   /**
    * Fetch active subscriptions with caching and deduplication
@@ -52,17 +110,20 @@ export const useSubscriptionStore = defineStore('subscriptions', () => {
       return activePromise
     }
 
-    const currentGeneration = ++requestGeneration
+    const currentGeneration = ++activeRequestGeneration
 
     // Start new request
     loading.value = true
     const requestPromise = subscriptionsAPI
       .getActiveSubscriptions()
       .then((data) => {
-        if (currentGeneration === requestGeneration) {
+        if (currentGeneration === activeRequestGeneration) {
           activeSubscriptions.value = data
           loaded.value = true
           lastFetchedAt.value = Date.now()
+          if (allLoaded.value) {
+            allLastFetchedAt.value = null
+          }
         }
         return data
       })
@@ -109,11 +170,18 @@ export const useSubscriptionStore = defineStore('subscriptions', () => {
    * Clear all subscription data and stop polling
    */
   function clear() {
-    requestGeneration++
+    activeRequestGeneration++
+    allRequestGeneration++
     activePromise = null
+    allPromise = null
     activeSubscriptions.value = []
+    allSubscriptions.value = []
     loaded.value = false
+    allLoaded.value = false
     lastFetchedAt.value = null
+    allLastFetchedAt.value = null
+    loading.value = false
+    allLoading.value = false
     stopPolling()
   }
 
@@ -122,15 +190,21 @@ export const useSubscriptionStore = defineStore('subscriptions', () => {
    */
   function invalidateCache() {
     lastFetchedAt.value = null
+    allLastFetchedAt.value = null
   }
 
   return {
     // State
     activeSubscriptions,
+    allSubscriptions,
     loading,
+    allLoading,
+    loaded,
+    allLoaded,
     hasActiveSubscriptions,
 
     // Actions
+    fetchMySubscriptions,
     fetchActiveSubscriptions,
     startPolling,
     stopPolling,
