@@ -6,32 +6,78 @@ export interface GroupModels {
   models: string[]
 }
 
-const MODEL_PLAZA_CACHE_TTL_MS = 5 * 60 * 1000
-const MODEL_PLAZA_SESSION_CACHE_KEY = 'sub2api:model-plaza'
-
-let cachedGroupModels: GroupModels[] | null = null
-let cacheExpiresAt = 0
-let inFlightRequest: Promise<GroupModels[]> | null = null
-
-interface ModelPlazaCachePayload {
-  expiresAt: number
-  data: GroupModels[]
+export interface ModelPlazaPricingMetrics {
+  input_per_million: number
+  output_per_million: number
+  cache_write_per_million: number
+  cache_read_per_million: number
+  input_per_million_above_200k: number | null
+  output_per_million_above_200k: number | null
+  cache_write_per_million_above_200k: number | null
+  cache_read_per_million_above_200k: number | null
 }
 
-const readSessionCache = (): ModelPlazaCachePayload | null => {
+export interface ModelPlazaPricingGroup {
+  id: number
+  name: string
+  platform: Group['platform']
+  rate_multiplier: number
+  display_rate_multiplier: number | null
+  display_price: string
+  display_discount: string
+  description: string | null
+  subscription_type: Group['subscription_type']
+  has_explicit_models: boolean
+  models_count: number
+}
+
+export interface ModelPlazaPricingItem {
+  model: string
+  aliases: string[]
+  platform: Group['platform']
+  provider: string
+  mode: string
+  supports_prompt_caching: boolean
+  max_input_tokens: number
+  max_output_tokens: number
+  official: ModelPlazaPricingMetrics
+  group_prices: Record<number, ModelPlazaPricingMetrics>
+}
+
+export interface ModelPlazaPricingTable {
+  groups: ModelPlazaPricingGroup[]
+  items: ModelPlazaPricingItem[]
+}
+
+const MODEL_PLAZA_CACHE_TTL_MS = 5 * 60 * 1000
+const MODEL_PLAZA_SESSION_CACHE_KEY = 'sub2api:model-plaza'
+const MODEL_PLAZA_PRICING_SESSION_CACHE_KEY = 'sub2api:model-plaza:pricing-table'
+
+let cachedGroupModels: GroupModels[] | null = null
+let cachedPricingTable: ModelPlazaPricingTable | null = null
+let cacheExpiresAt = 0
+let inFlightRequest: Promise<GroupModels[]> | null = null
+let pricingInFlightRequest: Promise<ModelPlazaPricingTable> | null = null
+
+interface ModelPlazaCachePayload<T> {
+  expiresAt: number
+  data: T
+}
+
+const readSessionCache = <T>(key: string): ModelPlazaCachePayload<T> | null => {
   if (typeof window === 'undefined') {
     return null
   }
 
   try {
-    const raw = window.sessionStorage.getItem(MODEL_PLAZA_SESSION_CACHE_KEY)
+    const raw = window.sessionStorage.getItem(key)
     if (!raw) {
       return null
     }
 
-    const payload = JSON.parse(raw) as ModelPlazaCachePayload
-    if (!Array.isArray(payload.data) || payload.expiresAt <= Date.now()) {
-      window.sessionStorage.removeItem(MODEL_PLAZA_SESSION_CACHE_KEY)
+    const payload = JSON.parse(raw) as ModelPlazaCachePayload<T>
+    if (payload.expiresAt <= Date.now()) {
+      window.sessionStorage.removeItem(key)
       return null
     }
 
@@ -41,14 +87,14 @@ const readSessionCache = (): ModelPlazaCachePayload | null => {
   }
 }
 
-const writeSessionCache = (data: GroupModels[], expiresAt: number) => {
+const writeSessionCache = <T>(key: string, data: T, expiresAt: number) => {
   if (typeof window === 'undefined') {
     return
   }
 
   try {
     window.sessionStorage.setItem(
-      MODEL_PLAZA_SESSION_CACHE_KEY,
+      key,
       JSON.stringify({ data, expiresAt })
     )
   } catch {
@@ -64,8 +110,8 @@ export async function getModelPlaza(force = false): Promise<GroupModels[]> {
   }
 
   if (!force && !cachedGroupModels) {
-    const cachedPayload = readSessionCache()
-    if (cachedPayload) {
+    const cachedPayload = readSessionCache<GroupModels[]>(MODEL_PLAZA_SESSION_CACHE_KEY)
+    if (cachedPayload && Array.isArray(cachedPayload.data)) {
       cachedGroupModels = cachedPayload.data
       cacheExpiresAt = cachedPayload.expiresAt
       return cachedGroupModels
@@ -81,7 +127,7 @@ export async function getModelPlaza(force = false): Promise<GroupModels[]> {
     .then(({ data }) => {
       cachedGroupModels = data
       cacheExpiresAt = Date.now() + MODEL_PLAZA_CACHE_TTL_MS
-      writeSessionCache(data, cacheExpiresAt)
+      writeSessionCache(MODEL_PLAZA_SESSION_CACHE_KEY, data, cacheExpiresAt)
       return data
     })
     .finally(() => {
@@ -91,4 +137,39 @@ export async function getModelPlaza(force = false): Promise<GroupModels[]> {
   return inFlightRequest
 }
 
-export default { getModelPlaza }
+export async function getModelPlazaPricingTable(force = false): Promise<ModelPlazaPricingTable> {
+  const now = Date.now()
+
+  if (!force && cachedPricingTable && cacheExpiresAt > now) {
+    return cachedPricingTable
+  }
+
+  if (!force && !cachedPricingTable) {
+    const cachedPayload = readSessionCache<ModelPlazaPricingTable>(MODEL_PLAZA_PRICING_SESSION_CACHE_KEY)
+    if (cachedPayload && cachedPayload.data?.items && cachedPayload.data?.groups) {
+      cachedPricingTable = cachedPayload.data
+      cacheExpiresAt = cachedPayload.expiresAt
+      return cachedPricingTable
+    }
+  }
+
+  if (!force && pricingInFlightRequest) {
+    return pricingInFlightRequest
+  }
+
+  pricingInFlightRequest = apiClient
+    .get<ModelPlazaPricingTable>('/model-plaza/pricing-table')
+    .then(({ data }) => {
+      cachedPricingTable = data
+      cacheExpiresAt = Date.now() + MODEL_PLAZA_CACHE_TTL_MS
+      writeSessionCache(MODEL_PLAZA_PRICING_SESSION_CACHE_KEY, data, cacheExpiresAt)
+      return data
+    })
+    .finally(() => {
+      pricingInFlightRequest = null
+    })
+
+  return pricingInFlightRequest
+}
+
+export default { getModelPlaza, getModelPlazaPricingTable }

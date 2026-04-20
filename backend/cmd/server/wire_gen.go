@@ -208,7 +208,7 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	openAIGatewayHandler := handler.NewOpenAIGatewayHandler(openAIGatewayService, concurrencyService, billingCacheService, settingService, configConfig)
 	handlerSettingHandler := handler.ProvideSettingHandler(settingService, buildInfo)
 	totpHandler := handler.NewTotpHandler(totpService)
-	modelPlazaHandler := handler.NewModelPlazaHandler(apiKeyService, gatewayService)
+	modelPlazaHandler := handler.NewModelPlazaHandler(apiKeyService, gatewayService, pricingService)
 	handlerReferralHandler := handler.NewReferralHandler(referralService)
 	handlerAnnouncementHandler := handler.NewAnnouncementHandler(announcementService)
 	paymentHandler := handler.NewPaymentHandler(paymentService)

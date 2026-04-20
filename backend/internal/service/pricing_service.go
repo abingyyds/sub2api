@@ -27,14 +27,20 @@ var (
 // LiteLLMModelPricing LiteLLM价格数据结构
 // 只保留我们需要的字段，使用指针来处理可能缺失的值
 type LiteLLMModelPricing struct {
-	InputCostPerToken           float64 `json:"input_cost_per_token"`
-	OutputCostPerToken          float64 `json:"output_cost_per_token"`
-	CacheCreationInputTokenCost float64 `json:"cache_creation_input_token_cost"`
-	CacheReadInputTokenCost     float64 `json:"cache_read_input_token_cost"`
-	LiteLLMProvider             string  `json:"litellm_provider"`
-	Mode                        string  `json:"mode"`
-	SupportsPromptCaching       bool    `json:"supports_prompt_caching"`
-	OutputCostPerImage          float64 `json:"output_cost_per_image"` // 图片生成模型每张图片价格
+	InputCostPerToken                          float64  `json:"input_cost_per_token"`
+	OutputCostPerToken                         float64  `json:"output_cost_per_token"`
+	CacheCreationInputTokenCost                float64  `json:"cache_creation_input_token_cost"`
+	CacheReadInputTokenCost                    float64  `json:"cache_read_input_token_cost"`
+	InputCostPerTokenAbove200KTokens           *float64 `json:"input_cost_per_token_above_200k_tokens,omitempty"`
+	OutputCostPerTokenAbove200KTokens          *float64 `json:"output_cost_per_token_above_200k_tokens,omitempty"`
+	CacheCreationInputTokenCostAbove200KTokens *float64 `json:"cache_creation_input_token_cost_above_200k_tokens,omitempty"`
+	CacheReadInputTokenCostAbove200KTokens     *float64 `json:"cache_read_input_token_cost_above_200k_tokens,omitempty"`
+	LiteLLMProvider                            string   `json:"litellm_provider"`
+	Mode                                       string   `json:"mode"`
+	SupportsPromptCaching                      bool     `json:"supports_prompt_caching"`
+	MaxInputTokens                             int      `json:"max_input_tokens"`
+	MaxOutputTokens                            int      `json:"max_output_tokens"`
+	OutputCostPerImage                         float64  `json:"output_cost_per_image"` // 图片生成模型每张图片价格
 }
 
 // PricingRemoteClient 远程价格数据获取接口
@@ -45,14 +51,26 @@ type PricingRemoteClient interface {
 
 // LiteLLMRawEntry 用于解析原始JSON数据
 type LiteLLMRawEntry struct {
-	InputCostPerToken           *float64 `json:"input_cost_per_token"`
-	OutputCostPerToken          *float64 `json:"output_cost_per_token"`
-	CacheCreationInputTokenCost *float64 `json:"cache_creation_input_token_cost"`
-	CacheReadInputTokenCost     *float64 `json:"cache_read_input_token_cost"`
-	LiteLLMProvider             string   `json:"litellm_provider"`
-	Mode                        string   `json:"mode"`
-	SupportsPromptCaching       bool     `json:"supports_prompt_caching"`
-	OutputCostPerImage          *float64 `json:"output_cost_per_image"`
+	InputCostPerToken                          *float64 `json:"input_cost_per_token"`
+	OutputCostPerToken                         *float64 `json:"output_cost_per_token"`
+	CacheCreationInputTokenCost                *float64 `json:"cache_creation_input_token_cost"`
+	CacheReadInputTokenCost                    *float64 `json:"cache_read_input_token_cost"`
+	InputCostPerTokenAbove200KTokens           *float64 `json:"input_cost_per_token_above_200k_tokens"`
+	OutputCostPerTokenAbove200KTokens          *float64 `json:"output_cost_per_token_above_200k_tokens"`
+	CacheCreationInputTokenCostAbove200KTokens *float64 `json:"cache_creation_input_token_cost_above_200k_tokens"`
+	CacheReadInputTokenCostAbove200KTokens     *float64 `json:"cache_read_input_token_cost_above_200k_tokens"`
+	LiteLLMProvider                            string   `json:"litellm_provider"`
+	Mode                                       string   `json:"mode"`
+	SupportsPromptCaching                      bool     `json:"supports_prompt_caching"`
+	MaxInputTokens                             *int     `json:"max_input_tokens"`
+	MaxOutputTokens                            *int     `json:"max_output_tokens"`
+	OutputCostPerImage                         *float64 `json:"output_cost_per_image"`
+}
+
+// NamedLiteLLMModelPricing is a named LiteLLM pricing entry.
+type NamedLiteLLMModelPricing struct {
+	Model   string
+	Pricing *LiteLLMModelPricing
 }
 
 // PricingService 动态价格服务
@@ -321,6 +339,16 @@ func (s *PricingService) parsePricingData(body []byte) (map[string]*LiteLLMModel
 		if entry.CacheReadInputTokenCost != nil {
 			pricing.CacheReadInputTokenCost = *entry.CacheReadInputTokenCost
 		}
+		pricing.InputCostPerTokenAbove200KTokens = cloneFloat64Ptr(entry.InputCostPerTokenAbove200KTokens)
+		pricing.OutputCostPerTokenAbove200KTokens = cloneFloat64Ptr(entry.OutputCostPerTokenAbove200KTokens)
+		pricing.CacheCreationInputTokenCostAbove200KTokens = cloneFloat64Ptr(entry.CacheCreationInputTokenCostAbove200KTokens)
+		pricing.CacheReadInputTokenCostAbove200KTokens = cloneFloat64Ptr(entry.CacheReadInputTokenCostAbove200KTokens)
+		if entry.MaxInputTokens != nil {
+			pricing.MaxInputTokens = *entry.MaxInputTokens
+		}
+		if entry.MaxOutputTokens != nil {
+			pricing.MaxOutputTokens = *entry.MaxOutputTokens
+		}
 		if entry.OutputCostPerImage != nil {
 			pricing.OutputCostPerImage = *entry.OutputCostPerImage
 		}
@@ -447,8 +475,37 @@ func (s *PricingService) GetModelPricing(modelName string) *LiteLLMModelPricing 
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
+	_, pricing := s.getModelPricingLocked(modelName)
+	return pricing
+}
+
+// GetMatchedModelPricing 获取匹配到的官方模型名和价格（带模糊匹配）。
+func (s *PricingService) GetMatchedModelPricing(modelName string) (string, *LiteLLMModelPricing) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	return s.getModelPricingLocked(modelName)
+}
+
+// ListModelPricingEntries returns a snapshot of all model pricing entries.
+func (s *PricingService) ListModelPricingEntries() []NamedLiteLLMModelPricing {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	entries := make([]NamedLiteLLMModelPricing, 0, len(s.pricingData))
+	for model, pricing := range s.pricingData {
+		entries = append(entries, NamedLiteLLMModelPricing{
+			Model:   model,
+			Pricing: pricing,
+		})
+	}
+
+	return entries
+}
+
+func (s *PricingService) getModelPricingLocked(modelName string) (string, *LiteLLMModelPricing) {
 	if modelName == "" {
-		return nil
+		return "", nil
 	}
 
 	// 标准化模型名称（同时兼容 "models/xxx"、VertexAI 资源名等前缀）
@@ -461,7 +518,7 @@ func (s *PricingService) GetModelPricing(modelName string) *LiteLLMModelPricing 
 			continue
 		}
 		if pricing, ok := s.pricingData[candidate]; ok {
-			return pricing
+			return candidate, pricing
 		}
 	}
 
@@ -470,7 +527,7 @@ func (s *PricingService) GetModelPricing(modelName string) *LiteLLMModelPricing 
 	for _, candidate := range lookupCandidates {
 		normalized := strings.ReplaceAll(candidate, "-4-5-", "-4.5-")
 		if pricing, ok := s.pricingData[normalized]; ok {
-			return pricing
+			return normalized, pricing
 		}
 	}
 
@@ -480,13 +537,13 @@ func (s *PricingService) GetModelPricing(modelName string) *LiteLLMModelPricing 
 	for key, pricing := range s.pricingData {
 		keyBase := s.extractBaseName(strings.ToLower(key))
 		if keyBase == baseName {
-			return pricing
+			return key, pricing
 		}
 	}
 
 	// 4. 基于模型系列匹配（Claude）
-	if pricing := s.matchByModelFamily(lookupCandidates[0]); pricing != nil {
-		return pricing
+	if matchedModel, pricing := s.matchByModelFamily(lookupCandidates[0]); pricing != nil {
+		return matchedModel, pricing
 	}
 
 	// 5. OpenAI 模型回退策略
@@ -494,7 +551,7 @@ func (s *PricingService) GetModelPricing(modelName string) *LiteLLMModelPricing 
 		return s.matchOpenAIModel(lookupCandidates[0])
 	}
 
-	return nil
+	return "", nil
 }
 
 func (s *PricingService) buildModelLookupCandidates(modelLower string) []string {
@@ -576,7 +633,7 @@ func (s *PricingService) extractBaseName(model string) string {
 }
 
 // matchByModelFamily 基于模型系列匹配
-func (s *PricingService) matchByModelFamily(model string) *LiteLLMModelPricing {
+func (s *PricingService) matchByModelFamily(model string) (string, *LiteLLMModelPricing) {
 	// Claude模型系列匹配规则
 	familyPatterns := map[string][]string{
 		"opus-4.5":   {"claude-opus-4.5", "claude-opus-4-5"},
@@ -629,7 +686,7 @@ func (s *PricingService) matchByModelFamily(model string) *LiteLLMModelPricing {
 	}
 
 	if matchedFamily == "" {
-		return nil
+		return "", nil
 	}
 
 	// 在价格数据中查找该系列的模型
@@ -639,12 +696,12 @@ func (s *PricingService) matchByModelFamily(model string) *LiteLLMModelPricing {
 			keyLower := strings.ToLower(key)
 			if strings.Contains(keyLower, pattern) {
 				log.Printf("[Pricing] Fuzzy matched %s -> %s", model, key)
-				return pricing
+				return key, pricing
 			}
 		}
 	}
 
-	return nil
+	return "", nil
 }
 
 // matchOpenAIModel OpenAI 模型回退匹配策略
@@ -652,14 +709,14 @@ func (s *PricingService) matchByModelFamily(model string) *LiteLLMModelPricing {
 // 1. gpt-5.2-codex -> gpt-5.2（去掉后缀如 -codex, -mini, -max 等）
 // 2. gpt-5.2-20251222 -> gpt-5.2（去掉日期版本号）
 // 3. 最终回退到 DefaultTestModel (gpt-5.1-codex)
-func (s *PricingService) matchOpenAIModel(model string) *LiteLLMModelPricing {
+func (s *PricingService) matchOpenAIModel(model string) (string, *LiteLLMModelPricing) {
 	// 尝试的回退变体
 	variants := s.generateOpenAIModelVariants(model, openAIModelDatePattern)
 
 	for _, variant := range variants {
 		if pricing, ok := s.pricingData[variant]; ok {
 			log.Printf("[Pricing] OpenAI fallback matched %s -> %s", model, variant)
-			return pricing
+			return variant, pricing
 		}
 	}
 
@@ -667,10 +724,10 @@ func (s *PricingService) matchOpenAIModel(model string) *LiteLLMModelPricing {
 	defaultModel := strings.ToLower(openai.DefaultTestModel)
 	if pricing, ok := s.pricingData[defaultModel]; ok {
 		log.Printf("[Pricing] OpenAI fallback to default model %s -> %s", model, defaultModel)
-		return pricing
+		return defaultModel, pricing
 	}
 
-	return nil
+	return "", nil
 }
 
 // generateOpenAIModelVariants 生成 OpenAI 模型的回退变体列表
@@ -742,4 +799,13 @@ func isNumeric(s string) bool {
 		}
 	}
 	return true
+}
+
+func cloneFloat64Ptr(v *float64) *float64 {
+	if v == nil {
+		return nil
+	}
+
+	value := *v
+	return &value
 }

@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 
@@ -10,6 +11,26 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+type OptionalFloat64 struct {
+	Set   bool
+	Value *float64
+}
+
+func (o *OptionalFloat64) UnmarshalJSON(data []byte) error {
+	o.Set = true
+	if string(data) == "null" {
+		o.Value = nil
+		return nil
+	}
+
+	var value float64
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	o.Value = &value
+	return nil
+}
 
 // GroupHandler handles admin group management
 type GroupHandler struct {
@@ -25,15 +46,16 @@ func NewGroupHandler(adminService service.AdminService) *GroupHandler {
 
 // CreateGroupRequest represents create group request
 type CreateGroupRequest struct {
-	Name             string   `json:"name" binding:"required"`
-	Description      string   `json:"description"`
-	Platform         string   `json:"platform" binding:"omitempty,oneof=anthropic openai gemini antigravity multi"`
-	RateMultiplier   float64  `json:"rate_multiplier"`
-	IsExclusive      bool     `json:"is_exclusive"`
-	SubscriptionType string   `json:"subscription_type" binding:"omitempty,oneof=standard subscription"`
-	DailyLimitUSD    *float64 `json:"daily_limit_usd"`
-	WeeklyLimitUSD   *float64 `json:"weekly_limit_usd"`
-	MonthlyLimitUSD  *float64 `json:"monthly_limit_usd"`
+	Name                  string   `json:"name" binding:"required"`
+	Description           string   `json:"description"`
+	Platform              string   `json:"platform" binding:"omitempty,oneof=anthropic openai gemini antigravity multi"`
+	RateMultiplier        float64  `json:"rate_multiplier"`
+	DisplayRateMultiplier *float64 `json:"display_rate_multiplier"`
+	IsExclusive           bool     `json:"is_exclusive"`
+	SubscriptionType      string   `json:"subscription_type" binding:"omitempty,oneof=standard subscription"`
+	DailyLimitUSD         *float64 `json:"daily_limit_usd"`
+	WeeklyLimitUSD        *float64 `json:"weekly_limit_usd"`
+	MonthlyLimitUSD       *float64 `json:"monthly_limit_usd"`
 	// 图片生成计费配置（antigravity 和 gemini 平台使用，负数表示清除配置）
 	ImagePrice1K    *float64 `json:"image_price_1k"`
 	ImagePrice2K    *float64 `json:"image_price_2k"`
@@ -59,16 +81,17 @@ type CreateGroupRequest struct {
 
 // UpdateGroupRequest represents update group request
 type UpdateGroupRequest struct {
-	Name             string   `json:"name"`
-	Description      string   `json:"description"`
-	Platform         string   `json:"platform" binding:"omitempty,oneof=anthropic openai gemini antigravity multi"`
-	RateMultiplier   *float64 `json:"rate_multiplier"`
-	IsExclusive      *bool    `json:"is_exclusive"`
-	Status           string   `json:"status" binding:"omitempty,oneof=active inactive"`
-	SubscriptionType string   `json:"subscription_type" binding:"omitempty,oneof=standard subscription"`
-	DailyLimitUSD    *float64 `json:"daily_limit_usd"`
-	WeeklyLimitUSD   *float64 `json:"weekly_limit_usd"`
-	MonthlyLimitUSD  *float64 `json:"monthly_limit_usd"`
+	Name                  string          `json:"name"`
+	Description           string          `json:"description"`
+	Platform              string          `json:"platform" binding:"omitempty,oneof=anthropic openai gemini antigravity multi"`
+	RateMultiplier        *float64        `json:"rate_multiplier"`
+	DisplayRateMultiplier OptionalFloat64 `json:"display_rate_multiplier"`
+	IsExclusive           *bool           `json:"is_exclusive"`
+	Status                string          `json:"status" binding:"omitempty,oneof=active inactive"`
+	SubscriptionType      string          `json:"subscription_type" binding:"omitempty,oneof=standard subscription"`
+	DailyLimitUSD         *float64        `json:"daily_limit_usd"`
+	WeeklyLimitUSD        *float64        `json:"weekly_limit_usd"`
+	MonthlyLimitUSD       *float64        `json:"monthly_limit_usd"`
 	// 图片生成计费配置（antigravity 和 gemini 平台使用，负数表示清除配置）
 	ImagePrice1K    *float64 `json:"image_price_1k"`
 	ImagePrice2K    *float64 `json:"image_price_2k"`
@@ -179,29 +202,30 @@ func (h *GroupHandler) Create(c *gin.Context) {
 	}
 
 	group, err := h.adminService.CreateGroup(c.Request.Context(), &service.CreateGroupInput{
-		Name:                req.Name,
-		Description:         req.Description,
-		Platform:            req.Platform,
-		RateMultiplier:      req.RateMultiplier,
-		IsExclusive:         req.IsExclusive,
-		SubscriptionType:    req.SubscriptionType,
-		DailyLimitUSD:       req.DailyLimitUSD,
-		WeeklyLimitUSD:      req.WeeklyLimitUSD,
-		MonthlyLimitUSD:     req.MonthlyLimitUSD,
-		ImagePrice1K:        req.ImagePrice1K,
-		ImagePrice2K:        req.ImagePrice2K,
-		ImagePrice4K:        req.ImagePrice4K,
-		ClaudeCodeOnly:      req.ClaudeCodeOnly,
-		FallbackGroupID:     req.FallbackGroupID,
-		ModelRouting:        req.ModelRouting,
-		ModelRoutingEnabled: req.ModelRoutingEnabled,
-		PriceFen:            req.PriceFen,
-		Listed:              req.Listed,
-		DefaultValidityDays: req.DefaultValidityDays,
-		PlanFeatures:        req.PlanFeatures,
-		Tags:                req.Tags,
-		DisplayPrice:        req.DisplayPrice,
-		DisplayDiscount:     req.DisplayDiscount,
+		Name:                  req.Name,
+		Description:           req.Description,
+		Platform:              req.Platform,
+		RateMultiplier:        req.RateMultiplier,
+		DisplayRateMultiplier: req.DisplayRateMultiplier,
+		IsExclusive:           req.IsExclusive,
+		SubscriptionType:      req.SubscriptionType,
+		DailyLimitUSD:         req.DailyLimitUSD,
+		WeeklyLimitUSD:        req.WeeklyLimitUSD,
+		MonthlyLimitUSD:       req.MonthlyLimitUSD,
+		ImagePrice1K:          req.ImagePrice1K,
+		ImagePrice2K:          req.ImagePrice2K,
+		ImagePrice4K:          req.ImagePrice4K,
+		ClaudeCodeOnly:        req.ClaudeCodeOnly,
+		FallbackGroupID:       req.FallbackGroupID,
+		ModelRouting:          req.ModelRouting,
+		ModelRoutingEnabled:   req.ModelRoutingEnabled,
+		PriceFen:              req.PriceFen,
+		Listed:                req.Listed,
+		DefaultValidityDays:   req.DefaultValidityDays,
+		PlanFeatures:          req.PlanFeatures,
+		Tags:                  req.Tags,
+		DisplayPrice:          req.DisplayPrice,
+		DisplayDiscount:       req.DisplayDiscount,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)
@@ -227,30 +251,32 @@ func (h *GroupHandler) Update(c *gin.Context) {
 	}
 
 	group, err := h.adminService.UpdateGroup(c.Request.Context(), groupID, &service.UpdateGroupInput{
-		Name:                req.Name,
-		Description:         req.Description,
-		Platform:            req.Platform,
-		RateMultiplier:      req.RateMultiplier,
-		IsExclusive:         req.IsExclusive,
-		Status:              req.Status,
-		SubscriptionType:    req.SubscriptionType,
-		DailyLimitUSD:       req.DailyLimitUSD,
-		WeeklyLimitUSD:      req.WeeklyLimitUSD,
-		MonthlyLimitUSD:     req.MonthlyLimitUSD,
-		ImagePrice1K:        req.ImagePrice1K,
-		ImagePrice2K:        req.ImagePrice2K,
-		ImagePrice4K:        req.ImagePrice4K,
-		ClaudeCodeOnly:      req.ClaudeCodeOnly,
-		FallbackGroupID:     req.FallbackGroupID,
-		ModelRouting:        req.ModelRouting,
-		ModelRoutingEnabled: req.ModelRoutingEnabled,
-		PriceFen:            req.PriceFen,
-		Listed:              req.Listed,
-		DefaultValidityDays: req.DefaultValidityDays,
-		PlanFeatures:        req.PlanFeatures,
-		Tags:                req.Tags,
-		DisplayPrice:        req.DisplayPrice,
-		DisplayDiscount:     req.DisplayDiscount,
+		Name:                     req.Name,
+		Description:              req.Description,
+		Platform:                 req.Platform,
+		RateMultiplier:           req.RateMultiplier,
+		DisplayRateMultiplier:    req.DisplayRateMultiplier.Value,
+		DisplayRateMultiplierSet: req.DisplayRateMultiplier.Set,
+		IsExclusive:              req.IsExclusive,
+		Status:                   req.Status,
+		SubscriptionType:         req.SubscriptionType,
+		DailyLimitUSD:            req.DailyLimitUSD,
+		WeeklyLimitUSD:           req.WeeklyLimitUSD,
+		MonthlyLimitUSD:          req.MonthlyLimitUSD,
+		ImagePrice1K:             req.ImagePrice1K,
+		ImagePrice2K:             req.ImagePrice2K,
+		ImagePrice4K:             req.ImagePrice4K,
+		ClaudeCodeOnly:           req.ClaudeCodeOnly,
+		FallbackGroupID:          req.FallbackGroupID,
+		ModelRouting:             req.ModelRouting,
+		ModelRoutingEnabled:      req.ModelRoutingEnabled,
+		PriceFen:                 req.PriceFen,
+		Listed:                   req.Listed,
+		DefaultValidityDays:      req.DefaultValidityDays,
+		PlanFeatures:             req.PlanFeatures,
+		Tags:                     req.Tags,
+		DisplayPrice:             req.DisplayPrice,
+		DisplayDiscount:          req.DisplayDiscount,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)

@@ -33,7 +33,13 @@ func newGroupRepositoryWithSQL(client *dbent.Client, sqlq sqlExecutor) *groupRep
 }
 
 func (r *groupRepository) Create(ctx context.Context, groupIn *service.Group) error {
-	builder := r.client.Group.Create().
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return translatePersistenceError(err, nil, service.ErrGroupExists)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	builder := tx.Client().Group.Create().
 		SetName(groupIn.Name).
 		SetDescription(groupIn.Description).
 		SetPlatform(groupIn.Platform).
@@ -64,15 +70,23 @@ func (r *groupRepository) Create(ctx context.Context, groupIn *service.Group) er
 	}
 
 	created, err := builder.Save(ctx)
-	if err == nil {
-		groupIn.ID = created.ID
-		groupIn.CreatedAt = created.CreatedAt
-		groupIn.UpdatedAt = created.UpdatedAt
-		if err := enqueueSchedulerOutbox(ctx, r.sql, service.SchedulerOutboxEventGroupChanged, nil, &groupIn.ID, nil); err != nil {
-			log.Printf("[SchedulerOutbox] enqueue group create failed: group=%d err=%v", groupIn.ID, err)
-		}
+	if err != nil {
+		return translatePersistenceError(err, nil, service.ErrGroupExists)
 	}
-	return translatePersistenceError(err, nil, service.ErrGroupExists)
+	if err := setGroupDisplayRateMultiplier(ctx, tx.Client(), created.ID, groupIn.DisplayRateMultiplier); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	groupIn.ID = created.ID
+	groupIn.CreatedAt = created.CreatedAt
+	groupIn.UpdatedAt = created.UpdatedAt
+	if err := enqueueSchedulerOutbox(ctx, r.sql, service.SchedulerOutboxEventGroupChanged, nil, &groupIn.ID, nil); err != nil {
+		log.Printf("[SchedulerOutbox] enqueue group create failed: group=%d err=%v", groupIn.ID, err)
+	}
+	return nil
 }
 
 func (r *groupRepository) GetByID(ctx context.Context, id int64) (*service.Group, error) {
@@ -94,11 +108,21 @@ func (r *groupRepository) GetByIDLite(ctx context.Context, id int64) (*service.G
 		return nil, translatePersistenceError(err, service.ErrGroupNotFound, nil)
 	}
 
-	return groupEntityToService(m), nil
+	out := groupEntityToService(m)
+	if err := r.hydrateDisplayRateMultiplier(ctx, out); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (r *groupRepository) Update(ctx context.Context, groupIn *service.Group) error {
-	builder := r.client.Group.UpdateOneID(groupIn.ID).
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return translatePersistenceError(err, service.ErrGroupNotFound, service.ErrGroupExists)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	builder := tx.Client().Group.UpdateOneID(groupIn.ID).
 		SetName(groupIn.Name).
 		SetDescription(groupIn.Description).
 		SetPlatform(groupIn.Platform).
@@ -139,6 +163,12 @@ func (r *groupRepository) Update(ctx context.Context, groupIn *service.Group) er
 	updated, err := builder.Save(ctx)
 	if err != nil {
 		return translatePersistenceError(err, service.ErrGroupNotFound, service.ErrGroupExists)
+	}
+	if err := setGroupDisplayRateMultiplier(ctx, tx.Client(), groupIn.ID, groupIn.DisplayRateMultiplier); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
 	}
 	groupIn.UpdatedAt = updated.UpdatedAt
 	if err := enqueueSchedulerOutbox(ctx, r.sql, service.SchedulerOutboxEventGroupChanged, nil, &groupIn.ID, nil); err != nil {
@@ -202,6 +232,9 @@ func (r *groupRepository) ListWithFilters(ctx context.Context, params pagination
 		outGroups = append(outGroups, *g)
 		groupIDs = append(groupIDs, g.ID)
 	}
+	if err := r.hydrateDisplayRateMultipliers(ctx, outGroups); err != nil {
+		return nil, nil, err
+	}
 
 	counts, err := r.loadAccountCounts(ctx, groupIDs)
 	if err == nil {
@@ -229,6 +262,9 @@ func (r *groupRepository) ListActive(ctx context.Context) ([]service.Group, erro
 		outGroups = append(outGroups, *g)
 		groupIDs = append(groupIDs, g.ID)
 	}
+	if err := r.hydrateDisplayRateMultipliers(ctx, outGroups); err != nil {
+		return nil, err
+	}
 
 	counts, err := r.loadAccountCounts(ctx, groupIDs)
 	if err == nil {
@@ -255,6 +291,9 @@ func (r *groupRepository) ListActiveByPlatform(ctx context.Context, platform str
 		g := groupEntityToService(groups[i])
 		outGroups = append(outGroups, *g)
 		groupIDs = append(groupIDs, g.ID)
+	}
+	if err := r.hydrateDisplayRateMultipliers(ctx, outGroups); err != nil {
+		return nil, err
 	}
 
 	counts, err := r.loadAccountCounts(ctx, groupIDs)
@@ -436,4 +475,92 @@ func (r *groupRepository) loadAccountCounts(ctx context.Context, groupIDs []int6
 	}
 
 	return counts, nil
+}
+
+func setGroupDisplayRateMultiplier(ctx context.Context, exec sqlExecutor, groupID int64, value *float64) error {
+	_, err := exec.ExecContext(
+		ctx,
+		"UPDATE groups SET display_rate_multiplier = $1 WHERE id = $2",
+		optionalFloat64Arg(value),
+		groupID,
+	)
+	return err
+}
+
+func optionalFloat64Arg(value *float64) any {
+	if value == nil {
+		return nil
+	}
+	return *value
+}
+
+func (r *groupRepository) hydrateDisplayRateMultiplier(ctx context.Context, group *service.Group) error {
+	if group == nil || group.ID <= 0 {
+		return nil
+	}
+
+	values, err := r.loadDisplayRateMultiplierMap(ctx, []int64{group.ID})
+	if err != nil {
+		return err
+	}
+	group.DisplayRateMultiplier = values[group.ID]
+	return nil
+}
+
+func (r *groupRepository) hydrateDisplayRateMultipliers(ctx context.Context, groups []service.Group) error {
+	if len(groups) == 0 {
+		return nil
+	}
+
+	groupIDs := make([]int64, 0, len(groups))
+	for i := range groups {
+		if groups[i].ID > 0 {
+			groupIDs = append(groupIDs, groups[i].ID)
+		}
+	}
+
+	values, err := r.loadDisplayRateMultiplierMap(ctx, groupIDs)
+	if err != nil {
+		return err
+	}
+	for i := range groups {
+		groups[i].DisplayRateMultiplier = values[groups[i].ID]
+	}
+	return nil
+}
+
+func (r *groupRepository) loadDisplayRateMultiplierMap(ctx context.Context, groupIDs []int64) (map[int64]*float64, error) {
+	values := make(map[int64]*float64, len(groupIDs))
+	if len(groupIDs) == 0 {
+		return values, nil
+	}
+
+	rows, err := r.sql.QueryContext(
+		ctx,
+		"SELECT id, display_rate_multiplier FROM groups WHERE id = ANY($1)",
+		pq.Array(groupIDs),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var groupID int64
+		var multiplier sql.NullFloat64
+		if err := rows.Scan(&groupID, &multiplier); err != nil {
+			return nil, err
+		}
+		if multiplier.Valid {
+			value := multiplier.Float64
+			values[groupID] = &value
+			continue
+		}
+		values[groupID] = nil
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return values, nil
 }

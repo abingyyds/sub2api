@@ -6,6 +6,25 @@
             <div class="mb-4">
               <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('keys.newApiKey') }}</h2>
               <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('keys.newApiKeyDesc') }}</p>
+              <router-link
+                to="/model-plaza"
+                class="mt-3 inline-flex max-w-3xl items-start gap-3 rounded-2xl border border-primary-100 bg-primary-50/80 px-4 py-3 text-left transition-colors hover:border-primary-200 hover:bg-primary-50 dark:border-primary-900/40 dark:bg-primary-900/20 dark:hover:border-primary-800 dark:hover:bg-primary-900/30"
+              >
+                <span class="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.042-.02a.75.75 0 011.037.852l-.708 2.836a.75.75 0 001.124.824l.042-.02M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                  </svg>
+                </span>
+                <span class="min-w-0">
+                  <span class="block text-sm leading-6 text-gray-600 dark:text-gray-300">{{ t('keys.newApiKeyBillingHint') }}</span>
+                  <span class="mt-1 inline-flex items-center gap-1 text-sm font-medium text-primary-700 dark:text-primary-300">
+                    {{ t('keys.newApiKeyBillingLink') }}
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                    </svg>
+                  </span>
+                </span>
+              </router-link>
             </div>
 
             <!-- Groups by Platform -->

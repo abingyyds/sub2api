@@ -75,6 +75,7 @@ func RegisterUserRoutes(
 
 		// 模型广场
 		authenticated.GET("/model-plaza", h.ModelPlaza.List)
+		authenticated.GET("/model-plaza/pricing-table", h.ModelPlaza.PricingTable)
 
 		// 使用记录
 		usage := authenticated.Group("/usage")
