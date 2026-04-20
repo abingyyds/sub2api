@@ -43,61 +43,64 @@
         </div>
       </div>
 
-      <div class="mt-6 space-y-4">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div class="mt-6 space-y-5">
+        <div class="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div class="max-w-3xl">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('modelPlaza.pricingTableTitle') }}</h3>
             <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-dark-300">
               {{ t('modelPlaza.pricingTableDesc') }}
             </p>
+            <div class="mt-3 flex flex-wrap items-center gap-2">
+              <span class="inline-flex rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-gray-700 ring-1 ring-gray-200 dark:bg-dark-800/90 dark:text-dark-200 dark:ring-dark-700">
+                {{ t('modelPlaza.pricingResults', { count: filteredPricingRows.length, total: pricingRows.length }) }}
+              </span>
+              <span
+                v-if="pricingGroups.length"
+                class="inline-flex rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700 ring-1 ring-primary-100 dark:bg-primary-950/30 dark:text-primary-300 dark:ring-primary-900/40"
+              >
+                {{ t('modelPlaza.pricingGroupsCount', { count: pricingGroups.length }) }}
+              </span>
+            </div>
+            <p v-if="pricingGroups.length" class="mt-3 text-xs leading-5 text-gray-500 dark:text-dark-400">
+              {{ t('modelPlaza.pricingFormula') }}
+            </p>
           </div>
 
           <div class="w-full max-w-md">
-            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-dark-300">
-              {{ t('common.search') }}
-            </label>
-            <input
-              v-model="pricingSearch"
-              type="text"
-              class="input w-full"
-              :placeholder="t('modelPlaza.pricingSearchPlaceholder')"
-            />
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-dark-300">
+                {{ t('common.search') }}
+              </label>
+              <input
+                v-model="pricingSearch"
+                type="text"
+                class="input w-full"
+                :placeholder="t('modelPlaza.pricingSearchPlaceholder')"
+              />
+            </div>
           </div>
         </div>
 
-        <div class="grid gap-3 lg:grid-cols-3">
-          <div class="rounded-2xl border border-white/70 bg-white/80 p-4 dark:border-dark-700 dark:bg-dark-800/80">
-            <div class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('modelPlaza.officialPriceCardTitle') }}</div>
+        <div class="grid gap-3 lg:grid-cols-2">
+          <div class="rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 dark:border-dark-700 dark:bg-dark-800/80">
+            <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">{{ t('modelPlaza.officialPriceCardTitle') }}</div>
             <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-dark-300">{{ t('modelPlaza.officialPriceCardDesc') }}</p>
           </div>
-          <div class="rounded-2xl border border-white/70 bg-white/80 p-4 dark:border-dark-700 dark:bg-dark-800/80">
-            <div class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('modelPlaza.sitePriceCardTitle') }}</div>
+          <div class="rounded-2xl border border-white/70 bg-white/80 px-4 py-3.5 dark:border-dark-700 dark:bg-dark-800/80">
+            <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">{{ t('modelPlaza.sitePriceCardTitle') }}</div>
             <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-dark-300">{{ t('modelPlaza.sitePriceCardDesc') }}</p>
-          </div>
-          <div class="rounded-2xl border border-white/70 bg-white/80 p-4 dark:border-dark-700 dark:bg-dark-800/80">
-            <div class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('modelPlaza.tierPriceCardTitle') }}</div>
-            <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-dark-300">{{ t('modelPlaza.tierPriceCardDesc') }}</p>
           </div>
         </div>
 
-        <div v-if="pricingGroups.length" class="overflow-hidden rounded-2xl border border-gray-200 bg-white/95 dark:border-dark-700 dark:bg-dark-900/95">
-          <div class="flex flex-col gap-2 border-b border-gray-200 px-4 py-4 dark:border-dark-700 lg:flex-row lg:items-center lg:justify-between">
-            <p class="text-sm text-gray-600 dark:text-dark-300">
-              {{ t('modelPlaza.pricingFormula') }}
-            </p>
-            <p class="text-xs text-gray-500 dark:text-dark-400">
-              {{ t('modelPlaza.pricingResults', { count: filteredPricingRows.length, total: pricingRows.length }) }}
-            </p>
-          </div>
-
+        <div v-if="pricingGroups.length" class="overflow-hidden rounded-3xl border border-gray-200 bg-white/95 shadow-sm dark:border-dark-700 dark:bg-dark-900/95">
           <div v-if="filteredPricingRows.length" class="overflow-x-auto">
-            <table class="min-w-[1200px] divide-y divide-gray-200 text-left dark:divide-dark-700">
-              <thead class="bg-gray-50/90 dark:bg-dark-800/90">
+            <table class="min-w-[1080px] text-left">
+              <thead class="border-b border-gray-200 bg-white/90 dark:border-dark-700 dark:bg-dark-900/90">
                 <tr>
-                  <th class="w-80 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">
+                  <th class="sticky left-0 z-20 w-72 bg-white/95 px-5 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500 backdrop-blur dark:bg-dark-900/95 dark:text-dark-400">
                     {{ t('modelPlaza.pricingColModel') }}
                   </th>
-                  <th class="w-72 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">
+                  <th class="w-60 px-4 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">
                     <div>{{ t('modelPlaza.pricingColOfficial') }}</div>
                     <div class="mt-1 normal-case tracking-normal text-[11px] font-medium text-gray-400 dark:text-dark-500">
                       {{ t('modelPlaza.officialUnitHint') }}
@@ -106,18 +109,22 @@
                   <th
                     v-for="group in pricingGroups"
                     :key="group.id"
-                    class="w-72 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400"
+                    class="w-60 px-4 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400"
                   >
-                    <div class="flex flex-col gap-1">
-                      <div class="flex items-center gap-2">
+                    <div class="flex flex-col gap-2">
+                      <div class="flex flex-wrap items-center gap-2">
                         <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium normal-case tracking-normal" :class="platformBadgeClass(group.platform)">
                           {{ t(`admin.groups.platforms.${group.platform}`) }}
                         </span>
                         <span class="truncate text-sm font-semibold normal-case text-gray-900 dark:text-white">{{ group.name }}</span>
                       </div>
-                      <div class="text-[11px] font-medium normal-case tracking-normal text-gray-500 dark:text-dark-400">
-                        {{ group.display_discount || formatMultiplierLabel(group.display_rate_multiplier ?? group.rate_multiplier) }}
-                        <span v-if="group.display_price"> · {{ group.display_price }}</span>
+                      <div class="flex flex-wrap gap-1.5 text-[11px] font-medium normal-case tracking-normal text-gray-500 dark:text-dark-400">
+                        <span class="rounded-full bg-gray-100 px-2 py-0.5 dark:bg-dark-700">
+                          {{ group.display_discount || formatMultiplierLabel(group.display_rate_multiplier ?? group.rate_multiplier) }}
+                        </span>
+                        <span v-if="group.display_price" class="rounded-full bg-primary-50 px-2 py-0.5 text-primary-700 dark:bg-primary-950/30 dark:text-primary-300">
+                          {{ group.display_price }}
+                        </span>
                       </div>
                       <div class="text-[11px] font-medium normal-case tracking-normal text-gray-400 dark:text-dark-500">
                         {{ t('modelPlaza.siteUnitHint') }}
@@ -129,92 +136,52 @@
 
               <tbody class="divide-y divide-gray-100 dark:divide-dark-800">
                 <tr v-for="row in paginatedPricingRows" :key="row.model" class="align-top">
-                  <td class="px-4 py-4">
-                    <div class="flex items-start gap-3">
-                      <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium" :class="platformBadgeClass(row.platform)">
-                        {{ t(`admin.groups.platforms.${row.platform}`) }}
-                      </span>
-                      <div class="min-w-0 flex-1">
-                        <div class="break-all font-mono text-sm font-semibold text-gray-900 dark:text-white">{{ row.model }}</div>
-                        <div class="mt-2 flex flex-wrap gap-1">
-                          <span class="rounded bg-gray-100 px-2 py-0.5 text-[11px] text-gray-600 dark:bg-dark-700 dark:text-dark-300">
-                            {{ row.mode }}
-                          </span>
-                          <span
-                            class="rounded px-2 py-0.5 text-[11px]"
-                            :class="row.supports_prompt_caching
-                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-                              : 'bg-gray-100 text-gray-600 dark:bg-dark-700 dark:text-dark-300'"
-                          >
-                            {{ row.supports_prompt_caching ? t('modelPlaza.promptCachingSupported') : t('modelPlaza.promptCachingUnsupported') }}
-                          </span>
-                        </div>
-                        <p v-if="row.aliases?.length" class="mt-2 text-xs leading-5 text-gray-500 dark:text-dark-400">
-                          {{ t('modelPlaza.aliasesLabel') }}: {{ row.aliases.join(', ') }}
-                        </p>
-                        <p class="mt-2 text-xs leading-5 text-gray-500 dark:text-dark-400">
-                          {{ tokenWindowLabel(row) }}
-                        </p>
+                  <td class="sticky left-0 z-10 bg-white/95 px-5 py-5 backdrop-blur dark:bg-dark-900/95">
+                    <div class="min-w-0 space-y-2.5">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium" :class="platformBadgeClass(row.platform)">
+                          {{ t(`admin.groups.platforms.${row.platform}`) }}
+                        </span>
                       </div>
+
+                      <div class="break-all font-mono text-sm font-semibold leading-6 text-gray-900 dark:text-white">{{ row.model }}</div>
+
+                      <p v-if="row.aliases?.length" class="text-xs leading-5 text-gray-500 dark:text-dark-400">
+                        {{ t('modelPlaza.aliasesLabel') }}: {{ row.aliases.join(', ') }}
+                      </p>
                     </div>
                   </td>
 
                   <td class="px-4 py-4">
-                    <div class="space-y-3">
-                      <div class="rounded-xl border border-gray-200 bg-gray-50/80 p-3 dark:border-dark-700 dark:bg-dark-800/80">
-                        <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">
-                          {{ t('modelPlaza.upTo200k') }}
-                        </div>
-                        <div class="mt-2 space-y-1.5">
-                          <div v-for="metric in metricRows(row.official, false, 'usd')" :key="metric.key" class="flex items-center justify-between gap-3 text-xs">
-                            <span class="text-gray-500 dark:text-dark-400">{{ metric.label }}</span>
-                            <span class="font-mono text-gray-900 dark:text-white">{{ metric.value }}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div v-if="hasAbove200kPricing(row.official)" class="rounded-xl border border-primary-100 bg-primary-50/70 p-3 dark:border-primary-900/40 dark:bg-primary-950/20">
-                        <div class="text-[11px] font-semibold uppercase tracking-wide text-primary-700 dark:text-primary-300">
-                          {{ t('modelPlaza.over200k') }}
-                        </div>
-                        <div class="mt-2 space-y-1.5">
-                          <div v-for="metric in metricRows(row.official, true, 'usd')" :key="metric.key" class="flex items-center justify-between gap-3 text-xs">
-                            <span class="text-primary-700/80 dark:text-primary-300/80">{{ metric.label }}</span>
-                            <span class="font-mono text-primary-800 dark:text-primary-200">{{ metric.value }}</span>
-                          </div>
+                    <div class="rounded-2xl border border-gray-200/80 bg-gray-50/80 p-3.5 dark:border-dark-700 dark:bg-dark-800/80">
+                      <div class="grid grid-cols-2 gap-2">
+                        <div
+                          v-for="metric in metricRows(row.official, 'usd')"
+                          :key="metric.key"
+                          class="rounded-xl bg-white/90 px-3 py-2.5 dark:bg-dark-900/70"
+                        >
+                          <div class="text-[11px] font-medium text-gray-500 dark:text-dark-400">{{ metric.label }}</div>
+                          <div class="mt-1 font-mono text-sm font-semibold text-gray-900 dark:text-white">{{ metric.value }}</div>
                         </div>
                       </div>
                     </div>
                   </td>
 
                   <td v-for="group in pricingGroups" :key="group.id" class="px-4 py-4">
-                    <div v-if="row.group_prices[group.id]" class="space-y-3">
-                      <div class="rounded-xl border border-gray-200 bg-gray-50/80 p-3 dark:border-dark-700 dark:bg-dark-800/80">
-                        <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">
-                          {{ t('modelPlaza.upTo200k') }}
-                        </div>
-                        <div class="mt-2 space-y-1.5">
-                          <div v-for="metric in metricRows(row.group_prices[group.id], false, 'balance')" :key="metric.key" class="flex items-center justify-between gap-3 text-xs">
-                            <span class="text-gray-500 dark:text-dark-400">{{ metric.label }}</span>
-                            <span class="font-mono text-gray-900 dark:text-white">{{ metric.value }}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div v-if="hasAbove200kPricing(row.group_prices[group.id])" class="rounded-xl border border-primary-100 bg-primary-50/70 p-3 dark:border-primary-900/40 dark:bg-primary-950/20">
-                        <div class="text-[11px] font-semibold uppercase tracking-wide text-primary-700 dark:text-primary-300">
-                          {{ t('modelPlaza.over200k') }}
-                        </div>
-                        <div class="mt-2 space-y-1.5">
-                          <div v-for="metric in metricRows(row.group_prices[group.id], true, 'balance')" :key="metric.key" class="flex items-center justify-between gap-3 text-xs">
-                            <span class="text-primary-700/80 dark:text-primary-300/80">{{ metric.label }}</span>
-                            <span class="font-mono text-primary-800 dark:text-primary-200">{{ metric.value }}</span>
-                          </div>
+                    <div v-if="row.group_prices[group.id]" class="rounded-2xl border border-gray-200/80 bg-gray-50/80 p-3.5 dark:border-dark-700 dark:bg-dark-800/80">
+                      <div class="grid grid-cols-2 gap-2">
+                        <div
+                          v-for="metric in metricRows(row.group_prices[group.id], 'balance')"
+                          :key="metric.key"
+                          class="rounded-xl bg-white/90 px-3 py-2.5 dark:bg-dark-900/70"
+                        >
+                          <div class="text-[11px] font-medium text-gray-500 dark:text-dark-400">{{ metric.label }}</div>
+                          <div class="mt-1 font-mono text-sm font-semibold text-gray-900 dark:text-white">{{ metric.value }}</div>
                         </div>
                       </div>
                     </div>
 
-                    <div v-else class="flex min-h-28 items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/60 px-3 py-4 text-center text-xs text-gray-400 dark:border-dark-700 dark:bg-dark-800/60 dark:text-dark-500">
+                    <div v-else class="flex min-h-24 items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50/60 px-3 py-4 text-center text-xs text-gray-400 dark:border-dark-700 dark:bg-dark-800/60 dark:text-dark-500">
                       {{ t('modelPlaza.notSupportedInGroup') }}
                     </div>
                   </td>
@@ -339,7 +306,6 @@ import {
   getModelPlaza,
   getModelPlazaPricingTable,
   type GroupModels,
-  type ModelPlazaPricingItem,
   type ModelPlazaPricingMetrics,
   type ModelPlazaPricingTable
 } from '@/api/model-plaza'
@@ -435,83 +401,41 @@ function formatMultiplierLabel(value: number | null | undefined) {
   return `${value.toFixed(digits).replace(/\.?0+$/, '')}x`
 }
 
-function metricRows(metrics: ModelPlazaPricingMetrics | undefined, above200k: boolean, unit: MetricUnit) {
+function metricRows(metrics: ModelPlazaPricingMetrics | undefined, unit: MetricUnit) {
   if (!metrics) {
     return []
   }
 
-  return [
+  const rows = [
     {
       key: 'input',
       label: t('modelPlaza.metricInput'),
-      value: formatMetricValue(
-        above200k ? metrics.input_per_million_above_200k : metrics.input_per_million,
-        unit
-      )
+      value: formatMetricValue(metrics.input_per_million, unit)
     },
     {
       key: 'output',
       label: t('modelPlaza.metricOutput'),
-      value: formatMetricValue(
-        above200k ? metrics.output_per_million_above_200k : metrics.output_per_million,
-        unit
-      )
-    },
-    {
-      key: 'cache-write',
-      label: t('modelPlaza.metricCacheWrite'),
-      value: formatMetricValue(
-        above200k ? metrics.cache_write_per_million_above_200k : metrics.cache_write_per_million,
-        unit
-      )
-    },
-    {
-      key: 'cache-read',
-      label: t('modelPlaza.metricCacheRead'),
-      value: formatMetricValue(
-        above200k ? metrics.cache_read_per_million_above_200k : metrics.cache_read_per_million,
-        unit
-      )
+      value: formatMetricValue(metrics.output_per_million, unit)
     }
   ]
-}
 
-function hasAbove200kPricing(metrics: ModelPlazaPricingMetrics | undefined) {
-  return Boolean(
-    metrics &&
-    (
-      metrics.input_per_million_above_200k !== null ||
-      metrics.output_per_million_above_200k !== null ||
-      metrics.cache_write_per_million_above_200k !== null ||
-      metrics.cache_read_per_million_above_200k !== null
-    )
-  )
-}
-
-function formatTokenCount(tokens: number) {
-  if (!tokens) {
-    return '-'
-  }
-  if (tokens >= 1_000_000) {
-    return `${(tokens / 1_000_000).toFixed(tokens % 1_000_000 === 0 ? 0 : 1)}M`
-  }
-  if (tokens >= 1000) {
-    return `${(tokens / 1000).toFixed(tokens % 1000 === 0 ? 0 : 1)}K`
-  }
-  return String(tokens)
-}
-
-function tokenWindowLabel(row: ModelPlazaPricingItem) {
-  const parts: string[] = []
-
-  if (row.max_input_tokens) {
-    parts.push(t('modelPlaza.maxInputTokens', { count: formatTokenCount(row.max_input_tokens) }))
-  }
-  if (row.max_output_tokens) {
-    parts.push(t('modelPlaza.maxOutputTokens', { count: formatTokenCount(row.max_output_tokens) }))
+  if (metrics.cache_write_per_million !== null && metrics.cache_write_per_million !== undefined && !Number.isNaN(metrics.cache_write_per_million)) {
+    rows.push({
+      key: 'cache-write',
+      label: t('modelPlaza.metricCacheWrite'),
+      value: formatMetricValue(metrics.cache_write_per_million, unit)
+    })
   }
 
-  return parts.join(' · ') || t('common.notAvailable')
+  if (metrics.cache_read_per_million !== null && metrics.cache_read_per_million !== undefined && !Number.isNaN(metrics.cache_read_per_million)) {
+    rows.push({
+      key: 'cache-read',
+      label: t('modelPlaza.metricCacheRead'),
+      value: formatMetricValue(metrics.cache_read_per_million, unit)
+    })
+  }
+
+  return rows
 }
 
 function handlePricingPageChange(page: number) {
