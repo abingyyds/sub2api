@@ -149,7 +149,7 @@
                             {{ row.supports_prompt_caching ? t('modelPlaza.promptCachingSupported') : t('modelPlaza.promptCachingUnsupported') }}
                           </span>
                         </div>
-                        <p v-if="row.aliases.length" class="mt-2 text-xs leading-5 text-gray-500 dark:text-dark-400">
+                        <p v-if="row.aliases?.length" class="mt-2 text-xs leading-5 text-gray-500 dark:text-dark-400">
                           {{ t('modelPlaza.aliasesLabel') }}: {{ row.aliases.join(', ') }}
                         </p>
                         <p class="mt-2 text-xs leading-5 text-gray-500 dark:text-dark-400">
@@ -392,7 +392,7 @@ const filteredPricingRows = computed(() => {
       row.platform,
       row.provider,
       row.mode,
-      ...row.aliases,
+      ...(row.aliases ?? []),
     ]
       .join(' ')
       .toLowerCase()

@@ -64,6 +64,60 @@ interface ModelPlazaCachePayload<T> {
   data: T
 }
 
+const normalizeGroupModels = (value: unknown): GroupModels[] => {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object' || !('group' in item)) {
+        return null
+      }
+
+      const record = item as GroupModels & { models?: unknown }
+      return {
+        group: record.group,
+        models: Array.isArray(record.models) ? record.models.filter((model): model is string => typeof model === 'string') : []
+      }
+    })
+    .filter((item): item is GroupModels => item !== null)
+}
+
+const normalizePricingTable = (value: unknown): ModelPlazaPricingTable => {
+  if (!value || typeof value !== 'object') {
+    return { groups: [], items: [] }
+  }
+
+  const record = value as {
+    groups?: unknown
+    items?: unknown
+  }
+
+  return {
+    groups: Array.isArray(record.groups) ? record.groups as ModelPlazaPricingGroup[] : [],
+    items: Array.isArray(record.items)
+      ? record.items.map((item) => {
+          const pricingItem = (item ?? {}) as ModelPlazaPricingItem & {
+            aliases?: unknown
+            group_prices?: unknown
+          }
+
+          return {
+            ...pricingItem,
+            aliases: Array.isArray(pricingItem.aliases)
+              ? pricingItem.aliases.filter((alias): alias is string => typeof alias === 'string')
+              : [],
+            group_prices:
+              pricingItem.group_prices && typeof pricingItem.group_prices === 'object'
+                ? pricingItem.group_prices as Record<number, ModelPlazaPricingMetrics>
+                : {}
+          }
+        })
+      : []
+  }
+}
+
 const readSessionCache = <T>(key: string): ModelPlazaCachePayload<T> | null => {
   if (typeof window === 'undefined') {
     return null
@@ -112,7 +166,7 @@ export async function getModelPlaza(force = false): Promise<GroupModels[]> {
   if (!force && !cachedGroupModels) {
     const cachedPayload = readSessionCache<GroupModels[]>(MODEL_PLAZA_SESSION_CACHE_KEY)
     if (cachedPayload && Array.isArray(cachedPayload.data)) {
-      cachedGroupModels = cachedPayload.data
+      cachedGroupModels = normalizeGroupModels(cachedPayload.data)
       cacheExpiresAt = cachedPayload.expiresAt
       return cachedGroupModels
     }
@@ -125,10 +179,10 @@ export async function getModelPlaza(force = false): Promise<GroupModels[]> {
   inFlightRequest = apiClient
     .get<GroupModels[]>('/model-plaza')
     .then(({ data }) => {
-      cachedGroupModels = data
+      cachedGroupModels = normalizeGroupModels(data)
       cacheExpiresAt = Date.now() + MODEL_PLAZA_CACHE_TTL_MS
-      writeSessionCache(MODEL_PLAZA_SESSION_CACHE_KEY, data, cacheExpiresAt)
-      return data
+      writeSessionCache(MODEL_PLAZA_SESSION_CACHE_KEY, cachedGroupModels, cacheExpiresAt)
+      return cachedGroupModels
     })
     .finally(() => {
       inFlightRequest = null
@@ -146,8 +200,8 @@ export async function getModelPlazaPricingTable(force = false): Promise<ModelPla
 
   if (!force && !cachedPricingTable) {
     const cachedPayload = readSessionCache<ModelPlazaPricingTable>(MODEL_PLAZA_PRICING_SESSION_CACHE_KEY)
-    if (cachedPayload && cachedPayload.data?.items && cachedPayload.data?.groups) {
-      cachedPricingTable = cachedPayload.data
+    if (cachedPayload && cachedPayload.data) {
+      cachedPricingTable = normalizePricingTable(cachedPayload.data)
       cacheExpiresAt = cachedPayload.expiresAt
       return cachedPricingTable
     }
@@ -160,10 +214,10 @@ export async function getModelPlazaPricingTable(force = false): Promise<ModelPla
   pricingInFlightRequest = apiClient
     .get<ModelPlazaPricingTable>('/model-plaza/pricing-table')
     .then(({ data }) => {
-      cachedPricingTable = data
+      cachedPricingTable = normalizePricingTable(data)
       cacheExpiresAt = Date.now() + MODEL_PLAZA_CACHE_TTL_MS
-      writeSessionCache(MODEL_PLAZA_PRICING_SESSION_CACHE_KEY, data, cacheExpiresAt)
-      return data
+      writeSessionCache(MODEL_PLAZA_PRICING_SESSION_CACHE_KEY, cachedPricingTable, cacheExpiresAt)
+      return cachedPricingTable
     })
     .finally(() => {
       pricingInFlightRequest = null
