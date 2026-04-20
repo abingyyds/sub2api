@@ -229,7 +229,7 @@ export default {
     projects: '项目管理',
     auditLogs: '审计日志',
     orgManagement: '企业',
-    tutorial: '文档中心',
+    tutorial: '使用教程',
     agent: '代理中心',
     agents: '代理管理',
     changelog: '更新公告'
@@ -3898,6 +3898,11 @@ export default {
       selectKey: '选择 API Key',
       selectModel: '选择模型',
       selectTool: '选择工具',
+      downloadConfig: '下载配置文件',
+      importToCcSwitch: '一键导入到 CC Switch',
+      importToCherryStudio: '一键导入到 Cherry Studio',
+      cherryStudioHint: '已支持 Cherry Studio 一键导入。点击下方按钮可直接拉起客户端；如果未拉起，也可以复制下方参数手动添加。',
+      cherryStudioNotInstalled: 'Cherry Studio 未安装或协议处理程序未注册。请先安装 Cherry Studio，或复制下方参数手动添加。',
       noKeys: '暂无 API Key',
       selectKeyHint: '请先选择一个 API Key 来生成配置文件',
       noKeysHint: '您还没有创建 API Key',
@@ -3917,8 +3922,10 @@ export default {
       authTip: '若出现 401 错误，在 Gemini CLI 中输入 /auth，然后填入你的 API Key'
     },
     docs: {
-      home: '文档中心',
+      home: '使用教程',
       navigation: '文档导航',
+      downloads: '安装与下载',
+      downloadsDesc: '先安装常用客户端，再回来生成配置或一键导入配置。',
       quickStart: '快速开始',
       advanced: '进阶玩法',
       tools: '实用工具',
@@ -3929,6 +3936,15 @@ export default {
       openclaw: 'OpenClaw 部署',
       opencode: 'OpenCode 配置',
       configGenerator: '配置文件导出'
+    },
+    downloads: {
+      ccSwitchDesc: '统一管理 Claude Code、Gemini CLI、Codex 等客户端，支持一键导入 Provider。',
+      codexDesc: 'OpenAI 官方 Codex 工具，可直接查看官方安装说明或下载最新 Releases。',
+      cherryStudioDesc: 'Cherry Studio 支持接入 OpenAI / Anthropic / Gemini 服务商，可配合本站生成参数使用。',
+      officialRepo: '官方项目',
+      releases: '下载 Releases',
+      installGuide: '官方安装说明',
+      providerDocs: '服务商配置文档'
     }
   },
 

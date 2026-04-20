@@ -232,7 +232,7 @@ export default {
     projects: 'Projects',
     auditLogs: 'Audit Logs',
     orgManagement: 'Organization',
-    tutorial: 'Documentation',
+    tutorial: 'Tutorial',
     agent: 'Agent Center',
     agents: 'Agent Management',
     changelog: 'Changelog'
@@ -3748,6 +3748,11 @@ export default {
       selectKey: 'Select API Key',
       selectModel: 'Select Model',
       selectTool: 'Select Tool',
+      downloadConfig: 'Download Config',
+      importToCcSwitch: 'Import to CC Switch',
+      importToCherryStudio: 'Import to Cherry Studio',
+      cherryStudioHint: 'Cherry Studio deeplink import is supported. Use the button below to open the desktop app directly, or copy the values below and add them manually.',
+      cherryStudioNotInstalled: 'Cherry Studio is not installed or the protocol handler is not registered. Please install Cherry Studio first, or copy the values below and add them manually.',
       noKeys: 'No API Keys',
       selectKeyHint: 'Please select an API Key to generate configuration',
       noKeysHint: 'You have not created any API Keys yet',
@@ -3767,8 +3772,10 @@ export default {
       authTip: 'If you see 401 error, run /auth in Gemini CLI and enter your API Key'
     },
     docs: {
-      home: 'Documentation',
+      home: 'Tutorial',
       navigation: 'Navigation',
+      downloads: 'Downloads & Installers',
+      downloadsDesc: 'Install your client first, then come back here to generate or import the configuration.',
       quickStart: 'Quick Start',
       advanced: 'Advanced',
       tools: 'Tools',
@@ -3779,6 +3786,15 @@ export default {
       openclaw: 'OpenClaw Deploy',
       opencode: 'OpenCode Setup',
       configGenerator: 'Config Export'
+    },
+    downloads: {
+      ccSwitchDesc: 'Manage Claude Code, Gemini CLI, Codex and more in one place, with one-click provider import.',
+      codexDesc: 'OpenAI official Codex tool. View the official install guide or download the latest releases.',
+      cherryStudioDesc: 'Cherry Studio can connect to OpenAI, Anthropic, and Gemini providers, and works well with generated settings from this site.',
+      officialRepo: 'Official Repo',
+      releases: 'Download Releases',
+      installGuide: 'Install Guide',
+      providerDocs: 'Provider Docs'
     }
   },
 
