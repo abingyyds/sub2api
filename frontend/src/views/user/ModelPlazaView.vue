@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-6xl space-y-8">
+  <div class="mx-auto max-w-7xl space-y-8">
     <div class="text-center">
       <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ t('modelPlaza.title') }}</h1>
       <p class="mt-2 text-gray-500 dark:text-dark-400">{{ t('modelPlaza.subtitle') }}</p>
@@ -16,16 +16,18 @@
               {{ t('modelPlaza.pricingStandardBadge') }}
             </span>
             <span
-              v-if="pricingGroups.length"
+              v-if="sortedGroupModels.length"
               class="inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 dark:bg-dark-800 dark:text-dark-300"
             >
-              {{ t('modelPlaza.pricingGroupsCount', { count: pricingGroups.length }) }}
+              {{ t('modelPlaza.pricingGroupsCount', { count: sortedGroupModels.length }) }}
             </span>
           </div>
 
-          <h2 class="mt-4 text-2xl font-semibold text-gray-900 dark:text-white">{{ t('modelPlaza.pricingTableTitle') }}</h2>
+          <h2 class="mt-4 text-2xl font-semibold text-gray-900 dark:text-white">
+            {{ t('modelPlaza.pricingExplorerTitle') }}
+          </h2>
           <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-dark-300">
-            {{ t('modelPlaza.pricingTableDesc') }}
+            {{ t('modelPlaza.pricingExplorerDesc') }}
           </p>
 
           <div class="mt-4 flex flex-wrap gap-2">
@@ -36,12 +38,12 @@
               {{ t('modelPlaza.siteUnitHint') }}
             </span>
             <span class="inline-flex rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700 dark:bg-primary-950/30 dark:text-primary-300">
-              {{ t('modelPlaza.pricingAvailableOnly') }}
+              {{ t('modelPlaza.pricingMultiplierIncluded') }}
             </span>
           </div>
 
-          <p v-if="pricingGroups.length" class="mt-3 text-xs leading-5 text-gray-500 dark:text-dark-400">
-            {{ t('modelPlaza.pricingCompactHint') }}
+          <p class="mt-3 text-xs leading-5 text-gray-500 dark:text-dark-400">
+            {{ t('modelPlaza.pricingSelectionHint') }}
           </p>
         </div>
 
@@ -66,38 +68,136 @@
           </div>
 
           <p class="text-xs leading-5 text-gray-500 dark:text-dark-400">
-            {{ t('modelPlaza.pricingResults', { count: filteredPricingRows.length, total: pricingRows.length }) }}
+            {{ t('modelPlaza.pricingExplorerStats', { groups: filteredGroupSections.length, models: filteredModelCount }) }}
           </p>
         </div>
       </div>
 
-      <div v-if="pricingGroups.length" class="mt-6 space-y-3">
-        <div v-if="filteredPricingRows.length" class="space-y-3">
+      <div v-if="loading" class="mt-8 flex justify-center py-12">
+        <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
+      </div>
+
+      <div
+        v-else-if="!filteredGroupSections.length"
+        class="mt-8 rounded-2xl border border-dashed border-gray-200 bg-gray-50/60 px-4 py-12 text-center text-sm text-gray-500 dark:border-dark-700 dark:bg-dark-800/60 dark:text-dark-400"
+      >
+        {{ pricingSearch.trim() ? t('modelPlaza.noPricingRows') : t('modelPlaza.empty') }}
+      </div>
+
+      <div v-else class="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div class="space-y-4">
           <article
-            v-for="row in paginatedPricingRows"
-            :key="row.model"
-            class="rounded-2xl border border-gray-200 bg-gray-50/70 p-4 dark:border-dark-700 dark:bg-dark-800/70"
+            v-for="section in filteredGroupSections"
+            :key="section.group.id"
+            class="model-plaza-card rounded-2xl border border-gray-200 bg-gray-50/70 p-5 dark:border-dark-700 dark:bg-dark-800/60"
           >
-            <div class="flex flex-col gap-4 xl:flex-row">
-              <div class="xl:w-72 xl:flex-shrink-0">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-2">
-                  <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium" :class="platformBadgeClass(row.platform)">
-                    {{ t(`admin.groups.platforms.${row.platform}`) }}
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ section.group.name }}</h3>
+                  <span class="rounded-full px-2.5 py-1 text-xs font-medium" :class="platformBadgeClass(section.group.platform)">
+                    {{ t(`admin.groups.platforms.${section.group.platform}`) }}
                   </span>
                 </div>
 
-                <h3 class="mt-3 break-all font-mono text-sm font-semibold leading-6 text-gray-900 dark:text-white">
-                  {{ row.model }}
-                </h3>
-
-                <p v-if="row.aliases?.length" class="mt-2 text-xs leading-5 text-gray-500 dark:text-dark-400">
-                  {{ t('modelPlaza.aliasesLabel') }}: {{ aliasSummary(row.aliases) }}
+                <p v-if="section.group.description" class="mt-1 text-sm text-gray-500 dark:text-dark-400">
+                  {{ section.group.description }}
                 </p>
               </div>
 
-              <div class="flex-1 space-y-3">
-                <div class="rounded-2xl border border-white/80 bg-white p-4 dark:border-dark-700 dark:bg-dark-900/80">
-                  <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <div class="flex flex-wrap gap-2 text-xs">
+                <span class="rounded-full bg-white px-3 py-1 text-gray-600 dark:bg-dark-900 dark:text-dark-300">
+                  {{ groupSummary(section.pricingGroup ?? section.group) }}
+                </span>
+                <span
+                  v-if="section.group.subscription_type === 'subscription'"
+                  class="rounded-full bg-primary-50 px-3 py-1 text-primary-700 dark:bg-primary-950/30 dark:text-primary-300"
+                >
+                  {{ t('modelPlaza.subscriptionType') }}
+                </span>
+                <span
+                  v-else
+                  class="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300"
+                >
+                  {{ t('modelPlaza.standardType') }}
+                </span>
+              </div>
+            </div>
+
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button
+                v-for="model in visibleModels(section)"
+                :key="model"
+                type="button"
+                class="inline-flex items-center rounded-xl border px-3 py-2 text-left text-xs font-mono transition-colors"
+                :class="isSelectedModel(section.group.id, model)
+                  ? 'border-primary-300 bg-primary-50 text-primary-700 shadow-sm dark:border-primary-700 dark:bg-primary-950/30 dark:text-primary-300'
+                  : 'border-gray-200 bg-white text-gray-700 hover:border-primary-300 hover:text-primary-700 dark:border-dark-700 dark:bg-dark-900 dark:text-dark-200 dark:hover:border-primary-700 dark:hover:text-primary-300'"
+                :title="t('modelPlaza.clickToCopy')"
+                @click="handleModelSelect(section.group.id, model)"
+              >
+                {{ model }}
+              </button>
+            </div>
+
+            <div v-if="hiddenModelCount(section) > 0" class="mt-3">
+              <button
+                type="button"
+                class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-primary-300 hover:text-primary-700 dark:border-dark-700 dark:text-dark-300 dark:hover:border-primary-700 dark:hover:text-primary-300"
+                @click="toggleExpanded(section.group.id)"
+              >
+                {{ isExpanded(section.group.id) ? t('common.collapse') : t('common.more') }}
+                <span v-if="!isExpanded(section.group.id)" class="text-gray-400 dark:text-dark-400">
+                  +{{ hiddenModelCount(section) }}
+                </span>
+              </button>
+            </div>
+          </article>
+        </div>
+
+        <aside class="xl:sticky xl:top-24 xl:self-start">
+          <div class="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">
+              {{ t('modelPlaza.pricingPanelTitle') }}
+            </p>
+
+            <template v-if="selectedGroup && selectedRequestedModel">
+              <h3 class="mt-3 break-all font-mono text-sm font-semibold leading-6 text-gray-900 dark:text-white">
+                {{ selectedRequestedModel }}
+              </h3>
+
+              <p class="mt-2 text-xs leading-5 text-gray-500 dark:text-dark-400">
+                {{ t('modelPlaza.pricingPanelCopiedHint') }}
+              </p>
+
+              <div class="mt-4 rounded-2xl border border-gray-200 bg-gray-50/80 p-4 dark:border-dark-700 dark:bg-dark-800/70">
+                <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">
+                  {{ t('modelPlaza.pricingCurrentGroup') }}
+                </div>
+                <div class="mt-2 flex flex-wrap items-center gap-2">
+                  <span class="text-sm font-semibold text-gray-900 dark:text-white">
+                    {{ selectedGroup.name }}
+                  </span>
+                  <span class="rounded-full px-2 py-0.5 text-[10px] font-medium" :class="platformBadgeClass(selectedGroup.platform)">
+                    {{ t(`admin.groups.platforms.${selectedGroup.platform}`) }}
+                  </span>
+                </div>
+                <p class="mt-2 text-xs leading-5 text-gray-500 dark:text-dark-400">
+                  {{ groupSummary(selectedPricingGroup ?? selectedGroup) }}
+                </p>
+              </div>
+
+              <div
+                v-if="selectedPricingRow && normalizeModelKey(selectedRequestedModel) !== normalizeModelKey(selectedPricingRow.model)"
+                class="mt-4 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200"
+              >
+                <div class="font-semibold">{{ t('modelPlaza.pricingMatchedModelLabel') }}</div>
+                <div class="mt-1 break-all font-mono">{{ selectedPricingRow.model }}</div>
+              </div>
+
+              <div class="mt-4 space-y-3">
+                <div class="rounded-2xl border border-gray-200 bg-gray-50/80 p-4 dark:border-dark-700 dark:bg-dark-800/70">
+                  <div class="flex items-center justify-between gap-3">
                     <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">
                       {{ t('modelPlaza.pricingColOfficial') }}
                     </div>
@@ -106,179 +206,66 @@
                     </div>
                   </div>
 
-                  <div class="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+                  <div v-if="selectedPricingRow" class="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
                     <div
-                      v-for="metric in metricRows(row.official, 'usd')"
+                      v-for="metric in metricRows(selectedPricingRow.official, 'usd')"
                       :key="metric.key"
-                      class="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1.5 text-xs dark:bg-dark-800"
+                      class="rounded-xl bg-white px-3 py-2.5 dark:bg-dark-900"
                     >
-                      <span class="text-gray-500 dark:text-dark-400">{{ metric.label }}</span>
-                      <span class="font-mono font-semibold text-gray-900 dark:text-white">{{ metric.value }}</span>
+                      <div class="text-[11px] font-medium text-gray-500 dark:text-dark-400">{{ metric.label }}</div>
+                      <div class="mt-1 font-mono text-sm font-semibold text-gray-900 dark:text-white">{{ metric.value }}</div>
                     </div>
+                  </div>
+                  <div v-else class="mt-3 text-xs text-gray-400 dark:text-dark-500">
+                    {{ t('modelPlaza.notSupportedInGroup') }}
                   </div>
                 </div>
 
-                <div class="rounded-2xl border border-white/80 bg-white p-4 dark:border-dark-700 dark:bg-dark-900/80">
-                  <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">
-                      {{ t('modelPlaza.pricingSupportedGroupsTitle') }}
+                <div class="rounded-2xl border border-primary-100 bg-primary-50/70 p-4 dark:border-primary-900/40 dark:bg-primary-950/20">
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="text-[11px] font-semibold uppercase tracking-wide text-primary-700 dark:text-primary-300">
+                      {{ t('modelPlaza.sitePriceCardTitle') }}
                     </div>
-                    <div class="text-[11px] text-gray-400 dark:text-dark-500">
-                      {{ t('modelPlaza.pricingSupportedGroupsCount', { count: supportedGroupEntries(row).length }) }}
+                    <div class="text-[11px] text-primary-600/70 dark:text-primary-300/70">
+                      {{ t('modelPlaza.siteUnitHint') }}
                     </div>
                   </div>
 
-                  <div
-                    v-if="supportedGroupEntries(row).length"
-                    class="mt-3 grid gap-2 lg:grid-cols-2 2xl:grid-cols-3"
-                  >
+                  <div v-if="selectedSiteMetrics" class="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
                     <div
-                      v-for="entry in supportedGroupEntries(row)"
-                      :key="entry.group.id"
-                      class="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 dark:border-dark-700 dark:bg-dark-800/80"
+                      v-for="metric in metricRows(selectedSiteMetrics, 'balance')"
+                      :key="metric.key"
+                      class="rounded-xl bg-white/90 px-3 py-2.5 dark:bg-dark-900/80"
                     >
-                      <div class="flex flex-wrap items-center gap-2">
-                        <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium" :class="platformBadgeClass(entry.group.platform)">
-                          {{ t(`admin.groups.platforms.${entry.group.platform}`) }}
-                        </span>
-                        <span class="truncate text-sm font-semibold text-gray-900 dark:text-white">
-                          {{ entry.group.name }}
-                        </span>
-                      </div>
-
-                      <p class="mt-1 text-[11px] leading-5 text-gray-500 dark:text-dark-400">
-                        {{ groupSummary(entry.group) }}
-                      </p>
-
-                      <div class="mt-3 flex flex-wrap gap-x-3 gap-y-2">
-                        <div
-                          v-for="metric in metricRows(entry.metrics, 'balance')"
-                          :key="metric.key"
-                          class="inline-flex items-center gap-1.5 text-xs"
-                        >
-                          <span class="text-gray-500 dark:text-dark-400">{{ metric.label }}</span>
-                          <span class="font-mono font-semibold text-gray-900 dark:text-white">{{ metric.value }}</span>
-                        </div>
-                      </div>
+                      <div class="text-[11px] font-medium text-primary-700/80 dark:text-primary-300/80">{{ metric.label }}</div>
+                      <div class="mt-1 font-mono text-sm font-semibold text-gray-900 dark:text-white">{{ metric.value }}</div>
                     </div>
                   </div>
-
-                  <div v-else class="mt-3 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-3 py-4 text-center text-xs text-gray-400 dark:border-dark-700 dark:bg-dark-800/80 dark:text-dark-500">
+                  <div v-else class="mt-3 text-xs text-primary-700/80 dark:text-primary-300/80">
                     {{ t('modelPlaza.notSupportedInGroup') }}
                   </div>
                 </div>
               </div>
-            </div>
-          </article>
-        </div>
+            </template>
 
-        <div v-else class="rounded-2xl border border-dashed border-gray-200 bg-gray-50/60 px-4 py-12 text-center text-sm text-gray-500 dark:border-dark-700 dark:bg-dark-800/60 dark:text-dark-400">
-          {{ t('modelPlaza.noPricingRows') }}
-        </div>
-
-        <Pagination
-          v-if="filteredPricingRows.length"
-          :page="pricingPage"
-          :page-size="pricingPageSize"
-          :total="filteredPricingRows.length"
-          :page-size-options="[10, 20, 50, 100]"
-          @update:page="handlePricingPageChange"
-          @update:pageSize="handlePricingPageSizeChange"
-        />
-      </div>
-
-      <div v-else-if="!loading" class="mt-6 rounded-2xl border border-dashed border-gray-200 bg-gray-50/60 px-4 py-10 text-center text-sm text-gray-500 dark:border-dark-700 dark:bg-dark-800/60 dark:text-dark-400">
-        {{ t('modelPlaza.noPricingRows') }}
-      </div>
-    </section>
-
-    <div v-if="loading" class="flex justify-center py-12">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
-    </div>
-
-    <div v-else-if="!groupModels.length" class="py-12 text-center text-gray-500 dark:text-dark-400">
-      {{ t('modelPlaza.empty') }}
-    </div>
-
-    <div v-else class="space-y-4">
-      <div>
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">{{ t('modelPlaza.groupListTitle') }}</h2>
-        <p class="mt-1 text-sm text-gray-500 dark:text-dark-400">{{ t('modelPlaza.groupListDesc') }}</p>
-      </div>
-
-      <div class="grid gap-6 md:grid-cols-2">
-        <div
-          v-for="item in sortedGroupModels"
-          :key="item.group.id"
-          class="model-plaza-card rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-dark-700 dark:bg-dark-900"
-        >
-          <div class="mb-4 flex items-center justify-between">
-            <div>
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ item.group.name }}</h2>
-              <p v-if="item.group.description" class="mt-1 text-sm text-gray-500 dark:text-dark-400">
-                {{ item.group.description }}
+            <div v-else class="mt-4 rounded-2xl border border-dashed border-gray-200 bg-gray-50/70 px-4 py-10 text-center dark:border-dark-700 dark:bg-dark-800/60">
+              <div class="text-sm font-semibold text-gray-900 dark:text-white">
+                {{ t('modelPlaza.pricingPanelEmptyTitle') }}
+              </div>
+              <p class="mt-2 text-sm leading-6 text-gray-500 dark:text-dark-400">
+                {{ t('modelPlaza.pricingPanelEmptyDesc') }}
               </p>
             </div>
-            <span class="rounded-full px-3 py-1 text-xs font-medium" :class="platformBadgeClass(item.group.platform)">
-              {{ t(`admin.groups.platforms.${item.group.platform}`) }}
-            </span>
           </div>
-
-          <div class="mb-4 flex flex-wrap gap-3 text-xs text-gray-500 dark:text-dark-400">
-            <span v-if="item.group.rate_multiplier !== 1">
-              {{ t('modelPlaza.rate') }}: {{ item.group.rate_multiplier }}x
-            </span>
-            <span v-if="item.group.subscription_type === 'subscription'" class="text-primary-600 dark:text-primary-400">
-              {{ t('modelPlaza.subscriptionType') }}
-            </span>
-            <span v-else class="text-green-600 dark:text-green-400">
-              {{ t('modelPlaza.standardType') }}
-            </span>
-            <span v-if="item.group.claude_code_only" class="text-amber-600 dark:text-amber-400">
-              Claude Code Only
-            </span>
-          </div>
-
-          <div v-if="getGroupModels(item).length">
-            <div class="mb-2 text-sm font-medium text-gray-700 dark:text-dark-300">
-              {{ t('modelPlaza.availableModels') }} ({{ getGroupModels(item).length }})
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <button
-                v-for="model in visibleModels(item)"
-                :key="model"
-                @click="copyModel(model)"
-                class="inline-block cursor-pointer rounded-md bg-gray-100 px-2.5 py-1 text-xs font-mono text-gray-700 transition-colors hover:bg-primary-100 hover:text-primary-700 dark:bg-dark-700 dark:text-dark-300 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
-                :title="t('modelPlaza.clickToCopy')"
-              >
-                {{ model }}
-              </button>
-            </div>
-            <div v-if="hiddenModelCount(item) > 0" class="mt-3">
-              <button
-                class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-primary-300 hover:text-primary-700 dark:border-dark-700 dark:text-dark-300 dark:hover:border-primary-700 dark:hover:text-primary-400"
-                @click="toggleExpanded(item.group.id)"
-              >
-                {{ isExpanded(item.group.id) ? t('common.collapse') : t('common.more') }}
-                <span v-if="!isExpanded(item.group.id)" class="text-gray-400 dark:text-dark-400">
-                  +{{ hiddenModelCount(item) }}
-                </span>
-              </button>
-            </div>
-          </div>
-          <div v-else class="text-sm italic text-gray-400 dark:text-dark-500">
-            {{ t('modelPlaza.allModels') }}
-          </div>
-        </div>
+        </aside>
       </div>
-    </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import Pagination from '@/components/common/Pagination.vue'
 import {
   getModelPlaza,
   getModelPlazaPricingTable,
@@ -292,6 +279,12 @@ import { useClipboard } from '@/composables/useClipboard'
 
 type MetricUnit = 'usd' | 'balance'
 
+interface GroupSection {
+  group: GroupModels['group']
+  pricingGroup: ModelPlazaPricingGroup | null
+  models: string[]
+}
+
 const { t } = useI18n()
 const { copyToClipboard } = useClipboard()
 const INITIAL_VISIBLE_MODELS = 18
@@ -301,8 +294,8 @@ const groupModels = ref<GroupModels[]>([])
 const pricingTable = ref<ModelPlazaPricingTable | null>(null)
 const expandedGroupIds = ref<number[]>([])
 const pricingSearch = ref('')
-const pricingPage = ref(1)
-const pricingPageSize = ref(20)
+const selectedGroupId = ref<number | null>(null)
+const selectedRequestedModel = ref('')
 
 const platformOrder: Record<string, number> = {
   anthropic: 0,
@@ -314,6 +307,42 @@ const platformOrder: Record<string, number> = {
 
 const pricingGroups = computed(() => pricingTable.value?.groups || [])
 const pricingRows = computed(() => pricingTable.value?.items || [])
+const pricingGroupMap = computed(() => new Map(pricingGroups.value.map((group) => [group.id, group])))
+
+const pricingRowLookup = computed(() => {
+  const lookup = new Map<string, ModelPlazaPricingItem>()
+
+  for (const row of pricingRows.value) {
+    lookup.set(normalizeModelKey(row.model), row)
+    for (const alias of row.aliases ?? []) {
+      const key = normalizeModelKey(alias)
+      if (!lookup.has(key)) {
+        lookup.set(key, row)
+      }
+    }
+  }
+
+  return lookup
+})
+
+const pricingModelsByGroup = computed(() => {
+  const map = new Map<number, string[]>()
+
+  for (const row of pricingRows.value) {
+    for (const groupId of Object.keys(row.group_prices)) {
+      const numericGroupId = Number(groupId)
+      if (!Number.isFinite(numericGroupId)) {
+        continue
+      }
+      const list = map.get(numericGroupId) ?? []
+      list.push(row.model)
+      map.set(numericGroupId, list)
+    }
+  }
+
+  return map
+})
+
 const sortedGroupModels = computed(() => {
   return [...groupModels.value].sort((a, b) => {
     const platformDelta = (platformOrder[a.group.platform] ?? 999) - (platformOrder[b.group.platform] ?? 999)
@@ -325,31 +354,62 @@ const sortedGroupModels = computed(() => {
   })
 })
 
-const filteredPricingRows = computed(() => {
+const filteredGroupSections = computed<GroupSection[]>(() => {
   const query = pricingSearch.value.trim().toLowerCase()
-  if (!query) {
-    return pricingRows.value
+
+  return sortedGroupModels.value
+    .map((item) => {
+      const pricingGroup = pricingGroupMap.value.get(item.group.id) ?? null
+      const baseModels = getBaseGroupModels(item.group.id, getGroupModels(item))
+      const groupMatches = query ? groupSearchText(item, pricingGroup).includes(query) : false
+      const models = query
+        ? (groupMatches ? baseModels : baseModels.filter((model) => modelSearchText(item, model, pricingGroup).includes(query)))
+        : baseModels
+
+      return {
+        group: item.group,
+        pricingGroup,
+        models,
+      }
+    })
+    .filter((section) => section.models.length > 0)
+})
+
+const filteredModelCount = computed(() => {
+  return filteredGroupSections.value.reduce((count, section) => count + section.models.length, 0)
+})
+
+const selectedGroup = computed(() => {
+  if (selectedGroupId.value === null) {
+    return null
   }
-
-  return pricingRows.value.filter((row) => {
-    const haystack = [
-      row.model,
-      row.platform,
-      row.provider,
-      row.mode,
-      ...(row.aliases ?? []),
-    ]
-      .join(' ')
-      .toLowerCase()
-
-    return haystack.includes(query)
-  })
+  return sortedGroupModels.value.find((item) => item.group.id === selectedGroupId.value)?.group ?? null
 })
 
-const paginatedPricingRows = computed(() => {
-  const start = (pricingPage.value - 1) * pricingPageSize.value
-  return filteredPricingRows.value.slice(start, start + pricingPageSize.value)
+const selectedPricingGroup = computed(() => {
+  if (selectedGroupId.value === null) {
+    return null
+  }
+  return pricingGroupMap.value.get(selectedGroupId.value) ?? null
 })
+
+const selectedPricingRow = computed(() => {
+  if (!selectedRequestedModel.value) {
+    return null
+  }
+  return pricingRowLookup.value.get(normalizeModelKey(selectedRequestedModel.value)) ?? null
+})
+
+const selectedSiteMetrics = computed(() => {
+  if (!selectedPricingRow.value || selectedGroupId.value === null) {
+    return null
+  }
+  return selectedPricingRow.value.group_prices[selectedGroupId.value] ?? null
+})
+
+function normalizeModelKey(model: string) {
+  return model.trim().toLowerCase()
+}
 
 function platformBadgeClass(platform: string) {
   const map: Record<string, string> = {
@@ -362,6 +422,73 @@ function platformBadgeClass(platform: string) {
   return map[platform] || map.multi
 }
 
+function dedupeModels(models: string[]) {
+  const seen = new Set<string>()
+  const result: string[] = []
+
+  for (const model of models) {
+    const normalized = model.trim()
+    if (!normalized || seen.has(normalized)) {
+      continue
+    }
+    seen.add(normalized)
+    result.push(normalized)
+  }
+
+  return result
+}
+
+function getGroupModels(item: GroupModels) {
+  return Array.isArray(item.models) ? item.models : []
+}
+
+function getBaseGroupModels(groupId: number, explicitModels: string[]) {
+  if (explicitModels.length > 0) {
+    return dedupeModels(explicitModels)
+  }
+
+  const derivedModels = pricingModelsByGroup.value.get(groupId) ?? []
+  return dedupeModels(derivedModels)
+}
+
+function getPricingRowByModel(model: string) {
+  return pricingRowLookup.value.get(normalizeModelKey(model)) ?? null
+}
+
+function groupSearchText(item: GroupModels, pricingGroup: ModelPlazaPricingGroup | null) {
+  return [
+    item.group.name,
+    item.group.description,
+    item.group.platform,
+    item.group.display_price,
+    item.group.display_discount,
+    pricingGroup?.display_price,
+    pricingGroup?.display_discount,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+}
+
+function modelSearchText(item: GroupModels, model: string, pricingGroup: ModelPlazaPricingGroup | null) {
+  const pricingRow = getPricingRowByModel(model)
+
+  return [
+    model,
+    pricingRow?.model,
+    ...(pricingRow?.aliases ?? []),
+    pricingRow?.provider,
+    pricingRow?.mode,
+    pricingRow?.platform,
+    item.group.name,
+    item.group.platform,
+    pricingGroup?.display_price,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+}
+
 function formatMetricValue(value: number | null | undefined, unit: MetricUnit) {
   if (value === null || value === undefined || Number.isNaN(value)) {
     return '-'
@@ -369,7 +496,7 @@ function formatMetricValue(value: number | null | undefined, unit: MetricUnit) {
 
   const digits = value >= 100 ? 2 : 3
   const formatted = value.toFixed(digits).replace(/\.?0+$/, '')
-  return unit === 'usd' ? `$${formatted}` : formatted
+  return unit === 'usd' ? `$${formatted}` : `¥${formatted}`
 }
 
 function formatMultiplierLabel(value: number | null | undefined) {
@@ -380,7 +507,11 @@ function formatMultiplierLabel(value: number | null | undefined) {
   return `${value.toFixed(digits).replace(/\.?0+$/, '')}x`
 }
 
-function metricRows(metrics: ModelPlazaPricingMetrics | undefined, unit: MetricUnit) {
+function hasPositiveMetric(value: number | null | undefined) {
+  return value !== null && value !== undefined && !Number.isNaN(value) && value > 0
+}
+
+function metricRows(metrics: ModelPlazaPricingMetrics | null | undefined, unit: MetricUnit) {
   if (!metrics) {
     return []
   }
@@ -417,20 +548,12 @@ function metricRows(metrics: ModelPlazaPricingMetrics | undefined, unit: MetricU
   return rows
 }
 
-function hasPositiveMetric(value: number | null | undefined) {
-  return value !== null && value !== undefined && !Number.isNaN(value) && value > 0
-}
-
-function supportedGroupEntries(row: ModelPlazaPricingItem) {
-  return pricingGroups.value
-    .filter((group) => Boolean(row.group_prices[group.id]))
-    .map((group) => ({
-      group,
-      metrics: row.group_prices[group.id]
-    }))
-}
-
-function groupSummary(group: ModelPlazaPricingGroup) {
+function groupSummary(group: {
+  display_discount?: string | null
+  display_price?: string | null
+  rate_multiplier: number
+  display_rate_multiplier?: number | null
+}) {
   const parts = [
     group.display_discount || formatMultiplierLabel(group.display_rate_multiplier ?? group.rate_multiplier)
   ]
@@ -440,32 +563,6 @@ function groupSummary(group: ModelPlazaPricingGroup) {
   }
 
   return parts.join(' · ')
-}
-
-function aliasSummary(aliases: string[]) {
-  if (!aliases.length) {
-    return ''
-  }
-
-  const visibleAliases = aliases.slice(0, 2)
-  if (aliases.length <= visibleAliases.length) {
-    return visibleAliases.join(', ')
-  }
-
-  return `${visibleAliases.join(', ')} +${aliases.length - visibleAliases.length}`
-}
-
-function handlePricingPageChange(page: number) {
-  pricingPage.value = page
-}
-
-function handlePricingPageSizeChange(pageSize: number) {
-  pricingPageSize.value = pageSize
-  pricingPage.value = 1
-}
-
-function copyModel(model: string) {
-  copyToClipboard(model, t('modelPlaza.modelCopied'))
 }
 
 function isExpanded(groupId: number) {
@@ -478,38 +575,47 @@ function toggleExpanded(groupId: number) {
     : [...expandedGroupIds.value, groupId]
 }
 
-function getGroupModels(item: GroupModels) {
-  return Array.isArray(item.models) ? item.models : []
-}
-
-function hiddenModelCount(item: GroupModels) {
-  const models = getGroupModels(item)
-  if (isExpanded(item.group.id) || models.length <= INITIAL_VISIBLE_MODELS) {
+function hiddenModelCount(section: GroupSection) {
+  if (isExpanded(section.group.id) || section.models.length <= INITIAL_VISIBLE_MODELS) {
     return 0
   }
 
-  return models.length - INITIAL_VISIBLE_MODELS
+  return section.models.length - INITIAL_VISIBLE_MODELS
 }
 
-function visibleModels(item: GroupModels) {
-  const models = getGroupModels(item)
-  if (isExpanded(item.group.id) || models.length <= INITIAL_VISIBLE_MODELS) {
-    return models
+function visibleModels(section: GroupSection) {
+  if (isExpanded(section.group.id) || section.models.length <= INITIAL_VISIBLE_MODELS) {
+    return section.models
   }
 
-  return models.slice(0, INITIAL_VISIBLE_MODELS)
+  return section.models.slice(0, INITIAL_VISIBLE_MODELS)
 }
 
-watch(pricingSearch, () => {
-  pricingPage.value = 1
-})
+function isSelectedModel(groupId: number, model: string) {
+  return selectedGroupId.value === groupId && selectedRequestedModel.value === model
+}
 
-watch(filteredPricingRows, (rows) => {
-  const totalPages = Math.max(1, Math.ceil(rows.length / pricingPageSize.value))
-  if (pricingPage.value > totalPages) {
-    pricingPage.value = totalPages
+function handleModelSelect(groupId: number, model: string) {
+  selectedGroupId.value = groupId
+  selectedRequestedModel.value = model
+  copyToClipboard(model, t('modelPlaza.modelCopied'))
+}
+
+watch(filteredGroupSections, (sections) => {
+  if (!sections.length) {
+    selectedGroupId.value = null
+    selectedRequestedModel.value = ''
+    return
   }
-})
+
+  const currentSection = sections.find((section) => section.group.id === selectedGroupId.value)
+  if (currentSection && currentSection.models.includes(selectedRequestedModel.value)) {
+    return
+  }
+
+  selectedGroupId.value = null
+  selectedRequestedModel.value = ''
+}, { immediate: true })
 
 onMounted(async () => {
   try {
