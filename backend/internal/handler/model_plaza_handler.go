@@ -13,13 +13,15 @@ import (
 type ModelPlazaHandler struct {
 	apiKeyService  *service.APIKeyService
 	gatewayService *service.GatewayService
+	pricingService *service.PricingService
 }
 
 // NewModelPlazaHandler creates a new ModelPlazaHandler
-func NewModelPlazaHandler(apiKeyService *service.APIKeyService, gatewayService *service.GatewayService) *ModelPlazaHandler {
+func NewModelPlazaHandler(apiKeyService *service.APIKeyService, gatewayService *service.GatewayService, pricingService *service.PricingService) *ModelPlazaHandler {
 	return &ModelPlazaHandler{
 		apiKeyService:  apiKeyService,
 		gatewayService: gatewayService,
+		pricingService: pricingService,
 	}
 }
 

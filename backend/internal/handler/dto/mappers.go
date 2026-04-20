@@ -109,10 +109,11 @@ func GroupFromServiceAdmin(g *service.Group) *AdminGroup {
 		return nil
 	}
 	out := &AdminGroup{
-		Group:               groupFromServiceBase(g),
-		ModelRouting:        g.ModelRouting,
-		ModelRoutingEnabled: g.ModelRoutingEnabled,
-		AccountCount:        g.AccountCount,
+		Group:                 groupFromServiceBase(g),
+		DisplayRateMultiplier: g.DisplayRateMultiplier,
+		ModelRouting:          g.ModelRouting,
+		ModelRoutingEnabled:   g.ModelRoutingEnabled,
+		AccountCount:          g.AccountCount,
 	}
 	if len(g.AccountGroups) > 0 {
 		out.AccountGroups = make([]AccountGroup, 0, len(g.AccountGroups))
@@ -126,31 +127,31 @@ func GroupFromServiceAdmin(g *service.Group) *AdminGroup {
 
 func groupFromServiceBase(g *service.Group) Group {
 	return Group{
-		ID:               g.ID,
-		Name:             g.Name,
-		Description:      g.Description,
-		Platform:         g.Platform,
-		RateMultiplier:   g.RateMultiplier,
-		IsExclusive:      g.IsExclusive,
-		Status:           g.Status,
-		SubscriptionType: g.SubscriptionType,
-		DailyLimitUSD:    g.DailyLimitUSD,
-		WeeklyLimitUSD:   g.WeeklyLimitUSD,
-		MonthlyLimitUSD:  g.MonthlyLimitUSD,
-		ImagePrice1K:     g.ImagePrice1K,
-		ImagePrice2K:     g.ImagePrice2K,
-		ImagePrice4K:     g.ImagePrice4K,
-		ClaudeCodeOnly:   g.ClaudeCodeOnly,
-		FallbackGroupID:  g.FallbackGroupID,
-		PriceFen:         g.PriceFen,
-		Listed:           g.Listed,
+		ID:                  g.ID,
+		Name:                g.Name,
+		Description:         g.Description,
+		Platform:            g.Platform,
+		RateMultiplier:      g.RateMultiplier,
+		IsExclusive:         g.IsExclusive,
+		Status:              g.Status,
+		SubscriptionType:    g.SubscriptionType,
+		DailyLimitUSD:       g.DailyLimitUSD,
+		WeeklyLimitUSD:      g.WeeklyLimitUSD,
+		MonthlyLimitUSD:     g.MonthlyLimitUSD,
+		ImagePrice1K:        g.ImagePrice1K,
+		ImagePrice2K:        g.ImagePrice2K,
+		ImagePrice4K:        g.ImagePrice4K,
+		ClaudeCodeOnly:      g.ClaudeCodeOnly,
+		FallbackGroupID:     g.FallbackGroupID,
+		PriceFen:            g.PriceFen,
+		Listed:              g.Listed,
 		DefaultValidityDays: g.DefaultValidityDays,
-		PlanFeatures:     g.PlanFeatures,
-		Tags:             g.Tags,
-		DisplayPrice:     g.DisplayPrice,
-		DisplayDiscount:  g.DisplayDiscount,
-		CreatedAt:        g.CreatedAt,
-		UpdatedAt:        g.UpdatedAt,
+		PlanFeatures:        g.PlanFeatures,
+		Tags:                g.Tags,
+		DisplayPrice:        g.DisplayPrice,
+		DisplayDiscount:     g.DisplayDiscount,
+		CreatedAt:           g.CreatedAt,
+		UpdatedAt:           g.UpdatedAt,
 	}
 }
 

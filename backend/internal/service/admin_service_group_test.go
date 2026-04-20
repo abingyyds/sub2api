@@ -165,6 +165,27 @@ func TestAdminService_CreateGroup_NilImagePricing(t *testing.T) {
 	require.Nil(t, repo.created.ImagePrice4K)
 }
 
+func TestAdminService_CreateGroup_WithDisplayRateMultiplier(t *testing.T) {
+	repo := &groupRepoStubForAdmin{}
+	svc := &adminServiceImpl{groupRepo: repo}
+
+	displayRateMultiplier := 0.35
+	input := &CreateGroupInput{
+		Name:                  "test-group",
+		Description:           "Test group",
+		Platform:              PlatformAnthropic,
+		RateMultiplier:        1.2,
+		DisplayRateMultiplier: &displayRateMultiplier,
+	}
+
+	group, err := svc.CreateGroup(context.Background(), input)
+	require.NoError(t, err)
+	require.NotNil(t, group)
+	require.NotNil(t, repo.created)
+	require.NotNil(t, repo.created.DisplayRateMultiplier)
+	require.InDelta(t, 0.35, *repo.created.DisplayRateMultiplier, 0.0001)
+}
+
 // TestAdminService_UpdateGroup_WithImagePricing 测试更新分组时 ImagePrice 字段正确更新
 func TestAdminService_UpdateGroup_WithImagePricing(t *testing.T) {
 	existingGroup := &Group{
@@ -231,6 +252,30 @@ func TestAdminService_UpdateGroup_PartialImagePricing(t *testing.T) {
 	require.NotNil(t, repo.updated.ImagePrice2K)
 	require.InDelta(t, 0.15, *repo.updated.ImagePrice2K, 0.0001) // 原值保持
 	require.Nil(t, repo.updated.ImagePrice4K)
+}
+
+func TestAdminService_UpdateGroup_ClearsDisplayRateMultiplierWhenExplicitlyUnset(t *testing.T) {
+	oldDisplayMultiplier := 0.42
+	existingGroup := &Group{
+		ID:                    1,
+		Name:                  "existing-group",
+		Platform:              PlatformAnthropic,
+		Status:                StatusActive,
+		DisplayRateMultiplier: &oldDisplayMultiplier,
+	}
+	repo := &groupRepoStubForAdmin{getByID: existingGroup}
+	svc := &adminServiceImpl{groupRepo: repo}
+
+	input := &UpdateGroupInput{
+		DisplayRateMultiplierSet: true,
+		DisplayRateMultiplier:    nil,
+	}
+
+	group, err := svc.UpdateGroup(context.Background(), 1, input)
+	require.NoError(t, err)
+	require.NotNil(t, group)
+	require.NotNil(t, repo.updated)
+	require.Nil(t, repo.updated.DisplayRateMultiplier)
 }
 
 func TestAdminService_ListGroups_WithSearch(t *testing.T) {

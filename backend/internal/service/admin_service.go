@@ -97,15 +97,16 @@ type UpdateUserInput struct {
 }
 
 type CreateGroupInput struct {
-	Name             string
-	Description      string
-	Platform         string
-	RateMultiplier   float64
-	IsExclusive      bool
-	SubscriptionType string   // standard/subscription
-	DailyLimitUSD    *float64 // 日限额 (USD)
-	WeeklyLimitUSD   *float64 // 周限额 (USD)
-	MonthlyLimitUSD  *float64 // 月限额 (USD)
+	Name                  string
+	Description           string
+	Platform              string
+	RateMultiplier        float64
+	DisplayRateMultiplier *float64
+	IsExclusive           bool
+	SubscriptionType      string   // standard/subscription
+	DailyLimitUSD         *float64 // 日限额 (USD)
+	WeeklyLimitUSD        *float64 // 周限额 (USD)
+	MonthlyLimitUSD       *float64 // 月限额 (USD)
 	// 图片生成计费配置（仅 antigravity 平台使用）
 	ImagePrice1K    *float64
 	ImagePrice2K    *float64
@@ -130,16 +131,18 @@ type CreateGroupInput struct {
 }
 
 type UpdateGroupInput struct {
-	Name             string
-	Description      string
-	Platform         string
-	RateMultiplier   *float64 // 使用指针以支持设置为0
-	IsExclusive      *bool
-	Status           string
-	SubscriptionType string   // standard/subscription
-	DailyLimitUSD    *float64 // 日限额 (USD)
-	WeeklyLimitUSD   *float64 // 周限额 (USD)
-	MonthlyLimitUSD  *float64 // 月限额 (USD)
+	Name                     string
+	Description              string
+	Platform                 string
+	RateMultiplier           *float64 // 使用指针以支持设置为0
+	DisplayRateMultiplier    *float64
+	DisplayRateMultiplierSet bool
+	IsExclusive              *bool
+	Status                   string
+	SubscriptionType         string   // standard/subscription
+	DailyLimitUSD            *float64 // 日限额 (USD)
+	WeeklyLimitUSD           *float64 // 周限额 (USD)
+	MonthlyLimitUSD          *float64 // 月限额 (USD)
 	// 图片生成计费配置（仅 antigravity 平台使用）
 	ImagePrice1K    *float64
 	ImagePrice2K    *float64
@@ -671,6 +674,7 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 	imagePrice1K := normalizePrice(input.ImagePrice1K)
 	imagePrice2K := normalizePrice(input.ImagePrice2K)
 	imagePrice4K := normalizePrice(input.ImagePrice4K)
+	displayRateMultiplier := normalizeDisplayRateMultiplier(input.DisplayRateMultiplier)
 
 	// 校验降级分组
 	if input.FallbackGroupID != nil {
@@ -680,29 +684,30 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 	}
 
 	group := &Group{
-		Name:                input.Name,
-		Description:         input.Description,
-		Platform:            platform,
-		RateMultiplier:      input.RateMultiplier,
-		IsExclusive:         input.IsExclusive,
-		Status:              StatusActive,
-		SubscriptionType:    subscriptionType,
-		DailyLimitUSD:       dailyLimit,
-		WeeklyLimitUSD:      weeklyLimit,
-		MonthlyLimitUSD:     monthlyLimit,
-		ImagePrice1K:        imagePrice1K,
-		ImagePrice2K:        imagePrice2K,
-		ImagePrice4K:        imagePrice4K,
-		ClaudeCodeOnly:      input.ClaudeCodeOnly,
-		FallbackGroupID:     input.FallbackGroupID,
-		ModelRouting:        input.ModelRouting,
-		PriceFen:            input.PriceFen,
-		Listed:              input.Listed,
-		DefaultValidityDays: input.DefaultValidityDays,
-		PlanFeatures:        input.PlanFeatures,
-		Tags:                input.Tags,
-		DisplayPrice:        input.DisplayPrice,
-		DisplayDiscount:     input.DisplayDiscount,
+		Name:                  input.Name,
+		Description:           input.Description,
+		Platform:              platform,
+		RateMultiplier:        input.RateMultiplier,
+		DisplayRateMultiplier: displayRateMultiplier,
+		IsExclusive:           input.IsExclusive,
+		Status:                StatusActive,
+		SubscriptionType:      subscriptionType,
+		DailyLimitUSD:         dailyLimit,
+		WeeklyLimitUSD:        weeklyLimit,
+		MonthlyLimitUSD:       monthlyLimit,
+		ImagePrice1K:          imagePrice1K,
+		ImagePrice2K:          imagePrice2K,
+		ImagePrice4K:          imagePrice4K,
+		ClaudeCodeOnly:        input.ClaudeCodeOnly,
+		FallbackGroupID:       input.FallbackGroupID,
+		ModelRouting:          input.ModelRouting,
+		PriceFen:              input.PriceFen,
+		Listed:                input.Listed,
+		DefaultValidityDays:   input.DefaultValidityDays,
+		PlanFeatures:          input.PlanFeatures,
+		Tags:                  input.Tags,
+		DisplayPrice:          input.DisplayPrice,
+		DisplayDiscount:       input.DisplayDiscount,
 	}
 	if err := s.groupRepo.Create(ctx, group); err != nil {
 		return nil, err
@@ -724,6 +729,17 @@ func normalizePrice(price *float64) *float64 {
 		return nil
 	}
 	return price
+}
+
+func normalizeDisplayRateMultiplier(multiplier *float64) *float64 {
+	if multiplier == nil {
+		return nil
+	}
+	if *multiplier < 0 {
+		return nil
+	}
+	value := *multiplier
+	return &value
 }
 
 // validateFallbackGroup 校验降级分组的有效性
@@ -781,6 +797,9 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 	}
 	if input.RateMultiplier != nil {
 		group.RateMultiplier = *input.RateMultiplier
+	}
+	if input.DisplayRateMultiplierSet {
+		group.DisplayRateMultiplier = normalizeDisplayRateMultiplier(input.DisplayRateMultiplier)
 	}
 	if input.IsExclusive != nil {
 		group.IsExclusive = *input.IsExclusive

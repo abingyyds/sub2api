@@ -11,9 +11,11 @@ type Group struct {
 	Description    string
 	Platform       string
 	RateMultiplier float64
-	IsExclusive    bool
-	Status         string
-	Hydrated       bool // indicates the group was loaded from a trusted repository source
+	// DisplayRateMultiplier 仅用于页面价格展示；nil 时回退到 RateMultiplier。
+	DisplayRateMultiplier *float64
+	IsExclusive           bool
+	Status                string
+	Hydrated              bool // indicates the group was loaded from a trusted repository source
 
 	SubscriptionType    string
 	DailyLimitUSD       *float64
@@ -59,6 +61,13 @@ type Group struct {
 
 func (g *Group) IsActive() bool {
 	return g.Status == StatusActive
+}
+
+func (g *Group) EffectiveDisplayRateMultiplier() float64 {
+	if g.DisplayRateMultiplier != nil {
+		return *g.DisplayRateMultiplier
+	}
+	return g.RateMultiplier
 }
 
 func (g *Group) IsSubscriptionType() bool {

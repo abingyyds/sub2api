@@ -466,6 +466,19 @@
               />
             </div>
 
+            <div>
+              <label class="input-label">{{ t('admin.groups.cardDisplay.displayRateMultiplier') }}</label>
+              <input
+                v-model="createDisplayRateMultiplierInput"
+                type="number"
+                step="0.001"
+                min="0"
+                class="input"
+                :placeholder="t('admin.groups.cardDisplay.displayRateMultiplierPlaceholder')"
+              />
+              <p class="input-hint">{{ t('admin.groups.cardDisplay.displayRateMultiplierHint') }}</p>
+            </div>
+
             <!-- 标签列表 -->
             <div>
               <div class="flex items-center justify-between mb-1">
@@ -1041,6 +1054,19 @@
               />
             </div>
 
+            <div>
+              <label class="input-label">{{ t('admin.groups.cardDisplay.displayRateMultiplier') }}</label>
+              <input
+                v-model="editDisplayRateMultiplierInput"
+                type="number"
+                step="0.001"
+                min="0"
+                class="input"
+                :placeholder="t('admin.groups.cardDisplay.displayRateMultiplierPlaceholder')"
+              />
+              <p class="input-hint">{{ t('admin.groups.cardDisplay.displayRateMultiplierHint') }}</p>
+            </div>
+
             <!-- 标签列表 -->
             <div>
               <div class="flex items-center justify-between mb-1">
@@ -1495,6 +1521,7 @@ const createForm = reactive({
   description: '',
   platform: 'anthropic' as GroupPlatform,
   rate_multiplier: 1.0,
+  display_rate_multiplier: null as number | null,
   is_exclusive: false,
   subscription_type: 'standard' as SubscriptionType,
   daily_limit_usd: null as number | null,
@@ -1681,6 +1708,7 @@ const editForm = reactive({
   description: '',
   platform: 'anthropic' as GroupPlatform,
   rate_multiplier: 1.0,
+  display_rate_multiplier: null as number | null,
   is_exclusive: false,
   status: 'active' as 'active' | 'inactive',
   subscription_type: 'standard' as SubscriptionType,
@@ -1718,6 +1746,32 @@ const deleteConfirmMessage = computed(() => {
   }
   return t('admin.groups.deleteConfirm', { name: deletingGroup.value.name })
 })
+
+const createDisplayRateMultiplierInput = computed({
+  get: () => optionalNumberToInput(createForm.display_rate_multiplier),
+  set: (value: string | number) => {
+    createForm.display_rate_multiplier = parseOptionalNumber(value)
+  }
+})
+
+const editDisplayRateMultiplierInput = computed({
+  get: () => optionalNumberToInput(editForm.display_rate_multiplier),
+  set: (value: string | number) => {
+    editForm.display_rate_multiplier = parseOptionalNumber(value)
+  }
+})
+
+function optionalNumberToInput(value: number | null) {
+  return value === null || value === undefined ? '' : String(value)
+}
+
+function parseOptionalNumber(value: string | number) {
+  if (value === '' || value === null || value === undefined) {
+    return null
+  }
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
 
 const loadGroups = async () => {
   if (abortController) {
@@ -1777,6 +1831,7 @@ const closeCreateModal = () => {
   createForm.description = ''
   createForm.platform = 'anthropic'
   createForm.rate_multiplier = 1.0
+  createForm.display_rate_multiplier = null
   createForm.is_exclusive = false
   createForm.subscription_type = 'standard'
   createForm.daily_limit_usd = null
@@ -1835,6 +1890,7 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.description = group.description || ''
   editForm.platform = group.platform
   editForm.rate_multiplier = group.rate_multiplier
+  editForm.display_rate_multiplier = group.display_rate_multiplier ?? null
   editForm.is_exclusive = group.is_exclusive
   editForm.status = group.status
   editForm.subscription_type = group.subscription_type || 'standard'
@@ -1863,6 +1919,7 @@ const handleEdit = async (group: AdminGroup) => {
 const closeEditModal = () => {
   showEditModal.value = false
   editingGroup.value = null
+  editForm.display_rate_multiplier = null
   editModelRoutingRules.value = []
   editPlanFeatures.value = []
   editTags.value = []
