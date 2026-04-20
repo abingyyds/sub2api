@@ -512,26 +512,24 @@
             <div class="mt-8">
               <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">{{ t('pricing.faq.title') }}</h2>
               <div class="space-y-4">
-                <div v-for="(item, idx) in faqItems" :key="idx"
-                  class="rounded-2xl border border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-800 overflow-hidden">
-                  <button
-                    class="flex w-full items-center justify-between p-5 text-left"
-                    @click="toggleFaq(idx)"
-                  >
-                    <span class="font-semibold text-gray-900 dark:text-white">{{ item.q }}</span>
-                    <svg
-                      class="h-5 w-5 flex-shrink-0 text-gray-400 transition-transform duration-200"
-                      :class="openFaqIndex === idx ? 'rotate-180' : ''"
-                      fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
-                    >
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  <transition name="faq-expand">
-                    <div v-if="openFaqIndex === idx" class="px-5 pb-5">
-                      <div class="text-sm leading-relaxed text-gray-600 dark:text-dark-300 whitespace-pre-line">{{ item.a }}</div>
+                <div
+                  v-for="(item, idx) in faqItems"
+                  :key="idx"
+                  class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-dark-700 dark:bg-dark-800"
+                >
+                  <div class="border-b border-gray-100 bg-gray-50/90 px-5 py-4 dark:border-dark-700 dark:bg-dark-900/80">
+                    <div class="flex items-start gap-3">
+                      <span class="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-primary-600 px-2 text-xs font-bold text-white">
+                        Q{{ idx + 1 }}
+                      </span>
+                      <h3 class="pt-0.5 text-base font-semibold leading-7 text-gray-900 dark:text-white">
+                        {{ item.q }}
+                      </h3>
                     </div>
-                  </transition>
+                  </div>
+                  <div class="px-5 py-5">
+                    <div class="space-y-3 text-sm leading-7 text-gray-700 dark:text-dark-200" v-html="formatFaqAnswer(item.a)"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -773,8 +771,6 @@ const customFinalAmount = computed(() => {
 // Current plan info line
 const currentPlanInfo = ref('')
 
-// FAQ state
-const openFaqIndex = ref<number | null>(null)
 const faqItems = computed(() => [
   { q: t('pricing.faq.q1'), a: t('pricing.faq.a1') },
   { q: t('pricing.faq.q2'), a: t('pricing.faq.a2') },
@@ -784,8 +780,61 @@ const faqItems = computed(() => [
   { q: t('pricing.faq.q6'), a: t('pricing.faq.a6') },
 ])
 
-function toggleFaq(idx: number) {
-  openFaqIndex.value = openFaqIndex.value === idx ? null : idx
+const faqHighlightPatterns = [
+  /每30天自动重置/g,
+  /30天自动重置/g,
+  /每30天/g,
+  /订阅额度/g,
+  /灵活额度/g,
+  /官方 Token 价格/g,
+  /计费标准/g,
+  /永久有效/g,
+  /优先消耗订阅额度/g,
+  /套餐到期后失效/g,
+  /自动重置/g,
+]
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function highlightFaqLine(line: string) {
+  let highlighted = line
+
+  for (const pattern of faqHighlightPatterns) {
+    highlighted = highlighted.replace(
+      pattern,
+      '<span class="rounded-md bg-amber-100 px-1.5 py-0.5 font-semibold text-amber-900 dark:bg-amber-500/20 dark:text-amber-100">$&</span>'
+    )
+  }
+
+  highlighted = highlighted.replace(
+    /^(订阅额度：|灵活额度：|Subscription quota:|Flexible balance:)/,
+    '<span class="font-semibold text-gray-900 dark:text-white">$1</span>'
+  )
+
+  return highlighted
+}
+
+function formatFaqAnswer(answer: string) {
+  return answer
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map((line, index) => {
+      const escapedLine = escapeHtml(line)
+      const formattedLine = highlightFaqLine(escapedLine)
+      const lineClass = index === 0
+        ? 'rounded-xl bg-primary-50/80 px-4 py-3 text-gray-800 dark:bg-primary-900/20 dark:text-dark-100'
+        : 'px-1 text-gray-700 dark:text-dark-200'
+      return `<p class="${lineClass}">${formattedLine}</p>`
+    })
+    .join('')
 }
 
 // === Feature icons for featured plan ===
@@ -1484,23 +1533,4 @@ function goAfterPayment() {
   transform: translateY(-4px);
 }
 
-.faq-expand-enter-active,
-.faq-expand-leave-active {
-  transition: all 0.2s ease;
-  overflow: hidden;
-}
-
-.faq-expand-enter-from,
-.faq-expand-leave-to {
-  opacity: 0;
-  max-height: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
-.faq-expand-enter-to,
-.faq-expand-leave-from {
-  opacity: 1;
-  max-height: 500px;
-}
 </style>

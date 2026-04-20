@@ -31,6 +31,11 @@
       </DocTabGroup>
 
       <p class="text-sm text-gray-600 dark:text-dark-300 mt-2 mb-2">以上命令会从 npm 官方仓库下载并安装最新版本的 Codex 工具。</p>
+      <p class="text-sm text-gray-600 dark:text-dark-300 mb-2">
+        如果你更希望直接下载安装包，也可以前往
+        <a href="https://github.com/openai/codex/releases" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:underline">OpenAI 官方 Releases</a>
+        查看 macOS / Windows 构建版本。
+      </p>
 
       <h3 class="text-base font-medium text-gray-800 dark:text-dark-200 mb-2 mt-4">验证安装</h3>
       <DocCodeBlock code="codex --version" language="bash" />

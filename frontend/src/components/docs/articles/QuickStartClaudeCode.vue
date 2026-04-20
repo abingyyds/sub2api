@@ -6,21 +6,33 @@
     </div>
 
     <DocNote type="info">
-      Claude Code 是 Anthropic 官方 CLI 工具，强大的 AI 编程助手。本教程将引导你完成安装和配置。
+      Claude Code 是 Anthropic 官方 CLI 工具。官方当前推荐优先使用原生安装脚本，npm 安装仅建议在受限环境下作为备用方案。
     </DocNote>
 
     <DocNote type="warning">
-      开始前请先完成
-      <router-link :to="{ path: '/tutorial', query: { doc: 'nodejs' } }" class="underline font-medium">Node.js 环境安装教程</router-link>。
+      如果你的网络环境限制 <code class="bg-amber-100 dark:bg-amber-800/30 px-1.5 py-0.5 rounded text-xs font-mono">curl</code> 或 <code class="bg-amber-100 dark:bg-amber-800/30 px-1.5 py-0.5 rounded text-xs font-mono">PowerShell</code> 在线脚本执行，再改用 npm 备用安装；只有备用方案才需要
+      <router-link :to="{ path: '/tutorial', query: { doc: 'nodejs' } }" class="underline font-medium">Node.js 环境</router-link>。
     </DocNote>
 
     <!-- Step 1 -->
     <section>
       <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">第一步：安装 Claude Code</h2>
-      <p class="text-sm text-gray-600 dark:text-dark-300 mb-2">打开终端（Windows 使用 PowerShell 或 CMD），运行以下命令：</p>
-      <DocCodeBlock code="npm install -g @anthropic-ai/claude-code" language="bash" />
-      <p class="text-sm text-gray-600 dark:text-dark-300 mb-2">如果在 macOS / Linux 上遇到权限问题，可以使用 sudo：</p>
-      <DocCodeBlock code="sudo npm install -g @anthropic-ai/claude-code" language="bash" />
+      <p class="text-sm text-gray-600 dark:text-dark-300 mb-2">Anthropic 官方当前推荐优先使用原生安装脚本。根据你的系统选择对应命令即可：</p>
+
+      <DocTabGroup :tabs="installTabs">
+        <template #native>
+          <DocCodeBlock code="curl -fsSL https://claude.ai/install.sh | bash" language="bash" />
+          <p class="text-sm text-gray-600 dark:text-dark-300 mt-2">适用于 macOS、Linux 与 WSL。安装完成后建议重新打开终端一次，确保 PATH 已刷新。</p>
+        </template>
+        <template #windows>
+          <DocCodeBlock code="irm https://claude.ai/install.ps1 | iex" filename="PowerShell" />
+          <p class="text-sm text-gray-600 dark:text-dark-300 mt-2">适用于 Windows PowerShell。若遇到执行策略限制，请先以管理员身份打开 PowerShell 后重试。</p>
+        </template>
+        <template #npm>
+          <DocCodeBlock code="npm install -g @anthropic-ai/claude-code" language="bash" />
+          <p class="text-sm text-gray-600 dark:text-dark-300 mt-2">这是备用方案，仅建议在无法使用官方原生安装脚本时使用。使用前请先准备好 Node.js 环境。</p>
+        </template>
+      </DocTabGroup>
 
       <h3 class="text-base font-medium text-gray-800 dark:text-dark-200 mb-2 mt-4">验证安装</h3>
       <p class="text-sm text-gray-600 dark:text-dark-300 mb-2">安装完成后，输入以下命令检查是否安装成功：</p>
@@ -76,7 +88,7 @@
       <DocCodeBlock code="claude" language="bash" />
       <p class="text-sm text-gray-600 dark:text-dark-300">
         启动后，Claude Code 会分析当前目录的代码，并提供智能编程辅助。更多使用说明请参考
-        <a href="https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview" target="_blank" class="text-primary-600 hover:underline">Anthropic 官方文档</a>。
+        <a href="https://code.claude.com/docs/en/setup#native-install-recommended" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:underline">Claude Code 官方安装文档</a>。
       </p>
     </section>
 
@@ -96,6 +108,12 @@
 import DocCodeBlock from '../DocCodeBlock.vue'
 import DocTabGroup from '../DocTabGroup.vue'
 import DocNote from '../DocNote.vue'
+
+const installTabs = [
+  { id: 'native', label: 'macOS / Linux / WSL' },
+  { id: 'windows', label: 'Windows PowerShell' },
+  { id: 'npm', label: 'npm 备用方案' },
+]
 
 const permanentTabs = [
   { id: 'windows', label: 'Windows' },

@@ -64,7 +64,7 @@
               class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-dark-600 dark:bg-dark-800 dark:text-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
             >
               <option v-if="loadingModels" value="" disabled>{{ t('common.loading') }}...</option>
-              <option v-for="model in availableModels" :key="model" :value="model">{{ model }}</option>
+              <option v-for="model in selectableModels" :key="model" :value="model">{{ model }}</option>
             </select>
           </div>
         </div>
@@ -89,6 +89,12 @@
 
         <!-- Generated Config Display -->
         <div v-if="selectedKeyId && generatedConfig" class="relative">
+          <div
+            v-if="selectedTool === 'cherryStudio'"
+            class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100"
+          >
+            {{ t('tutorial.configExport.cherryStudioHint') }}
+          </div>
           <div class="bg-gray-900 dark:bg-dark-900 rounded-xl overflow-hidden">
             <div class="flex items-center justify-between px-4 py-2 bg-gray-800 dark:bg-dark-800 border-b border-gray-700 dark:border-dark-700">
               <span class="text-xs text-gray-400 font-mono">{{ configFilePath }}</span>
@@ -109,6 +115,30 @@
               </button>
             </div>
             <pre class="p-4 text-sm font-mono text-gray-100 overflow-x-auto"><code>{{ generatedConfig }}</code></pre>
+          </div>
+
+          <div class="mt-4 flex flex-wrap gap-3">
+            <button
+              v-if="canDownloadConfig"
+              @click="downloadGeneratedConfig"
+              class="inline-flex items-center rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-primary-300 hover:text-primary-600 dark:border-dark-700 dark:text-dark-200 dark:hover:border-primary-700 dark:hover:text-primary-400"
+            >
+              {{ t('tutorial.configExport.downloadConfig') }}
+            </button>
+            <button
+              v-if="canImportToCherryStudio"
+              @click="importToCherryStudio"
+              class="inline-flex items-center rounded-lg bg-rose-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-700"
+            >
+              {{ t('tutorial.configExport.importToCherryStudio') }}
+            </button>
+            <button
+              v-if="canImportToCcSwitch"
+              @click="importToCcSwitch"
+              class="inline-flex items-center rounded-lg bg-primary-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
+            >
+              {{ t('tutorial.configExport.importToCcSwitch') }}
+            </button>
           </div>
         </div>
 
@@ -154,19 +184,38 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { keysAPI } from '@/api/keys'
 import { getModelPlaza } from '@/api/model-plaza'
-import { useClipboard } from '@/composables/useClipboard'
-import type { ApiKey } from '@/types'
 import { GlowCard } from '@/components/animations'
+import { useClipboard } from '@/composables/useClipboard'
+import { useAppStore } from '@/stores/app'
+import type { ApiKey } from '@/types'
+
+type ToolId =
+  | 'claudeCode'
+  | 'geminiCli'
+  | 'codexCli'
+  | 'cherryStudio'
+  | 'openclaw'
+  | 'opencode'
+  | 'cursor'
+  | 'api'
+  | 'openaiApi'
+  | 'geminiApi'
+  | 'python'
+  | 'anthropic'
+  | 'geminiPython'
+
+type ModelFamily = 'anthropic' | 'openai' | 'gemini' | 'unknown'
 
 const { t } = useI18n()
 const { copyToClipboard } = useClipboard()
+const appStore = useAppStore()
 
 const apiBaseUrl = computed(() => window.location.origin)
-const selectedTool = ref('claudeCode')
+const selectedTool = ref<ToolId>('claudeCode')
 const selectedKeyId = ref<number | null>(null)
 const selectedModel = ref('')
 const apiKeys = ref<ApiKey[]>([])
@@ -175,9 +224,11 @@ const loadingModels = ref(true)
 const copied = ref(false)
 const availableModels = ref<string[]>([])
 
-const tools = computed(() => [
+const tools: Array<{ id: ToolId; name: string }> = [
   { id: 'claudeCode', name: 'Claude Code' },
   { id: 'geminiCli', name: 'Gemini CLI' },
+  { id: 'codexCli', name: 'Codex CLI' },
+  { id: 'cherryStudio', name: 'Cherry Studio' },
   { id: 'openclaw', name: 'OpenClaw' },
   { id: 'opencode', name: 'OpenCode' },
   { id: 'cursor', name: 'Cursor' },
@@ -187,15 +238,131 @@ const tools = computed(() => [
   { id: 'python', name: 'Python (OpenAI)' },
   { id: 'anthropic', name: 'Python (Anthropic)' },
   { id: 'geminiPython', name: 'Python (Gemini)' },
-])
+]
 
-const selectedKey = computed(() => apiKeys.value.find(k => k.id === selectedKeyId.value))
+const selectedKey = computed(() => apiKeys.value.find(k => k.id === selectedKeyId.value) ?? null)
 const currentApiKey = computed(() => selectedKey.value?.key || 'sk-your-api-key')
+
+function detectModelFamily(model: string): ModelFamily {
+  const lowerModel = model.toLowerCase()
+  if (lowerModel.includes('claude')) {
+    return 'anthropic'
+  }
+  if (lowerModel.includes('gemini')) {
+    return 'gemini'
+  }
+  if (['gpt', 'chatgpt', 'codex', 'o1', 'o3', 'o4'].some(keyword => lowerModel.includes(keyword))) {
+    return 'openai'
+  }
+  return 'unknown'
+}
+
+function preferredFamiliesForTool(toolId: ToolId): ModelFamily[] | null {
+  switch (toolId) {
+    case 'claudeCode':
+    case 'api':
+    case 'anthropic':
+      return ['anthropic']
+    case 'geminiCli':
+    case 'geminiApi':
+    case 'geminiPython':
+      return ['gemini']
+    case 'codexCli':
+    case 'cursor':
+    case 'openaiApi':
+    case 'python':
+      return ['openai']
+    default:
+      return null
+  }
+}
+
+function pickDefaultModel(models: string[], toolId: ToolId) {
+  if (!models.length) {
+    return ''
+  }
+
+  const preferredFamily = preferredFamiliesForTool(toolId)?.[0]
+
+  if (preferredFamily === 'anthropic') {
+    return models.find(model => model.includes('claude-sonnet')) || models.find(model => model.includes('claude')) || models[0]
+  }
+  if (preferredFamily === 'gemini') {
+    return models.find(model => model.includes('gemini-2.5-pro')) || models.find(model => model.includes('gemini')) || models[0]
+  }
+  if (preferredFamily === 'openai') {
+    return models.find(model => model.includes('gpt-5.3-codex')) || models.find(model => model.includes('gpt-5')) || models[0]
+  }
+
+  return models[0]
+}
+
+const selectableModels = computed(() => {
+  const preferredFamilies = preferredFamiliesForTool(selectedTool.value)
+  if (!preferredFamilies) {
+    return availableModels.value
+  }
+
+  const filtered = availableModels.value.filter(model => preferredFamilies.includes(detectModelFamily(model)))
+  return filtered.length ? filtered : availableModels.value
+})
+
+watch(
+  [selectableModels, selectedTool],
+  ([models, tool]) => {
+    if (!models.length) {
+      selectedModel.value = ''
+      return
+    }
+
+    if (!models.includes(selectedModel.value)) {
+      selectedModel.value = pickDefaultModel(models, tool)
+    }
+  },
+  { immediate: true }
+)
+
+function getCherryStudioProvider(model: string, baseUrl: string) {
+  const family = detectModelFamily(model)
+
+  if (family === 'gemini') {
+    return {
+      providerType: 'Gemini',
+      type: 'gemini',
+      providerId: 'ccoder-me-gemini',
+      providerName: 'cCoder.me (Gemini)',
+      baseUrl: `${baseUrl}/v1beta`,
+      docsEntry: '选择 Gemini 服务商或自定义 Gemini Provider',
+    }
+  }
+
+  if (family === 'openai') {
+    return {
+      providerType: 'OpenAI',
+      type: 'openai',
+      providerId: 'ccoder-me-openai',
+      providerName: 'cCoder.me (OpenAI)',
+      baseUrl: `${baseUrl}/v1`,
+      docsEntry: '选择 OpenAI 兼容服务商',
+    }
+  }
+
+  return {
+    providerType: 'Anthropic',
+    type: 'anthropic',
+    providerId: 'ccoder-me-anthropic',
+    providerName: 'cCoder.me (Anthropic)',
+    baseUrl,
+    docsEntry: '选择 Anthropic 服务商',
+  }
+}
 
 const configFilePath = computed(() => {
   switch (selectedTool.value) {
     case 'claudeCode': return '~/.claude/settings.json'
     case 'geminiCli': return '~/.gemini/.env + settings.json'
+    case 'codexCli': return '~/.codex/config.toml + auth.json'
+    case 'cherryStudio': return 'Cherry Studio -> 设置 -> 模型服务 -> 自定义服务商'
     case 'openclaw': return '~/.openclaw/openclaw.json'
     case 'opencode': return '~/.config/opencode/opencode.json'
     case 'cursor': return 'Cursor Settings'
@@ -219,7 +386,7 @@ const generatedConfig = computed(() => {
       return JSON.stringify({
         env: {
           ANTHROPIC_API_KEY: key,
-          ANTHROPIC_BASE_URL: base + '/',
+          ANTHROPIC_BASE_URL: `${base}/`,
           ANTHROPIC_MODEL: model
         }
       }, null, 2)
@@ -243,11 +410,46 @@ ${JSON.stringify({
 
 # ${t('tutorial.geminiCli.authTip')}`
 
-    case 'openclaw':
+    case 'codexCli':
+      return `# ~/.codex/config.toml
+model_provider = "ccoder.me"
+model = "${model}"
+model_reasoning_effort = "high"
+disable_response_storage = true
+preferred_auth_method = "apikey"
+
+[model_providers.ccoder.me]
+name = "ccoder.me"
+base_url = "${base}"
+wire_api = "responses"
+requires_openai_auth = true
+
+# ~/.codex/auth.json
+{
+  "OPENAI_API_KEY": "${key}"
+}`
+
+    case 'cherryStudio': {
+      const provider = getCherryStudioProvider(model, base)
+      return `# Cherry Studio 自定义服务商参数
+提供商名称：${provider.providerName}
+服务商类型：${provider.providerType}
+API 地址：${provider.baseUrl}
+API Key：${key}
+默认模型：${model}
+
+# 配置步骤
+1. 打开 Cherry Studio -> 设置 -> 模型服务
+2. ${provider.docsEntry}
+3. 填入上面的 API 地址与 API Key
+4. 将模型 ${model} 添加到模型列表并保存`
+    }
+
+    case 'openclaw': {
       let provider = 'anthropic'
       let api = 'anthropic-messages'
       const lowerModel = model.toLowerCase()
-      if (lowerModel.includes('gpt') || lowerModel.includes('o1') || lowerModel.includes('o3')) {
+      if (lowerModel.includes('gpt') || lowerModel.includes('o1') || lowerModel.includes('o3') || lowerModel.includes('codex')) {
         provider = 'openai'
         api = 'openai-chat'
       } else if (lowerModel.includes('gemini')) {
@@ -256,17 +458,18 @@ ${JSON.stringify({
       }
       return JSON.stringify({
         provider,
-        base_url: base + '/',
+        base_url: `${base}/`,
         api,
         api_key: key,
         model: { id: model, name: model }
       }, null, 2)
+    }
 
     case 'opencode':
       return JSON.stringify({
         provider: {
           openai: {
-            options: { baseURL: base + '/v1', apiKey: key },
+            options: { baseURL: `${base}/v1`, apiKey: key },
             models: { [model]: { name: model, options: { store: false } } }
           }
         },
@@ -379,41 +582,210 @@ print(response.text)
   }
 })
 
-onMounted(async () => {
-  const keysPromise = keysAPI.list(1, 100).then(resp => {
-    apiKeys.value = (resp.items || []).filter((k: ApiKey) => k.status === 'active')
-    if (apiKeys.value.length > 0) {
-      selectedKeyId.value = apiKeys.value[0].id
-    }
-  }).catch(() => {}).finally(() => {
-    loadingKeys.value = false
+const canDownloadConfig = computed(() => Boolean(selectedKeyId.value && generatedConfig.value))
+const canImportToCherryStudio = computed(() => selectedTool.value === 'cherryStudio' && Boolean(selectedKey.value && selectedModel.value))
+
+const canImportToCcSwitch = computed(() => {
+  const platform = selectedKey.value?.group?.platform
+  if (!platform) {
+    return false
+  }
+
+  if (selectedTool.value === 'claudeCode') {
+    return platform === 'anthropic' || platform === 'antigravity'
+  }
+  if (selectedTool.value === 'geminiCli') {
+    return platform === 'gemini' || platform === 'antigravity'
+  }
+  if (selectedTool.value === 'codexCli') {
+    return platform === 'openai'
+  }
+  return false
+})
+
+function getDownloadFileName(toolId: ToolId) {
+  switch (toolId) {
+    case 'claudeCode': return 'claude-settings.json'
+    case 'geminiCli': return 'gemini-cli-config.txt'
+    case 'codexCli': return 'codex-config.txt'
+    case 'cherryStudio': return 'cherry-studio-provider.txt'
+    case 'openclaw': return 'openclaw.json'
+    case 'opencode': return 'opencode.json'
+    case 'cursor': return 'cursor-settings.txt'
+    case 'api':
+    case 'openaiApi':
+    case 'geminiApi':
+      return 'request-example.sh'
+    case 'python':
+    case 'anthropic':
+    case 'geminiPython':
+      return 'main.py'
+    default:
+      return 'config.txt'
+  }
+}
+
+function downloadGeneratedConfig() {
+  if (!generatedConfig.value) {
+    return
+  }
+
+  const blob = new Blob([generatedConfig.value], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = getDownloadFileName(selectedTool.value)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+function getCherryStudioImportUrl() {
+  if (!selectedKey.value || !selectedModel.value) {
+    return null
+  }
+
+  const provider = getCherryStudioProvider(selectedModel.value, apiBaseUrl.value)
+  const payload = JSON.stringify({
+    id: provider.providerId,
+    name: provider.providerName,
+    type: provider.type,
+    apiKey: selectedKey.value.key,
+    baseUrl: provider.baseUrl,
   })
 
-  const modelsPromise = getModelPlaza().then(groups => {
-    const modelSet = new Set<string>()
-    for (const g of groups) {
-      if (g.models) {
-        for (const m of g.models) modelSet.add(m)
-      }
-    }
-    availableModels.value = Array.from(modelSet).sort()
-    if (availableModels.value.length > 0) {
-      const claudeModel = availableModels.value.find(m => m.includes('claude-sonnet'))
-      selectedModel.value = claudeModel || availableModels.value[0]
-    }
-  }).catch(() => {}).finally(() => {
-    loadingModels.value = false
+  const data = btoa(payload)
+    .replace(/\+/g, '_')
+    .replace(/\//g, '-')
+
+  const params = new URLSearchParams({
+    v: '1',
+    data,
   })
+
+  return `cherrystudio://providers/api-keys?${params.toString()}`
+}
+
+function importToCherryStudio() {
+  const importUrl = getCherryStudioImportUrl()
+  if (!importUrl) {
+    return
+  }
+
+  try {
+    window.open(importUrl, '_self')
+    setTimeout(() => {
+      if (document.hasFocus()) {
+        appStore.showError(t('tutorial.configExport.cherryStudioNotInstalled'))
+      }
+    }, 120)
+  } catch {
+    appStore.showError(t('tutorial.configExport.cherryStudioNotInstalled'))
+  }
+}
+
+function importToCcSwitch() {
+  if (!canImportToCcSwitch.value || !selectedKey.value) {
+    return
+  }
+
+  const baseUrl = apiBaseUrl.value
+  const platform = selectedKey.value.group?.platform
+  const app =
+    selectedTool.value === 'codexCli'
+      ? 'codex'
+      : selectedTool.value === 'geminiCli'
+        ? 'gemini'
+        : 'claude'
+
+  const endpoint = platform === 'antigravity' ? `${baseUrl}/antigravity` : baseUrl
+  const usageScript = `({
+    request: {
+      url: "{{baseUrl}}/v1/usage",
+      method: "GET",
+      headers: { "Authorization": "Bearer {{apiKey}}" }
+    },
+    extractor: function(response) {
+      return {
+        isValid: response.is_active || true,
+        remaining: response.balance,
+        unit: "USD"
+      };
+    }
+  })`
+
+  const params = new URLSearchParams({
+    resource: 'provider',
+    app,
+    name: 'ccoder.me',
+    homepage: baseUrl,
+    endpoint,
+    apiKey: selectedKey.value.key,
+    configFormat: 'json',
+    usageEnabled: 'true',
+    usageScript: btoa(usageScript),
+    usageAutoInterval: '30'
+  })
+
+  try {
+    window.open(`ccswitch://v1/import?${params.toString()}`, '_self')
+    setTimeout(() => {
+      if (document.hasFocus()) {
+        appStore.showError(t('keys.ccSwitchNotInstalled'))
+      }
+    }, 120)
+  } catch {
+    appStore.showError(t('keys.ccSwitchNotInstalled'))
+  }
+}
+
+onMounted(async () => {
+  const keysPromise = keysAPI.list(1, 100)
+    .then(resp => {
+      apiKeys.value = (resp.items || []).filter((key: ApiKey) => key.status === 'active')
+      if (apiKeys.value.length > 0) {
+        selectedKeyId.value = apiKeys.value[0].id
+      }
+    })
+    .catch(() => {})
+    .finally(() => {
+      loadingKeys.value = false
+    })
+
+  const modelsPromise = getModelPlaza()
+    .then(groups => {
+      const modelSet = new Set<string>()
+      for (const group of groups) {
+        const models = Array.isArray(group.models) ? group.models : []
+        for (const model of models) {
+          modelSet.add(model)
+        }
+      }
+      availableModels.value = Array.from(modelSet).sort()
+      if (!selectedModel.value) {
+        selectedModel.value = pickDefaultModel(availableModels.value, selectedTool.value)
+      }
+    })
+    .catch(() => {})
+    .finally(() => {
+      loadingModels.value = false
+    })
 
   await Promise.all([keysPromise, modelsPromise])
 })
 
 const copyConfig = async () => {
-  if (!generatedConfig.value) return
+  if (!generatedConfig.value) {
+    return
+  }
+
   const success = await copyToClipboard(generatedConfig.value, t('keys.useKeyModal.copied'))
   if (success) {
     copied.value = true
-    setTimeout(() => { copied.value = false }, 2000)
+    setTimeout(() => {
+      copied.value = false
+    }, 2000)
   }
 }
 </script>
