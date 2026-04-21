@@ -3448,7 +3448,7 @@ export default {
     pricingExplorerTitle: 'Pricing By Group',
     pricingExplorerDesc: 'Browse groups and models on the left while the sticky panel on the right shows the selected model pricing.',
     pricingSelectionHint: 'Click any model on the left to switch the pricing card immediately.',
-    pricingMultiplierIncluded: 'Site price already includes the current multiplier',
+    pricingMultiplierIncluded: 'Site price is converted using the current group rate',
     pricingTableTitle: 'Model Pricing',
     pricingTableDesc: 'Shows only the official base price and currently available group prices, without placeholder columns for unsupported groups.',
     pricingSearchPlaceholder: 'Search by model, alias, platform, or mode',

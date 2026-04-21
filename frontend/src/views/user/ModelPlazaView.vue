@@ -156,7 +156,7 @@
         </div>
 
         <aside class="xl:sticky xl:top-24 xl:self-start">
-          <div class="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+          <div class="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm dark:border-dark-700 dark:bg-dark-900 xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto">
             <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">
               {{ t('modelPlaza.pricingPanelTitle') }}
             </p>
@@ -463,8 +463,31 @@ const selectedSiteMetrics = computed(() => {
   return selectedPricingRow.value.group_prices[selectedGroupId.value] ?? null
 })
 
+const selectedDisplayMultiplier = computed(() => {
+  return (
+    extractDisplayPriceMultiplier(selectedPricingGroup.value?.display_price) ??
+    extractDisplayPriceMultiplier(selectedGroup.value?.display_price) ??
+    normalizePositiveNumber(selectedPricingGroup.value?.display_rate_multiplier) ??
+    normalizePositiveNumber(selectedPricingGroup.value?.rate_multiplier) ??
+    normalizePositiveNumber(selectedGroup.value?.rate_multiplier) ??
+    1
+  )
+})
+
+const selectedDisplayedSiteMetrics = computed(() => {
+  if (!selectedPricingRow.value) {
+    return null
+  }
+
+  if (metricsDifferFromOfficial(selectedSiteMetrics.value, selectedPricingRow.value.official)) {
+    return selectedSiteMetrics.value
+  }
+
+  return scaleMetrics(selectedPricingRow.value.official, selectedDisplayMultiplier.value)
+})
+
 const selectedComparisonRows = computed(() => {
-  return buildMetricComparisonRows(selectedPricingRow.value?.official, selectedSiteMetrics.value)
+  return buildMetricComparisonRows(selectedPricingRow.value?.official, selectedDisplayedSiteMetrics.value)
 })
 
 const selectedPrimaryComparisonRows = computed(() => {
@@ -575,8 +598,90 @@ function formatMultiplierLabel(value: number | null | undefined) {
   return `${value.toFixed(digits).replace(/\.?0+$/, '')}x`
 }
 
+function normalizePositiveNumber(value: number | null | undefined) {
+  if (value === null || value === undefined || Number.isNaN(value) || value <= 0) {
+    return null
+  }
+
+  return value
+}
+
 function hasPositiveMetric(value: number | null | undefined) {
   return value !== null && value !== undefined && !Number.isNaN(value) && value > 0
+}
+
+function extractDisplayPriceMultiplier(displayPrice: string | null | undefined) {
+  if (!displayPrice) {
+    return null
+  }
+
+  const normalized = displayPrice.trim().toLowerCase()
+  if (!normalized) {
+    return null
+  }
+
+  const match = normalized.match(/(\d+(?:\.\d+)?)/)
+  if (!match) {
+    return null
+  }
+
+  const parsed = Number(match[1])
+  return normalizePositiveNumber(parsed)
+}
+
+function scaleMetricValue(value: number | null | undefined, multiplier: number) {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return 0
+  }
+
+  return value * multiplier
+}
+
+function scaleOptionalMetricValue(value: number | null | undefined, multiplier: number) {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return null
+  }
+
+  return value * multiplier
+}
+
+function scaleMetrics(metrics: ModelPlazaPricingMetrics, multiplier: number): ModelPlazaPricingMetrics {
+  return {
+    input_per_million: scaleMetricValue(metrics.input_per_million, multiplier),
+    output_per_million: scaleMetricValue(metrics.output_per_million, multiplier),
+    cache_write_per_million: scaleMetricValue(metrics.cache_write_per_million, multiplier),
+    cache_read_per_million: scaleMetricValue(metrics.cache_read_per_million, multiplier),
+    input_per_million_above_200k: scaleOptionalMetricValue(metrics.input_per_million_above_200k, multiplier),
+    output_per_million_above_200k: scaleOptionalMetricValue(metrics.output_per_million_above_200k, multiplier),
+    cache_write_per_million_above_200k: scaleOptionalMetricValue(metrics.cache_write_per_million_above_200k, multiplier),
+    cache_read_per_million_above_200k: scaleOptionalMetricValue(metrics.cache_read_per_million_above_200k, multiplier),
+  }
+}
+
+function metricsDifferFromOfficial(
+  site: ModelPlazaPricingMetrics | null | undefined,
+  official: ModelPlazaPricingMetrics | null | undefined
+) {
+  if (!site || !official) {
+    return false
+  }
+
+  const fields: MetricField[] = [
+    'input_per_million',
+    'output_per_million',
+    'cache_write_per_million',
+    'cache_read_per_million',
+  ]
+
+  return fields.some((field) => {
+    const siteValue = getMetricValue(site, field)
+    const officialValue = getMetricValue(official, field)
+    if (siteValue === null || officialValue === null) {
+      return false
+    }
+
+    return Math.abs(siteValue - officialValue) > 0.000001
+  })
 }
 
 function getMetricValue(metrics: ModelPlazaPricingMetrics | null | undefined, field: MetricField) {
