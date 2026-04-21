@@ -195,53 +195,101 @@
                 <div class="mt-1 break-all font-mono">{{ selectedPricingRow.model }}</div>
               </div>
 
-              <div class="mt-4 space-y-3">
-                <div class="rounded-2xl border border-gray-200 bg-gray-50/80 p-4 dark:border-dark-700 dark:bg-dark-800/70">
-                  <div class="flex items-center justify-between gap-3">
-                    <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">
-                      {{ t('modelPlaza.pricingColOfficial') }}
+              <div class="mt-4 space-y-4">
+                <div class="overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-600 to-sky-500 p-5 text-white shadow-lg shadow-primary-900/10">
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/75">
+                        {{ t('modelPlaza.sitePriceCardTitle') }}
+                      </div>
+                      <div class="mt-2 text-base font-semibold">
+                        {{ selectedGroup.name }}
+                      </div>
                     </div>
-                    <div class="text-[11px] text-gray-400 dark:text-dark-500">
-                      {{ t('modelPlaza.officialUnitHint') }}
-                    </div>
-                  </div>
-
-                  <div v-if="selectedPricingRow" class="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-                    <div
-                      v-for="metric in metricRows(selectedPricingRow.official, 'usd')"
-                      :key="metric.key"
-                      class="rounded-xl bg-white px-3 py-2.5 dark:bg-dark-900"
-                    >
-                      <div class="text-[11px] font-medium text-gray-500 dark:text-dark-400">{{ metric.label }}</div>
-                      <div class="mt-1 font-mono text-sm font-semibold text-gray-900 dark:text-white">{{ metric.value }}</div>
-                    </div>
-                  </div>
-                  <div v-else class="mt-3 text-xs text-gray-400 dark:text-dark-500">
-                    {{ t('modelPlaza.notSupportedInGroup') }}
-                  </div>
-                </div>
-
-                <div class="rounded-2xl border border-primary-100 bg-primary-50/70 p-4 dark:border-primary-900/40 dark:bg-primary-950/20">
-                  <div class="flex items-center justify-between gap-3">
-                    <div class="text-[11px] font-semibold uppercase tracking-wide text-primary-700 dark:text-primary-300">
-                      {{ t('modelPlaza.sitePriceCardTitle') }}
-                    </div>
-                    <div class="text-[11px] text-primary-600/70 dark:text-primary-300/70">
+                    <div class="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-medium text-white/85">
                       {{ t('modelPlaza.siteUnitHint') }}
                     </div>
                   </div>
 
-                  <div v-if="selectedSiteMetrics" class="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                  <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-white/80">
+                    <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1">
+                      {{ groupSummary(selectedPricingGroup ?? selectedGroup) }}
+                    </span>
+                    <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1">
+                      {{ t('modelPlaza.pricingMultiplierIncluded') }}
+                    </span>
+                  </div>
+
+                  <div v-if="selectedPrimaryComparisonRows.length" class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
                     <div
-                      v-for="metric in metricRows(selectedSiteMetrics, 'balance')"
+                      v-for="metric in selectedPrimaryComparisonRows"
                       :key="metric.key"
-                      class="rounded-xl bg-white/90 px-3 py-2.5 dark:bg-dark-900/80"
+                      class="rounded-2xl border border-white/15 bg-white/10 px-4 py-4 backdrop-blur-sm"
                     >
-                      <div class="text-[11px] font-medium text-primary-700/80 dark:text-primary-300/80">{{ metric.label }}</div>
-                      <div class="mt-1 font-mono text-sm font-semibold text-gray-900 dark:text-white">{{ metric.value }}</div>
+                      <div class="text-xs font-medium text-white/75">{{ metric.label }}</div>
+                      <div class="mt-2 font-mono text-3xl font-semibold leading-none text-white">
+                        {{ metric.siteValue }}
+                      </div>
+                      <div class="mt-3 text-xs text-white/70">
+                        {{ t('modelPlaza.pricingCompareOfficialShort') }} {{ metric.officialValue }}
+                      </div>
                     </div>
                   </div>
-                  <div v-else class="mt-3 text-xs text-primary-700/80 dark:text-primary-300/80">
+
+                  <div v-if="selectedSecondaryComparisonRows.length" class="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                    <div
+                      v-for="metric in selectedSecondaryComparisonRows"
+                      :key="metric.key"
+                      class="rounded-2xl border border-white/10 bg-black/10 px-4 py-3"
+                    >
+                      <div class="text-xs font-medium text-white/70">{{ metric.label }}</div>
+                      <div class="mt-1 font-mono text-lg font-semibold text-white">
+                        {{ metric.siteValue }}
+                      </div>
+                      <div class="mt-2 text-xs text-white/65">
+                        {{ t('modelPlaza.pricingCompareOfficialShort') }} {{ metric.officialValue }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div v-if="!selectedComparisonRows.length" class="mt-4 text-sm text-white/75">
+                    {{ t('modelPlaza.notSupportedInGroup') }}
+                  </div>
+                </div>
+
+                <div class="rounded-2xl border border-gray-200 bg-gray-50/80 p-4 dark:border-dark-700 dark:bg-dark-800/70">
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">
+                        {{ t('modelPlaza.pricingCompareTitle') }}
+                      </div>
+                      <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">
+                        {{ t('modelPlaza.pricingCompareDesc') }}
+                      </div>
+                    </div>
+                    <div class="rounded-full bg-white px-3 py-1 text-[11px] text-gray-500 dark:bg-dark-900 dark:text-dark-400">
+                      {{ t('modelPlaza.pricingCompareRange') }}
+                    </div>
+                  </div>
+
+                  <div v-if="selectedComparisonRows.length" class="mt-4 overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900">
+                    <div class="grid grid-cols-[minmax(0,1fr)_110px_110px] border-b border-gray-200 bg-gray-50 px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:border-dark-700 dark:bg-dark-800 dark:text-dark-400">
+                      <div>{{ t('modelPlaza.pricingCompareMetricLabel') }}</div>
+                      <div class="text-right">{{ t('modelPlaza.pricingCompareOfficialShort') }}</div>
+                      <div class="text-right text-primary-700 dark:text-primary-300">{{ t('modelPlaza.pricingCompareSiteShort') }}</div>
+                    </div>
+                    <div
+                      v-for="metric in selectedComparisonRows"
+                      :key="metric.key"
+                      class="grid grid-cols-[minmax(0,1fr)_110px_110px] items-center gap-3 border-t border-gray-100 px-4 py-3 first:border-t-0 dark:border-dark-800"
+                    >
+                      <div class="text-sm font-medium text-gray-700 dark:text-dark-200">{{ metric.label }}</div>
+                      <div class="text-right font-mono text-sm text-gray-500 dark:text-dark-400">{{ metric.officialValue }}</div>
+                      <div class="text-right font-mono text-sm font-semibold text-primary-700 dark:text-primary-300">{{ metric.siteValue }}</div>
+                    </div>
+                  </div>
+
+                  <div v-else class="mt-3 text-xs text-gray-400 dark:text-dark-500">
                     {{ t('modelPlaza.notSupportedInGroup') }}
                   </div>
                 </div>
@@ -278,11 +326,19 @@ import {
 import { useClipboard } from '@/composables/useClipboard'
 
 type MetricUnit = 'usd' | 'balance'
+type MetricField = 'input_per_million' | 'output_per_million' | 'cache_write_per_million' | 'cache_read_per_million'
 
 interface GroupSection {
   group: GroupModels['group']
   pricingGroup: ModelPlazaPricingGroup | null
   models: string[]
+}
+
+interface MetricComparisonRow {
+  key: string
+  label: string
+  officialValue: string
+  siteValue: string
 }
 
 const { t } = useI18n()
@@ -407,6 +463,18 @@ const selectedSiteMetrics = computed(() => {
   return selectedPricingRow.value.group_prices[selectedGroupId.value] ?? null
 })
 
+const selectedComparisonRows = computed(() => {
+  return buildMetricComparisonRows(selectedPricingRow.value?.official, selectedSiteMetrics.value)
+})
+
+const selectedPrimaryComparisonRows = computed(() => {
+  return selectedComparisonRows.value.filter((row) => row.key === 'input' || row.key === 'output')
+})
+
+const selectedSecondaryComparisonRows = computed(() => {
+  return selectedComparisonRows.value.filter((row) => row.key !== 'input' && row.key !== 'output')
+})
+
 function normalizeModelKey(model: string) {
   return model.trim().toLowerCase()
 }
@@ -511,41 +579,39 @@ function hasPositiveMetric(value: number | null | undefined) {
   return value !== null && value !== undefined && !Number.isNaN(value) && value > 0
 }
 
-function metricRows(metrics: ModelPlazaPricingMetrics | null | undefined, unit: MetricUnit) {
+function getMetricValue(metrics: ModelPlazaPricingMetrics | null | undefined, field: MetricField) {
   if (!metrics) {
-    return []
+    return null
   }
 
-  const rows = [
-    {
-      key: 'input',
-      label: t('modelPlaza.metricInput'),
-      value: formatMetricValue(metrics.input_per_million, unit)
-    },
-    {
-      key: 'output',
-      label: t('modelPlaza.metricOutput'),
-      value: formatMetricValue(metrics.output_per_million, unit)
-    }
+  return metrics[field]
+}
+
+function buildMetricComparisonRows(
+  official: ModelPlazaPricingMetrics | null | undefined,
+  site: ModelPlazaPricingMetrics | null | undefined
+): MetricComparisonRow[] {
+  const definitions: Array<{ key: MetricComparisonRow['key']; label: string; field: MetricField; always?: boolean }> = [
+    { key: 'input', label: t('modelPlaza.metricInput'), field: 'input_per_million', always: true },
+    { key: 'output', label: t('modelPlaza.metricOutput'), field: 'output_per_million', always: true },
+    { key: 'cache-write', label: t('modelPlaza.metricCacheWrite'), field: 'cache_write_per_million' },
+    { key: 'cache-read', label: t('modelPlaza.metricCacheRead'), field: 'cache_read_per_million' },
   ]
 
-  if (hasPositiveMetric(metrics.cache_write_per_million)) {
-    rows.push({
-      key: 'cache-write',
-      label: t('modelPlaza.metricCacheWrite'),
-      value: formatMetricValue(metrics.cache_write_per_million, unit)
-    })
-  }
+  return definitions
+    .filter((definition) => {
+      if (definition.always) {
+        return Boolean(official || site)
+      }
 
-  if (hasPositiveMetric(metrics.cache_read_per_million)) {
-    rows.push({
-      key: 'cache-read',
-      label: t('modelPlaza.metricCacheRead'),
-      value: formatMetricValue(metrics.cache_read_per_million, unit)
+      return hasPositiveMetric(getMetricValue(official, definition.field)) || hasPositiveMetric(getMetricValue(site, definition.field))
     })
-  }
-
-  return rows
+    .map((definition) => ({
+      key: definition.key,
+      label: definition.label,
+      officialValue: formatMetricValue(getMetricValue(official, definition.field), 'usd'),
+      siteValue: formatMetricValue(getMetricValue(site, definition.field), 'balance'),
+    }))
 }
 
 function groupSummary(group: {
