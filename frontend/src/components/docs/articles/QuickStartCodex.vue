@@ -31,11 +31,31 @@
       </DocTabGroup>
 
       <p class="text-sm text-gray-600 dark:text-dark-300 mt-2 mb-2">以上命令会从 npm 官方仓库下载并安装最新版本的 Codex 工具。</p>
-      <p class="text-sm text-gray-600 dark:text-dark-300 mb-2">
-        如果你更希望直接下载安装包，也可以前往
-        <a href="https://github.com/openai/codex/releases" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:underline">OpenAI 官方 Releases</a>
-        查看 macOS / Windows 构建版本。
-      </p>
+      <div class="mb-2 space-y-3">
+        <p class="text-sm text-gray-600 dark:text-dark-300">如果你更希望直接下载安装包，可以直接选择对应系统版本：</p>
+        <div
+          v-for="group in codexDownloads"
+          :key="group.title"
+          class="rounded-xl bg-gray-50 p-3 dark:bg-dark-800/70"
+        >
+          <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">{{ group.title }}</p>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <a
+              v-for="link in group.links"
+              :key="link.href"
+              :href="link.href"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center rounded-lg border px-3 py-2 text-sm font-medium transition-colors"
+              :class="link.recommended
+                ? 'border-primary-200 bg-primary-50 text-primary-700 hover:border-primary-300 dark:border-primary-800 dark:bg-primary-900/20 dark:text-primary-300'
+                : 'border-gray-200 text-gray-700 hover:border-primary-300 hover:text-primary-600 dark:border-dark-700 dark:text-dark-200 dark:hover:border-primary-700 dark:hover:text-primary-400'"
+            >
+              {{ link.label }}
+            </a>
+          </div>
+        </div>
+      </div>
 
       <h3 class="text-base font-medium text-gray-800 dark:text-dark-200 mb-2 mt-4">验证安装</h3>
       <DocCodeBlock code="codex --version" language="bash" />
@@ -106,6 +126,9 @@
 import DocCodeBlock from '../DocCodeBlock.vue'
 import DocTabGroup from '../DocTabGroup.vue'
 import DocNote from '../DocNote.vue'
+import { codexRecommendedDownloads } from '../downloads'
+
+const codexDownloads = codexRecommendedDownloads
 
 const mkdirWindows = `# 删除旧目录并创建新目录
 if (Test-Path "$env:USERPROFILE\\.codex") { Remove-Item -Recurse -Force "$env:USERPROFILE\\.codex" }

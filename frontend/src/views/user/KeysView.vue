@@ -439,40 +439,26 @@
       v-if="showCcsClientSelect"
       :show="showCcsClientSelect"
       :title="t('keys.ccsClientSelect.title')"
-      width="narrow"
+      width="wide"
       @close="closeCcsClientSelect"
     >
       <div class="space-y-4">
         <p class="text-sm text-gray-600 dark:text-gray-400">
           {{ t('keys.ccsClientSelect.description') }}
-	        </p>
-	        <div class="grid grid-cols-2 gap-3">
-	          <button
-	            @click="handleCcsClientSelect('claude')"
-	            class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-gray-200 dark:border-dark-600 hover:border-primary-500 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all"
-	          >
-	            <Icon name="terminal" size="xl" class="text-gray-600 dark:text-gray-400" />
-	            <span class="font-medium text-gray-900 dark:text-white">{{
-	              t('keys.ccsClientSelect.claudeCode')
-	            }}</span>
-	            <span class="text-xs text-gray-500 dark:text-gray-400">{{
-	              t('keys.ccsClientSelect.claudeCodeDesc')
-	            }}</span>
-	          </button>
-	          <button
-	            @click="handleCcsClientSelect('gemini')"
-	            class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-gray-200 dark:border-dark-600 hover:border-primary-500 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all"
-	          >
-	            <Icon name="sparkles" size="xl" class="text-gray-600 dark:text-gray-400" />
-	            <span class="font-medium text-gray-900 dark:text-white">{{
-	              t('keys.ccsClientSelect.geminiCli')
-	            }}</span>
-	            <span class="text-xs text-gray-500 dark:text-gray-400">{{
-	              t('keys.ccsClientSelect.geminiCliDesc')
-	            }}</span>
-	          </button>
-	        </div>
-	      </div>
+        </p>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <button
+            v-for="option in availablePendingCcsApps"
+            :key="option.app"
+            @click="handleCcsClientSelect(option.app)"
+            class="flex flex-col items-center gap-2 rounded-xl border-2 border-gray-200 p-4 transition-all hover:border-primary-500 hover:bg-primary-50 dark:border-dark-600 dark:hover:border-primary-500 dark:hover:bg-primary-900/20"
+          >
+            <Icon :name="option.icon" size="xl" class="text-gray-600 dark:text-gray-400" />
+            <span class="font-medium text-gray-900 dark:text-white">{{ option.label }}</span>
+            <span class="text-xs text-center text-gray-500 dark:text-gray-400">{{ option.description }}</span>
+          </button>
+        </div>
+      </div>
       <template #footer>
         <div class="flex justify-end">
           <button @click="closeCcsClientSelect" class="btn btn-secondary">
@@ -544,10 +530,15 @@ import { keysAPI, usageAPI, userGroupsAPI } from '@/api'
 	const KeyEditorDialog = defineAsyncComponent(() => import('@/components/keys/KeyEditorDialog.vue'))
 	const UseKeyModal = defineAsyncComponent(() => import('@/components/keys/UseKeyModal.vue'))
 
-	import type { ApiKey, Group, GroupPlatform, SelectOption, SubscriptionType } from '@/types'
+import type { ApiKey, Group, GroupPlatform, SelectOption, SubscriptionType } from '@/types'
 import type { Column } from '@/components/common/types'
 import type { BatchApiKeyUsageStats } from '@/api/usage'
 import { formatDateTime } from '@/utils/format'
+import {
+  buildCcSwitchImportUrl,
+  resolveCcSwitchImportTarget,
+  type SupportedCcSwitchApp,
+} from '@/utils/clientImport'
 
 interface GroupOption extends SelectOption {
   value: number | null
@@ -565,6 +556,7 @@ const INITIAL_VISIBLE_GROUPS_PER_PLATFORM = 6
 let cachedAvailableGroups: Group[] | null = null
 let cachedAvailableGroupsExpiresAt = 0
 let availableGroupsPromise: Promise<Group[]> | null = null
+const supportedAppCandidates: SupportedCcSwitchApp[] = ['claude', 'gemini', 'codex']
 
 interface AvailableGroupsCachePayload {
   expiresAt: number
@@ -1070,75 +1062,65 @@ const handleKeySaved = () => {
   void loadApiKeys()
 }
 
-const importToCcswitch = (row: ApiKey) => {
-  const platform = row.group?.platform || 'anthropic'
+const availablePendingCcsApps = computed(() => {
+  if (!pendingCcsRow.value) {
+    return []
+  }
 
-  // For antigravity platform, show client selection dialog
-  if (platform === 'antigravity') {
-    pendingCcsRow.value = row
-    showCcsClientSelect.value = true
+  const baseUrl = publicSettings.value?.api_base_url || window.location.origin
+  const candidates: Array<{ app: SupportedCcSwitchApp; label: string; description: string; icon: 'terminal' | 'sparkles' | 'cpu' }> = [
+    {
+      app: 'claude',
+      label: t('keys.ccsClientSelect.claudeCode'),
+      description: t('keys.ccsClientSelect.claudeCodeDesc'),
+      icon: 'terminal',
+    },
+    {
+      app: 'gemini',
+      label: t('keys.ccsClientSelect.geminiCli'),
+      description: t('keys.ccsClientSelect.geminiCliDesc'),
+      icon: 'sparkles',
+    },
+    {
+      app: 'codex',
+      label: t('keys.ccsClientSelect.codexCli'),
+      description: t('keys.ccsClientSelect.codexCliDesc'),
+      icon: 'cpu',
+    },
+  ]
+
+  return candidates.filter(candidate =>
+    Boolean(resolveCcSwitchImportTarget(pendingCcsRow.value as ApiKey, candidate.app, baseUrl))
+  )
+})
+
+const importToCcswitch = (row: ApiKey) => {
+  const baseUrl = publicSettings.value?.api_base_url || window.location.origin
+  const supportedApps = supportedAppCandidates.filter((app) =>
+    Boolean(resolveCcSwitchImportTarget(row, app, baseUrl))
+  )
+
+  if (supportedApps.length === 0) {
+    appStore.showError(t('tutorial.configExport.ccSwitchUnsupported'))
     return
   }
 
-  // For other platforms, execute directly
-  executeCcsImport(row, platform === 'gemini' ? 'gemini' : 'claude')
-}
-
-const executeCcsImport = (row: ApiKey, clientType: 'claude' | 'gemini') => {
-  const baseUrl = publicSettings.value?.api_base_url || window.location.origin
-  const platform = row.group?.platform || 'anthropic'
-
-  // Determine app name and endpoint based on platform and client type
-  let app: string
-  let endpoint: string
-
-  if (platform === 'antigravity') {
-    // Antigravity always uses /antigravity suffix
-    app = clientType === 'gemini' ? 'gemini' : 'claude'
-    endpoint = `${baseUrl}/antigravity`
-  } else {
-    switch (platform) {
-      case 'openai':
-        app = 'codex'
-        endpoint = baseUrl
-        break
-      case 'gemini':
-        app = 'gemini'
-        endpoint = baseUrl
-        break
-      default: // anthropic
-        app = 'claude'
-        endpoint = baseUrl
-    }
+  if (supportedApps.length === 1) {
+    executeCcsImport(row, supportedApps[0])
+    return
   }
 
-  const usageScript = `({
-    request: {
-      url: "{{baseUrl}}/v1/usage",
-      method: "GET",
-      headers: { "Authorization": "Bearer {{apiKey}}" }
-    },
-    extractor: function(response) {
-      return {
-        isValid: response.is_active || true,
-        remaining: response.balance,
-        unit: "USD"
-      };
-    }
-  })`
-  const params = new URLSearchParams({
-    resource: 'provider',
-    app: app,
-    name: 'sub2api',
-    homepage: baseUrl,
-    endpoint: endpoint,
-    apiKey: row.key,
-    configFormat: 'json',
-    usageEnabled: 'true',
-    usageScript: btoa(usageScript),
-    usageAutoInterval: '30'
-  })
-  const deeplink = `ccswitch://v1/import?${params.toString()}`
+  pendingCcsRow.value = row
+  showCcsClientSelect.value = true
+}
+
+const executeCcsImport = (row: ApiKey, clientType: SupportedCcSwitchApp) => {
+  const baseUrl = publicSettings.value?.api_base_url || window.location.origin
+  const deeplink = buildCcSwitchImportUrl(row, clientType, baseUrl)
+  if (!deeplink) {
+    appStore.showError(t('tutorial.configExport.ccSwitchUnsupported'))
+    return
+  }
 
   try {
     window.open(deeplink, '_self')
@@ -1155,7 +1137,7 @@ const executeCcsImport = (row: ApiKey, clientType: 'claude' | 'gemini') => {
   }
 }
 
-const handleCcsClientSelect = (clientType: 'claude' | 'gemini') => {
+const handleCcsClientSelect = (clientType: SupportedCcSwitchApp) => {
   if (pendingCcsRow.value) {
     executeCcsImport(pendingCcsRow.value, clientType)
   }

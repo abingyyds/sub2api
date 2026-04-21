@@ -31,6 +31,7 @@
 
           <!-- Content area -->
           <div class="flex-1 min-w-0">
+            <TutorialRouteNotice />
             <SlideIn direction="up" :delay="100">
               <component :is="currentComponent" :key="currentDoc" />
             </SlideIn>
@@ -48,6 +49,7 @@ import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { FadeIn, SlideIn } from '@/components/animations'
 import DocSidebar from '@/components/docs/DocSidebar.vue'
+import TutorialRouteNotice from '@/components/docs/TutorialRouteNotice.vue'
 
 // Article components
 import DocsHome from '@/components/docs/articles/DocsHome.vue'
@@ -63,13 +65,13 @@ const route = useRoute()
 const showMobileSidebar = ref(false)
 
 const docComponents: Record<string, Component> = {
-  'home': DocsHome,
-  'nodejs': QuickStartNodejs,
+  home: DocsHome,
+  nodejs: QuickStartNodejs,
   'claude-code': QuickStartClaudeCode,
   'gemini-cli': QuickStartGeminiCli,
-  'codex': QuickStartCodex,
-  'openclaw': AdvancedOpenClaw,
-  'opencode': AdvancedOpenCode,
+  codex: QuickStartCodex,
+  openclaw: AdvancedOpenClaw,
+  opencode: AdvancedOpenCode,
 }
 
 const currentDoc = computed(() => (route.query.doc as string) || 'home')
