@@ -33,6 +33,14 @@
             </div>
           </div>
         </div>
+        <div class="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+          当前生成的配置默认使用当前站点域名。如果你在大陆网络环境下调用不稳定，可将配置中的域名切换为
+          <code class="mx-1 rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">https://airiver.cn</code>
+          或
+          <code class="mx-1 rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">https://api.airiver.cn</code>；
+          Claude / OpenAI 追加 <code class="rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">/v1</code>，Gemini 追加
+          <code class="rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">/v1beta</code>。
+        </div>
       </div>
     </GlowCard>
 
@@ -134,7 +142,7 @@
             </button>
             <button
               v-if="canImportToCcSwitch"
-              @click="importToCcSwitch"
+              @click="handleCcSwitchImport"
               class="inline-flex items-center rounded-lg bg-primary-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
             >
               {{ t('tutorial.configExport.importToCcSwitch') }}
@@ -180,6 +188,38 @@
         </div>
       </div>
     </div>
+
+    <BaseDialog
+      v-if="showCcSwitchClientSelect"
+      :show="showCcSwitchClientSelect"
+      :title="t('tutorial.configExport.ccSwitchClientSelect.title')"
+      width="wide"
+      @close="closeCcSwitchClientSelect"
+    >
+      <div class="space-y-4">
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          {{ t('tutorial.configExport.ccSwitchClientSelect.description') }}
+        </p>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <button
+            v-for="option in availableCcSwitchApps"
+            :key="option.app"
+            @click="importToCcSwitch(option.app)"
+            class="flex flex-col items-start gap-2 rounded-xl border-2 border-gray-200 p-4 text-left transition-all hover:border-primary-500 hover:bg-primary-50 dark:border-dark-600 dark:hover:border-primary-500 dark:hover:bg-primary-900/20"
+          >
+            <span class="text-base font-semibold text-gray-900 dark:text-white">{{ option.label }}</span>
+            <span class="text-xs leading-5 text-gray-500 dark:text-gray-400">{{ option.description }}</span>
+          </button>
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end">
+          <button @click="closeCcSwitchClientSelect" class="btn btn-secondary">
+            {{ t('common.cancel') }}
+          </button>
+        </div>
+      </template>
+    </BaseDialog>
   </div>
 </template>
 
@@ -189,9 +229,19 @@ import { useI18n } from 'vue-i18n'
 import { keysAPI } from '@/api/keys'
 import { getModelPlaza } from '@/api/model-plaza'
 import { GlowCard } from '@/components/animations'
+import BaseDialog from '@/components/common/BaseDialog.vue'
 import { useClipboard } from '@/composables/useClipboard'
 import { useAppStore } from '@/stores/app'
 import type { ApiKey } from '@/types'
+import {
+  buildCcSwitchImportUrl,
+  detectModelFamily,
+  getCherryStudioImportUrl,
+  getCherryStudioProvider,
+  resolveCcSwitchImportTarget,
+  type ModelFamily,
+  type SupportedCcSwitchApp,
+} from '@/utils/clientImport'
 
 type ToolId =
   | 'claudeCode'
@@ -208,8 +258,6 @@ type ToolId =
   | 'anthropic'
   | 'geminiPython'
 
-type ModelFamily = 'anthropic' | 'openai' | 'gemini' | 'unknown'
-
 const { t } = useI18n()
 const { copyToClipboard } = useClipboard()
 const appStore = useAppStore()
@@ -223,6 +271,7 @@ const loadingKeys = ref(true)
 const loadingModels = ref(true)
 const copied = ref(false)
 const availableModels = ref<string[]>([])
+const showCcSwitchClientSelect = ref(false)
 
 const tools: Array<{ id: ToolId; name: string }> = [
   { id: 'claudeCode', name: 'Claude Code' },
@@ -242,20 +291,6 @@ const tools: Array<{ id: ToolId; name: string }> = [
 
 const selectedKey = computed(() => apiKeys.value.find(k => k.id === selectedKeyId.value) ?? null)
 const currentApiKey = computed(() => selectedKey.value?.key || 'sk-your-api-key')
-
-function detectModelFamily(model: string): ModelFamily {
-  const lowerModel = model.toLowerCase()
-  if (lowerModel.includes('claude')) {
-    return 'anthropic'
-  }
-  if (lowerModel.includes('gemini')) {
-    return 'gemini'
-  }
-  if (['gpt', 'chatgpt', 'codex', 'o1', 'o3', 'o4'].some(keyword => lowerModel.includes(keyword))) {
-    return 'openai'
-  }
-  return 'unknown'
-}
 
 function preferredFamiliesForTool(toolId: ToolId): ModelFamily[] | null {
   switch (toolId) {
@@ -321,41 +356,6 @@ watch(
   },
   { immediate: true }
 )
-
-function getCherryStudioProvider(model: string, baseUrl: string) {
-  const family = detectModelFamily(model)
-
-  if (family === 'gemini') {
-    return {
-      providerType: 'Gemini',
-      type: 'gemini',
-      providerId: 'ccoder-me-gemini',
-      providerName: 'cCoder.me (Gemini)',
-      baseUrl: `${baseUrl}/v1beta`,
-      docsEntry: '选择 Gemini 服务商或自定义 Gemini Provider',
-    }
-  }
-
-  if (family === 'openai') {
-    return {
-      providerType: 'OpenAI',
-      type: 'openai',
-      providerId: 'ccoder-me-openai',
-      providerName: 'cCoder.me (OpenAI)',
-      baseUrl: `${baseUrl}/v1`,
-      docsEntry: '选择 OpenAI 兼容服务商',
-    }
-  }
-
-  return {
-    providerType: 'Anthropic',
-    type: 'anthropic',
-    providerId: 'ccoder-me-anthropic',
-    providerName: 'cCoder.me (Anthropic)',
-    baseUrl,
-    docsEntry: '选择 Anthropic 服务商',
-  }
-}
 
 const configFilePath = computed(() => {
   switch (selectedTool.value) {
@@ -585,22 +585,36 @@ print(response.text)
 const canDownloadConfig = computed(() => Boolean(selectedKeyId.value && generatedConfig.value))
 const canImportToCherryStudio = computed(() => selectedTool.value === 'cherryStudio' && Boolean(selectedKey.value && selectedModel.value))
 
-const canImportToCcSwitch = computed(() => {
-  const platform = selectedKey.value?.group?.platform
-  if (!platform) {
-    return false
+const availableCcSwitchApps = computed(() => {
+  if (!selectedKey.value) {
+    return []
   }
 
-  if (selectedTool.value === 'claudeCode') {
-    return platform === 'anthropic' || platform === 'antigravity'
-  }
-  if (selectedTool.value === 'geminiCli') {
-    return platform === 'gemini' || platform === 'antigravity'
-  }
-  if (selectedTool.value === 'codexCli') {
-    return platform === 'openai'
-  }
-  return false
+  const candidates: Array<{ app: SupportedCcSwitchApp; label: string; description: string }> = [
+    {
+      app: 'claude',
+      label: t('tutorial.configExport.ccSwitchClientSelect.claudeCode'),
+      description: t('tutorial.configExport.ccSwitchClientSelect.claudeCodeDesc'),
+    },
+    {
+      app: 'gemini',
+      label: t('tutorial.configExport.ccSwitchClientSelect.geminiCli'),
+      description: t('tutorial.configExport.ccSwitchClientSelect.geminiCliDesc'),
+    },
+    {
+      app: 'codex',
+      label: t('tutorial.configExport.ccSwitchClientSelect.codexCli'),
+      description: t('tutorial.configExport.ccSwitchClientSelect.codexCliDesc'),
+    },
+  ]
+
+  return candidates.filter(candidate =>
+    Boolean(resolveCcSwitchImportTarget(selectedKey.value as ApiKey, candidate.app, apiBaseUrl.value))
+  )
+})
+
+const canImportToCcSwitch = computed(() => {
+  return Boolean(selectedKey.value) && availableCcSwitchApps.value.length > 0
 })
 
 function getDownloadFileName(toolId: ToolId) {
@@ -641,37 +655,12 @@ function downloadGeneratedConfig() {
   URL.revokeObjectURL(url)
 }
 
-function getCherryStudioImportUrl() {
-  if (!selectedKey.value || !selectedModel.value) {
-    return null
-  }
-
-  const provider = getCherryStudioProvider(selectedModel.value, apiBaseUrl.value)
-  const payload = JSON.stringify({
-    id: provider.providerId,
-    name: provider.providerName,
-    type: provider.type,
-    apiKey: selectedKey.value.key,
-    baseUrl: provider.baseUrl,
-  })
-
-  const data = btoa(payload)
-    .replace(/\+/g, '_')
-    .replace(/\//g, '-')
-
-  const params = new URLSearchParams({
-    v: '1',
-    data,
-  })
-
-  return `cherrystudio://providers/api-keys?${params.toString()}`
-}
-
 function importToCherryStudio() {
-  const importUrl = getCherryStudioImportUrl()
-  if (!importUrl) {
+  if (!selectedKey.value || !selectedModel.value) {
     return
   }
+
+  const importUrl = getCherryStudioImportUrl(selectedKey.value.key, selectedModel.value, apiBaseUrl.value)
 
   try {
     window.open(importUrl, '_self')
@@ -685,51 +674,46 @@ function importToCherryStudio() {
   }
 }
 
-function importToCcSwitch() {
-  if (!canImportToCcSwitch.value || !selectedKey.value) {
+function handleCcSwitchImport() {
+  if (!canImportToCcSwitch.value) {
     return
   }
 
-  const baseUrl = apiBaseUrl.value
-  const platform = selectedKey.value.group?.platform
-  const app =
-    selectedTool.value === 'codexCli'
-      ? 'codex'
-      : selectedTool.value === 'geminiCli'
-        ? 'gemini'
-        : 'claude'
+  const preferredApp = selectedTool.value === 'codexCli'
+    ? 'codex'
+    : selectedTool.value === 'geminiCli'
+      ? 'gemini'
+      : selectedTool.value === 'claudeCode'
+        ? 'claude'
+        : null
 
-  const endpoint = platform === 'antigravity' ? `${baseUrl}/antigravity` : baseUrl
-  const usageScript = `({
-    request: {
-      url: "{{baseUrl}}/v1/usage",
-      method: "GET",
-      headers: { "Authorization": "Bearer {{apiKey}}" }
-    },
-    extractor: function(response) {
-      return {
-        isValid: response.is_active || true,
-        remaining: response.balance,
-        unit: "USD"
-      };
-    }
-  })`
+  if (preferredApp && availableCcSwitchApps.value.some(option => option.app === preferredApp)) {
+    importToCcSwitch(preferredApp)
+    return
+  }
 
-  const params = new URLSearchParams({
-    resource: 'provider',
-    app,
-    name: 'ccoder.me',
-    homepage: baseUrl,
-    endpoint,
-    apiKey: selectedKey.value.key,
-    configFormat: 'json',
-    usageEnabled: 'true',
-    usageScript: btoa(usageScript),
-    usageAutoInterval: '30'
-  })
+  if (availableCcSwitchApps.value.length === 1) {
+    importToCcSwitch(availableCcSwitchApps.value[0].app)
+    return
+  }
+
+  showCcSwitchClientSelect.value = true
+}
+
+function importToCcSwitch(app: SupportedCcSwitchApp) {
+  if (!selectedKey.value) {
+    return
+  }
+
+  const deeplink = buildCcSwitchImportUrl(selectedKey.value, app, apiBaseUrl.value)
+  if (!deeplink) {
+    appStore.showError(t('tutorial.configExport.ccSwitchUnsupported'))
+    return
+  }
 
   try {
-    window.open(`ccswitch://v1/import?${params.toString()}`, '_self')
+    window.open(deeplink, '_self')
+    closeCcSwitchClientSelect()
     setTimeout(() => {
       if (document.hasFocus()) {
         appStore.showError(t('keys.ccSwitchNotInstalled'))
@@ -738,6 +722,10 @@ function importToCcSwitch() {
   } catch {
     appStore.showError(t('keys.ccSwitchNotInstalled'))
   }
+}
+
+function closeCcSwitchClientSelect() {
+  showCcSwitchClientSelect.value = false
 }
 
 onMounted(async () => {

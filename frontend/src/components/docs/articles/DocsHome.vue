@@ -48,14 +48,17 @@
               <component :is="card.icon" class="h-5 w-5" />
             </div>
             <div class="min-w-0 flex-1">
-              <h3 class="text-base font-semibold text-gray-900 dark:text-white">{{ card.title }}</h3>
+              <div class="flex items-center gap-2">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">{{ card.title }}</h3>
+                <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-dark-800 dark:text-dark-300">{{ card.version }}</span>
+              </div>
               <p class="mt-1 text-sm leading-6 text-gray-500 dark:text-dark-400">{{ card.desc }}</p>
             </div>
           </div>
 
           <div class="mt-4 flex flex-wrap gap-2">
             <a
-              v-for="action in card.actions"
+              v-for="action in card.metaLinks"
               :key="action.href"
               :href="action.href"
               target="_blank"
@@ -64,6 +67,30 @@
             >
               {{ action.label }}
             </a>
+          </div>
+
+          <div class="mt-4 space-y-3">
+            <div
+              v-for="group in card.groups"
+              :key="group.title"
+              class="rounded-xl bg-gray-50 p-3 dark:bg-dark-800/70"
+            >
+              <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-dark-400">{{ group.title }}</p>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <a
+                  v-for="link in group.links"
+                  :key="link.href"
+                  :href="link.href"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center rounded-lg border px-3 py-2 text-sm font-medium transition-colors"
+                  :class="link.recommended
+                    ? 'border-primary-200 bg-primary-50 text-primary-700 hover:border-primary-300 dark:border-primary-800 dark:bg-primary-900/20 dark:text-primary-300'
+                    : 'border-gray-200 text-gray-700 hover:border-primary-300 hover:text-primary-600 dark:border-dark-700 dark:text-dark-200 dark:hover:border-primary-700 dark:hover:text-primary-400'"
+                >
+                  {{ link.label }}
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -104,8 +131,9 @@
 import { computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ConfigGenerator from './ConfigGenerator.vue'
+import { tutorialDownloadTools } from '../downloads'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 // Inline icons
 const BotIcon = () => h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' }, [
@@ -124,35 +152,33 @@ const RocketIcon = () => h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 
   h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z' })
 ])
 
-const downloadCards = computed(() => [
-  {
-    title: 'CC Switch',
-    desc: t('tutorial.downloads.ccSwitchDesc'),
-    icon: SparkIcon,
-    actions: [
-      { label: t('tutorial.downloads.officialRepo'), href: 'https://github.com/Farion1231/cc-switch' },
-      { label: t('tutorial.downloads.releases'), href: 'https://github.com/Farion1231/cc-switch/releases' },
-    ]
-  },
-  {
-    title: 'Codex',
-    desc: t('tutorial.downloads.codexDesc'),
-    icon: CodeIcon,
-    actions: [
-      { label: t('tutorial.downloads.installGuide'), href: 'https://github.com/openai/codex#installation' },
-      { label: t('tutorial.downloads.releases'), href: 'https://github.com/openai/codex/releases' },
-    ]
-  },
-  {
-    title: 'Cherry Studio',
-    desc: t('tutorial.downloads.cherryStudioDesc'),
-    icon: BotIcon,
-    actions: [
-      { label: t('tutorial.downloads.providerDocs'), href: 'https://docs.cherry-ai.com/advanced-basic/providers/custom-providers' },
-      { label: t('tutorial.downloads.releases'), href: 'https://github.com/CherryHQ/cherry-studio/releases' },
-    ]
-  },
-])
+const iconMap = {
+  'CC Switch': SparkIcon,
+  Codex: CodeIcon,
+  'Cherry Studio': BotIcon,
+} as const
+
+type DownloadToolTitle = keyof typeof iconMap
+
+const downloadCards = computed(() =>
+  tutorialDownloadTools.map((tool) => {
+    const metaLinks = [
+      tool.officialRepo ? { label: t('tutorial.downloads.officialRepo'), href: tool.officialRepo } : null,
+      tool.installGuide ? { label: t('tutorial.downloads.installGuide'), href: tool.installGuide } : null,
+      tool.providerDocs ? { label: t('tutorial.downloads.providerDocs'), href: tool.providerDocs } : null,
+      tool.releases ? { label: t('tutorial.downloads.releases'), href: tool.releases } : null,
+    ].filter((item): item is { label: string; href: string } => Boolean(item))
+
+    return {
+      title: tool.title,
+      version: tool.version,
+      desc: locale.value.startsWith('zh') ? tool.descZh : tool.descEn,
+      icon: iconMap[tool.title as DownloadToolTitle] ?? BotIcon,
+      metaLinks,
+      groups: tool.groups,
+    }
+  })
+)
 
 const advancedDocs = [
   { slug: 'openclaw', title: 'OpenClaw 部署教程', desc: '从零开始部署 OpenClaw Telegram 机器人，并接入 ccoder.me 平台。', icon: RocketIcon },
