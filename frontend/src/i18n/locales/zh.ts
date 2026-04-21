@@ -3598,7 +3598,7 @@ export default {
     pricingExplorerTitle: '分组模型价格',
     pricingExplorerDesc: '左侧看分组和模型，右侧固定显示当前选中模型的官方价和本站价。',
     pricingSelectionHint: '点击左侧模型后，右侧价格卡会立即切换。',
-    pricingMultiplierIncluded: '本站价格已乘当前倍率',
+    pricingMultiplierIncluded: '本站价格已按当前分组汇率换算',
     pricingTableTitle: '模型价格',
     pricingTableDesc: '只展示官方基础价和当前可用分组价，未支持的分组不再占位。',
     pricingSearchPlaceholder: '搜索模型名、别名、平台或模式',
