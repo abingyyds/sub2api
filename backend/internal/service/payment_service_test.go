@@ -93,6 +93,150 @@ func (s *paymentOrderRepoStub) CountPaidByUserAndPlanKey(ctx context.Context, us
 	panic("unexpected CountPaidByUserAndPlanKey call")
 }
 
+type paymentPlanGroupRepoStub struct {
+	groups []Group
+}
+
+func (s *paymentPlanGroupRepoStub) Create(ctx context.Context, group *Group) error {
+	panic("unexpected Create call")
+}
+
+func (s *paymentPlanGroupRepoStub) GetByID(ctx context.Context, id int64) (*Group, error) {
+	panic("unexpected GetByID call")
+}
+
+func (s *paymentPlanGroupRepoStub) GetByIDLite(ctx context.Context, id int64) (*Group, error) {
+	panic("unexpected GetByIDLite call")
+}
+
+func (s *paymentPlanGroupRepoStub) Update(ctx context.Context, group *Group) error {
+	panic("unexpected Update call")
+}
+
+func (s *paymentPlanGroupRepoStub) Delete(ctx context.Context, id int64) error {
+	panic("unexpected Delete call")
+}
+
+func (s *paymentPlanGroupRepoStub) DeleteCascade(ctx context.Context, id int64) ([]int64, error) {
+	panic("unexpected DeleteCascade call")
+}
+
+func (s *paymentPlanGroupRepoStub) List(ctx context.Context, params pagination.PaginationParams) ([]Group, *pagination.PaginationResult, error) {
+	panic("unexpected List call")
+}
+
+func (s *paymentPlanGroupRepoStub) ListWithFilters(ctx context.Context, params pagination.PaginationParams, platform, status, search string, isExclusive *bool) ([]Group, *pagination.PaginationResult, error) {
+	panic("unexpected ListWithFilters call")
+}
+
+func (s *paymentPlanGroupRepoStub) ListActive(ctx context.Context) ([]Group, error) {
+	return s.groups, nil
+}
+
+func (s *paymentPlanGroupRepoStub) ListActiveByPlatform(ctx context.Context, platform string) ([]Group, error) {
+	panic("unexpected ListActiveByPlatform call")
+}
+
+func (s *paymentPlanGroupRepoStub) ExistsByName(ctx context.Context, name string) (bool, error) {
+	panic("unexpected ExistsByName call")
+}
+
+func (s *paymentPlanGroupRepoStub) GetAccountCount(ctx context.Context, groupID int64) (int64, error) {
+	panic("unexpected GetAccountCount call")
+}
+
+func (s *paymentPlanGroupRepoStub) DeleteAccountGroupsByGroupID(ctx context.Context, groupID int64) (int64, error) {
+	panic("unexpected DeleteAccountGroupsByGroupID call")
+}
+
+type paymentActiveSubscriptionRepoStub struct {
+	active *UserSubscription
+}
+
+func (s *paymentActiveSubscriptionRepoStub) Create(ctx context.Context, sub *UserSubscription) error {
+	panic("unexpected Create call")
+}
+
+func (s *paymentActiveSubscriptionRepoStub) GetByID(ctx context.Context, id int64) (*UserSubscription, error) {
+	panic("unexpected GetByID call")
+}
+
+func (s *paymentActiveSubscriptionRepoStub) GetByUserIDAndGroupID(ctx context.Context, userID, groupID int64) (*UserSubscription, error) {
+	panic("unexpected GetByUserIDAndGroupID call")
+}
+
+func (s *paymentActiveSubscriptionRepoStub) GetActiveByUserIDAndGroupID(ctx context.Context, userID, groupID int64) (*UserSubscription, error) {
+	if s.active == nil || s.active.UserID != userID || s.active.GroupID != groupID {
+		return nil, ErrSubscriptionNotFound
+	}
+	clone := *s.active
+	return &clone, nil
+}
+
+func (s *paymentActiveSubscriptionRepoStub) Update(ctx context.Context, sub *UserSubscription) error {
+	panic("unexpected Update call")
+}
+
+func (s *paymentActiveSubscriptionRepoStub) Delete(ctx context.Context, id int64) error {
+	panic("unexpected Delete call")
+}
+
+func (s *paymentActiveSubscriptionRepoStub) ListByUserID(ctx context.Context, userID int64) ([]UserSubscription, error) {
+	panic("unexpected ListByUserID call")
+}
+
+func (s *paymentActiveSubscriptionRepoStub) ListActiveByUserID(ctx context.Context, userID int64) ([]UserSubscription, error) {
+	panic("unexpected ListActiveByUserID call")
+}
+
+func (s *paymentActiveSubscriptionRepoStub) ListByGroupID(ctx context.Context, groupID int64, params pagination.PaginationParams) ([]UserSubscription, *pagination.PaginationResult, error) {
+	panic("unexpected ListByGroupID call")
+}
+
+func (s *paymentActiveSubscriptionRepoStub) List(ctx context.Context, params pagination.PaginationParams, userID, groupID *int64, status, sortBy, sortOrder string) ([]UserSubscription, *pagination.PaginationResult, error) {
+	panic("unexpected List call")
+}
+
+func (s *paymentActiveSubscriptionRepoStub) ExistsByUserIDAndGroupID(ctx context.Context, userID, groupID int64) (bool, error) {
+	panic("unexpected ExistsByUserIDAndGroupID call")
+}
+
+func (s *paymentActiveSubscriptionRepoStub) ExtendExpiry(ctx context.Context, subscriptionID int64, newExpiresAt time.Time) error {
+	panic("unexpected ExtendExpiry call")
+}
+
+func (s *paymentActiveSubscriptionRepoStub) UpdateStatus(ctx context.Context, subscriptionID int64, status string) error {
+	panic("unexpected UpdateStatus call")
+}
+
+func (s *paymentActiveSubscriptionRepoStub) UpdateNotes(ctx context.Context, subscriptionID int64, notes string) error {
+	panic("unexpected UpdateNotes call")
+}
+
+func (s *paymentActiveSubscriptionRepoStub) ActivateWindows(ctx context.Context, id int64, start time.Time) error {
+	panic("unexpected ActivateWindows call")
+}
+
+func (s *paymentActiveSubscriptionRepoStub) ResetDailyUsage(ctx context.Context, id int64, newWindowStart time.Time) error {
+	panic("unexpected ResetDailyUsage call")
+}
+
+func (s *paymentActiveSubscriptionRepoStub) ResetWeeklyUsage(ctx context.Context, id int64, newWindowStart time.Time) error {
+	panic("unexpected ResetWeeklyUsage call")
+}
+
+func (s *paymentActiveSubscriptionRepoStub) ResetMonthlyUsage(ctx context.Context, id int64, newWindowStart time.Time) error {
+	panic("unexpected ResetMonthlyUsage call")
+}
+
+func (s *paymentActiveSubscriptionRepoStub) IncrementUsage(ctx context.Context, id int64, costUSD float64) error {
+	panic("unexpected IncrementUsage call")
+}
+
+func (s *paymentActiveSubscriptionRepoStub) BatchUpdateExpiredStatus(ctx context.Context) (int64, error) {
+	panic("unexpected BatchUpdateExpiredStatus call")
+}
+
 type paymentBalanceUserRepoStub struct {
 	*userRepoStub
 	balanceUpdates []float64
@@ -202,6 +346,49 @@ func TestPaymentServiceCreateEpayOrderUnexpectedResponseReturnsBadRequest(t *tes
 	require.Error(t, err)
 	require.Equal(t, http.StatusBadRequest, infraerrors.Code(err))
 	require.Equal(t, "EPAY_API_ERROR", infraerrors.Reason(err))
+}
+
+func TestPaymentServiceCreateOrderBlocksRepurchaseWhileSubscriptionActive(t *testing.T) {
+	t.Parallel()
+
+	groupRepo := &paymentPlanGroupRepoStub{
+		groups: []Group{
+			{
+				ID:                  88,
+				Name:                "Pro",
+				Description:         "pro plan",
+				PriceFen:            29900,
+				Listed:              true,
+				DefaultValidityDays: 30,
+				SubscriptionType:    SubscriptionTypeSubscription,
+				Status:              StatusActive,
+			},
+		},
+	}
+	subRepo := &paymentActiveSubscriptionRepoStub{
+		active: &UserSubscription{
+			ID:        10,
+			UserID:    7,
+			GroupID:   88,
+			Status:    SubscriptionStatusActive,
+			ExpiresAt: time.Now().Add(24 * time.Hour),
+		},
+	}
+
+	svc := &PaymentService{
+		settingService: NewSettingService(&settingRepoStub{values: map[string]string{
+			SettingKeyPaymentEnabled: "true",
+		}}, &config.Config{}),
+		groupRepo: groupRepo,
+		subscriptionService: &SubscriptionService{
+			userSubRepo: subRepo,
+		},
+	}
+
+	_, err := svc.CreateOrder(context.Background(), 7, "group_88", "", "")
+	require.ErrorIs(t, err, ErrPaymentSubscriptionRepurchaseBlocked)
+	require.Equal(t, http.StatusConflict, infraerrors.Code(err))
+	require.Equal(t, "SUBSCRIPTION_REPURCHASE_BLOCKED", infraerrors.Reason(err))
 }
 
 func TestPaymentServiceRepairOrder_ReplaysBalanceFulfillment(t *testing.T) {
