@@ -302,7 +302,7 @@
                 class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
               >
                 <Icon name="upload" size="sm" />
-                <span class="text-xs">{{ t('keys.importToCcSwitch') }}</span>
+                <span class="text-xs">{{ getCcSwitchButtonLabel(row) }}</span>
               </button>
               <!-- Toggle Status Button -->
               <button
@@ -1112,6 +1112,26 @@ const importToCcswitch = (row: ApiKey) => {
 
   pendingCcsRow.value = row
   showCcsClientSelect.value = true
+}
+
+const getCcSwitchButtonLabel = (row: ApiKey) => {
+  const baseUrl = publicSettings.value?.api_base_url || window.location.origin
+  const supportedApps = supportedAppCandidates.filter((app) =>
+    Boolean(resolveCcSwitchImportTarget(row, app, baseUrl))
+  )
+
+  if (supportedApps.length !== 1) {
+    return t('keys.chooseCcSwitchImport')
+  }
+
+  const app = supportedApps[0]
+  if (app === 'claude') {
+    return t('keys.importToCcSwitchApp', { app: t('keys.ccsClientSelect.claudeCode') })
+  }
+  if (app === 'gemini') {
+    return t('keys.importToCcSwitchApp', { app: t('keys.ccsClientSelect.geminiCli') })
+  }
+  return t('keys.importToCcSwitchApp', { app: t('keys.ccsClientSelect.codexCli') })
 }
 
 const executeCcsImport = (row: ApiKey, clientType: SupportedCcSwitchApp) => {
