@@ -14,6 +14,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -42,6 +43,10 @@ var (
 	ErrPaymentConfigMissing     = infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", "payment configuration is incomplete")
 	ErrPaymentCreateFailed      = infraerrors.BadRequest("PAYMENT_CREATE_FAILED", "failed to create payment order")
 	ErrPaymentSignature         = infraerrors.BadRequest("PAYMENT_SIGNATURE_INVALID", "payment notification signature invalid")
+	ErrPaymentSubscriptionRepurchaseBlocked = infraerrors.Conflict(
+		"SUBSCRIPTION_REPURCHASE_BLOCKED",
+		"you already have an active subscription for this plan; purchase again after it expires",
+	)
 	ErrInvoiceOrdersRequired    = infraerrors.BadRequest("INVOICE_ORDERS_REQUIRED", "at least one order is required")
 	ErrInvoiceEmailInvalid      = infraerrors.BadRequest("INVOICE_EMAIL_INVALID", "invoice email is invalid")
 	ErrInvoiceOrderNotPaid      = infraerrors.BadRequest("INVOICE_ORDER_NOT_PAID", "only paid orders can request invoices")
@@ -569,6 +574,21 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 		return nil, ErrPaymentPlanNotFound
 	}
 
+	// 确定订单类型
+	orderType := plan.Type
+	if orderType == "" {
+		orderType = PaymentOrderTypeSubscription
+	}
+
+	// 同一订阅分组未到期前不可重复购买；到期后仍复用原订阅记录续开。
+	if orderType == PaymentOrderTypeSubscription && s.subscriptionService != nil && s.subscriptionService.userSubRepo != nil {
+		if _, err := s.subscriptionService.userSubRepo.GetActiveByUserIDAndGroupID(ctx, userID, plan.GroupID); err == nil {
+			return nil, ErrPaymentSubscriptionRepurchaseBlocked
+		} else if err != nil && !errors.Is(err, ErrSubscriptionNotFound) {
+			return nil, fmt.Errorf("check active subscription before create order: %w", err)
+		}
+	}
+
 	// 计算优惠码折扣
 	var discountFen int
 	promoCode = strings.TrimSpace(promoCode)
@@ -588,12 +608,6 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 
 	// 生成订单号
 	orderNo := generateOrderNo()
-
-	// 确定订单类型
-	orderType := plan.Type
-	if orderType == "" {
-		orderType = PaymentOrderTypeSubscription
-	}
 
 	// 确定支付方式
 	if payMethod == "" {

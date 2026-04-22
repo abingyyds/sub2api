@@ -118,7 +118,7 @@
             </div>
           </div>
           <p class="mt-6 text-center text-sm text-gray-500 dark:text-dark-400">
-            {{ t('pricing.stackable') }}
+            {{ t('pricing.repurchaseRule') }}
           </p>
         </div>
 

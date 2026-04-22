@@ -373,7 +373,7 @@
             {{ t('pricing.noPlans') }}
           </div>
           <p v-if="decoratedPlans.length > 0" class="text-center text-sm text-gray-500 dark:text-dark-400">
-            {{ t('pricing.stackable') }}
+            {{ t('pricing.repurchaseRule') }}
           </p>
 
           </template>
