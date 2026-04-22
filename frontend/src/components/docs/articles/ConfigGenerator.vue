@@ -141,11 +141,12 @@
               {{ t('tutorial.configExport.importToCherryStudio') }}
             </button>
             <button
-              v-if="canImportToCcSwitch"
-              @click="handleCcSwitchImport"
+              v-for="option in visibleCcSwitchApps"
+              :key="option.app"
+              @click="importToCcSwitch(option.app)"
               class="inline-flex items-center rounded-lg bg-primary-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
             >
-              {{ t('tutorial.configExport.importToCcSwitch') }}
+              {{ t('tutorial.configExport.importToCcSwitchApp', { app: option.label }) }}
             </button>
           </div>
         </div>
@@ -188,38 +189,6 @@
         </div>
       </div>
     </div>
-
-    <BaseDialog
-      v-if="showCcSwitchClientSelect"
-      :show="showCcSwitchClientSelect"
-      :title="t('tutorial.configExport.ccSwitchClientSelect.title')"
-      width="wide"
-      @close="closeCcSwitchClientSelect"
-    >
-      <div class="space-y-4">
-        <p class="text-sm text-gray-600 dark:text-gray-400">
-          {{ t('tutorial.configExport.ccSwitchClientSelect.description') }}
-        </p>
-        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <button
-            v-for="option in availableCcSwitchApps"
-            :key="option.app"
-            @click="importToCcSwitch(option.app)"
-            class="flex flex-col items-start gap-2 rounded-xl border-2 border-gray-200 p-4 text-left transition-all hover:border-primary-500 hover:bg-primary-50 dark:border-dark-600 dark:hover:border-primary-500 dark:hover:bg-primary-900/20"
-          >
-            <span class="text-base font-semibold text-gray-900 dark:text-white">{{ option.label }}</span>
-            <span class="text-xs leading-5 text-gray-500 dark:text-gray-400">{{ option.description }}</span>
-          </button>
-        </div>
-      </div>
-      <template #footer>
-        <div class="flex justify-end">
-          <button @click="closeCcSwitchClientSelect" class="btn btn-secondary">
-            {{ t('common.cancel') }}
-          </button>
-        </div>
-      </template>
-    </BaseDialog>
   </div>
 </template>
 
@@ -229,7 +198,6 @@ import { useI18n } from 'vue-i18n'
 import { keysAPI } from '@/api/keys'
 import { getModelPlaza } from '@/api/model-plaza'
 import { GlowCard } from '@/components/animations'
-import BaseDialog from '@/components/common/BaseDialog.vue'
 import { useClipboard } from '@/composables/useClipboard'
 import { useAppStore } from '@/stores/app'
 import type { ApiKey } from '@/types'
@@ -271,7 +239,6 @@ const loadingKeys = ref(true)
 const loadingModels = ref(true)
 const copied = ref(false)
 const availableModels = ref<string[]>([])
-const showCcSwitchClientSelect = ref(false)
 
 const tools: Array<{ id: ToolId; name: string }> = [
   { id: 'claudeCode', name: 'Claude Code' },
@@ -613,8 +580,25 @@ const availableCcSwitchApps = computed(() => {
   )
 })
 
-const canImportToCcSwitch = computed(() => {
-  return Boolean(selectedKey.value) && availableCcSwitchApps.value.length > 0
+const preferredCcSwitchApp = computed<SupportedCcSwitchApp | null>(() => {
+  switch (selectedTool.value) {
+    case 'claudeCode':
+      return 'claude'
+    case 'geminiCli':
+      return 'gemini'
+    case 'codexCli':
+      return 'codex'
+    default:
+      return null
+  }
+})
+
+const visibleCcSwitchApps = computed(() => {
+  if (!preferredCcSwitchApp.value) {
+    return []
+  }
+
+  return availableCcSwitchApps.value.filter(option => option.app === preferredCcSwitchApp.value)
 })
 
 function getDownloadFileName(toolId: ToolId) {
@@ -674,32 +658,6 @@ function importToCherryStudio() {
   }
 }
 
-function handleCcSwitchImport() {
-  if (!canImportToCcSwitch.value) {
-    return
-  }
-
-  const preferredApp = selectedTool.value === 'codexCli'
-    ? 'codex'
-    : selectedTool.value === 'geminiCli'
-      ? 'gemini'
-      : selectedTool.value === 'claudeCode'
-        ? 'claude'
-        : null
-
-  if (preferredApp && availableCcSwitchApps.value.some(option => option.app === preferredApp)) {
-    importToCcSwitch(preferredApp)
-    return
-  }
-
-  if (availableCcSwitchApps.value.length === 1) {
-    importToCcSwitch(availableCcSwitchApps.value[0].app)
-    return
-  }
-
-  showCcSwitchClientSelect.value = true
-}
-
 function importToCcSwitch(app: SupportedCcSwitchApp) {
   if (!selectedKey.value) {
     return
@@ -713,7 +671,6 @@ function importToCcSwitch(app: SupportedCcSwitchApp) {
 
   try {
     window.open(deeplink, '_self')
-    closeCcSwitchClientSelect()
     setTimeout(() => {
       if (document.hasFocus()) {
         appStore.showError(t('keys.ccSwitchNotInstalled'))
@@ -722,10 +679,6 @@ function importToCcSwitch(app: SupportedCcSwitchApp) {
   } catch {
     appStore.showError(t('keys.ccSwitchNotInstalled'))
   }
-}
-
-function closeCcSwitchClientSelect() {
-  showCcSwitchClientSelect.value = false
 }
 
 onMounted(async () => {
