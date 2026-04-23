@@ -99,6 +99,87 @@ var allowedHeaders = map[string]bool{
 	"content-type":                              true,
 }
 
+var blockedPassthroughHeaders = map[string]bool{
+	"authorization":       true,
+	"x-api-key":           true,
+	"host":                true,
+	"content-length":      true,
+	"connection":          true,
+	"proxy-connection":    true,
+	"proxy-authenticate":  true,
+	"proxy-authorization": true,
+	"te":                  true,
+	"trailer":             true,
+	"transfer-encoding":   true,
+	"upgrade":             true,
+	"keep-alive":          true,
+}
+
+func shouldPassthroughHeader(lowerKey string, passthroughAll bool) bool {
+	if lowerKey == "" || blockedPassthroughHeaders[lowerKey] {
+		return false
+	}
+	if passthroughAll {
+		return true
+	}
+	return allowedHeaders[lowerKey]
+}
+
+func copyClientHeaders(dst, src http.Header, passthroughAll bool) {
+	for key, values := range src {
+		lowerKey := strings.ToLower(strings.TrimSpace(key))
+		if !shouldPassthroughHeader(lowerKey, passthroughAll) {
+			continue
+		}
+		wireKey := resolveWireCasing(key)
+		for _, v := range values {
+			addHeaderRaw(dst, wireKey, v)
+		}
+	}
+}
+
+func (s *GatewayService) shouldForceClaudeCLIHeaders(ctx context.Context) bool {
+	return s != nil && s.cfg != nil && s.cfg.Gateway.ForceClaudeCLIHeaders && IsClaudeCodeClient(ctx)
+}
+
+func (s *GatewayService) forcedClaudeCLIUserAgent() string {
+	if s != nil && s.cfg != nil {
+		if ua := strings.TrimSpace(s.cfg.Gateway.ForceClaudeCLIUserAgent); ua != "" {
+			return ua
+		}
+	}
+	return "claude-cli/2.1.114"
+}
+
+func (s *GatewayService) applyForcedClaudeCLIHeaders(req *http.Request) {
+	if req == nil {
+		return
+	}
+
+	setHeaderRaw(req.Header, resolveWireCasing("user-agent"), s.forcedClaudeCLIUserAgent())
+
+	defaults := map[string]string{
+		"X-Stainless-Lang":                          claude.DefaultHeaders["X-Stainless-Lang"],
+		"X-Stainless-Package-Version":               claude.DefaultHeaders["X-Stainless-Package-Version"],
+		"X-Stainless-OS":                            claude.DefaultHeaders["X-Stainless-OS"],
+		"X-Stainless-Arch":                          claude.DefaultHeaders["X-Stainless-Arch"],
+		"X-Stainless-Runtime":                       claude.DefaultHeaders["X-Stainless-Runtime"],
+		"X-Stainless-Runtime-Version":               claude.DefaultHeaders["X-Stainless-Runtime-Version"],
+		"X-Stainless-Retry-Count":                   claude.DefaultHeaders["X-Stainless-Retry-Count"],
+		"X-Stainless-Timeout":                       claude.DefaultHeaders["X-Stainless-Timeout"],
+		"X-App":                                     claude.DefaultHeaders["X-App"],
+		"Anthropic-Dangerous-Direct-Browser-Access": claude.DefaultHeaders["Anthropic-Dangerous-Direct-Browser-Access"],
+	}
+	for key, value := range defaults {
+		if strings.TrimSpace(value) == "" {
+			continue
+		}
+		if getHeaderRaw(req.Header, key) == "" {
+			setHeaderRaw(req.Header, resolveWireCasing(key), value)
+		}
+	}
+}
+
 // GatewayCache 定义网关服务的缓存操作接口。
 // 提供粘性会话（Sticky Session）的存储、查询、刷新和删除功能。
 //
@@ -2760,51 +2841,47 @@ func (s *GatewayService) buildUpstreamRequest(ctx context.Context, c *gin.Contex
 
 	// 设置认证头
 	if tokenType == "oauth" {
-		req.Header.Set("authorization", "Bearer "+token)
+		setHeaderRaw(req.Header, resolveWireCasing("authorization"), "Bearer "+token)
 	} else {
-		req.Header.Set("x-api-key", token)
+		setHeaderRaw(req.Header, resolveWireCasing("x-api-key"), token)
 	}
 
-	// 白名单透传headers
-	for key, values := range c.Request.Header {
-		lowerKey := strings.ToLower(key)
-		if allowedHeaders[lowerKey] {
-			for _, v := range values {
-				req.Header.Add(key, v)
-			}
-		}
-	}
+	forceCLIHeaders := s.shouldForceClaudeCLIHeaders(c.Request.Context())
+	copyClientHeaders(req.Header, c.Request.Header, forceCLIHeaders)
 
 	// APIKey账号：针对 Anthropic JS SDK 的 User-Agent 进行覆盖
 	// 某些第三方上游API会阻止 "Anthropic/JS" 的请求，只影响该SDK的请求
-	if account.Type == AccountTypeAPIKey {
-		ua := req.Header.Get("User-Agent")
+	if account.Type == AccountTypeAPIKey && !forceCLIHeaders {
+		ua := getHeaderRaw(req.Header, "User-Agent")
 		if strings.HasPrefix(ua, "Anthropic/JS") {
-			req.Header.Set("User-Agent", "curl/8.7.1")
+			setHeaderRaw(req.Header, resolveWireCasing("user-agent"), "curl/8.7.1")
 		}
 	}
 
 	// OAuth账号：应用缓存的指纹到请求头（覆盖白名单透传的头）
-	if fingerprint != nil {
+	if fingerprint != nil && !forceCLIHeaders {
 		s.identityService.ApplyFingerprint(req, fingerprint)
+	}
+	if forceCLIHeaders {
+		s.applyForcedClaudeCLIHeaders(req)
 	}
 
 	// 确保必要的headers存在
-	if req.Header.Get("content-type") == "" {
-		req.Header.Set("content-type", "application/json")
+	if getHeaderRaw(req.Header, "content-type") == "" {
+		setHeaderRaw(req.Header, resolveWireCasing("content-type"), "application/json")
 	}
-	if req.Header.Get("anthropic-version") == "" {
-		req.Header.Set("anthropic-version", "2023-06-01")
+	if getHeaderRaw(req.Header, "anthropic-version") == "" {
+		setHeaderRaw(req.Header, resolveWireCasing("anthropic-version"), "2023-06-01")
 	}
 
 	// 处理anthropic-beta header（OAuth账号需要特殊处理）
 	if tokenType == "oauth" {
-		req.Header.Set("anthropic-beta", s.getBetaHeader(modelID, c.GetHeader("anthropic-beta")))
-	} else if s.cfg != nil && s.cfg.Gateway.InjectBetaForAPIKey && req.Header.Get("anthropic-beta") == "" {
+		setHeaderRaw(req.Header, resolveWireCasing("anthropic-beta"), s.getBetaHeader(modelID, c.GetHeader("anthropic-beta")))
+	} else if s.cfg != nil && s.cfg.Gateway.InjectBetaForAPIKey && getHeaderRaw(req.Header, "anthropic-beta") == "" {
 		// API-key：仅在请求显式使用 beta 特性且客户端未提供时，按需补齐（默认关闭）
 		if requestNeedsBetaFeatures(body) {
 			if beta := defaultAPIKeyBetaHeader(body); beta != "" {
-				req.Header.Set("anthropic-beta", beta)
+				setHeaderRaw(req.Header, resolveWireCasing("anthropic-beta"), beta)
 			}
 		}
 	}
@@ -3906,45 +3983,41 @@ func (s *GatewayService) buildCountTokensRequest(ctx context.Context, c *gin.Con
 
 	// 设置认证头
 	if tokenType == "oauth" {
-		req.Header.Set("authorization", "Bearer "+token)
+		setHeaderRaw(req.Header, resolveWireCasing("authorization"), "Bearer "+token)
 	} else {
-		req.Header.Set("x-api-key", token)
+		setHeaderRaw(req.Header, resolveWireCasing("x-api-key"), token)
 	}
 
-	// 白名单透传 headers
-	for key, values := range c.Request.Header {
-		lowerKey := strings.ToLower(key)
-		if allowedHeaders[lowerKey] {
-			for _, v := range values {
-				req.Header.Add(key, v)
-			}
-		}
-	}
+	forceCLIHeaders := s.shouldForceClaudeCLIHeaders(c.Request.Context())
+	copyClientHeaders(req.Header, c.Request.Header, forceCLIHeaders)
 
 	// OAuth 账号：应用指纹到请求头
-	if account.IsOAuth() && s.identityService != nil {
+	if account.IsOAuth() && s.identityService != nil && !forceCLIHeaders {
 		fp, _ := s.identityService.GetOrCreateFingerprint(ctx, account.ID, c.Request.Header)
 		if fp != nil {
 			s.identityService.ApplyFingerprint(req, fp)
 		}
 	}
+	if forceCLIHeaders {
+		s.applyForcedClaudeCLIHeaders(req)
+	}
 
 	// 确保必要的 headers 存在
-	if req.Header.Get("content-type") == "" {
-		req.Header.Set("content-type", "application/json")
+	if getHeaderRaw(req.Header, "content-type") == "" {
+		setHeaderRaw(req.Header, resolveWireCasing("content-type"), "application/json")
 	}
-	if req.Header.Get("anthropic-version") == "" {
-		req.Header.Set("anthropic-version", "2023-06-01")
+	if getHeaderRaw(req.Header, "anthropic-version") == "" {
+		setHeaderRaw(req.Header, resolveWireCasing("anthropic-version"), "2023-06-01")
 	}
 
 	// OAuth 账号：处理 anthropic-beta header
 	if tokenType == "oauth" {
-		req.Header.Set("anthropic-beta", s.getBetaHeader(modelID, c.GetHeader("anthropic-beta")))
-	} else if s.cfg != nil && s.cfg.Gateway.InjectBetaForAPIKey && req.Header.Get("anthropic-beta") == "" {
+		setHeaderRaw(req.Header, resolveWireCasing("anthropic-beta"), s.getBetaHeader(modelID, c.GetHeader("anthropic-beta")))
+	} else if s.cfg != nil && s.cfg.Gateway.InjectBetaForAPIKey && getHeaderRaw(req.Header, "anthropic-beta") == "" {
 		// API-key：与 messages 同步的按需 beta 注入（默认关闭）
 		if requestNeedsBetaFeatures(body) {
 			if beta := defaultAPIKeyBetaHeader(body); beta != "" {
-				req.Header.Set("anthropic-beta", beta)
+				setHeaderRaw(req.Header, resolveWireCasing("anthropic-beta"), beta)
 			}
 		}
 	}

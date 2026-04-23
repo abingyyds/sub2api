@@ -54,6 +54,12 @@ func TestLoadDefaultSchedulingConfig(t *testing.T) {
 	if cfg.Gateway.Scheduling.SlotCleanupInterval != 30*time.Second {
 		t.Fatalf("SlotCleanupInterval = %v, want 30s", cfg.Gateway.Scheduling.SlotCleanupInterval)
 	}
+	if cfg.Gateway.ForceClaudeCLIHeaders {
+		t.Fatalf("ForceClaudeCLIHeaders = true, want false")
+	}
+	if cfg.Gateway.ForceClaudeCLIUserAgent != "claude-cli/2.1.114" {
+		t.Fatalf("ForceClaudeCLIUserAgent = %q, want %q", cfg.Gateway.ForceClaudeCLIUserAgent, "claude-cli/2.1.114")
+	}
 }
 
 func TestLoadSchedulingConfigFromEnv(t *testing.T) {
