@@ -2,7 +2,7 @@
   <div class="relative min-h-screen bg-[#FAFAFA] dark:bg-dark-950 overflow-x-hidden antialiased">
     <!-- 顶部公告栏 -->
     <div class="fixed top-0 left-0 w-full bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-center py-2.5 text-sm font-medium z-50 transition-all hover:bg-indigo-100 dark:hover:bg-indigo-900/30">
-      <span class="mr-2">🎉</span> 新一代企业级多节点路由已上线 | <strong>新人特惠 ¥9.9 = $19.9 额度</strong>
+      <span class="mr-2">🎉</span> 新一代企业级多节点路由已上线 | <strong>{{ newcomerBannerText }}</strong>
     </div>
 
     <!-- 导航栏 -->
@@ -49,7 +49,7 @@
               @click="navigateTo(isAuthenticated ? dashboardPath : '/register')"
               class="bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 text-white dark:text-gray-900 text-lg font-bold py-4 px-10 rounded-full shadow-xl transform hover:-translate-y-1 transition duration-300 flex items-center gap-3"
             >
-              <Icon name="sparkles" size="md" /> 新人特惠 ¥9.9 = $19.9，即刻接入
+              <Icon name="sparkles" size="md" /> {{ newcomerCtaText }}
             </button>
           </MagneticButton>
         </div>
@@ -394,8 +394,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { paymentAPI, type RechargePlan } from '@/api/payment'
 import { useAuthStore } from '@/stores/auth'
 import Icon from '@/components/icons/Icon.vue'
 import { FadeIn, SlideIn, StaggerContainer, GlowCard, MagneticButton } from '@/components/animations'
@@ -411,6 +412,7 @@ const dashboardPath = computed(() => {
 })
 
 const activeFaq = ref<number | null>(null)
+const newcomerPlans = ref<RechargePlan[]>([])
 
 const faqs = [
   {
@@ -435,8 +437,30 @@ const faqs = [
   }
 ]
 
+const primaryNewcomerPlan = computed(() => newcomerPlans.value[0] || null)
+
+const newcomerBannerText = computed(() => {
+  const plan = primaryNewcomerPlan.value
+  if (!plan) {
+    return '新人专享优惠已上线'
+  }
+  return `新人专享 ¥${formatOfferAmount(plan.pay_amount_fen / 100)} = $${formatOfferAmount(plan.balance_amount)} 额度`
+})
+
+const newcomerCtaText = computed(() => {
+  const plan = primaryNewcomerPlan.value
+  if (!plan) {
+    return '新人专享价，即刻接入'
+  }
+  return `新人专享 ¥${formatOfferAmount(plan.pay_amount_fen / 100)} = $${formatOfferAmount(plan.balance_amount)}，即刻接入`
+})
+
 function toggleFaq(index: number) {
   activeFaq.value = activeFaq.value === index ? null : index
+}
+
+function formatOfferAmount(value: number) {
+  return value.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1')
 }
 
 function navigateTo(path: string) {
@@ -450,6 +474,15 @@ function selectPlan(_tier: string) {
     navigateTo('/register')
   }
 }
+
+onMounted(async () => {
+  try {
+    const rechargeInfo = await paymentAPI.getRechargeInfo()
+    newcomerPlans.value = (rechargeInfo.plans || []).filter(plan => plan.is_newcomer)
+  } catch {
+    newcomerPlans.value = []
+  }
+})
 </script>
 
 <style scoped>
