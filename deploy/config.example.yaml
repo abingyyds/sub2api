@@ -168,6 +168,12 @@ gateway:
   # Auto inject anthropic-beta header for API-key accounts when needed (default: off)
   # 需要时自动为 API-key 账户注入 anthropic-beta 头（默认：关闭）
   inject_beta_for_apikey: false
+  # Wrap Claude Code requests as a fixed Claude CLI header profile before forwarding (default: off)
+  # 将 Claude Code 请求包装成固定 Claude CLI 请求头形态后再转发（默认：关闭）
+  force_claude_cli_headers: false
+  # User-Agent used when force_claude_cli_headers is enabled
+  # 开启 force_claude_cli_headers 后使用的 User-Agent
+  force_claude_cli_user_agent: "claude-cli/2.1.114"
   # Allow failover on selected 400 errors (default: off)
   # 允许在特定 400 错误时进行故障转移（默认：关闭）
   failover_on_400: false

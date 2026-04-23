@@ -45,7 +45,7 @@ var (
 	ErrPaymentSignature         = infraerrors.BadRequest("PAYMENT_SIGNATURE_INVALID", "payment notification signature invalid")
 	ErrPaymentSubscriptionRepurchaseBlocked = infraerrors.Conflict(
 		"SUBSCRIPTION_REPURCHASE_BLOCKED",
-		"you already have an active subscription for this plan; purchase again after it expires",
+		"each account can only purchase the same plan once during its active period; repurchase after expiry",
 	)
 	ErrInvoiceOrdersRequired    = infraerrors.BadRequest("INVOICE_ORDERS_REQUIRED", "at least one order is required")
 	ErrInvoiceEmailInvalid      = infraerrors.BadRequest("INVOICE_EMAIL_INVALID", "invoice email is invalid")

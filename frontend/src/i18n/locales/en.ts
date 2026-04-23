@@ -3542,7 +3542,7 @@ export default {
     validity: '30-day validity',
     validityDays: '{days}-day validity',
     repurchaseRuleTag: 'Repurchase After Expiry',
-    repurchaseRule: 'The same plan cannot be purchased again until the current subscription expires',
+    repurchaseRule: 'Each account can only purchase the same plan once before the current subscription expires',
     wechatPay: 'WeChat Scan to Pay',
     noPlans: 'No plans available',
     howToBuy: 'How to Purchase',
@@ -3585,7 +3585,7 @@ export default {
       q2: 'Flexible Balance Explained',
       a2: 'Flexible balance is a one-time top-up that is deducted based on actual usage.\nThere is no expiration — it remains valid until fully used.\nIdeal for users with irregular or occasional usage.',
       q3: 'How to Upgrade Plans?',
-      a3: 'You can purchase the same plan again only after the current subscription expires.\nIf you need another plan, choose the appropriate group for your use case.\nNo manual cancellation is needed — the current plan expires automatically.',
+      a3: 'Each account can purchase the same plan again only after the current subscription expires.\nIf you need a different option, choose another plan group that fits your use case.\nNo manual cancellation is needed — the current plan expires automatically.',
       q4: 'Quota Reset Mechanism',
       a4: 'Plan subscription quota resets automatically every 30 days on the subscription cycle.\nFlexible balance does not reset — recharge when depleted.\nIf the current cycle quota is used up, you can recharge flexible balance to continue.',
       q5: 'Plan Changes',
@@ -3616,6 +3616,7 @@ export default {
       viewDashboard: 'View Dashboard',
       viewOrderHistory: 'View Order History',
       createFailed: 'Failed to create order, please try again',
+      subscriptionRepurchaseBlocked: 'Each account can only purchase the same plan once during its active period. Please buy it again after expiry.',
       noMethodsAvailable: 'No payment methods are currently available. Please ask the administrator to check the payment configuration.'
     }
   },

@@ -255,7 +255,10 @@ type GatewayConfig struct {
 
 	// API-key 账号在客户端未提供 anthropic-beta 时，是否按需自动补齐（默认关闭以保持兼容）
 	InjectBetaForAPIKey bool `mapstructure:"inject_beta_for_apikey"`
-
+	// 是否将 Claude Code 请求包装成固定 Claude CLI 请求头再转发（默认关闭）
+	ForceClaudeCLIHeaders bool `mapstructure:"force_claude_cli_headers"`
+	// 开启包装时使用的 Claude CLI User-Agent（默认：claude-cli/2.1.114）
+	ForceClaudeCLIUserAgent string `mapstructure:"force_claude_cli_user_agent"`
 	// 是否允许对部分 400 错误触发 failover（默认关闭以避免改变语义）
 	FailoverOn400 bool `mapstructure:"failover_on_400"`
 
@@ -846,6 +849,8 @@ func setDefaults() {
 	viper.SetDefault("gateway.log_upstream_error_body", true)
 	viper.SetDefault("gateway.log_upstream_error_body_max_bytes", 2048)
 	viper.SetDefault("gateway.inject_beta_for_apikey", false)
+	viper.SetDefault("gateway.force_claude_cli_headers", false)
+	viper.SetDefault("gateway.force_claude_cli_user_agent", "claude-cli/2.1.114")
 	viper.SetDefault("gateway.failover_on_400", false)
 	viper.SetDefault("gateway.max_account_switches", 10)
 	viper.SetDefault("gateway.max_account_switches_gemini", 3)
