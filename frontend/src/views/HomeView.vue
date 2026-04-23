@@ -370,6 +370,13 @@ function clearTimers() {
   if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null }
 }
 
+function getCreateOrderErrorMessage(err: any) {
+  if (err?.reason === 'SUBSCRIPTION_REPURCHASE_BLOCKED') {
+    return t('pricing.payment.subscriptionRepurchaseBlocked')
+  }
+  return err?.message || err?.response?.data?.message || t('pricing.payment.createFailed')
+}
+
 async function handleBuyPlan(plan: PaymentPlan) {
   if (!isAuthenticated.value) {
     router.push('/login')
@@ -413,8 +420,7 @@ async function handleBuyPlan(plan: PaymentPlan) {
       }
     }, 1000)
   } catch (err: any) {
-    const msg = err?.message || err?.response?.data?.message || t('pricing.payment.createFailed')
-    alert(msg)
+    alert(getCreateOrderErrorMessage(err))
   } finally {
     qrLoading.value = false
     creatingOrder.value = false

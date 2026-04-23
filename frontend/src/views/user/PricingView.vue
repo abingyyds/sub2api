@@ -760,6 +760,13 @@ function isProcessingOrderAction(type: 'subscription' | 'recharge' | 'custom', k
   return orderFlowBusy.value && activeOrderActionKey.value === makeOrderActionKey(type, key)
 }
 
+function getCreateOrderErrorMessage(err: any) {
+  if (err?.reason === 'SUBSCRIPTION_REPURCHASE_BLOCKED') {
+    return t('pricing.payment.subscriptionRepurchaseBlocked')
+  }
+  return err?.message || err?.response?.data?.message || t('pricing.payment.createFailed')
+}
+
 const customFinalAmount = computed(() => {
   if (customInput.value !== '') {
     const val = parseFloat(customInput.value)
@@ -1308,8 +1315,7 @@ async function handleBuy(plan: PaymentPlan) {
         const order = await paymentAPI.createOrder(plan.key, code || undefined, selectedPayMethod.value)
         await showQRModal(order)
       } catch (err: any) {
-        const msg = err?.message || err?.response?.data?.message || t('pricing.payment.createFailed')
-        alert(msg)
+        alert(getCreateOrderErrorMessage(err))
       } finally {
         creatingOrder.value = false
       }
