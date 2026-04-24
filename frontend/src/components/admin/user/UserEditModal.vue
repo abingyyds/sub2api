@@ -48,6 +48,16 @@
         <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">{{ t('admin.users.inviterIdHint') }}</p>
       </div>
       <div>
+        <label class="input-label">{{ t('admin.users.boundSubSite') }}</label>
+        <select v-model.number="form.sub_site_id" class="input">
+          <option :value="0">{{ t('admin.users.mainSite') }}</option>
+          <option v-for="site in subSites" :key="site.id" :value="site.id">
+            #{{ site.id }} · {{ site.name }}{{ site.custom_domain ? ` (${site.custom_domain})` : ` (${site.slug})` }}
+          </option>
+        </select>
+        <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">{{ t('admin.users.boundSubSiteHint') }}</p>
+      </div>
+      <div>
         <label class="input-label">{{ t('admin.users.columns.discoverySource') }}</label>
         <div class="flex gap-2">
           <select v-model="form.discovery_source" class="input flex-1">
@@ -92,6 +102,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useClipboard } from '@/composables/useClipboard'
 import { adminAPI } from '@/api/admin'
 import type { AdminUser, UserAttributeValuesMap } from '@/types'
+import type { AdminSubSite } from '@/api/admin/subsites'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import UserAttributeForm from '@/components/user/UserAttributeForm.vue'
 import Icon from '@/components/icons/Icon.vue'
@@ -101,7 +112,14 @@ const emit = defineEmits(['close', 'success'])
 const { t } = useI18n(); const appStore = useAppStore(); const authStore = useAuthStore(); const { copyToClipboard } = useClipboard()
 
 const submitting = ref(false); const passwordCopied = ref(false)
-const form = reactive({ email: '', password: '', username: '', notes: '', concurrency: 1, role: 'user' as string, discovery_source: '' as string, custom_discovery_source: '', customAttributes: {} as UserAttributeValuesMap, inviter_id: null as number | null })
+const subSites = ref<AdminSubSite[]>([])
+const form = reactive({ email: '', password: '', username: '', notes: '', concurrency: 1, role: 'user' as string, discovery_source: '' as string, custom_discovery_source: '', customAttributes: {} as UserAttributeValuesMap, inviter_id: null as number | null, sub_site_id: 0 })
+
+const loadSubSites = async () => {
+  if (subSites.value.length > 0) return
+  const res = await adminAPI.subSites.list(1, 1000)
+  subSites.value = res.items
+}
 
 const discoverySourceOptions = computed(() => [
   { value: 'douyin', label: t('auth.discoverySource.douyin') },
@@ -128,7 +146,8 @@ watch(() => props.user, (u) => {
       discovery_source: isKnown ? (src === 'skip' ? '' : src) : '__custom__',
       custom_discovery_source: isKnown ? '' : src,
       customAttributes: {},
-      inviter_id: null
+      inviter_id: null,
+      sub_site_id: u.bound_sub_site?.id || 0
     })
     passwordCopied.value = false
     // Load current inviter
@@ -137,6 +156,7 @@ watch(() => props.user, (u) => {
         if (inviter) form.inviter_id = inviter.id
       }).catch(() => {})
     }
+    loadSubSites().catch(() => {})
   }
 }, { immediate: true })
 
@@ -172,6 +192,7 @@ const handleUpdateUser = async () => {
     if (form.inviter_id !== undefined) {
       data.inviter_id = form.inviter_id === null ? 0 : form.inviter_id
     }
+    data.sub_site_id = form.sub_site_id || 0
     await adminAPI.users.update(props.user.id, data)
     if (Object.keys(form.customAttributes).length > 0) await adminAPI.userAttributes.updateUserAttributeValues(props.user.id, form.customAttributes)
     appStore.showSuccess(t('admin.users.userUpdated'))

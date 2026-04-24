@@ -27,7 +27,16 @@ type User struct {
 type AdminUser struct {
 	User
 
-	Notes string `json:"notes"`
+	Notes        string   `json:"notes"`
+	BoundSubSite *SubSite `json:"bound_sub_site,omitempty"`
+}
+
+type SubSite struct {
+	ID           int64  `json:"id"`
+	Name         string `json:"name"`
+	Slug         string `json:"slug"`
+	CustomDomain string `json:"custom_domain,omitempty"`
+	Status       string `json:"status"`
 }
 
 type APIKey struct {

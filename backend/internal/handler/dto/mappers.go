@@ -61,8 +61,22 @@ func UserFromServiceAdmin(u *service.User) *AdminUser {
 		return nil
 	}
 	return &AdminUser{
-		User:  *base,
-		Notes: u.Notes,
+		User:         *base,
+		Notes:        u.Notes,
+		BoundSubSite: SubSiteFromService(u.BoundSubSite),
+	}
+}
+
+func SubSiteFromService(s *service.SubSite) *SubSite {
+	if s == nil {
+		return nil
+	}
+	return &SubSite{
+		ID:           s.ID,
+		Name:         s.Name,
+		Slug:         s.Slug,
+		CustomDomain: s.CustomDomain,
+		Status:       s.Status,
 	}
 }
 

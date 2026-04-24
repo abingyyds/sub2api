@@ -92,6 +92,10 @@ export async function update(id: number, updates: UpdateUserRequest): Promise<Ad
   return data
 }
 
+export async function updateSubSiteBinding(id: number, subSiteId: number): Promise<AdminUser> {
+  return update(id, { sub_site_id: subSiteId })
+}
+
 /**
  * Delete user
  * @param id - User ID
@@ -225,6 +229,7 @@ export const usersAPI = {
   toggleStatus,
   getUserApiKeys,
   getUserUsageStats,
+  updateSubSiteBinding,
   getAgents,
   getUserInviter
 }

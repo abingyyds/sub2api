@@ -69,6 +69,13 @@ type AdminService interface {
 	ExpireRedeemCode(ctx context.Context, id int64) (*RedeemCode, error)
 }
 
+type userSubSiteBinder interface {
+	GetByID(ctx context.Context, id int64) (*SubSite, error)
+	GetBoundSubSiteByUserID(ctx context.Context, userID int64) (*SubSite, error)
+	BindUser(ctx context.Context, siteID int64, userID int64, source string) error
+	UnbindUser(ctx context.Context, userID int64) error
+}
+
 // CreateUserInput represents input for creating a new user via admin operations.
 type CreateUserInput struct {
 	Email         string
@@ -94,6 +101,7 @@ type UpdateUserInput struct {
 	AllowedGroups   *[]int64 // 使用指针区分"未提供"和"设置为空数组"
 	DiscoverySource *string  // 来源渠道
 	InviterID       *int64   // 上级代理ID，nil表示不修改，指向0表示移除关系
+	SubSiteID       *int64   // 分站绑定，nil表示不修改，指向0表示解除绑定
 }
 
 type CreateGroupInput struct {
@@ -313,6 +321,7 @@ type adminServiceImpl struct {
 	proxyLatencyCache    ProxyLatencyCache
 	userCache            UserCache
 	authCacheInvalidator APIKeyAuthCacheInvalidator
+	subSiteRepo          userSubSiteBinder
 }
 
 // NewAdminService creates a new AdminService
@@ -329,7 +338,12 @@ func NewAdminService(
 	proxyLatencyCache ProxyLatencyCache,
 	userCache UserCache,
 	authCacheInvalidator APIKeyAuthCacheInvalidator,
+	subSiteRepo ...userSubSiteBinder,
 ) AdminService {
+	var binder userSubSiteBinder
+	if len(subSiteRepo) > 0 {
+		binder = subSiteRepo[0]
+	}
 	return &adminServiceImpl{
 		userRepo:             userRepo,
 		groupRepo:            groupRepo,
@@ -343,7 +357,40 @@ func NewAdminService(
 		proxyLatencyCache:    proxyLatencyCache,
 		userCache:            userCache,
 		authCacheInvalidator: authCacheInvalidator,
+		subSiteRepo:          binder,
 	}
+}
+
+func ProvideAdminService(
+	userRepo UserRepository,
+	groupRepo GroupRepository,
+	accountRepo AccountRepository,
+	proxyRepo ProxyRepository,
+	apiKeyRepo APIKeyRepository,
+	redeemCodeRepo RedeemCodeRepository,
+	referralRepo ReferralRepository,
+	billingCacheService *BillingCacheService,
+	proxyProber ProxyExitInfoProber,
+	proxyLatencyCache ProxyLatencyCache,
+	userCache UserCache,
+	authCacheInvalidator APIKeyAuthCacheInvalidator,
+	subSiteRepo SubSiteRepository,
+) AdminService {
+	return NewAdminService(
+		userRepo,
+		groupRepo,
+		accountRepo,
+		proxyRepo,
+		apiKeyRepo,
+		redeemCodeRepo,
+		referralRepo,
+		billingCacheService,
+		proxyProber,
+		proxyLatencyCache,
+		userCache,
+		authCacheInvalidator,
+		subSiteRepo,
+	)
 }
 
 func (s *adminServiceImpl) invalidateUserCache(ctx context.Context, userID int64) {
@@ -362,11 +409,45 @@ func (s *adminServiceImpl) ListUsers(ctx context.Context, page, pageSize int, fi
 	if err != nil {
 		return nil, 0, err
 	}
+	if err := s.attachBoundSubSites(ctx, users); err != nil {
+		return nil, 0, err
+	}
 	return users, result.Total, nil
 }
 
 func (s *adminServiceImpl) GetUser(ctx context.Context, id int64) (*User, error) {
-	return s.userRepo.GetByID(ctx, id)
+	user, err := s.userRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.attachBoundSubSite(ctx, user); err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *adminServiceImpl) attachBoundSubSites(ctx context.Context, users []User) error {
+	if s.subSiteRepo == nil {
+		return nil
+	}
+	for i := range users {
+		if err := s.attachBoundSubSite(ctx, &users[i]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *adminServiceImpl) attachBoundSubSite(ctx context.Context, user *User) error {
+	if s.subSiteRepo == nil || user == nil || user.ID <= 0 {
+		return nil
+	}
+	site, err := s.subSiteRepo.GetBoundSubSiteByUserID(ctx, user.ID)
+	if err != nil {
+		return err
+	}
+	user.BoundSubSite = site
+	return nil
 }
 
 func (s *adminServiceImpl) CreateUser(ctx context.Context, input *CreateUserInput) (*User, error) {
@@ -447,6 +528,31 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 		user.DiscoverySource = input.DiscoverySource
 	}
 
+	if input.SubSiteID != nil {
+		if s.subSiteRepo == nil {
+			return nil, errors.New("sub-site repository is not configured")
+		}
+		siteID := *input.SubSiteID
+		if siteID < 0 {
+			return nil, errors.New("invalid sub-site id")
+		}
+		if siteID == 0 {
+			if err := s.subSiteRepo.UnbindUser(ctx, user.ID); err != nil {
+				return nil, err
+			}
+			user.BoundSubSite = nil
+		} else {
+			site, err := s.subSiteRepo.GetByID(ctx, siteID)
+			if err != nil {
+				return nil, err
+			}
+			if err := s.subSiteRepo.BindUser(ctx, site.ID, user.ID, "admin"); err != nil {
+				return nil, err
+			}
+			user.BoundSubSite = site
+		}
+	}
+
 	// 处理上级代理关系
 	if input.InviterID != nil {
 		inviterID := *input.InviterID
@@ -523,6 +629,9 @@ func (s *adminServiceImpl) UpdateUser(ctx context.Context, id int64, input *Upda
 		}
 	}
 
+	if input.SubSiteID == nil {
+		_ = s.attachBoundSubSite(ctx, user)
+	}
 	return user, nil
 }
 

@@ -880,6 +880,9 @@ export default {
       noInviter: 'No inviter',
       inviterIdPlaceholder: 'Enter agent user ID, leave empty for no inviter',
       inviterIdHint: 'Enter the agent user ID (check in agent management page), leave empty or 0 to remove inviter',
+      boundSubSite: 'Bound Site',
+      boundSubSiteHint: 'Select Main Site to remove sub-site binding; select a sub-site to restrict login to that site.',
+      mainSite: 'Main Site',
       creating: 'Creating...',
       updating: 'Updating...',
       columns: {
@@ -887,6 +890,7 @@ export default {
         email: 'Email',
         username: 'Username',
         notes: 'Notes',
+        boundSubSite: 'Bound Site',
         role: 'Role',
         subscriptions: 'Subscriptions',
         balance: 'Balance',

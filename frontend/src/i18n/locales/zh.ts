@@ -898,6 +898,9 @@ export default {
       noInviter: '无上级',
       inviterIdPlaceholder: '输入代理用户ID，留空表示无上级',
       inviterIdHint: '输入代理用户的ID（可在代理管理页面查看），留空或输入0表示移除上级',
+      boundSubSite: '绑定站点',
+      boundSubSiteHint: '选择主站会解除分站绑定；选择分站会限制该用户只能从对应站点登录。',
+      mainSite: '主站',
       creating: '创建中...',
       updating: '更新中...',
       columns: {
@@ -905,6 +908,7 @@ export default {
         email: '邮箱',
         username: '用户名',
         notes: '备注',
+        boundSubSite: '绑定站点',
         role: '角色',
         subscriptions: '订阅分组',
         balance: '余额',

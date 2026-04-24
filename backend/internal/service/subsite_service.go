@@ -52,6 +52,7 @@ type SubSiteRepository interface {
 	IncrementTotalWithdrawnFen(ctx context.Context, siteID int64, amountFen int64) error
 	Delete(ctx context.Context, id int64) error
 	BindUser(ctx context.Context, siteID int64, userID int64, source string) error
+	UnbindUser(ctx context.Context, userID int64) error
 	// 级联停用：把 sub_sites 中 parent 链包含 rootID 的所有后代（递归）status 置为 newStatus。
 	// 返回受影响的分站 id 列表。
 	CascadeUpdateStatus(ctx context.Context, rootID int64, newStatus string) ([]int64, error)
