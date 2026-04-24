@@ -374,53 +374,53 @@ func init() {
 	// group.DefaultRateMultiplier holds the default value on creation for the rate_multiplier field.
 	group.DefaultRateMultiplier = groupDescRateMultiplier.Default.(float64)
 	// groupDescIsExclusive is the schema descriptor for is_exclusive field.
-	groupDescIsExclusive := groupFields[3].Descriptor()
+	groupDescIsExclusive := groupFields[4].Descriptor()
 	// group.DefaultIsExclusive holds the default value on creation for the is_exclusive field.
 	group.DefaultIsExclusive = groupDescIsExclusive.Default.(bool)
 	// groupDescStatus is the schema descriptor for status field.
-	groupDescStatus := groupFields[4].Descriptor()
+	groupDescStatus := groupFields[5].Descriptor()
 	// group.DefaultStatus holds the default value on creation for the status field.
 	group.DefaultStatus = groupDescStatus.Default.(string)
 	// group.StatusValidator is a validator for the "status" field. It is called by the builders before save.
 	group.StatusValidator = groupDescStatus.Validators[0].(func(string) error)
 	// groupDescPlatform is the schema descriptor for platform field.
-	groupDescPlatform := groupFields[5].Descriptor()
+	groupDescPlatform := groupFields[6].Descriptor()
 	// group.DefaultPlatform holds the default value on creation for the platform field.
 	group.DefaultPlatform = groupDescPlatform.Default.(string)
 	// group.PlatformValidator is a validator for the "platform" field. It is called by the builders before save.
 	group.PlatformValidator = groupDescPlatform.Validators[0].(func(string) error)
 	// groupDescSubscriptionType is the schema descriptor for subscription_type field.
-	groupDescSubscriptionType := groupFields[6].Descriptor()
+	groupDescSubscriptionType := groupFields[7].Descriptor()
 	// group.DefaultSubscriptionType holds the default value on creation for the subscription_type field.
 	group.DefaultSubscriptionType = groupDescSubscriptionType.Default.(string)
 	// group.SubscriptionTypeValidator is a validator for the "subscription_type" field. It is called by the builders before save.
 	group.SubscriptionTypeValidator = groupDescSubscriptionType.Validators[0].(func(string) error)
 	// groupDescDefaultValidityDays is the schema descriptor for default_validity_days field.
-	groupDescDefaultValidityDays := groupFields[10].Descriptor()
+	groupDescDefaultValidityDays := groupFields[11].Descriptor()
 	// group.DefaultDefaultValidityDays holds the default value on creation for the default_validity_days field.
 	group.DefaultDefaultValidityDays = groupDescDefaultValidityDays.Default.(int)
 	// groupDescClaudeCodeOnly is the schema descriptor for claude_code_only field.
-	groupDescClaudeCodeOnly := groupFields[14].Descriptor()
+	groupDescClaudeCodeOnly := groupFields[15].Descriptor()
 	// group.DefaultClaudeCodeOnly holds the default value on creation for the claude_code_only field.
 	group.DefaultClaudeCodeOnly = groupDescClaudeCodeOnly.Default.(bool)
 	// groupDescModelRoutingEnabled is the schema descriptor for model_routing_enabled field.
-	groupDescModelRoutingEnabled := groupFields[17].Descriptor()
+	groupDescModelRoutingEnabled := groupFields[18].Descriptor()
 	// group.DefaultModelRoutingEnabled holds the default value on creation for the model_routing_enabled field.
 	group.DefaultModelRoutingEnabled = groupDescModelRoutingEnabled.Default.(bool)
 	// groupDescPriceFen is the schema descriptor for price_fen field.
-	groupDescPriceFen := groupFields[18].Descriptor()
+	groupDescPriceFen := groupFields[19].Descriptor()
 	// group.DefaultPriceFen holds the default value on creation for the price_fen field.
 	group.DefaultPriceFen = groupDescPriceFen.Default.(int)
 	// groupDescListed is the schema descriptor for listed field.
-	groupDescListed := groupFields[19].Descriptor()
+	groupDescListed := groupFields[20].Descriptor()
 	// group.DefaultListed holds the default value on creation for the listed field.
 	group.DefaultListed = groupDescListed.Default.(bool)
 	// groupDescDisplayPrice is the schema descriptor for display_price field.
-	groupDescDisplayPrice := groupFields[22].Descriptor()
+	groupDescDisplayPrice := groupFields[23].Descriptor()
 	// group.DefaultDisplayPrice holds the default value on creation for the display_price field.
 	group.DefaultDisplayPrice = groupDescDisplayPrice.Default.(string)
 	// groupDescDisplayDiscount is the schema descriptor for display_discount field.
-	groupDescDisplayDiscount := groupFields[23].Descriptor()
+	groupDescDisplayDiscount := groupFields[24].Descriptor()
 	// group.DefaultDisplayDiscount holds the default value on creation for the display_discount field.
 	group.DefaultDisplayDiscount = groupDescDisplayDiscount.Default.(string)
 	orgauditlogFields := schema.OrgAuditLog{}.Fields()
@@ -734,67 +734,67 @@ func init() {
 	// paymentorder.DefaultBalanceAmount holds the default value on creation for the balance_amount field.
 	paymentorder.DefaultBalanceAmount = paymentorderDescBalanceAmount.Default.(float64)
 	// paymentorderDescPromoCode is the schema descriptor for promo_code field.
-	paymentorderDescPromoCode := paymentorderFields[9].Descriptor()
+	paymentorderDescPromoCode := paymentorderFields[10].Descriptor()
 	// paymentorder.DefaultPromoCode holds the default value on creation for the promo_code field.
 	paymentorder.DefaultPromoCode = paymentorderDescPromoCode.Default.(string)
 	// paymentorder.PromoCodeValidator is a validator for the "promo_code" field. It is called by the builders before save.
 	paymentorder.PromoCodeValidator = paymentorderDescPromoCode.Validators[0].(func(string) error)
 	// paymentorderDescDiscountAmount is the schema descriptor for discount_amount field.
-	paymentorderDescDiscountAmount := paymentorderFields[10].Descriptor()
+	paymentorderDescDiscountAmount := paymentorderFields[11].Descriptor()
 	// paymentorder.DefaultDiscountAmount holds the default value on creation for the discount_amount field.
 	paymentorder.DefaultDiscountAmount = paymentorderDescDiscountAmount.Default.(int)
 	// paymentorderDescStatus is the schema descriptor for status field.
-	paymentorderDescStatus := paymentorderFields[11].Descriptor()
+	paymentorderDescStatus := paymentorderFields[12].Descriptor()
 	// paymentorder.DefaultStatus holds the default value on creation for the status field.
 	paymentorder.DefaultStatus = paymentorderDescStatus.Default.(string)
 	// paymentorder.StatusValidator is a validator for the "status" field. It is called by the builders before save.
 	paymentorder.StatusValidator = paymentorderDescStatus.Validators[0].(func(string) error)
 	// paymentorderDescPayMethod is the schema descriptor for pay_method field.
-	paymentorderDescPayMethod := paymentorderFields[12].Descriptor()
+	paymentorderDescPayMethod := paymentorderFields[13].Descriptor()
 	// paymentorder.DefaultPayMethod holds the default value on creation for the pay_method field.
 	paymentorder.DefaultPayMethod = paymentorderDescPayMethod.Default.(string)
 	// paymentorder.PayMethodValidator is a validator for the "pay_method" field. It is called by the builders before save.
 	paymentorder.PayMethodValidator = paymentorderDescPayMethod.Validators[0].(func(string) error)
 	// paymentorderDescWechatTransactionID is the schema descriptor for wechat_transaction_id field.
-	paymentorderDescWechatTransactionID := paymentorderFields[13].Descriptor()
+	paymentorderDescWechatTransactionID := paymentorderFields[14].Descriptor()
 	// paymentorder.WechatTransactionIDValidator is a validator for the "wechat_transaction_id" field. It is called by the builders before save.
 	paymentorder.WechatTransactionIDValidator = paymentorderDescWechatTransactionID.Validators[0].(func(string) error)
 	// paymentorderDescAlipayTradeNo is the schema descriptor for alipay_trade_no field.
-	paymentorderDescAlipayTradeNo := paymentorderFields[14].Descriptor()
+	paymentorderDescAlipayTradeNo := paymentorderFields[15].Descriptor()
 	// paymentorder.AlipayTradeNoValidator is a validator for the "alipay_trade_no" field. It is called by the builders before save.
 	paymentorder.AlipayTradeNoValidator = paymentorderDescAlipayTradeNo.Validators[0].(func(string) error)
 	// paymentorderDescEpayTradeNo is the schema descriptor for epay_trade_no field.
-	paymentorderDescEpayTradeNo := paymentorderFields[15].Descriptor()
+	paymentorderDescEpayTradeNo := paymentorderFields[16].Descriptor()
 	// paymentorder.EpayTradeNoValidator is a validator for the "epay_trade_no" field. It is called by the builders before save.
 	paymentorder.EpayTradeNoValidator = paymentorderDescEpayTradeNo.Validators[0].(func(string) error)
 	// paymentorderDescInvoiceCompanyName is the schema descriptor for invoice_company_name field.
-	paymentorderDescInvoiceCompanyName := paymentorderFields[16].Descriptor()
+	paymentorderDescInvoiceCompanyName := paymentorderFields[17].Descriptor()
 	// paymentorder.DefaultInvoiceCompanyName holds the default value on creation for the invoice_company_name field.
 	paymentorder.DefaultInvoiceCompanyName = paymentorderDescInvoiceCompanyName.Default.(string)
 	// paymentorder.InvoiceCompanyNameValidator is a validator for the "invoice_company_name" field. It is called by the builders before save.
 	paymentorder.InvoiceCompanyNameValidator = paymentorderDescInvoiceCompanyName.Validators[0].(func(string) error)
 	// paymentorderDescInvoiceTaxID is the schema descriptor for invoice_tax_id field.
-	paymentorderDescInvoiceTaxID := paymentorderFields[17].Descriptor()
+	paymentorderDescInvoiceTaxID := paymentorderFields[18].Descriptor()
 	// paymentorder.DefaultInvoiceTaxID holds the default value on creation for the invoice_tax_id field.
 	paymentorder.DefaultInvoiceTaxID = paymentorderDescInvoiceTaxID.Default.(string)
 	// paymentorder.InvoiceTaxIDValidator is a validator for the "invoice_tax_id" field. It is called by the builders before save.
 	paymentorder.InvoiceTaxIDValidator = paymentorderDescInvoiceTaxID.Validators[0].(func(string) error)
 	// paymentorderDescInvoiceEmail is the schema descriptor for invoice_email field.
-	paymentorderDescInvoiceEmail := paymentorderFields[18].Descriptor()
+	paymentorderDescInvoiceEmail := paymentorderFields[19].Descriptor()
 	// paymentorder.DefaultInvoiceEmail holds the default value on creation for the invoice_email field.
 	paymentorder.DefaultInvoiceEmail = paymentorderDescInvoiceEmail.Default.(string)
 	// paymentorder.InvoiceEmailValidator is a validator for the "invoice_email" field. It is called by the builders before save.
 	paymentorder.InvoiceEmailValidator = paymentorderDescInvoiceEmail.Validators[0].(func(string) error)
 	// paymentorderDescInvoiceRemark is the schema descriptor for invoice_remark field.
-	paymentorderDescInvoiceRemark := paymentorderFields[19].Descriptor()
+	paymentorderDescInvoiceRemark := paymentorderFields[20].Descriptor()
 	// paymentorder.DefaultInvoiceRemark holds the default value on creation for the invoice_remark field.
 	paymentorder.DefaultInvoiceRemark = paymentorderDescInvoiceRemark.Default.(string)
 	// paymentorderDescCreatedAt is the schema descriptor for created_at field.
-	paymentorderDescCreatedAt := paymentorderFields[25].Descriptor()
+	paymentorderDescCreatedAt := paymentorderFields[26].Descriptor()
 	// paymentorder.DefaultCreatedAt holds the default value on creation for the created_at field.
 	paymentorder.DefaultCreatedAt = paymentorderDescCreatedAt.Default.(func() time.Time)
 	// paymentorderDescUpdatedAt is the schema descriptor for updated_at field.
-	paymentorderDescUpdatedAt := paymentorderFields[26].Descriptor()
+	paymentorderDescUpdatedAt := paymentorderFields[27].Descriptor()
 	// paymentorder.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	paymentorder.DefaultUpdatedAt = paymentorderDescUpdatedAt.Default.(func() time.Time)
 	// paymentorder.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

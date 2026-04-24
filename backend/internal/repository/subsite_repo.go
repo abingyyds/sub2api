@@ -40,6 +40,12 @@ const subSiteBaseSelect = `
 		COALESCE(s.contact_info, ''),
 		COALESCE(s.doc_url, ''),
 		COALESCE(s.home_content, ''),
+		COALESCE(s.pending_home_content, ''),
+		COALESCE(s.home_content_review_status, 'none'),
+		COALESCE(s.home_content_review_note, ''),
+		s.home_content_submitted_at,
+		s.home_content_reviewed_at,
+		s.home_content_reviewed_by,
 		COALESCE(s.theme_template, 'starter'),
 		COALESCE(s.registration_mode, 'open'),
 		COALESCE(s.enable_topup, TRUE),
@@ -278,6 +284,56 @@ func (r *subSiteRepository) UpdateMode(ctx context.Context, siteID int64, newMod
 	res, err := r.db.ExecContext(ctx, `
 		UPDATE sub_sites SET mode = $2, updated_at = NOW() WHERE id = $1
 	`, siteID, mode)
+	if err != nil {
+		return err
+	}
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		return service.ErrSubSiteNotFound
+	}
+	return nil
+}
+
+func (r *subSiteRepository) SubmitHomeContentReview(ctx context.Context, siteID int64, pendingContent string) error {
+	res, err := r.db.ExecContext(ctx, `
+		UPDATE sub_sites
+		SET pending_home_content = $2,
+			home_content_review_status = 'pending',
+			home_content_review_note = '',
+			home_content_submitted_at = NOW(),
+			home_content_reviewed_at = NULL,
+			home_content_reviewed_by = NULL,
+			updated_at = NOW()
+		WHERE id = $1
+	`, siteID, pendingContent)
+	if err != nil {
+		return err
+	}
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		return service.ErrSubSiteNotFound
+	}
+	return nil
+}
+
+func (r *subSiteRepository) ReviewHomeContent(ctx context.Context, siteID int64, approved bool, reviewerID int64, reviewNote string) error {
+	status := service.SubSiteHomeContentReviewRejected
+	setHomeContent := `home_content`
+	if approved {
+		status = service.SubSiteHomeContentReviewApproved
+		setHomeContent = `COALESCE(pending_home_content, '')`
+	}
+	res, err := r.db.ExecContext(ctx, fmt.Sprintf(`
+		UPDATE sub_sites
+		SET home_content = %s,
+			pending_home_content = NULL,
+			home_content_review_status = $2,
+			home_content_review_note = $3,
+			home_content_reviewed_at = NOW(),
+			home_content_reviewed_by = NULLIF($4, 0),
+			updated_at = NOW()
+		WHERE id = $1 AND home_content_review_status = 'pending'
+	`, setHomeContent), siteID, status, reviewNote, reviewerID)
 	if err != nil {
 		return err
 	}
@@ -594,10 +650,13 @@ type scanner interface {
 
 func scanSubSite(row scanner) (*service.SubSite, error) {
 	var (
-		site                  service.SubSite
-		parentID              sql.NullInt64
-		ownerPaymentRaw       []byte
-		subscriptionExpiredAt sql.NullTime
+		site                   service.SubSite
+		parentID               sql.NullInt64
+		ownerPaymentRaw        []byte
+		subscriptionExpiredAt  sql.NullTime
+		homeContentSubmittedAt sql.NullTime
+		homeContentReviewedAt  sql.NullTime
+		homeContentReviewedBy  sql.NullInt64
 	)
 	if err := row.Scan(
 		&site.ID,
@@ -618,6 +677,12 @@ func scanSubSite(row scanner) (*service.SubSite, error) {
 		&site.ContactInfo,
 		&site.DocURL,
 		&site.HomeContent,
+		&site.PendingHomeContent,
+		&site.HomeContentReviewStatus,
+		&site.HomeContentReviewNote,
+		&homeContentSubmittedAt,
+		&homeContentReviewedAt,
+		&homeContentReviewedBy,
 		&site.ThemeTemplate,
 		&site.RegistrationMode,
 		&site.EnableTopup,
@@ -647,6 +712,15 @@ func scanSubSite(row scanner) (*service.SubSite, error) {
 	}
 	if subscriptionExpiredAt.Valid {
 		site.SubscriptionExpiredAt = &subscriptionExpiredAt.Time
+	}
+	if homeContentSubmittedAt.Valid {
+		site.HomeContentSubmittedAt = &homeContentSubmittedAt.Time
+	}
+	if homeContentReviewedAt.Valid {
+		site.HomeContentReviewedAt = &homeContentReviewedAt.Time
+	}
+	if homeContentReviewedBy.Valid {
+		site.HomeContentReviewedBy = &homeContentReviewedBy.Int64
 	}
 	site.Mode = normalizeSubSiteMode(site.Mode)
 	if cfg, err := unmarshalOwnerPaymentConfig(ownerPaymentRaw); err != nil {

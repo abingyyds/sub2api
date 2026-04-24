@@ -296,7 +296,13 @@ const githubUrl = 'https://github.com/Wei-Shaw/sub2api'
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const isAdmin = computed(() => authStore.isAdmin)
-const dashboardPath = computed(() => isAdmin.value ? '/admin/dashboard' : '/dashboard')
+const dashboardPath = computed(() => {
+  if (isAdmin.value) return '/admin/dashboard'
+  if (appStore.cachedPublicSettings?.is_subsite && authStore.ownedSites[0]?.id) {
+    return `/subsite-admin/${authStore.ownedSites[0].id}/dashboard`
+  }
+  return '/dashboard'
+})
 const userInitial = computed(() => {
   const user = authStore.user
   if (!user || !user.email) return ''

@@ -7,12 +7,12 @@
           :class="site.mode === 'rate'
             ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
             : 'bg-gray-200 text-gray-700 dark:bg-dark-700 dark:text-dark-300'">
-          {{ site.mode === 'rate' ? '倍率分成模式' : '资金池模式' }}
+          {{ site.mode === 'rate' ? '一键加价/倍率分成' : '资金池/进货模式' }}
         </span>
       </div>
 
       <div v-if="site?.mode === 'pool'" class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800/50 dark:bg-amber-900/20 dark:text-amber-200">
-        当前分站为资金池模式，盈利通过线下售卖用户余额实现，不支持利润提现。
+        当前分站为资金池/进货模式，盈利通过线下售卖用户余额实现，不支持利润提现。
       </div>
 
       <template v-else-if="site">
@@ -208,7 +208,7 @@ async function handleApply() {
   submitting.value = true
   try {
     await withdrawAPI.applyWithdraw({
-      amount: Math.round(form.amountYuan * 100),
+      amount: Number(form.amountYuan.toFixed(2)),
       alipay_name: form.alipay_name.trim(),
       alipay_account: form.alipay_account.trim(),
       alipay_qr_image: form.alipay_qr_image.trim() || undefined,

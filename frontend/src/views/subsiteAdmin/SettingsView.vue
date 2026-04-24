@@ -7,14 +7,14 @@
           :class="site.mode === 'pool'
             ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
             : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'">
-          {{ site.mode === 'pool' ? '资金池模式' : '倍率分成模式' }}
+          {{ site.mode === 'pool' ? '资金池/进货模式' : '一键加价/倍率分成' }}
         </span>
       </div>
       <p v-if="site?.mode === 'pool'" class="text-sm text-gray-500 dark:text-dark-400">
-        资金池模式：需要预充余额池，用户余额由您从池内"进货"发放。可配置自有收款账号自动进货。
+        资金池/进货模式：需要预充余额池，用户余额由您从池内“进货”发放。可配置自有收款账号自动进货。
       </p>
       <p v-else-if="site?.mode === 'rate'" class="text-sm text-gray-500 dark:text-dark-400">
-        倍率分成模式：用户在主站充值，按您设置的倍率消费时，差额利润入账到分站可提现余额。
+        一键加价/倍率分成：用户在主站充值，按您设置的倍率消费时，差额利润入账到分站可提现余额。
       </p>
 
       <div v-if="loading" class="flex justify-center py-16">
@@ -62,6 +62,16 @@
           <div class="md:col-span-2">
             <label class="input-label">首页内容</label>
             <textarea v-model="site.home_content" rows="5" class="input mt-1 w-full"></textarea>
+            <p class="mt-1 text-xs text-gray-500 dark:text-dark-400">
+              首页 HTML 修改提交后需主站管理员审核，通过前线上首页仍使用当前已审核内容。
+            </p>
+            <div v-if="site.home_content_review_status === 'pending'" class="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-800/50 dark:bg-amber-900/20 dark:text-amber-200">
+              <div class="font-medium">有一份首页内容正在等待主站审核。</div>
+              <pre class="mt-2 max-h-32 overflow-auto whitespace-pre-wrap rounded-lg bg-white/70 p-2 dark:bg-dark-900/60">{{ site.pending_home_content }}</pre>
+            </div>
+            <div v-else-if="site.home_content_review_status === 'rejected' && site.home_content_review_note" class="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700 dark:border-red-800/50 dark:bg-red-900/20 dark:text-red-200">
+              上次首页内容审核未通过：{{ site.home_content_review_note }}
+            </div>
           </div>
           <div class="md:col-span-2">
             <label class="input-label">主题模板</label>
@@ -152,7 +162,7 @@ async function handleSave() {
       consume_rate_multiplier: Number(site.value.consume_rate_multiplier || 1),
     }
     await subSiteAdminAPI.updateSite(siteId.value, payload)
-    appStore.showSuccess('分站已更新')
+    appStore.showSuccess('分站已更新；如修改了首页内容，将等待主站审核后生效')
     await authStore.refreshOwnedSites().catch(() => { /* ignore */ })
     await loadSite()
   } catch (error: any) {

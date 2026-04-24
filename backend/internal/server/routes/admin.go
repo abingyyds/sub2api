@@ -107,6 +107,7 @@ func registerSubSiteRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		subSites.POST("/:id/topup", h.Admin.SubSite.Topup)
 		subSites.GET("/:id/ledger", h.Admin.SubSite.Ledger)
 		subSites.PUT("/:id/mode", h.Admin.SubSite.SetMode)
+		subSites.POST("/:id/home-content/review", h.Admin.SubSite.ReviewHomeContent)
 	}
 }
 

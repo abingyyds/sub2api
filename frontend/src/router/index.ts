@@ -768,6 +768,13 @@ router.beforeEach(async (to, _from, next) => {
   if (!requiresAuth) {
     // If already authenticated and trying to access login/register, redirect to appropriate dashboard
     if (authStore.isAuthenticated && (to.path === '/login' || to.path === '/register')) {
+      if (!authStore.isAdmin && !authStore.isOrgAdmin && appStore.cachedPublicSettings?.is_subsite) {
+        const sites = authStore.ownedSites.length > 0 ? authStore.ownedSites : await authStore.refreshOwnedSites().catch(() => [])
+        if (sites.length > 0) {
+          next(`/subsite-admin/${sites[0].id}/dashboard`)
+          return
+        }
+      }
       // Admin users go to admin dashboard, org admins go to org dashboard, regular users go to user dashboard
       if (authStore.isAdmin) {
         next('/admin/dashboard')
