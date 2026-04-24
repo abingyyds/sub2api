@@ -188,7 +188,7 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	organizationHandler := admin.NewOrganizationHandler(organizationService)
 	adminInviteCodeHandler := admin.NewAdminInviteCodeHandler(adminInviteCodeService)
 	discoverySourceStatsHandler := admin.NewDiscoverySourceStatsHandler(userService)
-	paymentOrderRepository := repository.NewPaymentOrderRepo(client)
+	paymentOrderRepository := repository.NewPaymentOrderRepo(client, db)
 	agentRepository := repository.NewAgentRepository(db)
 	agentService := service.NewAgentService(agentRepository, userRepository, referralService, settingService)
 	withdrawService := service.NewWithdrawService(agentRepository, subSiteService)

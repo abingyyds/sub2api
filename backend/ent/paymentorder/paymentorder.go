@@ -30,6 +30,8 @@ const (
 	FieldOrderType = "order_type"
 	// FieldBalanceAmount holds the string denoting the balance_amount field in the database.
 	FieldBalanceAmount = "balance_amount"
+	// FieldSubSiteID holds the string denoting the sub_site_id field in the database.
+	FieldSubSiteID = "sub_site_id"
 	// FieldPromoCode holds the string denoting the promo_code field in the database.
 	FieldPromoCode = "promo_code"
 	// FieldDiscountAmount holds the string denoting the discount_amount field in the database.
@@ -99,6 +101,7 @@ var Columns = []string{
 	FieldValidityDays,
 	FieldOrderType,
 	FieldBalanceAmount,
+	FieldSubSiteID,
 	FieldPromoCode,
 	FieldDiscountAmount,
 	FieldStatus,
@@ -230,6 +233,11 @@ func ByOrderType(opts ...sql.OrderTermOption) OrderOption {
 // ByBalanceAmount orders the results by the balance_amount field.
 func ByBalanceAmount(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldBalanceAmount, opts...).ToFunc()
+}
+
+// BySubSiteID orders the results by the sub_site_id field.
+func BySubSiteID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSubSiteID, opts...).ToFunc()
 }
 
 // ByPromoCode orders the results by the promo_code field.

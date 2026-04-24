@@ -11,6 +11,7 @@ export interface AdminPaymentOrder {
   validity_days: number
   order_type: string
   balance_amount: number
+  sub_site_id: number | null
   status: string
   pay_method: string
   wechat_transaction_id: string | null

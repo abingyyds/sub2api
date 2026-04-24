@@ -35,24 +35,24 @@ import (
 )
 
 var (
-	ErrPaymentDisabled          = infraerrors.Forbidden("PAYMENT_DISABLED", "online payment is disabled")
-	ErrPaymentPlanNotFound      = infraerrors.NotFound("PAYMENT_PLAN_NOT_FOUND", "payment plan not found")
-	ErrPaymentOrderNotFound     = infraerrors.NotFound("PAYMENT_ORDER_NOT_FOUND", "payment order not found")
-	ErrPaymentOrderPaid         = infraerrors.Conflict("PAYMENT_ORDER_ALREADY_PAID", "payment order already paid")
-	ErrPaymentOrderUnrepairable = infraerrors.BadRequest("PAYMENT_ORDER_REPAIR_NOT_ALLOWED", "only pending or closed orders can be repaired manually")
-	ErrPaymentConfigMissing     = infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", "payment configuration is incomplete")
-	ErrPaymentCreateFailed      = infraerrors.BadRequest("PAYMENT_CREATE_FAILED", "failed to create payment order")
-	ErrPaymentSignature         = infraerrors.BadRequest("PAYMENT_SIGNATURE_INVALID", "payment notification signature invalid")
+	ErrPaymentDisabled                      = infraerrors.Forbidden("PAYMENT_DISABLED", "online payment is disabled")
+	ErrPaymentPlanNotFound                  = infraerrors.NotFound("PAYMENT_PLAN_NOT_FOUND", "payment plan not found")
+	ErrPaymentOrderNotFound                 = infraerrors.NotFound("PAYMENT_ORDER_NOT_FOUND", "payment order not found")
+	ErrPaymentOrderPaid                     = infraerrors.Conflict("PAYMENT_ORDER_ALREADY_PAID", "payment order already paid")
+	ErrPaymentOrderUnrepairable             = infraerrors.BadRequest("PAYMENT_ORDER_REPAIR_NOT_ALLOWED", "only pending or closed orders can be repaired manually")
+	ErrPaymentConfigMissing                 = infraerrors.BadRequest("PAYMENT_CONFIG_MISSING", "payment configuration is incomplete")
+	ErrPaymentCreateFailed                  = infraerrors.BadRequest("PAYMENT_CREATE_FAILED", "failed to create payment order")
+	ErrPaymentSignature                     = infraerrors.BadRequest("PAYMENT_SIGNATURE_INVALID", "payment notification signature invalid")
 	ErrPaymentSubscriptionRepurchaseBlocked = infraerrors.Conflict(
 		"SUBSCRIPTION_REPURCHASE_BLOCKED",
 		"each account can only purchase the same plan once during its active period; repurchase after expiry",
 	)
-	ErrInvoiceOrdersRequired    = infraerrors.BadRequest("INVOICE_ORDERS_REQUIRED", "at least one order is required")
-	ErrInvoiceEmailInvalid      = infraerrors.BadRequest("INVOICE_EMAIL_INVALID", "invoice email is invalid")
-	ErrInvoiceOrderNotPaid      = infraerrors.BadRequest("INVOICE_ORDER_NOT_PAID", "only paid orders can request invoices")
-	ErrInvoiceNotRequested      = infraerrors.BadRequest("INVOICE_NOT_REQUESTED", "invoice has not been requested for this order")
-	ErrInvoiceAlreadyFiled      = infraerrors.Conflict("INVOICE_ALREADY_FILED", "invoice has already been requested for one or more selected orders")
-	ErrInvoiceAlreadyHandled    = infraerrors.Conflict("INVOICE_ALREADY_HANDLED", "invoice has already been processed")
+	ErrInvoiceOrdersRequired = infraerrors.BadRequest("INVOICE_ORDERS_REQUIRED", "at least one order is required")
+	ErrInvoiceEmailInvalid   = infraerrors.BadRequest("INVOICE_EMAIL_INVALID", "invoice email is invalid")
+	ErrInvoiceOrderNotPaid   = infraerrors.BadRequest("INVOICE_ORDER_NOT_PAID", "only paid orders can request invoices")
+	ErrInvoiceNotRequested   = infraerrors.BadRequest("INVOICE_NOT_REQUESTED", "invoice has not been requested for this order")
+	ErrInvoiceAlreadyFiled   = infraerrors.Conflict("INVOICE_ALREADY_FILED", "invoice has already been requested for one or more selected orders")
+	ErrInvoiceAlreadyHandled = infraerrors.Conflict("INVOICE_ALREADY_HANDLED", "invoice has already been processed")
 )
 
 var wechatPayAPIBaseURL = "https://api.mch.weixin.qq.com"
@@ -81,6 +81,7 @@ type PaymentOrder struct {
 	ValidityDays        int
 	OrderType           string  // "subscription" or "balance"
 	BalanceAmount       float64 // 充值金额（元），仅 balance 类型
+	SubSiteID           *int64  // 下单时所属分站，nil 表示主站订单
 	PromoCode           string  // 使用的优惠码
 	DiscountAmount      int     // 优惠码折扣金额（分）
 	Status              string
@@ -162,10 +163,26 @@ func NewPaymentService(
 	}
 }
 
-// getPoolSubSiteFromCtx returns the current pool-mode sub-site with a non-nil OwnerPaymentConfig, or nil.
-func (s *PaymentService) getPoolSubSiteFromCtx(ctx context.Context) *SubSite {
+func (s *PaymentService) getSubSiteFromCtx(ctx context.Context) *SubSite {
 	site, ok := ctx.Value(ctxkey.SubSite).(*SubSite)
 	if !ok || site == nil {
+		return nil
+	}
+	return site
+}
+
+func subSiteIDPtr(site *SubSite) *int64 {
+	if site == nil || site.ID <= 0 {
+		return nil
+	}
+	id := site.ID
+	return &id
+}
+
+// getPoolSubSiteFromCtx returns the current pool-mode sub-site with a non-nil OwnerPaymentConfig, or nil.
+func (s *PaymentService) getPoolSubSiteFromCtx(ctx context.Context) *SubSite {
+	site := s.getSubSiteFromCtx(ctx)
+	if site == nil {
 		return nil
 	}
 	if site.Mode != SubSiteModePool || site.OwnerPaymentConfig == nil {
@@ -638,6 +655,7 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 	}
 
 	// 创建订单记录
+	currentSubSite := s.getSubSiteFromCtx(ctx)
 	order := &PaymentOrder{
 		OrderNo:        orderNo,
 		UserID:         userID,
@@ -646,6 +664,7 @@ func (s *PaymentService) CreateOrder(ctx context.Context, userID int64, planKey 
 		Status:         PaymentOrderStatusPending,
 		PayMethod:      payMethodStr,
 		OrderType:      orderType,
+		SubSiteID:      subSiteIDPtr(currentSubSite),
 		PromoCode:      promoCode,
 		DiscountAmount: discountFen,
 		ExpiredAt:      time.Now().Add(30 * time.Minute), // 30分钟过期
@@ -761,6 +780,7 @@ func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, 
 	orderNo := generateOrderNo()
 
 	// 检测当前请求是否命中 pool 模式分站（有 OwnerPaymentConfig）
+	currentSubSite := s.getSubSiteFromCtx(ctx)
 	poolSite := s.getPoolSubSiteFromCtx(ctx)
 	var ownerPayCfg *OwnerPaymentConfig
 	if poolSite != nil {
@@ -801,6 +821,7 @@ func (s *PaymentService) CreateRechargeOrder(ctx context.Context, userID int64, 
 		ValidityDays:   0,
 		OrderType:      PaymentOrderTypeBalance,
 		BalanceAmount:  planBalanceAmount,
+		SubSiteID:      subSiteIDPtr(currentSubSite),
 		PromoCode:      promoCode,
 		DiscountAmount: discountFen,
 		Status:         PaymentOrderStatusPending,
@@ -1081,6 +1102,7 @@ func (s *PaymentService) CreateSubSiteTopupOrder(ctx context.Context, userID int
 		Status:    PaymentOrderStatusPending,
 		PayMethod: payMethodStr,
 		OrderType: PaymentOrderTypeSubSiteTopup,
+		SubSiteID: &siteID,
 		ExpiredAt: time.Now().Add(30 * time.Minute),
 	}
 
@@ -1875,7 +1897,12 @@ func (s *PaymentService) handlePaymentSuccess(ctx context.Context, order *Paymen
 		}
 		// 如果此充值订单绑定了 pool 模式分站，执行自动进货（扣分站池等额）
 		if _, siteID, ok := parseBalanceSubSitePlanKey(order.PlanKey); ok && siteID > 0 && s.subSiteService != nil {
-			entry := SubSiteLedgerEntry{TxType: SubSiteLedgerAutoRestock}
+			entry := SubSiteLedgerEntry{
+				TxType:         SubSiteLedgerAutoRestock,
+				RelatedUserID:  &order.UserID,
+				RelatedOrderID: &order.ID,
+				Note:           fmt.Sprintf("用户线上充值自动进货，订单 %s", order.OrderNo),
+			}
 			if _, err := s.subSiteService.AdjustPoolBalance(ctx, siteID, -int64(order.AmountFen), entry); err != nil {
 				log.Printf("[Payment] WARN: auto-restock failed for order %s site %d: %v (balance already credited to user)", order.OrderNo, siteID, err)
 			} else {

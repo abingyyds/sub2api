@@ -21,6 +21,10 @@
               {{ value === 'balance' ? t('admin.orders.typeBalance') : t('admin.orders.typeSubscription') }}
             </span>
           </template>
+          <template #cell-sub_site_id="{ value }">
+            <span v-if="value" class="badge badge-primary">{{ t('admin.orders.subSite') }} #{{ value }}</span>
+            <span v-else class="badge badge-gray">{{ t('admin.orders.mainSite') }}</span>
+          </template>
           <template #cell-status="{ value }">
             <span :class="['badge', statusBadgeClass(value)]">
               {{ statusLabel(value) }}
@@ -111,6 +115,7 @@ const columns = computed<Column[]>(() => [
   { key: 'order_no', label: t('admin.orders.orderNo'), sortable: false },
   { key: 'user_id', label: t('admin.orders.userId'), sortable: false },
   { key: 'order_type', label: t('admin.orders.orderType'), sortable: false },
+  { key: 'sub_site_id', label: t('admin.orders.sourceSite'), sortable: false },
   { key: 'amount_fen', label: t('admin.orders.amount'), sortable: false },
   { key: 'status', label: t('common.status'), sortable: false },
   { key: 'invoice_status', label: t('admin.orders.invoiceStatus'), sortable: false },

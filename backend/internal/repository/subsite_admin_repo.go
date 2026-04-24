@@ -72,7 +72,7 @@ func (r *subSiteAdminRepository) ListUsersBySubSite(ctx context.Context, siteID 
 }
 
 func (r *subSiteAdminRepository) ListOrdersBySubSite(ctx context.Context, siteID int64, params pagination.PaginationParams, status string) ([]service.SubSiteAdminOrder, *pagination.PaginationResult, error) {
-	conds := []string{"su.sub_site_id = $1"}
+	conds := []string{"COALESCE(po.sub_site_id, su.sub_site_id) = $1"}
 	args := []any{siteID}
 	if status = strings.TrimSpace(strings.ToLower(status)); status != "" {
 		args = append(args, status)
@@ -82,7 +82,7 @@ func (r *subSiteAdminRepository) ListOrdersBySubSite(ctx context.Context, siteID
 
 	countQuery := `
 		SELECT COUNT(*) FROM payment_orders po
-		INNER JOIN sub_site_users su ON su.user_id = po.user_id
+		LEFT JOIN sub_site_users su ON su.user_id = po.user_id
 		WHERE ` + where
 	var total int64
 	if err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&total); err != nil {
@@ -97,7 +97,7 @@ func (r *subSiteAdminRepository) ListOrdersBySubSite(ctx context.Context, siteID
 			po.amount_fen, COALESCE(po.status, 'pending'), COALESCE(po.pay_method, ''),
 			po.paid_at, po.created_at
 		FROM payment_orders po
-		INNER JOIN sub_site_users su ON su.user_id = po.user_id
+		LEFT JOIN sub_site_users su ON su.user_id = po.user_id
 		LEFT JOIN users u ON u.id = po.user_id
 		WHERE %s
 		ORDER BY po.id DESC
@@ -221,8 +221,8 @@ func (r *subSiteAdminRepository) GetDashboardStats(ctx context.Context, siteID i
 	if err := r.db.QueryRowContext(ctx, `
 		SELECT COALESCE(SUM(po.amount_fen), 0)
 		FROM payment_orders po
-		INNER JOIN sub_site_users su ON su.user_id = po.user_id
-		WHERE su.sub_site_id = $1 AND po.status = 'paid' AND COALESCE(po.paid_at, po.created_at) >= $2
+		LEFT JOIN sub_site_users su ON su.user_id = po.user_id
+		WHERE COALESCE(po.sub_site_id, su.sub_site_id) = $1 AND po.status = 'paid' AND COALESCE(po.paid_at, po.created_at) >= $2
 	`, siteID, rangeStart).Scan(&stats.RevenueFen); err != nil {
 		return nil, err
 	}

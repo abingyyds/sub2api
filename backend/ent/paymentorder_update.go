@@ -170,6 +170,33 @@ func (_u *PaymentOrderUpdate) AddBalanceAmount(v float64) *PaymentOrderUpdate {
 	return _u
 }
 
+// SetSubSiteID sets the "sub_site_id" field.
+func (_u *PaymentOrderUpdate) SetSubSiteID(v int64) *PaymentOrderUpdate {
+	_u.mutation.ResetSubSiteID()
+	_u.mutation.SetSubSiteID(v)
+	return _u
+}
+
+// SetNillableSubSiteID sets the "sub_site_id" field if the given value is not nil.
+func (_u *PaymentOrderUpdate) SetNillableSubSiteID(v *int64) *PaymentOrderUpdate {
+	if v != nil {
+		_u.SetSubSiteID(*v)
+	}
+	return _u
+}
+
+// AddSubSiteID adds value to the "sub_site_id" field.
+func (_u *PaymentOrderUpdate) AddSubSiteID(v int64) *PaymentOrderUpdate {
+	_u.mutation.AddSubSiteID(v)
+	return _u
+}
+
+// ClearSubSiteID clears the value of the "sub_site_id" field.
+func (_u *PaymentOrderUpdate) ClearSubSiteID() *PaymentOrderUpdate {
+	_u.mutation.ClearSubSiteID()
+	return _u
+}
+
 // SetPromoCode sets the "promo_code" field.
 func (_u *PaymentOrderUpdate) SetPromoCode(v string) *PaymentOrderUpdate {
 	_u.mutation.SetPromoCode(v)
@@ -680,6 +707,15 @@ func (_u *PaymentOrderUpdate) sqlSave(ctx context.Context) (_node int, err error
 	if value, ok := _u.mutation.AddedBalanceAmount(); ok {
 		_spec.AddField(paymentorder.FieldBalanceAmount, field.TypeFloat64, value)
 	}
+	if value, ok := _u.mutation.SubSiteID(); ok {
+		_spec.SetField(paymentorder.FieldSubSiteID, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedSubSiteID(); ok {
+		_spec.AddField(paymentorder.FieldSubSiteID, field.TypeInt64, value)
+	}
+	if _u.mutation.SubSiteIDCleared() {
+		_spec.ClearField(paymentorder.FieldSubSiteID, field.TypeInt64)
+	}
 	if value, ok := _u.mutation.PromoCode(); ok {
 		_spec.SetField(paymentorder.FieldPromoCode, field.TypeString, value)
 	}
@@ -1001,6 +1037,33 @@ func (_u *PaymentOrderUpdateOne) SetNillableBalanceAmount(v *float64) *PaymentOr
 // AddBalanceAmount adds value to the "balance_amount" field.
 func (_u *PaymentOrderUpdateOne) AddBalanceAmount(v float64) *PaymentOrderUpdateOne {
 	_u.mutation.AddBalanceAmount(v)
+	return _u
+}
+
+// SetSubSiteID sets the "sub_site_id" field.
+func (_u *PaymentOrderUpdateOne) SetSubSiteID(v int64) *PaymentOrderUpdateOne {
+	_u.mutation.ResetSubSiteID()
+	_u.mutation.SetSubSiteID(v)
+	return _u
+}
+
+// SetNillableSubSiteID sets the "sub_site_id" field if the given value is not nil.
+func (_u *PaymentOrderUpdateOne) SetNillableSubSiteID(v *int64) *PaymentOrderUpdateOne {
+	if v != nil {
+		_u.SetSubSiteID(*v)
+	}
+	return _u
+}
+
+// AddSubSiteID adds value to the "sub_site_id" field.
+func (_u *PaymentOrderUpdateOne) AddSubSiteID(v int64) *PaymentOrderUpdateOne {
+	_u.mutation.AddSubSiteID(v)
+	return _u
+}
+
+// ClearSubSiteID clears the value of the "sub_site_id" field.
+func (_u *PaymentOrderUpdateOne) ClearSubSiteID() *PaymentOrderUpdateOne {
+	_u.mutation.ClearSubSiteID()
 	return _u
 }
 
@@ -1543,6 +1606,15 @@ func (_u *PaymentOrderUpdateOne) sqlSave(ctx context.Context) (_node *PaymentOrd
 	}
 	if value, ok := _u.mutation.AddedBalanceAmount(); ok {
 		_spec.AddField(paymentorder.FieldBalanceAmount, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.SubSiteID(); ok {
+		_spec.SetField(paymentorder.FieldSubSiteID, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedSubSiteID(); ok {
+		_spec.AddField(paymentorder.FieldSubSiteID, field.TypeInt64, value)
+	}
+	if _u.mutation.SubSiteIDCleared() {
+		_spec.ClearField(paymentorder.FieldSubSiteID, field.TypeInt64)
 	}
 	if value, ok := _u.mutation.PromoCode(); ok {
 		_spec.SetField(paymentorder.FieldPromoCode, field.TypeString, value)

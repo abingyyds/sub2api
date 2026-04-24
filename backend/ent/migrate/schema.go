@@ -350,6 +350,7 @@ var (
 		{Name: "name", Type: field.TypeString, Size: 100},
 		{Name: "description", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
 		{Name: "rate_multiplier", Type: field.TypeFloat64, Default: 1, SchemaType: map[string]string{"postgres": "decimal(10,4)"}},
+		{Name: "display_rate_multiplier", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(10,4)"}},
 		{Name: "is_exclusive", Type: field.TypeBool, Default: false},
 		{Name: "status", Type: field.TypeString, Size: 20, Default: "active"},
 		{Name: "platform", Type: field.TypeString, Size: 50, Default: "anthropic"},
@@ -381,22 +382,22 @@ var (
 			{
 				Name:    "group_status",
 				Unique:  false,
-				Columns: []*schema.Column{GroupsColumns[8]},
+				Columns: []*schema.Column{GroupsColumns[9]},
 			},
 			{
 				Name:    "group_platform",
 				Unique:  false,
-				Columns: []*schema.Column{GroupsColumns[9]},
+				Columns: []*schema.Column{GroupsColumns[10]},
 			},
 			{
 				Name:    "group_subscription_type",
 				Unique:  false,
-				Columns: []*schema.Column{GroupsColumns[10]},
+				Columns: []*schema.Column{GroupsColumns[11]},
 			},
 			{
 				Name:    "group_is_exclusive",
 				Unique:  false,
-				Columns: []*schema.Column{GroupsColumns[7]},
+				Columns: []*schema.Column{GroupsColumns[8]},
 			},
 			{
 				Name:    "group_deleted_at",
@@ -712,6 +713,7 @@ var (
 		{Name: "validity_days", Type: field.TypeInt, Default: 30},
 		{Name: "order_type", Type: field.TypeString, Size: 20, Default: "subscription"},
 		{Name: "balance_amount", Type: field.TypeFloat64, Default: 0},
+		{Name: "sub_site_id", Type: field.TypeInt64, Nullable: true},
 		{Name: "promo_code", Type: field.TypeString, Nullable: true, Size: 32, Default: ""},
 		{Name: "discount_amount", Type: field.TypeInt, Default: 0},
 		{Name: "status", Type: field.TypeString, Size: 20, Default: "pending"},
@@ -740,7 +742,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "payment_orders_users_payment_orders",
-				Columns:    []*schema.Column{PaymentOrdersColumns[26]},
+				Columns:    []*schema.Column{PaymentOrdersColumns[27]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -749,7 +751,7 @@ var (
 			{
 				Name:    "paymentorder_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{PaymentOrdersColumns[26]},
+				Columns: []*schema.Column{PaymentOrdersColumns[27]},
 			},
 			{
 				Name:    "paymentorder_order_no",
@@ -759,12 +761,17 @@ var (
 			{
 				Name:    "paymentorder_status",
 				Unique:  false,
-				Columns: []*schema.Column{PaymentOrdersColumns[10]},
+				Columns: []*schema.Column{PaymentOrdersColumns[11]},
+			},
+			{
+				Name:    "paymentorder_sub_site_id",
+				Unique:  false,
+				Columns: []*schema.Column{PaymentOrdersColumns[8]},
 			},
 			{
 				Name:    "paymentorder_invoice_requested_at",
 				Unique:  false,
-				Columns: []*schema.Column{PaymentOrdersColumns[19]},
+				Columns: []*schema.Column{PaymentOrdersColumns[20]},
 			},
 		},
 	}

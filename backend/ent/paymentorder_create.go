@@ -96,6 +96,20 @@ func (_c *PaymentOrderCreate) SetNillableBalanceAmount(v *float64) *PaymentOrder
 	return _c
 }
 
+// SetSubSiteID sets the "sub_site_id" field.
+func (_c *PaymentOrderCreate) SetSubSiteID(v int64) *PaymentOrderCreate {
+	_c.mutation.SetSubSiteID(v)
+	return _c
+}
+
+// SetNillableSubSiteID sets the "sub_site_id" field if the given value is not nil.
+func (_c *PaymentOrderCreate) SetNillableSubSiteID(v *int64) *PaymentOrderCreate {
+	if v != nil {
+		_c.SetSubSiteID(*v)
+	}
+	return _c
+}
+
 // SetPromoCode sets the "promo_code" field.
 func (_c *PaymentOrderCreate) SetPromoCode(v string) *PaymentOrderCreate {
 	_c.mutation.SetPromoCode(v)
@@ -623,6 +637,10 @@ func (_c *PaymentOrderCreate) createSpec() (*PaymentOrder, *sqlgraph.CreateSpec)
 		_spec.SetField(paymentorder.FieldBalanceAmount, field.TypeFloat64, value)
 		_node.BalanceAmount = value
 	}
+	if value, ok := _c.mutation.SubSiteID(); ok {
+		_spec.SetField(paymentorder.FieldSubSiteID, field.TypeInt64, value)
+		_node.SubSiteID = &value
+	}
 	if value, ok := _c.mutation.PromoCode(); ok {
 		_spec.SetField(paymentorder.FieldPromoCode, field.TypeString, value)
 		_node.PromoCode = value
@@ -897,6 +915,30 @@ func (u *PaymentOrderUpsert) UpdateBalanceAmount() *PaymentOrderUpsert {
 // AddBalanceAmount adds v to the "balance_amount" field.
 func (u *PaymentOrderUpsert) AddBalanceAmount(v float64) *PaymentOrderUpsert {
 	u.Add(paymentorder.FieldBalanceAmount, v)
+	return u
+}
+
+// SetSubSiteID sets the "sub_site_id" field.
+func (u *PaymentOrderUpsert) SetSubSiteID(v int64) *PaymentOrderUpsert {
+	u.Set(paymentorder.FieldSubSiteID, v)
+	return u
+}
+
+// UpdateSubSiteID sets the "sub_site_id" field to the value that was provided on create.
+func (u *PaymentOrderUpsert) UpdateSubSiteID() *PaymentOrderUpsert {
+	u.SetExcluded(paymentorder.FieldSubSiteID)
+	return u
+}
+
+// AddSubSiteID adds v to the "sub_site_id" field.
+func (u *PaymentOrderUpsert) AddSubSiteID(v int64) *PaymentOrderUpsert {
+	u.Add(paymentorder.FieldSubSiteID, v)
+	return u
+}
+
+// ClearSubSiteID clears the value of the "sub_site_id" field.
+func (u *PaymentOrderUpsert) ClearSubSiteID() *PaymentOrderUpsert {
+	u.SetNull(paymentorder.FieldSubSiteID)
 	return u
 }
 
@@ -1370,6 +1412,34 @@ func (u *PaymentOrderUpsertOne) AddBalanceAmount(v float64) *PaymentOrderUpsertO
 func (u *PaymentOrderUpsertOne) UpdateBalanceAmount() *PaymentOrderUpsertOne {
 	return u.Update(func(s *PaymentOrderUpsert) {
 		s.UpdateBalanceAmount()
+	})
+}
+
+// SetSubSiteID sets the "sub_site_id" field.
+func (u *PaymentOrderUpsertOne) SetSubSiteID(v int64) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetSubSiteID(v)
+	})
+}
+
+// AddSubSiteID adds v to the "sub_site_id" field.
+func (u *PaymentOrderUpsertOne) AddSubSiteID(v int64) *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.AddSubSiteID(v)
+	})
+}
+
+// UpdateSubSiteID sets the "sub_site_id" field to the value that was provided on create.
+func (u *PaymentOrderUpsertOne) UpdateSubSiteID() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateSubSiteID()
+	})
+}
+
+// ClearSubSiteID clears the value of the "sub_site_id" field.
+func (u *PaymentOrderUpsertOne) ClearSubSiteID() *PaymentOrderUpsertOne {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearSubSiteID()
 	})
 }
 
@@ -2056,6 +2126,34 @@ func (u *PaymentOrderUpsertBulk) AddBalanceAmount(v float64) *PaymentOrderUpsert
 func (u *PaymentOrderUpsertBulk) UpdateBalanceAmount() *PaymentOrderUpsertBulk {
 	return u.Update(func(s *PaymentOrderUpsert) {
 		s.UpdateBalanceAmount()
+	})
+}
+
+// SetSubSiteID sets the "sub_site_id" field.
+func (u *PaymentOrderUpsertBulk) SetSubSiteID(v int64) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.SetSubSiteID(v)
+	})
+}
+
+// AddSubSiteID adds v to the "sub_site_id" field.
+func (u *PaymentOrderUpsertBulk) AddSubSiteID(v int64) *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.AddSubSiteID(v)
+	})
+}
+
+// UpdateSubSiteID sets the "sub_site_id" field to the value that was provided on create.
+func (u *PaymentOrderUpsertBulk) UpdateSubSiteID() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.UpdateSubSiteID()
+	})
+}
+
+// ClearSubSiteID clears the value of the "sub_site_id" field.
+func (u *PaymentOrderUpsertBulk) ClearSubSiteID() *PaymentOrderUpsertBulk {
+	return u.Update(func(s *PaymentOrderUpsert) {
+		s.ClearSubSiteID()
 	})
 }
 
