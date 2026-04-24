@@ -89,6 +89,7 @@ func (s *FrontendServer) Middleware() gin.HandlerFunc {
 			strings.HasPrefix(requestPath, "/v1/") ||
 			strings.HasPrefix(requestPath, "/v1beta/") ||
 			strings.HasPrefix(requestPath, "/antigravity/") ||
+			strings.HasPrefix(requestPath, "/downloads/") ||
 			strings.HasPrefix(requestPath, "/setup/") ||
 			requestPath == "/health" ||
 			requestPath == "/responses" {
@@ -225,6 +226,7 @@ func ServeEmbeddedFrontend() gin.HandlerFunc {
 			strings.HasPrefix(requestPath, "/v1/") ||
 			strings.HasPrefix(requestPath, "/v1beta/") ||
 			strings.HasPrefix(requestPath, "/antigravity/") ||
+			strings.HasPrefix(requestPath, "/downloads/") ||
 			strings.HasPrefix(requestPath, "/setup/") ||
 			requestPath == "/health" ||
 			requestPath == "/responses" {
