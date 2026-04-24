@@ -977,8 +977,10 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 		bodyModified = true
 	}
 
-	// 针对所有 OpenAI 账号执行 Codex 模型名规范化，确保上游识别一致。
-	if currentModel := firstNonEmptyModel(reqPayload, mappedModel); currentModel != "" {
+	// OAuth 账号走 ChatGPT internal API，需要把客户端别名规范化成内部 Codex 模型名。
+	// API Key 账号走 OpenAI Platform API，应保留用户请求/显式映射后的模型名，避免把
+	// 平台模型（如 gpt-5-codex）改写成另一个内部模型后触发上游 404。
+	if currentModel := firstNonEmptyModel(reqPayload, mappedModel); account.Type == AccountTypeOAuth && currentModel != "" {
 		normalizedModel := normalizeCodexModel(currentModel)
 		if normalizedModel != "" && normalizedModel != currentModel {
 			log.Printf("[OpenAI] Codex model normalization: %s -> %s (account: %s, type: %s, isCodexCLI: %v)",
