@@ -48,7 +48,8 @@ type UpdateUserRequest struct {
 	Role            string   `json:"role" binding:"omitempty,oneof=admin sub_admin user"`
 	AllowedGroups   *[]int64 `json:"allowed_groups"`
 	DiscoverySource *string  `json:"discovery_source"`
-	InviterID       *int64   `json:"inviter_id"` // 上级代理ID，null表示移除关系
+	InviterID       *int64   `json:"inviter_id"`  // 上级代理ID，null表示移除关系
+	SubSiteID       *int64   `json:"sub_site_id"` // 分站绑定ID，0表示解除绑定
 }
 
 // UpdateBalanceRequest represents balance update request
@@ -198,6 +199,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 		AllowedGroups:   req.AllowedGroups,
 		DiscoverySource: req.DiscoverySource,
 		InviterID:       req.InviterID,
+		SubSiteID:       req.SubSiteID,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)

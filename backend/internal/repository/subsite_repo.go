@@ -360,6 +360,11 @@ func (r *subSiteRepository) BindUser(ctx context.Context, siteID int64, userID i
 	return err
 }
 
+func (r *subSiteRepository) UnbindUser(ctx context.Context, userID int64) error {
+	_, err := r.db.ExecContext(ctx, `DELETE FROM sub_site_users WHERE user_id = $1`, userID)
+	return err
+}
+
 func (r *subSiteRepository) GetBoundSubSiteByUserID(ctx context.Context, userID int64) (*service.SubSite, error) {
 	row := r.db.QueryRowContext(ctx, subSiteBaseSelect+`
 		INNER JOIN sub_site_users su ON su.sub_site_id = s.id

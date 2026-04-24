@@ -6309,76 +6309,78 @@ func (m *AgentCommissionMutation) ResetEdge(name string) error {
 // GroupMutation represents an operation that mutates the Group nodes in the graph.
 type GroupMutation struct {
 	config
-	op                       Op
-	typ                      string
-	id                       *int64
-	created_at               *time.Time
-	updated_at               *time.Time
-	deleted_at               *time.Time
-	name                     *string
-	description              *string
-	rate_multiplier          *float64
-	addrate_multiplier       *float64
-	is_exclusive             *bool
-	status                   *string
-	platform                 *string
-	subscription_type        *string
-	daily_limit_usd          *float64
-	adddaily_limit_usd       *float64
-	weekly_limit_usd         *float64
-	addweekly_limit_usd      *float64
-	monthly_limit_usd        *float64
-	addmonthly_limit_usd     *float64
-	default_validity_days    *int
-	adddefault_validity_days *int
-	image_price_1k           *float64
-	addimage_price_1k        *float64
-	image_price_2k           *float64
-	addimage_price_2k        *float64
-	image_price_4k           *float64
-	addimage_price_4k        *float64
-	claude_code_only         *bool
-	fallback_group_id        *int64
-	addfallback_group_id     *int64
-	model_routing            *map[string][]int64
-	model_routing_enabled    *bool
-	price_fen                *int
-	addprice_fen             *int
-	listed                   *bool
-	plan_features            *[]string
-	appendplan_features      []string
-	tags                     *[]string
-	appendtags               []string
-	display_price            *string
-	display_discount         *string
-	clearedFields            map[string]struct{}
-	api_keys                 map[int64]struct{}
-	removedapi_keys          map[int64]struct{}
-	clearedapi_keys          bool
-	redeem_codes             map[int64]struct{}
-	removedredeem_codes      map[int64]struct{}
-	clearedredeem_codes      bool
-	subscriptions            map[int64]struct{}
-	removedsubscriptions     map[int64]struct{}
-	clearedsubscriptions     bool
-	org_subscriptions        map[int64]struct{}
-	removedorg_subscriptions map[int64]struct{}
-	clearedorg_subscriptions bool
-	org_projects             map[int64]struct{}
-	removedorg_projects      map[int64]struct{}
-	clearedorg_projects      bool
-	usage_logs               map[int64]struct{}
-	removedusage_logs        map[int64]struct{}
-	clearedusage_logs        bool
-	accounts                 map[int64]struct{}
-	removedaccounts          map[int64]struct{}
-	clearedaccounts          bool
-	allowed_users            map[int64]struct{}
-	removedallowed_users     map[int64]struct{}
-	clearedallowed_users     bool
-	done                     bool
-	oldValue                 func(context.Context) (*Group, error)
-	predicates               []predicate.Group
+	op                         Op
+	typ                        string
+	id                         *int64
+	created_at                 *time.Time
+	updated_at                 *time.Time
+	deleted_at                 *time.Time
+	name                       *string
+	description                *string
+	rate_multiplier            *float64
+	addrate_multiplier         *float64
+	display_rate_multiplier    *float64
+	adddisplay_rate_multiplier *float64
+	is_exclusive               *bool
+	status                     *string
+	platform                   *string
+	subscription_type          *string
+	daily_limit_usd            *float64
+	adddaily_limit_usd         *float64
+	weekly_limit_usd           *float64
+	addweekly_limit_usd        *float64
+	monthly_limit_usd          *float64
+	addmonthly_limit_usd       *float64
+	default_validity_days      *int
+	adddefault_validity_days   *int
+	image_price_1k             *float64
+	addimage_price_1k          *float64
+	image_price_2k             *float64
+	addimage_price_2k          *float64
+	image_price_4k             *float64
+	addimage_price_4k          *float64
+	claude_code_only           *bool
+	fallback_group_id          *int64
+	addfallback_group_id       *int64
+	model_routing              *map[string][]int64
+	model_routing_enabled      *bool
+	price_fen                  *int
+	addprice_fen               *int
+	listed                     *bool
+	plan_features              *[]string
+	appendplan_features        []string
+	tags                       *[]string
+	appendtags                 []string
+	display_price              *string
+	display_discount           *string
+	clearedFields              map[string]struct{}
+	api_keys                   map[int64]struct{}
+	removedapi_keys            map[int64]struct{}
+	clearedapi_keys            bool
+	redeem_codes               map[int64]struct{}
+	removedredeem_codes        map[int64]struct{}
+	clearedredeem_codes        bool
+	subscriptions              map[int64]struct{}
+	removedsubscriptions       map[int64]struct{}
+	clearedsubscriptions       bool
+	org_subscriptions          map[int64]struct{}
+	removedorg_subscriptions   map[int64]struct{}
+	clearedorg_subscriptions   bool
+	org_projects               map[int64]struct{}
+	removedorg_projects        map[int64]struct{}
+	clearedorg_projects        bool
+	usage_logs                 map[int64]struct{}
+	removedusage_logs          map[int64]struct{}
+	clearedusage_logs          bool
+	accounts                   map[int64]struct{}
+	removedaccounts            map[int64]struct{}
+	clearedaccounts            bool
+	allowed_users              map[int64]struct{}
+	removedallowed_users       map[int64]struct{}
+	clearedallowed_users       bool
+	done                       bool
+	oldValue                   func(context.Context) (*Group, error)
+	predicates                 []predicate.Group
 }
 
 var _ ent.Mutation = (*GroupMutation)(nil)
@@ -6739,6 +6741,76 @@ func (m *GroupMutation) AddedRateMultiplier() (r float64, exists bool) {
 func (m *GroupMutation) ResetRateMultiplier() {
 	m.rate_multiplier = nil
 	m.addrate_multiplier = nil
+}
+
+// SetDisplayRateMultiplier sets the "display_rate_multiplier" field.
+func (m *GroupMutation) SetDisplayRateMultiplier(f float64) {
+	m.display_rate_multiplier = &f
+	m.adddisplay_rate_multiplier = nil
+}
+
+// DisplayRateMultiplier returns the value of the "display_rate_multiplier" field in the mutation.
+func (m *GroupMutation) DisplayRateMultiplier() (r float64, exists bool) {
+	v := m.display_rate_multiplier
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDisplayRateMultiplier returns the old "display_rate_multiplier" field's value of the Group entity.
+// If the Group object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupMutation) OldDisplayRateMultiplier(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDisplayRateMultiplier is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDisplayRateMultiplier requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDisplayRateMultiplier: %w", err)
+	}
+	return oldValue.DisplayRateMultiplier, nil
+}
+
+// AddDisplayRateMultiplier adds f to the "display_rate_multiplier" field.
+func (m *GroupMutation) AddDisplayRateMultiplier(f float64) {
+	if m.adddisplay_rate_multiplier != nil {
+		*m.adddisplay_rate_multiplier += f
+	} else {
+		m.adddisplay_rate_multiplier = &f
+	}
+}
+
+// AddedDisplayRateMultiplier returns the value that was added to the "display_rate_multiplier" field in this mutation.
+func (m *GroupMutation) AddedDisplayRateMultiplier() (r float64, exists bool) {
+	v := m.adddisplay_rate_multiplier
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearDisplayRateMultiplier clears the value of the "display_rate_multiplier" field.
+func (m *GroupMutation) ClearDisplayRateMultiplier() {
+	m.display_rate_multiplier = nil
+	m.adddisplay_rate_multiplier = nil
+	m.clearedFields[group.FieldDisplayRateMultiplier] = struct{}{}
+}
+
+// DisplayRateMultiplierCleared returns if the "display_rate_multiplier" field was cleared in this mutation.
+func (m *GroupMutation) DisplayRateMultiplierCleared() bool {
+	_, ok := m.clearedFields[group.FieldDisplayRateMultiplier]
+	return ok
+}
+
+// ResetDisplayRateMultiplier resets all changes to the "display_rate_multiplier" field.
+func (m *GroupMutation) ResetDisplayRateMultiplier() {
+	m.display_rate_multiplier = nil
+	m.adddisplay_rate_multiplier = nil
+	delete(m.clearedFields, group.FieldDisplayRateMultiplier)
 }
 
 // SetIsExclusive sets the "is_exclusive" field.
@@ -8312,7 +8384,7 @@ func (m *GroupMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupMutation) Fields() []string {
-	fields := make([]string, 0, 27)
+	fields := make([]string, 0, 28)
 	if m.created_at != nil {
 		fields = append(fields, group.FieldCreatedAt)
 	}
@@ -8330,6 +8402,9 @@ func (m *GroupMutation) Fields() []string {
 	}
 	if m.rate_multiplier != nil {
 		fields = append(fields, group.FieldRateMultiplier)
+	}
+	if m.display_rate_multiplier != nil {
+		fields = append(fields, group.FieldDisplayRateMultiplier)
 	}
 	if m.is_exclusive != nil {
 		fields = append(fields, group.FieldIsExclusive)
@@ -8414,6 +8489,8 @@ func (m *GroupMutation) Field(name string) (ent.Value, bool) {
 		return m.Description()
 	case group.FieldRateMultiplier:
 		return m.RateMultiplier()
+	case group.FieldDisplayRateMultiplier:
+		return m.DisplayRateMultiplier()
 	case group.FieldIsExclusive:
 		return m.IsExclusive()
 	case group.FieldStatus:
@@ -8477,6 +8554,8 @@ func (m *GroupMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldDescription(ctx)
 	case group.FieldRateMultiplier:
 		return m.OldRateMultiplier(ctx)
+	case group.FieldDisplayRateMultiplier:
+		return m.OldDisplayRateMultiplier(ctx)
 	case group.FieldIsExclusive:
 		return m.OldIsExclusive(ctx)
 	case group.FieldStatus:
@@ -8569,6 +8648,13 @@ func (m *GroupMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetRateMultiplier(v)
+		return nil
+	case group.FieldDisplayRateMultiplier:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDisplayRateMultiplier(v)
 		return nil
 	case group.FieldIsExclusive:
 		v, ok := value.(bool)
@@ -8728,6 +8814,9 @@ func (m *GroupMutation) AddedFields() []string {
 	if m.addrate_multiplier != nil {
 		fields = append(fields, group.FieldRateMultiplier)
 	}
+	if m.adddisplay_rate_multiplier != nil {
+		fields = append(fields, group.FieldDisplayRateMultiplier)
+	}
 	if m.adddaily_limit_usd != nil {
 		fields = append(fields, group.FieldDailyLimitUsd)
 	}
@@ -8765,6 +8854,8 @@ func (m *GroupMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case group.FieldRateMultiplier:
 		return m.AddedRateMultiplier()
+	case group.FieldDisplayRateMultiplier:
+		return m.AddedDisplayRateMultiplier()
 	case group.FieldDailyLimitUsd:
 		return m.AddedDailyLimitUsd()
 	case group.FieldWeeklyLimitUsd:
@@ -8798,6 +8889,13 @@ func (m *GroupMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddRateMultiplier(v)
+		return nil
+	case group.FieldDisplayRateMultiplier:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDisplayRateMultiplier(v)
 		return nil
 	case group.FieldDailyLimitUsd:
 		v, ok := value.(float64)
@@ -8876,6 +8974,9 @@ func (m *GroupMutation) ClearedFields() []string {
 	if m.FieldCleared(group.FieldDescription) {
 		fields = append(fields, group.FieldDescription)
 	}
+	if m.FieldCleared(group.FieldDisplayRateMultiplier) {
+		fields = append(fields, group.FieldDisplayRateMultiplier)
+	}
 	if m.FieldCleared(group.FieldDailyLimitUsd) {
 		fields = append(fields, group.FieldDailyLimitUsd)
 	}
@@ -8925,6 +9026,9 @@ func (m *GroupMutation) ClearField(name string) error {
 		return nil
 	case group.FieldDescription:
 		m.ClearDescription()
+		return nil
+	case group.FieldDisplayRateMultiplier:
+		m.ClearDisplayRateMultiplier()
 		return nil
 	case group.FieldDailyLimitUsd:
 		m.ClearDailyLimitUsd()
@@ -8981,6 +9085,9 @@ func (m *GroupMutation) ResetField(name string) error {
 		return nil
 	case group.FieldRateMultiplier:
 		m.ResetRateMultiplier()
+		return nil
+	case group.FieldDisplayRateMultiplier:
+		m.ResetDisplayRateMultiplier()
 		return nil
 	case group.FieldIsExclusive:
 		m.ResetIsExclusive()
@@ -17297,6 +17404,8 @@ type PaymentOrderMutation struct {
 	order_type               *string
 	balance_amount           *float64
 	addbalance_amount        *float64
+	sub_site_id              *int64
+	addsub_site_id           *int64
 	promo_code               *string
 	discount_amount          *int
 	adddiscount_amount       *int
@@ -17797,6 +17906,76 @@ func (m *PaymentOrderMutation) AddedBalanceAmount() (r float64, exists bool) {
 func (m *PaymentOrderMutation) ResetBalanceAmount() {
 	m.balance_amount = nil
 	m.addbalance_amount = nil
+}
+
+// SetSubSiteID sets the "sub_site_id" field.
+func (m *PaymentOrderMutation) SetSubSiteID(i int64) {
+	m.sub_site_id = &i
+	m.addsub_site_id = nil
+}
+
+// SubSiteID returns the value of the "sub_site_id" field in the mutation.
+func (m *PaymentOrderMutation) SubSiteID() (r int64, exists bool) {
+	v := m.sub_site_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubSiteID returns the old "sub_site_id" field's value of the PaymentOrder entity.
+// If the PaymentOrder object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PaymentOrderMutation) OldSubSiteID(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubSiteID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubSiteID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubSiteID: %w", err)
+	}
+	return oldValue.SubSiteID, nil
+}
+
+// AddSubSiteID adds i to the "sub_site_id" field.
+func (m *PaymentOrderMutation) AddSubSiteID(i int64) {
+	if m.addsub_site_id != nil {
+		*m.addsub_site_id += i
+	} else {
+		m.addsub_site_id = &i
+	}
+}
+
+// AddedSubSiteID returns the value that was added to the "sub_site_id" field in this mutation.
+func (m *PaymentOrderMutation) AddedSubSiteID() (r int64, exists bool) {
+	v := m.addsub_site_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearSubSiteID clears the value of the "sub_site_id" field.
+func (m *PaymentOrderMutation) ClearSubSiteID() {
+	m.sub_site_id = nil
+	m.addsub_site_id = nil
+	m.clearedFields[paymentorder.FieldSubSiteID] = struct{}{}
+}
+
+// SubSiteIDCleared returns if the "sub_site_id" field was cleared in this mutation.
+func (m *PaymentOrderMutation) SubSiteIDCleared() bool {
+	_, ok := m.clearedFields[paymentorder.FieldSubSiteID]
+	return ok
+}
+
+// ResetSubSiteID resets all changes to the "sub_site_id" field.
+func (m *PaymentOrderMutation) ResetSubSiteID() {
+	m.sub_site_id = nil
+	m.addsub_site_id = nil
+	delete(m.clearedFields, paymentorder.FieldSubSiteID)
 }
 
 // SetPromoCode sets the "promo_code" field.
@@ -18738,7 +18917,7 @@ func (m *PaymentOrderMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PaymentOrderMutation) Fields() []string {
-	fields := make([]string, 0, 26)
+	fields := make([]string, 0, 27)
 	if m.order_no != nil {
 		fields = append(fields, paymentorder.FieldOrderNo)
 	}
@@ -18762,6 +18941,9 @@ func (m *PaymentOrderMutation) Fields() []string {
 	}
 	if m.balance_amount != nil {
 		fields = append(fields, paymentorder.FieldBalanceAmount)
+	}
+	if m.sub_site_id != nil {
+		fields = append(fields, paymentorder.FieldSubSiteID)
 	}
 	if m.promo_code != nil {
 		fields = append(fields, paymentorder.FieldPromoCode)
@@ -18841,6 +19023,8 @@ func (m *PaymentOrderMutation) Field(name string) (ent.Value, bool) {
 		return m.OrderType()
 	case paymentorder.FieldBalanceAmount:
 		return m.BalanceAmount()
+	case paymentorder.FieldSubSiteID:
+		return m.SubSiteID()
 	case paymentorder.FieldPromoCode:
 		return m.PromoCode()
 	case paymentorder.FieldDiscountAmount:
@@ -18902,6 +19086,8 @@ func (m *PaymentOrderMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldOrderType(ctx)
 	case paymentorder.FieldBalanceAmount:
 		return m.OldBalanceAmount(ctx)
+	case paymentorder.FieldSubSiteID:
+		return m.OldSubSiteID(ctx)
 	case paymentorder.FieldPromoCode:
 		return m.OldPromoCode(ctx)
 	case paymentorder.FieldDiscountAmount:
@@ -19002,6 +19188,13 @@ func (m *PaymentOrderMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetBalanceAmount(v)
+		return nil
+	case paymentorder.FieldSubSiteID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubSiteID(v)
 		return nil
 	case paymentorder.FieldPromoCode:
 		v, ok := value.(string)
@@ -19149,6 +19342,9 @@ func (m *PaymentOrderMutation) AddedFields() []string {
 	if m.addbalance_amount != nil {
 		fields = append(fields, paymentorder.FieldBalanceAmount)
 	}
+	if m.addsub_site_id != nil {
+		fields = append(fields, paymentorder.FieldSubSiteID)
+	}
 	if m.adddiscount_amount != nil {
 		fields = append(fields, paymentorder.FieldDiscountAmount)
 	}
@@ -19168,6 +19364,8 @@ func (m *PaymentOrderMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedValidityDays()
 	case paymentorder.FieldBalanceAmount:
 		return m.AddedBalanceAmount()
+	case paymentorder.FieldSubSiteID:
+		return m.AddedSubSiteID()
 	case paymentorder.FieldDiscountAmount:
 		return m.AddedDiscountAmount()
 	}
@@ -19207,6 +19405,13 @@ func (m *PaymentOrderMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddBalanceAmount(v)
 		return nil
+	case paymentorder.FieldSubSiteID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSubSiteID(v)
+		return nil
 	case paymentorder.FieldDiscountAmount:
 		v, ok := value.(int)
 		if !ok {
@@ -19222,6 +19427,9 @@ func (m *PaymentOrderMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *PaymentOrderMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(paymentorder.FieldSubSiteID) {
+		fields = append(fields, paymentorder.FieldSubSiteID)
+	}
 	if m.FieldCleared(paymentorder.FieldPromoCode) {
 		fields = append(fields, paymentorder.FieldPromoCode)
 	}
@@ -19272,6 +19480,9 @@ func (m *PaymentOrderMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *PaymentOrderMutation) ClearField(name string) error {
 	switch name {
+	case paymentorder.FieldSubSiteID:
+		m.ClearSubSiteID()
+		return nil
 	case paymentorder.FieldPromoCode:
 		m.ClearPromoCode()
 		return nil
@@ -19339,6 +19550,9 @@ func (m *PaymentOrderMutation) ResetField(name string) error {
 		return nil
 	case paymentorder.FieldBalanceAmount:
 		m.ResetBalanceAmount()
+		return nil
+	case paymentorder.FieldSubSiteID:
+		m.ResetSubSiteID()
 		return nil
 	case paymentorder.FieldPromoCode:
 		m.ResetPromoCode()

@@ -34,6 +34,8 @@ type PaymentOrder struct {
 	OrderType string `json:"order_type,omitempty"`
 	// BalanceAmount holds the value of the "balance_amount" field.
 	BalanceAmount float64 `json:"balance_amount,omitempty"`
+	// 下单时所属分站，NULL 表示主站订单
+	SubSiteID *int64 `json:"sub_site_id,omitempty"`
 	// 使用的优惠码
 	PromoCode string `json:"promo_code,omitempty"`
 	// 优惠码折扣金额(分)
@@ -114,7 +116,7 @@ func (*PaymentOrder) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case paymentorder.FieldBalanceAmount:
 			values[i] = new(sql.NullFloat64)
-		case paymentorder.FieldID, paymentorder.FieldUserID, paymentorder.FieldGroupID, paymentorder.FieldAmountFen, paymentorder.FieldValidityDays, paymentorder.FieldDiscountAmount:
+		case paymentorder.FieldID, paymentorder.FieldUserID, paymentorder.FieldGroupID, paymentorder.FieldAmountFen, paymentorder.FieldValidityDays, paymentorder.FieldSubSiteID, paymentorder.FieldDiscountAmount:
 			values[i] = new(sql.NullInt64)
 		case paymentorder.FieldOrderNo, paymentorder.FieldPlanKey, paymentorder.FieldOrderType, paymentorder.FieldPromoCode, paymentorder.FieldStatus, paymentorder.FieldPayMethod, paymentorder.FieldWechatTransactionID, paymentorder.FieldAlipayTradeNo, paymentorder.FieldEpayTradeNo, paymentorder.FieldInvoiceCompanyName, paymentorder.FieldInvoiceTaxID, paymentorder.FieldInvoiceEmail, paymentorder.FieldInvoiceRemark, paymentorder.FieldCodeURL:
 			values[i] = new(sql.NullString)
@@ -188,6 +190,13 @@ func (_m *PaymentOrder) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field balance_amount", values[i])
 			} else if value.Valid {
 				_m.BalanceAmount = value.Float64
+			}
+		case paymentorder.FieldSubSiteID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sub_site_id", values[i])
+			} else if value.Valid {
+				_m.SubSiteID = new(int64)
+				*_m.SubSiteID = value.Int64
 			}
 		case paymentorder.FieldPromoCode:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -373,6 +382,11 @@ func (_m *PaymentOrder) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("balance_amount=")
 	builder.WriteString(fmt.Sprintf("%v", _m.BalanceAmount))
+	builder.WriteString(", ")
+	if v := _m.SubSiteID; v != nil {
+		builder.WriteString("sub_site_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("promo_code=")
 	builder.WriteString(_m.PromoCode)

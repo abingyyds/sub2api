@@ -44,6 +44,15 @@ export interface User {
 export interface AdminUser extends User {
   // 管理员备注（普通用户接口不返回）
   notes: string
+  bound_sub_site?: UserBoundSubSite | null
+}
+
+export interface UserBoundSubSite {
+  id: number
+  name: string
+  slug: string
+  custom_domain?: string
+  status: 'pending' | 'active' | 'disabled'
 }
 
 export interface LoginRequest {
@@ -892,6 +901,7 @@ export interface UpdateUserRequest {
   allowed_groups?: number[] | null
   discovery_source?: string | null
   inviter_id?: number | null // 上级代理ID，null表示移除关系
+  sub_site_id?: number | null // 分站绑定ID，0表示解除绑定
 }
 
 export interface ChangePasswordRequest {

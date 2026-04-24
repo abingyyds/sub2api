@@ -44,6 +44,10 @@ func (PaymentOrder) Fields() []ent.Field {
 			Default("subscription"),
 		field.Float("balance_amount").
 			Default(0),
+		field.Int64("sub_site_id").
+			Optional().
+			Nillable().
+			Comment("下单时所属分站，NULL 表示主站订单"),
 		field.String("promo_code").
 			MaxLen(32).
 			Optional().
@@ -141,6 +145,7 @@ func (PaymentOrder) Indexes() []ent.Index {
 		index.Fields("user_id"),
 		index.Fields("order_no"),
 		index.Fields("status"),
+		index.Fields("sub_site_id"),
 		index.Fields("invoice_requested_at"),
 	}
 }

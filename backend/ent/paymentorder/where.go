@@ -95,6 +95,11 @@ func BalanceAmount(v float64) predicate.PaymentOrder {
 	return predicate.PaymentOrder(sql.FieldEQ(FieldBalanceAmount, v))
 }
 
+// SubSiteID applies equality check predicate on the "sub_site_id" field. It's identical to SubSiteIDEQ.
+func SubSiteID(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldEQ(FieldSubSiteID, v))
+}
+
 // PromoCode applies equality check predicate on the "promo_code" field. It's identical to PromoCodeEQ.
 func PromoCode(v string) predicate.PaymentOrder {
 	return predicate.PaymentOrder(sql.FieldEQ(FieldPromoCode, v))
@@ -558,6 +563,56 @@ func BalanceAmountLT(v float64) predicate.PaymentOrder {
 // BalanceAmountLTE applies the LTE predicate on the "balance_amount" field.
 func BalanceAmountLTE(v float64) predicate.PaymentOrder {
 	return predicate.PaymentOrder(sql.FieldLTE(FieldBalanceAmount, v))
+}
+
+// SubSiteIDEQ applies the EQ predicate on the "sub_site_id" field.
+func SubSiteIDEQ(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldEQ(FieldSubSiteID, v))
+}
+
+// SubSiteIDNEQ applies the NEQ predicate on the "sub_site_id" field.
+func SubSiteIDNEQ(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNEQ(FieldSubSiteID, v))
+}
+
+// SubSiteIDIn applies the In predicate on the "sub_site_id" field.
+func SubSiteIDIn(vs ...int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldIn(FieldSubSiteID, vs...))
+}
+
+// SubSiteIDNotIn applies the NotIn predicate on the "sub_site_id" field.
+func SubSiteIDNotIn(vs ...int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNotIn(FieldSubSiteID, vs...))
+}
+
+// SubSiteIDGT applies the GT predicate on the "sub_site_id" field.
+func SubSiteIDGT(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldGT(FieldSubSiteID, v))
+}
+
+// SubSiteIDGTE applies the GTE predicate on the "sub_site_id" field.
+func SubSiteIDGTE(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldGTE(FieldSubSiteID, v))
+}
+
+// SubSiteIDLT applies the LT predicate on the "sub_site_id" field.
+func SubSiteIDLT(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldLT(FieldSubSiteID, v))
+}
+
+// SubSiteIDLTE applies the LTE predicate on the "sub_site_id" field.
+func SubSiteIDLTE(v int64) predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldLTE(FieldSubSiteID, v))
+}
+
+// SubSiteIDIsNil applies the IsNil predicate on the "sub_site_id" field.
+func SubSiteIDIsNil() predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldIsNull(FieldSubSiteID))
+}
+
+// SubSiteIDNotNil applies the NotNil predicate on the "sub_site_id" field.
+func SubSiteIDNotNil() predicate.PaymentOrder {
+	return predicate.PaymentOrder(sql.FieldNotNull(FieldSubSiteID))
 }
 
 // PromoCodeEQ applies the EQ predicate on the "promo_code" field.

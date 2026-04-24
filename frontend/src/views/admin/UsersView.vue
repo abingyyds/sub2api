@@ -271,6 +271,18 @@
             </div>
           </template>
 
+          <template #cell-bound_sub_site="{ row }">
+            <div v-if="row.bound_sub_site" class="max-w-xs">
+              <div class="truncate text-sm font-medium text-gray-900 dark:text-white" :title="row.bound_sub_site.name">
+                {{ row.bound_sub_site.name }}
+              </div>
+              <div class="truncate text-xs text-gray-500 dark:text-dark-400">
+                #{{ row.bound_sub_site.id }} · {{ row.bound_sub_site.custom_domain || row.bound_sub_site.slug }}
+              </div>
+            </div>
+            <span v-else class="text-sm text-gray-400">{{ t('admin.users.mainSite') }}</span>
+          </template>
+
           <!-- Dynamic attribute columns -->
           <template
             v-for="def in attributeDefinitions.filter(d => d.enabled)"
@@ -623,6 +635,7 @@ const allColumns = computed<Column[]>(() => [
   { key: 'id', label: 'ID', sortable: true },
   { key: 'username', label: t('admin.users.columns.username'), sortable: true },
   { key: 'notes', label: t('admin.users.columns.notes'), sortable: false },
+  { key: 'bound_sub_site', label: t('admin.users.columns.boundSubSite'), sortable: false },
   // Dynamic attribute columns
   ...attributeColumns.value,
   { key: 'role', label: t('admin.users.columns.role'), sortable: true },

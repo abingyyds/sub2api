@@ -43,6 +43,8 @@ type User struct {
 	AgentNote           string
 	AgentApprovedAt     *time.Time
 
+	BoundSubSite *SubSite
+
 	APIKeys       []APIKey
 	Subscriptions []UserSubscription
 }

@@ -47,6 +47,7 @@ func (h *PaymentOrderHandler) List(c *gin.Context) {
 			"validity_days":         order.ValidityDays,
 			"order_type":            order.OrderType,
 			"balance_amount":        order.BalanceAmount,
+			"sub_site_id":           order.SubSiteID,
 			"status":                order.Status,
 			"pay_method":            order.PayMethod,
 			"wechat_transaction_id": order.WechatTransactionID,

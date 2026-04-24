@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -13,10 +14,11 @@ import (
 
 type paymentOrderRepo struct {
 	client *dbent.Client
+	db     *sql.DB
 }
 
-func NewPaymentOrderRepo(client *dbent.Client) service.PaymentOrderRepository {
-	return &paymentOrderRepo{client: client}
+func NewPaymentOrderRepo(client *dbent.Client, db *sql.DB) service.PaymentOrderRepository {
+	return &paymentOrderRepo{client: client, db: db}
 }
 
 func (r *paymentOrderRepo) Create(ctx context.Context, order *service.PaymentOrder) error {
@@ -37,6 +39,9 @@ func (r *paymentOrderRepo) Create(ctx context.Context, order *service.PaymentOrd
 
 	if order.CodeURL != nil {
 		builder.SetCodeURL(*order.CodeURL)
+	}
+	if order.SubSiteID != nil {
+		builder.SetSubSiteID(*order.SubSiteID)
 	}
 
 	created, err := builder.Save(ctx)
@@ -341,6 +346,7 @@ func toServicePaymentOrder(e *dbent.PaymentOrder) *service.PaymentOrder {
 		ValidityDays:        e.ValidityDays,
 		OrderType:           e.OrderType,
 		BalanceAmount:       e.BalanceAmount,
+		SubSiteID:           e.SubSiteID,
 		PromoCode:           e.PromoCode,
 		DiscountAmount:      e.DiscountAmount,
 		Status:              e.Status,
