@@ -49,6 +49,8 @@ type SubSiteRepository interface {
 	Create(ctx context.Context, site *SubSite) error
 	Update(ctx context.Context, site *SubSite) error
 	UpdateMode(ctx context.Context, siteID int64, newMode string) error
+	SubmitHomeContentReview(ctx context.Context, siteID int64, pendingContent string) error
+	ReviewHomeContent(ctx context.Context, siteID int64, approved bool, reviewerID int64, reviewNote string) error
 	IncrementTotalWithdrawnFen(ctx context.Context, siteID int64, amountFen int64) error
 	Delete(ctx context.Context, id int64) error
 	BindUser(ctx context.Context, siteID int64, userID int64, source string) error

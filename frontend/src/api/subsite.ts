@@ -42,6 +42,12 @@ export interface OwnedSubSite {
   contact_info?: string
   doc_url?: string
   home_content?: string
+  pending_home_content?: string
+  home_content_review_status?: 'none' | 'pending' | 'approved' | 'rejected'
+  home_content_review_note?: string
+  home_content_submitted_at?: string
+  home_content_reviewed_at?: string
+  home_content_reviewed_by?: number
   theme_template?: string
   registration_mode?: 'open' | 'invite' | 'closed'
   enable_topup: boolean

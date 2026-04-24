@@ -272,7 +272,7 @@ func (s *SubSiteService) UpdateOwnedSite(ctx context.Context, ownerUserID int64,
 		Announcement:          input.Announcement,
 		ContactInfo:           input.ContactInfo,
 		DocURL:                input.DocURL,
-		HomeContent:           input.HomeContent,
+		HomeContent:           current.HomeContent,
 		ThemeTemplate:         input.ThemeTemplate,
 		RegistrationMode:      input.RegistrationMode,
 		EnableTopup:           boolPtr(current.EnableTopup),
@@ -291,7 +291,37 @@ func (s *SubSiteService) UpdateOwnedSite(ctx context.Context, ownerUserID int64,
 	if input.OwnerPaymentConfig == nil {
 		merged.OwnerPaymentConfig = current.OwnerPaymentConfig
 	}
-	return s.Update(ctx, merged)
+	updated, err := s.Update(ctx, merged)
+	if err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(input.HomeContent) != strings.TrimSpace(current.HomeContent) {
+		if err := s.repo.SubmitHomeContentReview(ctx, current.ID, strings.TrimSpace(input.HomeContent)); err != nil {
+			return nil, err
+		}
+		s.invalidateCaches()
+		updated, err = s.repo.GetByID(ctx, current.ID)
+		if err != nil {
+			return nil, err
+		}
+		return s.populateComputedFields(ctx, updated, true)
+	}
+	return updated, nil
+}
+
+func (s *SubSiteService) ReviewHomeContent(ctx context.Context, siteID int64, approved bool, reviewerID int64, reviewNote string) (*SubSite, error) {
+	if siteID <= 0 {
+		return nil, ErrSubSiteNotFound
+	}
+	if err := s.repo.ReviewHomeContent(ctx, siteID, approved, reviewerID, strings.TrimSpace(reviewNote)); err != nil {
+		return nil, err
+	}
+	s.invalidateCaches()
+	refreshed, err := s.repo.GetByID(ctx, siteID)
+	if err != nil {
+		return nil, err
+	}
+	return s.populateComputedFields(ctx, refreshed, true)
 }
 
 // SetSubSiteMode 平台管理员切换分站模式；要求 balance_fen == 0 且无 pending 提现，避免切换导致账目错乱。

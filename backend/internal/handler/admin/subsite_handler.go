@@ -158,6 +158,11 @@ type setModeRequest struct {
 	Mode string `json:"mode" binding:"required"`
 }
 
+type reviewHomeContentRequest struct {
+	Approve    bool   `json:"approve"`
+	ReviewNote string `json:"review_note"`
+}
+
 // SetMode 管理员切换分站模式（pool ↔ rate）。
 func (h *SubSiteHandler) SetMode(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -176,6 +181,30 @@ func (h *SubSiteHandler) SetMode(c *gin.Context) {
 		return
 	}
 	site, err := h.subSiteService.SetSubSiteMode(c.Request.Context(), id, req.Mode, hasPending)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, site)
+}
+
+// ReviewHomeContent 管理员审核分站首页 HTML 修改申请。
+func (h *SubSiteHandler) ReviewHomeContent(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || id <= 0 {
+		response.BadRequest(c, "invalid sub-site ID")
+		return
+	}
+	var req reviewHomeContentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "invalid request: "+err.Error())
+		return
+	}
+	var reviewerID int64
+	if subject, ok := middleware2.GetAuthSubjectFromContext(c); ok {
+		reviewerID = subject.UserID
+	}
+	site, err := h.subSiteService.ReviewHomeContent(c.Request.Context(), id, req.Approve, reviewerID, strings.TrimSpace(req.ReviewNote))
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return

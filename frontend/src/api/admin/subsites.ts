@@ -20,6 +20,12 @@ export interface AdminSubSite {
   contact_info?: string
   doc_url?: string
   home_content?: string
+  pending_home_content?: string
+  home_content_review_status?: 'none' | 'pending' | 'approved' | 'rejected'
+  home_content_review_note?: string
+  home_content_submitted_at?: string
+  home_content_reviewed_at?: string
+  home_content_reviewed_by?: number
   theme_template?: string
   registration_mode?: 'open' | 'invite' | 'closed'
   enable_topup: boolean
@@ -166,6 +172,18 @@ export async function setMode(id: number, mode: 'pool' | 'rate'): Promise<AdminS
   return data
 }
 
+export async function reviewHomeContent(
+  id: number,
+  approve: boolean,
+  reviewNote: string = ''
+): Promise<AdminSubSite> {
+  const { data } = await apiClient.post<AdminSubSite>(`/admin/subsites/${id}/home-content/review`, {
+    approve,
+    review_note: reviewNote
+  })
+  return data
+}
+
 export const subSitesAPI = {
   list,
   create,
@@ -176,6 +194,7 @@ export const subSitesAPI = {
   topupPool,
   listLedger,
   setMode,
+  reviewHomeContent,
 }
 
 export default subSitesAPI

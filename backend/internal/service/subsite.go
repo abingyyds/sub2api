@@ -31,14 +31,22 @@ const (
 )
 
 // 分站模式：
-//   pool — 经典资金池模式：分站主先向主站充值到 balance_fen，线下卖用户余额赚差价；
-//          支持配置自有收款账号，用户线上充值直接到分站主账号并从池同步扣减（自动进货）。
-//   rate — 倍率分成模式：无独立资金池；用户充值/消费都经主站，消费时按链上复合倍率
-//          把 (compound_i - compound_{i-1}) × base 的利润分级入账到 balance_fen，
-//          分站主通过提现把利润取走。
+//
+//	pool — 经典资金池模式：分站主先向主站充值到 balance_fen，线下卖用户余额赚差价；
+//	       支持配置自有收款账号，用户线上充值直接到分站主账号并从池同步扣减（自动进货）。
+//	rate — 倍率分成模式：无独立资金池；用户充值/消费都经主站，消费时按链上复合倍率
+//	       把 (compound_i - compound_{i-1}) × base 的利润分级入账到 balance_fen，
+//	       分站主通过提现把利润取走。
 const (
 	SubSiteModePool = "pool"
 	SubSiteModeRate = "rate"
+)
+
+const (
+	SubSiteHomeContentReviewNone     = "none"
+	SubSiteHomeContentReviewPending  = "pending"
+	SubSiteHomeContentReviewApproved = "approved"
+	SubSiteHomeContentReviewRejected = "rejected"
 )
 
 type SubSiteThemeTemplateOption struct {
@@ -105,43 +113,49 @@ type UpdatePlatformSubSiteConfigInput struct {
 }
 
 type SubSite struct {
-	ID                    int64               `json:"id"`
-	OwnerUserID           int64               `json:"owner_user_id"`
-	OwnerEmail            string              `json:"owner_email,omitempty"`
-	ParentSubSiteID       *int64              `json:"parent_sub_site_id,omitempty"`
-	ParentSubSiteName     string              `json:"parent_sub_site_name,omitempty"`
-	Level                 int                 `json:"level"`
-	Name                  string              `json:"name"`
-	Slug                  string              `json:"slug"`
-	CustomDomain          string              `json:"custom_domain,omitempty"`
-	Status                string              `json:"status"`
-	Mode                  string              `json:"mode"`
-	SiteLogo              string              `json:"site_logo,omitempty"`
-	SiteFavicon           string              `json:"site_favicon,omitempty"`
-	SiteSubtitle          string              `json:"site_subtitle,omitempty"`
-	Announcement          string              `json:"announcement,omitempty"`
-	ContactInfo           string              `json:"contact_info,omitempty"`
-	DocURL                string              `json:"doc_url,omitempty"`
-	HomeContent           string              `json:"home_content,omitempty"`
-	ThemeTemplate         string              `json:"theme_template,omitempty"`
-	RegistrationMode      string              `json:"registration_mode,omitempty"`
-	EnableTopup           bool                `json:"enable_topup"`
-	AllowSubSite          bool                `json:"allow_sub_site"`
-	SubSitePriceFen       int                 `json:"sub_site_price_fen"`
-	ConsumeRateMultiplier float64             `json:"consume_rate_multiplier"`
-	BalanceFen            int64               `json:"balance_fen"`
-	TotalTopupFen         int64               `json:"total_topup_fen"`
-	TotalConsumedFen      int64               `json:"total_consumed_fen"`
-	TotalWithdrawnFen     int64               `json:"total_withdrawn_fen"`
-	AllowOnlineTopup      bool                `json:"allow_online_topup"`
-	AllowOfflineTopup     bool                `json:"allow_offline_topup"`
-	OwnerPaymentConfig    *OwnerPaymentConfig `json:"owner_payment_config,omitempty"`
-	SubscriptionExpiredAt *time.Time          `json:"subscription_expired_at,omitempty"`
-	UserCount             int64               `json:"user_count,omitempty"`
-	ChildSiteCount        int64               `json:"child_site_count,omitempty"`
-	EntryURL              string              `json:"entry_url,omitempty"`
-	CreatedAt             time.Time           `json:"created_at"`
-	UpdatedAt             time.Time           `json:"updated_at"`
+	ID                      int64               `json:"id"`
+	OwnerUserID             int64               `json:"owner_user_id"`
+	OwnerEmail              string              `json:"owner_email,omitempty"`
+	ParentSubSiteID         *int64              `json:"parent_sub_site_id,omitempty"`
+	ParentSubSiteName       string              `json:"parent_sub_site_name,omitempty"`
+	Level                   int                 `json:"level"`
+	Name                    string              `json:"name"`
+	Slug                    string              `json:"slug"`
+	CustomDomain            string              `json:"custom_domain,omitempty"`
+	Status                  string              `json:"status"`
+	Mode                    string              `json:"mode"`
+	SiteLogo                string              `json:"site_logo,omitempty"`
+	SiteFavicon             string              `json:"site_favicon,omitempty"`
+	SiteSubtitle            string              `json:"site_subtitle,omitempty"`
+	Announcement            string              `json:"announcement,omitempty"`
+	ContactInfo             string              `json:"contact_info,omitempty"`
+	DocURL                  string              `json:"doc_url,omitempty"`
+	HomeContent             string              `json:"home_content,omitempty"`
+	PendingHomeContent      string              `json:"pending_home_content,omitempty"`
+	HomeContentReviewStatus string              `json:"home_content_review_status,omitempty"`
+	HomeContentReviewNote   string              `json:"home_content_review_note,omitempty"`
+	HomeContentSubmittedAt  *time.Time          `json:"home_content_submitted_at,omitempty"`
+	HomeContentReviewedAt   *time.Time          `json:"home_content_reviewed_at,omitempty"`
+	HomeContentReviewedBy   *int64              `json:"home_content_reviewed_by,omitempty"`
+	ThemeTemplate           string              `json:"theme_template,omitempty"`
+	RegistrationMode        string              `json:"registration_mode,omitempty"`
+	EnableTopup             bool                `json:"enable_topup"`
+	AllowSubSite            bool                `json:"allow_sub_site"`
+	SubSitePriceFen         int                 `json:"sub_site_price_fen"`
+	ConsumeRateMultiplier   float64             `json:"consume_rate_multiplier"`
+	BalanceFen              int64               `json:"balance_fen"`
+	TotalTopupFen           int64               `json:"total_topup_fen"`
+	TotalConsumedFen        int64               `json:"total_consumed_fen"`
+	TotalWithdrawnFen       int64               `json:"total_withdrawn_fen"`
+	AllowOnlineTopup        bool                `json:"allow_online_topup"`
+	AllowOfflineTopup       bool                `json:"allow_offline_topup"`
+	OwnerPaymentConfig      *OwnerPaymentConfig `json:"owner_payment_config,omitempty"`
+	SubscriptionExpiredAt   *time.Time          `json:"subscription_expired_at,omitempty"`
+	UserCount               int64               `json:"user_count,omitempty"`
+	ChildSiteCount          int64               `json:"child_site_count,omitempty"`
+	EntryURL                string              `json:"entry_url,omitempty"`
+	CreatedAt               time.Time           `json:"created_at"`
+	UpdatedAt               time.Time           `json:"updated_at"`
 }
 
 // OwnerPaymentConfig 分站主自有收款凭据（仅 pool 模式可用）。
@@ -153,15 +167,15 @@ type OwnerPaymentConfig struct {
 }
 
 type WechatPayCredentials struct {
-	Enabled      bool   `json:"enabled"`
-	AppID        string `json:"app_id"`
-	MchID        string `json:"mch_id"`
-	APIv3Key     string `json:"apiv3_key"`
-	MchSerialNo  string `json:"mch_serial_no"`
-	PublicKeyID  string `json:"public_key_id"`
-	PublicKey    string `json:"public_key"`
-	PrivateKey   string `json:"private_key"`
-	NotifyURL    string `json:"notify_url"`
+	Enabled     bool   `json:"enabled"`
+	AppID       string `json:"app_id"`
+	MchID       string `json:"mch_id"`
+	APIv3Key    string `json:"apiv3_key"`
+	MchSerialNo string `json:"mch_serial_no"`
+	PublicKeyID string `json:"public_key_id"`
+	PublicKey   string `json:"public_key"`
+	PrivateKey  string `json:"private_key"`
+	NotifyURL   string `json:"notify_url"`
 }
 
 type AlipayCredentials struct {

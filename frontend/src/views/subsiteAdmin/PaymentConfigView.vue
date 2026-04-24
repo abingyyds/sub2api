@@ -7,13 +7,13 @@
           :class="site.mode === 'pool'
             ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
             : 'bg-gray-200 text-gray-700 dark:bg-dark-700 dark:text-dark-300'">
-          {{ site.mode === 'pool' ? '资金池模式' : '倍率分成模式' }}
+          {{ site.mode === 'pool' ? '资金池/进货模式' : '一键加价/倍率分成' }}
         </span>
       </div>
 
       <div v-if="site?.mode !== 'pool'" class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800/50 dark:bg-amber-900/20 dark:text-amber-200">
-        自有收款账号仅对资金池模式生效：用户通过分站域名充值时，款项会直接入账到您配置的商户号，同时从分站池扣等额作为"自动进货"。
-        当前分站为倍率分成模式，无需配置。
+        自有收款账号仅对资金池/进货模式生效：用户通过分站域名充值时，款项会直接入账到您配置的商户号，同时从分站池扣等额作为“自动进货”。
+        当前分站为一键加价/倍率分成，无需配置。
       </div>
 
       <template v-else-if="site">

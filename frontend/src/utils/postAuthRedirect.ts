@@ -1,4 +1,5 @@
 import type { Router } from 'vue-router'
+import { useAppStore, useAuthStore } from '@/stores'
 
 function fallbackPath(path: string | null | undefined, fallback: string): string {
   if (!path) return fallback
@@ -21,7 +22,16 @@ export async function redirectAfterAuth(
   path: string | null | undefined,
   fallback = '/pricing'
 ): Promise<void> {
-  const safePath = sanitizePostAuthRedirect(path, fallback)
+  const authStore = useAuthStore()
+  const appStore = useAppStore()
+  let defaultFallback = fallback
+  if (!path && appStore.cachedPublicSettings?.is_subsite && !authStore.isAdmin && !authStore.isOrgAdmin) {
+    const sites = authStore.ownedSites.length > 0 ? authStore.ownedSites : await authStore.refreshOwnedSites().catch(() => [])
+    if (sites.length > 0) {
+      defaultFallback = `/subsite-admin/${sites[0].id}/dashboard`
+    }
+  }
+  const safePath = sanitizePostAuthRedirect(path, defaultFallback)
   const resolved = router.resolve(safePath)
 
   // Pricing currently has an intermittent client-side hydration/transition issue
