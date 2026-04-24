@@ -6,7 +6,7 @@ builder = "dockerfile"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = 'sh -lc "
+startCommand = '''sh -lc "
 set -eu
 
 echo \"[boot] launcher begin\"
@@ -58,7 +58,7 @@ if [ -x /tmp/start.sh ]; then
 else
   exec /app/sub2api
 fi
-"'
+"'''
 restartPolicyType = "ON_FAILURE"
 
 [env]
