@@ -22,6 +22,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/util/urlvalidator"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/tidwall/gjson"
 )
 
 // sseDataPrefix matches SSE data lines with optional whitespace after colon.
@@ -35,11 +36,19 @@ const (
 
 // TestEvent represents a SSE event for account testing
 type TestEvent struct {
-	Type    string `json:"type"`
-	Text    string `json:"text,omitempty"`
-	Model   string `json:"model,omitempty"`
-	Success bool   `json:"success,omitempty"`
-	Error   string `json:"error,omitempty"`
+	Type     string `json:"type"`
+	Text     string `json:"text,omitempty"`
+	Model    string `json:"model,omitempty"`
+	ImageURL string `json:"image_url,omitempty"`
+	MimeType string `json:"mime_type,omitempty"`
+	Success  bool   `json:"success,omitempty"`
+	Error    string `json:"error,omitempty"`
+}
+
+const defaultOpenAIImageTestPrompt = "Generate a cute orange cat astronaut sticker on a clean pastel background."
+
+func isOpenAIImageModel(model string) bool {
+	return isOpenAIImageGenerationModel(model)
 }
 
 // AccountTestService handles account testing operations
@@ -300,6 +309,10 @@ func (s *AccountTestService) testOpenAIAccountConnection(c *gin.Context, account
 		}
 	}
 
+	if isOpenAIImageModel(testModelID) {
+		return s.testOpenAIImageAccountConnection(c, ctx, account, testModelID)
+	}
+
 	// Determine authentication method and API URL
 	var authToken string
 	var apiURL string
@@ -388,6 +401,102 @@ func (s *AccountTestService) testOpenAIAccountConnection(c *gin.Context, account
 
 	// Process SSE stream
 	return s.processOpenAIStream(c, resp.Body)
+}
+
+func (s *AccountTestService) testOpenAIImageAccountConnection(c *gin.Context, ctx context.Context, account *Account, modelID string) error {
+	var (
+		authToken        string
+		apiURL           string
+		isOAuth          bool
+		chatgptAccountID string
+		payloadBytes     []byte
+		err              error
+	)
+
+	if account.IsOAuth() {
+		isOAuth = true
+		authToken = account.GetOpenAIAccessToken()
+		if authToken == "" {
+			return s.sendErrorAndEnd(c, "No access token available")
+		}
+		apiURL = chatgptCodexAPIURL
+		chatgptAccountID = account.GetChatGPTAccountID()
+		payloadBytes, err = buildOpenAIImagesResponsesRequest(&OpenAIImagesRequest{
+			Endpoint:       OpenAIEndpointImagesGenerations,
+			Model:          modelID,
+			Prompt:         defaultOpenAIImageTestPrompt,
+			ResponseFormat: "b64_json",
+		}, modelID)
+		if err != nil {
+			return s.sendErrorAndEnd(c, fmt.Sprintf("Failed to create image test payload: %s", err.Error()))
+		}
+	} else if account.Type == "apikey" {
+		authToken = account.GetOpenAIApiKey()
+		if authToken == "" {
+			return s.sendErrorAndEnd(c, "No API key available")
+		}
+		baseURL := account.GetOpenAIBaseURL()
+		if baseURL == "" {
+			baseURL = openaiPlatformBaseURL
+		}
+		normalizedBaseURL, validateErr := s.validateUpstreamBaseURL(baseURL)
+		if validateErr != nil {
+			return s.sendErrorAndEnd(c, fmt.Sprintf("Invalid base URL: %s", validateErr.Error()))
+		}
+		apiURL = strings.TrimSuffix(normalizedBaseURL, "/") + "/v1/images/generations"
+		payload := map[string]any{
+			"model":           modelID,
+			"prompt":          defaultOpenAIImageTestPrompt,
+			"size":            "1024x1024",
+			"response_format": "b64_json",
+		}
+		payloadBytes, _ = json.Marshal(payload)
+	} else {
+		return s.sendErrorAndEnd(c, fmt.Sprintf("Unsupported account type: %s", account.Type))
+	}
+
+	c.Writer.Header().Set("Content-Type", "text/event-stream")
+	c.Writer.Header().Set("Cache-Control", "no-cache")
+	c.Writer.Header().Set("Connection", "keep-alive")
+	c.Writer.Header().Set("X-Accel-Buffering", "no")
+	c.Writer.Flush()
+
+	s.sendEvent(c, TestEvent{Type: "test_start", Model: modelID})
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, bytes.NewReader(payloadBytes))
+	if err != nil {
+		return s.sendErrorAndEnd(c, "Failed to create request")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+authToken)
+	if isOAuth {
+		req.Host = "chatgpt.com"
+		req.Header.Set("accept", "text/event-stream")
+		if chatgptAccountID != "" {
+			req.Header.Set("chatgpt-account-id", chatgptAccountID)
+		}
+	}
+
+	proxyURL := ""
+	if account.ProxyID != nil && account.Proxy != nil {
+		proxyURL = account.Proxy.URL()
+	}
+
+	resp, err := s.httpUpstream.DoWithTLS(req, proxyURL, account.ID, account.Concurrency, account.IsTLSFingerprintEnabled())
+	if err != nil {
+		return s.sendErrorAndEnd(c, fmt.Sprintf("Request failed: %s", err.Error()))
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return s.sendErrorAndEnd(c, fmt.Sprintf("API returned %d: %s", resp.StatusCode, string(body)))
+	}
+
+	if isOAuth {
+		return s.processOpenAIImageStream(c, resp.Body)
+	}
+	return s.processOpenAIImageJSONResponse(c, resp.Body)
 }
 
 // testGeminiAccountConnection tests a Gemini account's connection
@@ -827,6 +936,64 @@ func (s *AccountTestService) processOpenAIStream(c *gin.Context, body io.Reader)
 			return s.sendErrorAndEnd(c, errorMsg)
 		}
 	}
+}
+
+func (s *AccountTestService) processOpenAIImageJSONResponse(c *gin.Context, body io.Reader) error {
+	payload, err := io.ReadAll(body)
+	if err != nil {
+		return s.sendErrorAndEnd(c, fmt.Sprintf("Failed to read response: %s", err.Error()))
+	}
+	if !gjson.ValidBytes(payload) {
+		return s.sendErrorAndEnd(c, "Invalid image response")
+	}
+
+	data := gjson.GetBytes(payload, "data")
+	if !data.Exists() || !data.IsArray() || len(data.Array()) == 0 {
+		return s.sendErrorAndEnd(c, "Image generation returned no data")
+	}
+
+	for _, item := range data.Array() {
+		b64 := strings.TrimSpace(item.Get("b64_json").String())
+		url := strings.TrimSpace(item.Get("url").String())
+		if b64 == "" && url == "" {
+			continue
+		}
+		mimeType := openAIImageOutputMIMEType(gjson.GetBytes(payload, "output_format").String())
+		if url == "" {
+			url = "data:" + mimeType + ";base64," + b64
+		}
+		s.sendEvent(c, TestEvent{Type: "image", ImageURL: url, MimeType: mimeType})
+	}
+
+	s.sendEvent(c, TestEvent{Type: "test_complete", Success: true})
+	return nil
+}
+
+func (s *AccountTestService) processOpenAIImageStream(c *gin.Context, body io.Reader) error {
+	payload, err := io.ReadAll(body)
+	if err != nil {
+		return s.sendErrorAndEnd(c, fmt.Sprintf("Failed to read stream: %s", err.Error()))
+	}
+
+	results, _, _, _, _, err := collectOpenAIImagesFromResponsesBody(payload)
+	if err != nil {
+		return s.sendErrorAndEnd(c, err.Error())
+	}
+	if len(results) == 0 {
+		return s.sendErrorAndEnd(c, "Image generation returned no data")
+	}
+
+	for _, result := range results {
+		mimeType := openAIImageOutputMIMEType(result.OutputFormat)
+		s.sendEvent(c, TestEvent{
+			Type:     "image",
+			ImageURL: "data:" + mimeType + ";base64," + result.Result,
+			MimeType: mimeType,
+		})
+	}
+
+	s.sendEvent(c, TestEvent{Type: "test_complete", Success: true})
+	return nil
 }
 
 // sendEvent sends a SSE event to the client

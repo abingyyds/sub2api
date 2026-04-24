@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/require"
 )
 
 type stubOpenAIAccountRepo struct {
@@ -807,7 +809,7 @@ func TestOpenAIStreamingTimeout(t *testing.T) {
 	}
 
 	start := time.Now()
-	_, err := svc.handleStreamingResponse(c.Request.Context(), resp, c, &Account{ID: 1}, start, "model", "model")
+	_, err := svc.handleStreamingResponse(c.Request.Context(), resp, c, &Account{ID: 1}, start, "model", "model", OpenAIEndpointResponses)
 	_ = pw.Close()
 	_ = pr.Close()
 
@@ -848,7 +850,7 @@ func TestOpenAIStreamingTooLong(t *testing.T) {
 		_, _ = pw.Write([]byte(payload))
 	}()
 
-	_, err := svc.handleStreamingResponse(c.Request.Context(), resp, c, &Account{ID: 2}, time.Now(), "model", "model")
+	_, err := svc.handleStreamingResponse(c.Request.Context(), resp, c, &Account{ID: 2}, time.Now(), "model", "model", OpenAIEndpointResponses)
 	_ = pr.Close()
 
 	if !errors.Is(err, bufio.ErrTooLong) {
@@ -879,7 +881,7 @@ func TestOpenAINonStreamingContentTypePassThrough(t *testing.T) {
 		Header:     http.Header{"Content-Type": []string{"application/vnd.test+json"}},
 	}
 
-	_, err := svc.handleNonStreamingResponse(c.Request.Context(), resp, c, &Account{}, "model", "model")
+	_, err := svc.handleNonStreamingResponse(c.Request.Context(), resp, c, &Account{}, "model", "model", OpenAIEndpointResponses)
 	if err != nil {
 		t.Fatalf("handleNonStreamingResponse error: %v", err)
 	}
@@ -909,7 +911,7 @@ func TestOpenAINonStreamingContentTypeDefault(t *testing.T) {
 		Header:     http.Header{},
 	}
 
-	_, err := svc.handleNonStreamingResponse(c.Request.Context(), resp, c, &Account{}, "model", "model")
+	_, err := svc.handleNonStreamingResponse(c.Request.Context(), resp, c, &Account{}, "model", "model", OpenAIEndpointResponses)
 	if err != nil {
 		t.Fatalf("handleNonStreamingResponse error: %v", err)
 	}
@@ -953,7 +955,7 @@ func TestOpenAIStreamingHeadersOverride(t *testing.T) {
 		_, _ = pw.Write([]byte("data: {}\n\n"))
 	}()
 
-	_, err := svc.handleStreamingResponse(c.Request.Context(), resp, c, &Account{ID: 1}, time.Now(), "model", "model")
+	_, err := svc.handleStreamingResponse(c.Request.Context(), resp, c, &Account{ID: 1}, time.Now(), "model", "model", OpenAIEndpointResponses)
 	_ = pr.Close()
 	if err != nil {
 		t.Fatalf("handleStreamingResponse error: %v", err)
@@ -989,7 +991,7 @@ func TestOpenAIInvalidBaseURLWhenAllowlistDisabled(t *testing.T) {
 		Credentials: map[string]any{"base_url": "://invalid-url"},
 	}
 
-	_, err := svc.buildUpstreamRequest(c.Request.Context(), c, account, []byte("{}"), "token", false, "", false)
+	_, err := svc.buildUpstreamRequest(c.Request.Context(), c, account, []byte("{}"), "token", false, "", false, OpenAIEndpointResponses, "application/json")
 	if err == nil {
 		t.Fatalf("expected error for invalid base_url when allowlist disabled")
 	}
@@ -1052,4 +1054,125 @@ func TestOpenAIValidateUpstreamBaseURLEnabledEnforcesAllowlist(t *testing.T) {
 	if _, err := svc.validateUpstreamBaseURL("https://evil.com"); err == nil {
 		t.Fatalf("expected non-allowlisted host to fail")
 	}
+}
+
+func TestParseOpenAIRequestPayloadMultipart(t *testing.T) {
+	var buf bytes.Buffer
+	writer := multipart.NewWriter(&buf)
+	require.NoError(t, writer.WriteField("model", "gpt-image-2"))
+	require.NoError(t, writer.WriteField("size", "1536x1024"))
+	require.NoError(t, writer.WriteField("stream", "true"))
+
+	part, err := writer.CreateFormFile("image", "cat.png")
+	require.NoError(t, err)
+	_, err = part.Write([]byte("png-bytes"))
+	require.NoError(t, err)
+	require.NoError(t, writer.Close())
+
+	payload, err := parseOpenAIRequestPayload(buf.Bytes(), writer.FormDataContentType())
+	require.NoError(t, err)
+	require.Equal(t, "gpt-image-2", payload.Model)
+	require.True(t, payload.Stream)
+	require.Equal(t, "2K", payload.ImageSize)
+	require.NotNil(t, payload.MultipartBody)
+
+	rebuiltBody, rebuiltType, err := payload.MultipartBody.rebuildBody(map[string]string{"model": "gpt-image-2-2026-04-21"})
+	require.NoError(t, err)
+	rebuiltPayload, err := parseOpenAIRequestPayload(rebuiltBody, rebuiltType)
+	require.NoError(t, err)
+	require.Equal(t, "gpt-image-2-2026-04-21", rebuiltPayload.Model)
+	require.Equal(t, "2K", rebuiltPayload.ImageSize)
+}
+
+func TestOpenAIBuildUpstreamRequestImageEndpoint(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	svc := &OpenAIGatewayService{}
+
+	rec := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(rec)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/images/generations", nil)
+
+	account := &Account{
+		Platform: PlatformOpenAI,
+		Type:     AccountTypeAPIKey,
+	}
+
+	req, err := svc.buildUpstreamRequest(c.Request.Context(), c, account, []byte("{}"), "token", false, "", false, OpenAIEndpointImagesGenerations, "application/json")
+	require.NoError(t, err)
+	require.Equal(t, "https://api.openai.com/v1/images/generations", req.URL.String())
+	require.Equal(t, "application/json", req.Header.Get("content-type"))
+}
+
+func TestOpenAIHandleNonStreamingImageResponse(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	cfg := &config.Config{
+		Security: config.SecurityConfig{
+			ResponseHeaders: config.ResponseHeaderConfig{Enabled: false},
+		},
+	}
+	svc := &OpenAIGatewayService{cfg: cfg}
+
+	rec := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(rec)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/images/generations", nil)
+
+	body := []byte(`{
+		"created": 1740000000,
+		"size": "1536x1024",
+		"data": [
+			{"b64_json": "a"},
+			{"b64_json": "b"}
+		],
+		"usage": {
+			"input_tokens": 12,
+			"output_tokens": 34
+		}
+	}`)
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Body:       io.NopCloser(bytes.NewReader(body)),
+		Header:     http.Header{"Content-Type": []string{"application/json"}},
+	}
+
+	meta, err := svc.handleNonStreamingResponse(c.Request.Context(), resp, c, &Account{}, "gpt-image-2", "gpt-image-2", OpenAIEndpointImagesGenerations)
+	require.NoError(t, err)
+	require.Equal(t, 2, meta.ImageCount)
+	require.Equal(t, "2K", meta.ImageSize)
+	require.Equal(t, 12, meta.Usage.InputTokens)
+	require.Equal(t, 34, meta.Usage.OutputTokens)
+	require.Contains(t, rec.Header().Get("Content-Type"), "application/json")
+}
+
+func TestParseOpenAIImagesRequestDefaultsModel(t *testing.T) {
+	req, err := ParseOpenAIImagesRequest([]byte(`{"prompt":"cat sticker"}`), "application/json", OpenAIEndpointImagesGenerations)
+	require.NoError(t, err)
+	require.Equal(t, DefaultOpenAIImageModel, req.Model)
+	require.Equal(t, "cat sticker", req.Prompt)
+	require.Equal(t, 1, req.N)
+}
+
+func TestBuildOpenAIImagesResponsesRequest(t *testing.T) {
+	body, err := buildOpenAIImagesResponsesRequest(&OpenAIImagesRequest{
+		Endpoint:       OpenAIEndpointImagesGenerations,
+		Model:          DefaultOpenAIImageModel,
+		Prompt:         "cat sticker",
+		ResponseFormat: "b64_json",
+		Size:           "1024x1024",
+	}, DefaultOpenAIImageModel)
+	require.NoError(t, err)
+	require.Contains(t, string(body), `"type":"image_generation"`)
+	require.Contains(t, string(body), `"text":"cat sticker"`)
+	require.Contains(t, string(body), `"model":"gpt-image-2"`)
+}
+
+func TestCollectOpenAIImagesFromResponsesBody(t *testing.T) {
+	body := []byte("data: " + `{"type":"response.completed","response":{"created_at":1740000000,"tool_usage":{"image_gen":{"input_tokens":12,"output_tokens":34}},"output":[{"type":"image_generation_call","result":"abc123","output_format":"png","size":"1024x1024","quality":"medium"}]}}` + "\n\n")
+	results, createdAt, usageRaw, firstMeta, foundFinal, err := collectOpenAIImagesFromResponsesBody(body)
+	require.NoError(t, err)
+	require.True(t, foundFinal)
+	require.Equal(t, int64(1740000000), createdAt)
+	require.Len(t, results, 1)
+	require.Equal(t, "abc123", results[0].Result)
+	require.Equal(t, "png", firstMeta.OutputFormat)
+	require.JSONEq(t, `{"input_tokens":12,"output_tokens":34}`, string(usageRaw))
 }

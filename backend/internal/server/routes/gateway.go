@@ -47,6 +47,8 @@ func RegisterGatewayRoutes(
 	{
 		openaiV1.POST("/responses", h.OpenAIGateway.Responses)
 		openaiV1.POST("/chat/completions", h.OpenAIGateway.ChatCompletions)
+		openaiV1.POST("/images/generations", h.OpenAIGateway.ImagesGenerations)
+		openaiV1.POST("/images/edits", h.OpenAIGateway.ImagesEdits)
 	}
 
 	// Gemini 原生 API 兼容层（Gemini SDK/CLI 直连）
