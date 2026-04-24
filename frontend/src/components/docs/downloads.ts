@@ -21,7 +21,7 @@ export type DownloadTool = {
   groups: DownloadGroup[]
 }
 
-const gh = (url: string) => `https://ghfast.top/${url}`
+const localDownload = (id: string) => `/downloads/${id}`
 
 export const nodejsLtsVersion = 'v24.15.0'
 
@@ -84,12 +84,12 @@ export const tutorialDownloadTools: DownloadTool[] = [
         links: [
           {
             label: 'Windows x64 MSI',
-            href: gh('https://github.com/farion1231/cc-switch/releases/download/v3.13.0/CC-Switch-v3.13.0-Windows.msi'),
+            href: localDownload('cc-switch-windows-x64-msi'),
             recommended: true,
           },
           {
             label: 'Windows x64 Portable ZIP',
-            href: gh('https://github.com/farion1231/cc-switch/releases/download/v3.13.0/CC-Switch-v3.13.0-Windows-Portable.zip'),
+            href: localDownload('cc-switch-windows-x64-portable-zip'),
           },
         ],
       },
@@ -98,7 +98,7 @@ export const tutorialDownloadTools: DownloadTool[] = [
         links: [
           {
             label: 'macOS Universal DMG',
-            href: gh('https://github.com/farion1231/cc-switch/releases/download/v3.13.0/CC-Switch-v3.13.0-macOS.dmg'),
+            href: localDownload('cc-switch-macos-universal-dmg'),
             recommended: true,
           },
         ],
@@ -108,20 +108,20 @@ export const tutorialDownloadTools: DownloadTool[] = [
         links: [
           {
             label: 'Linux x64 DEB',
-            href: gh('https://github.com/farion1231/cc-switch/releases/download/v3.13.0/CC-Switch-v3.13.0-Linux-x86_64.deb'),
+            href: localDownload('cc-switch-linux-x64-deb'),
             recommended: true,
           },
           {
             label: 'Linux ARM64 DEB',
-            href: gh('https://github.com/farion1231/cc-switch/releases/download/v3.13.0/CC-Switch-v3.13.0-Linux-arm64.deb'),
+            href: localDownload('cc-switch-linux-arm64-deb'),
           },
           {
             label: 'Linux x64 AppImage',
-            href: gh('https://github.com/farion1231/cc-switch/releases/download/v3.13.0/CC-Switch-v3.13.0-Linux-x86_64.AppImage'),
+            href: localDownload('cc-switch-linux-x64-appimage'),
           },
           {
             label: 'Linux ARM64 AppImage',
-            href: gh('https://github.com/farion1231/cc-switch/releases/download/v3.13.0/CC-Switch-v3.13.0-Linux-arm64.AppImage'),
+            href: localDownload('cc-switch-linux-arm64-appimage'),
           },
         ],
       },
@@ -140,12 +140,12 @@ export const tutorialDownloadTools: DownloadTool[] = [
         links: [
           {
             label: 'Windows x64 EXE',
-            href: gh('https://github.com/openai/codex/releases/download/rust-v0.122.0/codex-x86_64-pc-windows-msvc.exe'),
+            href: localDownload('codex-windows-x64-exe'),
             recommended: true,
           },
           {
             label: 'Windows ARM64 EXE',
-            href: gh('https://github.com/openai/codex/releases/download/rust-v0.122.0/codex-aarch64-pc-windows-msvc.exe'),
+            href: localDownload('codex-windows-arm64-exe'),
           },
         ],
       },
@@ -154,12 +154,12 @@ export const tutorialDownloadTools: DownloadTool[] = [
         links: [
           {
             label: 'macOS Apple Silicon DMG',
-            href: gh('https://github.com/openai/codex/releases/download/rust-v0.122.0/codex-aarch64-apple-darwin.dmg'),
+            href: localDownload('codex-macos-arm64-dmg'),
             recommended: true,
           },
           {
             label: 'macOS Intel DMG',
-            href: gh('https://github.com/openai/codex/releases/download/rust-v0.122.0/codex-x86_64-apple-darwin.dmg'),
+            href: localDownload('codex-macos-intel-dmg'),
           },
         ],
       },
@@ -168,12 +168,12 @@ export const tutorialDownloadTools: DownloadTool[] = [
         links: [
           {
             label: 'Linux x64 TAR.GZ',
-            href: gh('https://github.com/openai/codex/releases/download/rust-v0.122.0/codex-x86_64-unknown-linux-gnu.tar.gz'),
+            href: localDownload('codex-linux-x64-tar-gz'),
             recommended: true,
           },
           {
             label: 'Linux ARM64 TAR.GZ',
-            href: gh('https://github.com/openai/codex/releases/download/rust-v0.122.0/codex-aarch64-unknown-linux-gnu.tar.gz'),
+            href: localDownload('codex-linux-arm64-tar-gz'),
           },
         ],
       },
@@ -192,16 +192,16 @@ export const tutorialDownloadTools: DownloadTool[] = [
         links: [
           {
             label: 'Windows x64 Setup EXE',
-            href: gh('https://github.com/CherryHQ/cherry-studio/releases/download/v1.9.2/Cherry-Studio-1.9.2-x64-setup.exe'),
+            href: localDownload('cherry-studio-windows-x64-setup-exe'),
             recommended: true,
           },
           {
             label: 'Windows x64 Portable EXE',
-            href: gh('https://github.com/CherryHQ/cherry-studio/releases/download/v1.9.2/Cherry-Studio-1.9.2-x64-portable.exe'),
+            href: localDownload('cherry-studio-windows-x64-portable-exe'),
           },
           {
             label: 'Windows ARM64 Setup EXE',
-            href: gh('https://github.com/CherryHQ/cherry-studio/releases/download/v1.9.2/Cherry-Studio-1.9.2-arm64-setup.exe'),
+            href: localDownload('cherry-studio-windows-arm64-setup-exe'),
           },
         ],
       },
@@ -210,12 +210,12 @@ export const tutorialDownloadTools: DownloadTool[] = [
         links: [
           {
             label: 'macOS Intel DMG',
-            href: gh('https://github.com/CherryHQ/cherry-studio/releases/download/v1.9.2/Cherry-Studio-1.9.2-x64.dmg'),
+            href: localDownload('cherry-studio-macos-intel-dmg'),
             recommended: true,
           },
           {
             label: 'macOS Apple Silicon DMG',
-            href: gh('https://github.com/CherryHQ/cherry-studio/releases/download/v1.9.2/Cherry-Studio-1.9.2-arm64.dmg'),
+            href: localDownload('cherry-studio-macos-arm64-dmg'),
           },
         ],
       },
@@ -224,20 +224,20 @@ export const tutorialDownloadTools: DownloadTool[] = [
         links: [
           {
             label: 'Linux x64 AppImage',
-            href: gh('https://github.com/CherryHQ/cherry-studio/releases/download/v1.9.2/Cherry-Studio-1.9.2-x86_64.AppImage'),
+            href: localDownload('cherry-studio-linux-x64-appimage'),
             recommended: true,
           },
           {
             label: 'Linux x64 DEB',
-            href: gh('https://github.com/CherryHQ/cherry-studio/releases/download/v1.9.2/Cherry-Studio-1.9.2-amd64.deb'),
+            href: localDownload('cherry-studio-linux-x64-deb'),
           },
           {
             label: 'Linux ARM64 AppImage',
-            href: gh('https://github.com/CherryHQ/cherry-studio/releases/download/v1.9.2/Cherry-Studio-1.9.2-arm64.AppImage'),
+            href: localDownload('cherry-studio-linux-arm64-appimage'),
           },
           {
             label: 'Linux ARM64 DEB',
-            href: gh('https://github.com/CherryHQ/cherry-studio/releases/download/v1.9.2/Cherry-Studio-1.9.2-arm64.deb'),
+            href: localDownload('cherry-studio-linux-arm64-deb'),
           },
         ],
       },
