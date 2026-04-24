@@ -706,10 +706,22 @@ func (s *PricingService) matchByModelFamily(model string) (string, *LiteLLMModel
 
 // matchOpenAIModel OpenAI 模型回退匹配策略
 // 回退顺序：
-// 1. gpt-5.2-codex -> gpt-5.2（去掉后缀如 -codex, -mini, -max 等）
-// 2. gpt-5.2-20251222 -> gpt-5.2（去掉日期版本号）
-// 3. 最终回退到 DefaultTestModel (gpt-5.1-codex)
+// 1. gpt-5.3-codex-spark* -> gpt-5.3-codex / DefaultTestModel
+// 2. gpt-5.2-codex -> gpt-5.2（去掉后缀如 -codex, -mini, -max 等）
+// 3. gpt-5.2-20251222 -> gpt-5.2（去掉日期版本号）
+// 4. gpt-5.3-codex -> gpt-5.2-codex
+// 5. gpt-image-* -> gpt-image-2 / gpt-image-1.5 / gpt-image-1
+// 6. 最终回退到 DefaultTestModel
 func (s *PricingService) matchOpenAIModel(model string) (string, *LiteLLMModelPricing) {
+	if strings.HasPrefix(model, "gpt-5.3-codex-spark") {
+		for _, candidate := range []string{"gpt-5.3-codex", strings.ToLower(openai.DefaultTestModel)} {
+			if pricing, ok := s.pricingData[candidate]; ok {
+				log.Printf("[Pricing] OpenAI fallback matched %s -> %s", model, candidate)
+				return candidate, pricing
+			}
+		}
+	}
+
 	// 尝试的回退变体
 	variants := s.generateOpenAIModelVariants(model, openAIModelDatePattern)
 
@@ -717,6 +729,22 @@ func (s *PricingService) matchOpenAIModel(model string) (string, *LiteLLMModelPr
 		if pricing, ok := s.pricingData[variant]; ok {
 			log.Printf("[Pricing] OpenAI fallback matched %s -> %s", model, variant)
 			return variant, pricing
+		}
+	}
+
+	if strings.HasPrefix(model, "gpt-5.3-codex") {
+		if pricing, ok := s.pricingData["gpt-5.2-codex"]; ok {
+			log.Printf("[Pricing] OpenAI fallback matched %s -> %s", model, "gpt-5.2-codex")
+			return "gpt-5.2-codex", pricing
+		}
+	}
+
+	if isOpenAIImageGenerationModel(model) {
+		for _, candidate := range []string{"gpt-image-2", "gpt-image-1.5", "gpt-image-1"} {
+			if pricing, ok := s.pricingData[candidate]; ok {
+				log.Printf("[Pricing] OpenAI image fallback matched %s -> %s", model, candidate)
+				return candidate, pricing
+			}
 		}
 	}
 

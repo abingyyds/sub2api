@@ -1,12 +1,15 @@
 package handler
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log"
+	"mime"
+	"mime/multipart"
 	"net/http"
 	"strings"
 	"time"
@@ -57,17 +60,27 @@ func NewOpenAIGatewayHandler(
 // Responses handles OpenAI Responses API endpoint
 // POST /openai/v1/responses
 func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
-	h.handleRequest(c, false)
+	h.handleRequest(c, service.OpenAIEndpointResponses)
 }
 
 // ChatCompletions handles OpenAI Chat Completions compatible endpoint.
 // POST /openai/v1/chat/completions
 func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
-	h.handleRequest(c, true)
+	h.handleRequest(c, service.OpenAIEndpointChatCompletions)
 }
 
-func (h *OpenAIGatewayHandler) handleRequest(c *gin.Context, chatCompletionsMode bool) {
-	if chatCompletionsMode {
+// ImagesGenerations handles OpenAI Images API generations endpoint.
+func (h *OpenAIGatewayHandler) ImagesGenerations(c *gin.Context) {
+	h.handleRequest(c, service.OpenAIEndpointImagesGenerations)
+}
+
+// ImagesEdits handles OpenAI Images API edits endpoint.
+func (h *OpenAIGatewayHandler) ImagesEdits(c *gin.Context) {
+	h.handleRequest(c, service.OpenAIEndpointImagesEdits)
+}
+
+func (h *OpenAIGatewayHandler) handleRequest(c *gin.Context, endpoint string) {
+	if endpoint == service.OpenAIEndpointChatCompletions {
 		service.EnableOpenAIChatCompletionsMode(c)
 	}
 
@@ -102,49 +115,60 @@ func (h *OpenAIGatewayHandler) handleRequest(c *gin.Context, chatCompletionsMode
 
 	setOpsRequestContext(c, "", false, body)
 
-	// Parse request body to map for potential modification
-	var reqBody map[string]any
-	if err := json.Unmarshal(body, &reqBody); err != nil {
-		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", "Failed to parse request body")
+	reqBody, reqModel, reqStream, normalizedBody, err := parseOpenAIRequestMetadata(body, c.GetHeader("Content-Type"), endpoint)
+	if err != nil {
+		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", err.Error())
 		return
 	}
-
-	if _, hasMessages := reqBody["messages"]; hasMessages {
-		if _, err := service.ConvertChatCompletionsRequest(reqBody); err != nil {
-			h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", err.Error())
-			return
-		}
-		body, err = json.Marshal(reqBody)
-		if err != nil {
-			h.errorResponse(c, http.StatusInternalServerError, "api_error", "Failed to process request")
-			return
-		}
+	if len(normalizedBody) > 0 {
+		body = normalizedBody
 	}
 
-	// Extract model and stream
-	reqModel, _ := reqBody["model"].(string)
-	reqStream, _ := reqBody["stream"].(bool)
-
-	// 验证 model 必填
-	if reqModel == "" {
-		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", "model is required")
-		return
+	if service.IsOpenAIImageEndpoint(endpoint) && strings.TrimSpace(reqModel) == "" {
+		reqModel = service.DefaultOpenAIImageModel
+		if reqBody != nil {
+			reqBody["model"] = reqModel
+			body, err = json.Marshal(reqBody)
+			if err != nil {
+				h.errorResponse(c, http.StatusInternalServerError, "api_error", "Failed to process request")
+				return
+			}
+		}
 	}
 
 	userAgent := c.GetHeader("User-Agent")
-	if !openai.IsCodexCLIRequest(userAgent) {
-		existingInstructions, _ := reqBody["instructions"].(string)
-		if strings.TrimSpace(existingInstructions) == "" {
-			if instructions := strings.TrimSpace(service.GetOpenCodeInstructions()); instructions != "" {
-				reqBody["instructions"] = instructions
-				// Re-serialize body
-				body, err = json.Marshal(reqBody)
-				if err != nil {
-					h.errorResponse(c, http.StatusInternalServerError, "api_error", "Failed to process request")
-					return
+	if reqBody != nil {
+		if _, hasMessages := reqBody["messages"]; hasMessages {
+			if _, err := service.ConvertChatCompletionsRequest(reqBody); err != nil {
+				h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", err.Error())
+				return
+			}
+			body, err = json.Marshal(reqBody)
+			if err != nil {
+				h.errorResponse(c, http.StatusInternalServerError, "api_error", "Failed to process request")
+				return
+			}
+		}
+
+		if !service.IsOpenAIImageEndpoint(endpoint) && !openai.IsCodexCLIRequest(userAgent) {
+			existingInstructions, _ := reqBody["instructions"].(string)
+			if strings.TrimSpace(existingInstructions) == "" {
+				if instructions := strings.TrimSpace(service.GetOpenCodeInstructions()); instructions != "" {
+					reqBody["instructions"] = instructions
+					body, err = json.Marshal(reqBody)
+					if err != nil {
+						h.errorResponse(c, http.StatusInternalServerError, "api_error", "Failed to process request")
+						return
+					}
 				}
 			}
 		}
+	}
+
+	// 验证 model 必填
+	if strings.TrimSpace(reqModel) == "" {
+		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", "model is required")
+		return
 	}
 
 	setOpsRequestContext(c, reqModel, reqStream, body)
@@ -152,7 +176,7 @@ func (h *OpenAIGatewayHandler) handleRequest(c *gin.Context, chatCompletionsMode
 	// 提前校验 function_call_output 是否具备可关联上下文，避免上游 400。
 	// 要求 previous_response_id，或 input 内存在带 call_id 的 tool_call/function_call，
 	// 或带 id 且与 call_id 匹配的 item_reference。
-	if service.HasFunctionCallOutput(reqBody) {
+	if reqBody != nil && service.HasFunctionCallOutput(reqBody) {
 		previousResponseID, _ := reqBody["previous_response_id"].(string)
 		if strings.TrimSpace(previousResponseID) == "" && !service.HasToolCallContext(reqBody) {
 			if service.HasFunctionCallOutputMissingCallID(reqBody) {
@@ -322,7 +346,6 @@ func (h *OpenAIGatewayHandler) handleRequest(c *gin.Context, chatCompletionsMode
 		}
 
 		// 捕获请求信息（用于异步记录，避免在 goroutine 中访问 gin.Context）
-		userAgent := c.GetHeader("User-Agent")
 		clientIP := ip.GetClientIP(c)
 
 		// Async record usage
@@ -343,6 +366,71 @@ func (h *OpenAIGatewayHandler) handleRequest(c *gin.Context, chatCompletionsMode
 		}(result, account, userAgent, clientIP)
 		return
 	}
+}
+
+func parseOpenAIRequestMetadata(body []byte, contentType string, endpoint string) (map[string]any, string, bool, []byte, error) {
+	mediaType := strings.ToLower(strings.TrimSpace(contentType))
+	if mediaType != "" {
+		parsedMediaType, _, err := mime.ParseMediaType(contentType)
+		if err == nil {
+			mediaType = strings.ToLower(parsedMediaType)
+		}
+	}
+
+	if service.IsOpenAIImageEndpoint(endpoint) && strings.HasPrefix(mediaType, "multipart/form-data") {
+		model, stream, err := extractMultipartRequestMetadata(body, contentType)
+		return nil, model, stream, body, err
+	}
+
+	var reqBody map[string]any
+	if err := json.Unmarshal(body, &reqBody); err != nil {
+		return nil, "", false, nil, errors.New("Failed to parse request body")
+	}
+	reqModel, _ := reqBody["model"].(string)
+	reqStream, _ := reqBody["stream"].(bool)
+	return reqBody, reqModel, reqStream, body, nil
+}
+
+func extractMultipartRequestMetadata(body []byte, contentType string) (string, bool, error) {
+	mediaType, params, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return "", false, errors.New("Failed to parse multipart request body")
+	}
+	if !strings.EqualFold(mediaType, "multipart/form-data") {
+		return "", false, errors.New("Failed to parse multipart request body")
+	}
+	boundary := strings.TrimSpace(params["boundary"])
+	if boundary == "" {
+		return "", false, errors.New("Failed to parse multipart request body")
+	}
+
+	reader := multipart.NewReader(bytes.NewReader(body), boundary)
+	var model string
+	stream := false
+	for {
+		part, err := reader.NextPart()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			return "", false, errors.New("Failed to parse multipart request body")
+		}
+		partData, readErr := io.ReadAll(part)
+		_ = part.Close()
+		if readErr != nil {
+			return "", false, errors.New("Failed to parse multipart request body")
+		}
+		if part.FileName() != "" {
+			continue
+		}
+		switch part.FormName() {
+		case "model":
+			model = strings.TrimSpace(string(partData))
+		case "stream":
+			stream = strings.EqualFold(strings.TrimSpace(string(partData)), "true")
+		}
+	}
+	return model, stream, nil
 }
 
 // handleConcurrencyError handles concurrency-related errors with proper 429 response
