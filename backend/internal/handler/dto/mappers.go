@@ -201,6 +201,7 @@ func AccountFromServiceShallow(a *service.Account) *Account {
 		SessionWindowStart:      a.SessionWindowStart,
 		SessionWindowEnd:        a.SessionWindowEnd,
 		SessionWindowStatus:     a.SessionWindowStatus,
+		RequestBodyPassthrough:  a.IsRequestBodyPassthroughEnabled(),
 		GroupIDs:                a.GroupIDs,
 	}
 

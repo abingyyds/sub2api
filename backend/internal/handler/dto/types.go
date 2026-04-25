@@ -167,6 +167,9 @@ type Account struct {
 	// 从 extra 字段提取，方便前端显示和编辑
 	EnableSessionIDMasking *bool `json:"session_id_masking_enabled,omitempty"`
 
+	// 请求体透传：启用后网关尽量不改写请求体，直接转发客户端原始 body
+	RequestBodyPassthrough bool `json:"request_body_passthrough"`
+
 	Proxy         *Proxy         `json:"proxy,omitempty"`
 	AccountGroups []AccountGroup `json:"account_groups,omitempty"`
 

@@ -643,6 +643,20 @@ func (a *Account) IsSessionIDMaskingEnabled() bool {
 	return false
 }
 
+// IsRequestBodyPassthroughEnabled checks whether request body passthrough is enabled for this account.
+// When enabled, gateway services should forward the client request body without gateway-side rewrites.
+func (a *Account) IsRequestBodyPassthroughEnabled() bool {
+	if a == nil || a.Extra == nil {
+		return false
+	}
+	if v, ok := a.Extra["request_body_passthrough"]; ok {
+		if enabled, ok := v.(bool); ok {
+			return enabled
+		}
+	}
+	return false
+}
+
 // GetWindowCostLimit 获取 5h 窗口费用阈值（美元）
 // 返回 0 表示未启用
 func (a *Account) GetWindowCostLimit() float64 {

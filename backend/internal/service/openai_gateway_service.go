@@ -958,6 +958,7 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 	originalModel := reqPayload.Model
 
 	isCodexCLI := openai.IsCodexCLIRequest(c.GetHeader("User-Agent"))
+	requestBodyPassthrough := account.IsRequestBodyPassthroughEnabled()
 
 	if IsOpenAIImageEndpoint(endpoint) && account.Type == AccountTypeOAuth {
 		parsedImagesReq, parseErr := ParseOpenAIImagesRequest(body, reqPayload.ContentType, endpoint)
@@ -969,7 +970,7 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 
 	// 对所有请求执行模型映射（包含 Codex CLI）。
 	mappedModel := account.GetMappedModel(reqPayload.Model)
-	if mappedModel != reqPayload.Model {
+	if mappedModel != reqPayload.Model && !requestBodyPassthrough {
 		log.Printf("[OpenAI] Model mapping applied: %s -> %s (account: %s, isCodexCLI: %v)", reqPayload.Model, mappedModel, account.Name, isCodexCLI)
 		if reqPayload.JSONBody != nil {
 			reqPayload.JSONBody["model"] = mappedModel
@@ -980,7 +981,7 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 	// OAuth 账号走 ChatGPT internal API，需要把客户端别名规范化成内部 Codex 模型名。
 	// API Key 账号走 OpenAI Platform API，应保留用户请求/显式映射后的模型名，避免把
 	// 平台模型（如 gpt-5-codex）改写成另一个内部模型后触发上游 404。
-	if currentModel := firstNonEmptyModel(reqPayload, mappedModel); account.Type == AccountTypeOAuth && currentModel != "" {
+	if currentModel := firstNonEmptyModel(reqPayload, mappedModel); account.Type == AccountTypeOAuth && currentModel != "" && !requestBodyPassthrough {
 		normalizedModel := normalizeCodexModel(currentModel)
 		if normalizedModel != "" && normalizedModel != currentModel {
 			log.Printf("[OpenAI] Codex model normalization: %s -> %s (account: %s, type: %s, isCodexCLI: %v)",
@@ -994,7 +995,7 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 	}
 
 	// 规范化 reasoning.effort 参数（minimal -> none），与上游允许值对齐。
-	if reasoning, ok := reqPayload.JSONBody["reasoning"].(map[string]any); ok {
+	if reasoning, ok := reqPayload.JSONBody["reasoning"].(map[string]any); ok && !requestBodyPassthrough {
 		if effort, ok := reasoning["effort"].(string); ok && effort == "minimal" {
 			reasoning["effort"] = "none"
 			bodyModified = true
@@ -1002,7 +1003,7 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 		}
 	}
 
-	if endpoint == OpenAIEndpointResponses && account.Type == AccountTypeOAuth && !isCodexCLI {
+	if endpoint == OpenAIEndpointResponses && account.Type == AccountTypeOAuth && !isCodexCLI && !requestBodyPassthrough {
 		codexResult := applyCodexOAuthTransform(reqPayload.JSONBody)
 		if codexResult.Modified {
 			bodyModified = true
@@ -1016,7 +1017,7 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 	}
 
 	// Handle max_output_tokens based on platform and account type
-	if reqPayload.JSONBody != nil && !isCodexCLI {
+	if reqPayload.JSONBody != nil && !isCodexCLI && !requestBodyPassthrough {
 		if maxOutputTokens, hasMaxOutputTokens := reqPayload.JSONBody["max_output_tokens"]; hasMaxOutputTokens {
 			switch account.Platform {
 			case PlatformOpenAI:
