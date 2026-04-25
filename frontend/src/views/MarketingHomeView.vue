@@ -211,7 +211,7 @@
                 </li>
                 <li class="flex items-start gap-3">
                   <Icon name="dollar" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white text-base">无损计费机制：</strong>拒绝倍率陷阱，每一分实打实可用</div>
+                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white text-base">透明计费机制：</strong>按量清晰结算，每一分实打实可用</div>
                 </li>
                 <li class="flex items-start gap-3">
                   <Icon name="shield" size="sm" class="text-blue-500 mt-0.5 flex-shrink-0" />
@@ -421,7 +421,7 @@ const faqs = [
   },
   {
     question: '如何计费？有最低消费吗？',
-    answer: '无最低消费。购买的月卡额度直接存入账户，0 倍率损耗，每一分钱都实打实用于 Token 消耗。'
+    answer: '无最低消费。购买的月卡额度直接存入账户，按量清晰结算，每一分钱都实打实用于 Token 消耗。'
   },
   {
     question: '服务的稳定性如何？会经常 429 吗？',

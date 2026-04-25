@@ -24,6 +24,7 @@
           :name="group.name"
           :subscription-type="group.subscription_type"
           :rate-multiplier="group.rate_multiplier"
+          show-rate
           class="min-w-0 flex-1"
         />
         <span class="shrink-0 text-xs text-gray-400">{{ group.account_count || 0 }}</span>

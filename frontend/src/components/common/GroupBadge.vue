@@ -33,7 +33,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   subscriptionType: 'standard',
-  showRate: true,
+  showRate: false,
   daysRemaining: null
 })
 
