@@ -1522,6 +1522,9 @@ export default {
       interceptWarmupRequests: 'Intercept Warmup Requests',
       interceptWarmupRequestsDesc:
         'When enabled, warmup requests like title generation will return mock responses without consuming upstream tokens',
+      requestBodyPassthrough: 'Request Body Passthrough',
+      requestBodyPassthroughDesc:
+        'When enabled, forward the client request body as-is and skip gateway-side body rewrites such as model mapping and compatibility transforms',
       autoPauseOnExpired: 'Auto Pause On Expired',
       autoPauseOnExpiredDesc: 'When enabled, the account will auto pause scheduling after it expires',
       // Quota control (Anthropic OAuth/SetupToken only)

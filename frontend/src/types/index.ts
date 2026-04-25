@@ -541,6 +541,9 @@ export interface Account {
   // 启用后将在15分钟内固定 metadata.user_id 中的 session ID
   session_id_masking_enabled?: boolean | null
 
+  // 请求体透传：启用后网关尽量不改写请求体，直接转发客户端原始 body
+  request_body_passthrough?: boolean
+
   // 运行时状态（仅当启用对应限制时返回）
   current_window_cost?: number | null // 当前窗口费用
   active_sessions?: number | null // 当前活跃会话数

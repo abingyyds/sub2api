@@ -1654,6 +1654,8 @@ export default {
       errorCodeExists: '该错误码已被选中',
       interceptWarmupRequests: '拦截预热请求',
       interceptWarmupRequestsDesc: '启用后，标题生成等预热请求将返回 mock 响应，不消耗上游 token',
+      requestBodyPassthrough: '请求体透传',
+      requestBodyPassthroughDesc: '启用后将尽量原样转发客户端请求体，跳过模型映射、兼容转换等网关侧请求体改写',
       autoPauseOnExpired: '过期自动暂停调度',
       autoPauseOnExpiredDesc: '启用后，账号过期将自动暂停调度',
       // Quota control (Anthropic OAuth/SetupToken only)

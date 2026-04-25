@@ -1162,6 +1162,33 @@
         </div>
       </div>
 
+      <!-- Request Body Passthrough -->
+      <div class="border-t border-gray-200 pt-4 dark:border-dark-600">
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="input-label mb-0">{{ t('admin.accounts.requestBodyPassthrough') }}</label>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {{ t('admin.accounts.requestBodyPassthroughDesc') }}
+            </p>
+          </div>
+          <button
+            type="button"
+            @click="requestBodyPassthrough = !requestBodyPassthrough"
+            :class="[
+              'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
+              requestBodyPassthrough ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+            ]"
+          >
+            <span
+              :class="[
+                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                requestBodyPassthrough ? 'translate-x-5' : 'translate-x-0'
+              ]"
+            />
+          </button>
+        </div>
+      </div>
+
       <!-- Quota Control Section (Anthropic OAuth/SetupToken only) -->
       <div
         v-if="form.platform === 'anthropic' && accountCategory === 'oauth-based'"
@@ -1909,6 +1936,7 @@ const customErrorCodesEnabled = ref(false)
 const selectedErrorCodes = ref<number[]>([])
 const customErrorCodeInput = ref<number | null>(null)
 const interceptWarmupRequests = ref(false)
+const requestBodyPassthrough = ref(false)
 const autoPauseOnExpired = ref(true)
 const mixedScheduling = ref(false) // For antigravity accounts: enable mixed scheduling
 const tempUnschedEnabled = ref(false)
@@ -2304,6 +2332,7 @@ const resetForm = () => {
   selectedErrorCodes.value = []
   customErrorCodeInput.value = null
   interceptWarmupRequests.value = false
+  requestBodyPassthrough.value = false
   autoPauseOnExpired.value = true
   // Reset quota control state
   windowCostEnabled.value = false
@@ -2385,12 +2414,18 @@ const handleSubmit = async () => {
     return
   }
 
+  const extra: Record<string, unknown> = {}
+  if (requestBodyPassthrough.value) {
+    extra.request_body_passthrough = true
+  }
+
   form.credentials = credentials
 
   submitting.value = true
   try {
     await adminAPI.accounts.create({
       ...form,
+      extra,
       group_ids: form.group_ids,
       auto_pause_on_expired: autoPauseOnExpired.value
     })
@@ -2443,13 +2478,19 @@ const createAccountAndFinish = async (
   if (!applyTempUnschedConfig(credentials)) {
     return
   }
+  const mergedExtra: Record<string, unknown> = { ...(extra || {}) }
+  if (requestBodyPassthrough.value) {
+    mergedExtra.request_body_passthrough = true
+  } else {
+    delete mergedExtra.request_body_passthrough
+  }
   await adminAPI.accounts.create({
     name: form.name,
     notes: form.notes,
     platform,
     type,
     credentials,
-    extra,
+    extra: mergedExtra,
     proxy_id: form.proxy_id,
     concurrency: form.concurrency,
     priority: form.priority,
@@ -2698,6 +2739,12 @@ const handleCookieAuth = async (sessionKey: string) => {
         // Add session ID masking settings
         if (sessionIdMaskingEnabled.value) {
           extra.session_id_masking_enabled = true
+        }
+
+        if (requestBodyPassthrough.value) {
+          extra.request_body_passthrough = true
+        } else {
+          delete extra.request_body_passthrough
         }
 
         const accountName = keys.length > 1 ? `${form.name} #${i + 1}` : form.name

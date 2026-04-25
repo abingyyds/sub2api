@@ -2392,10 +2392,12 @@ func (s *GatewayService) Forward(ctx context.Context, c *gin.Context, account *A
 	body := parsed.Body
 	reqModel := parsed.Model
 	reqStream := parsed.Stream
+	requestBodyPassthrough := account.IsRequestBodyPassthroughEnabled()
 
 	// 智能注入 Claude Code 系统提示词（仅 OAuth/SetupToken 账号需要）
 	// 条件：1) OAuth/SetupToken 账号  2) 不是 Claude Code 客户端  3) 不是 Haiku 模型  4) system 中还没有 Claude Code 提示词
 	if account.IsOAuth() &&
+		!requestBodyPassthrough &&
 		!isClaudeCodeClient(c.GetHeader("User-Agent"), parsed.MetadataUserID) &&
 		!strings.Contains(strings.ToLower(reqModel), "haiku") &&
 		!systemIncludesClaudeCodePrompt(parsed.System) {
@@ -2403,11 +2405,13 @@ func (s *GatewayService) Forward(ctx context.Context, c *gin.Context, account *A
 	}
 
 	// 强制执行 cache_control 块数量限制（最多 4 个）
-	body = enforceCacheControlLimit(body)
+	if !requestBodyPassthrough {
+		body = enforceCacheControlLimit(body)
+	}
 
 	// 应用模型映射（仅对apikey类型账号）
 	originalModel := reqModel
-	if account.Type == AccountTypeAPIKey {
+	if account.Type == AccountTypeAPIKey && !requestBodyPassthrough {
 		mappedModel := account.GetMappedModel(reqModel)
 		if mappedModel != reqModel {
 			// 替换请求体中的模型名
@@ -2814,7 +2818,7 @@ func (s *GatewayService) buildUpstreamRequest(ctx context.Context, c *gin.Contex
 
 	// OAuth账号：应用统一指纹
 	var fingerprint *Fingerprint
-	if account.IsOAuth() && s.identityService != nil {
+	if account.IsOAuth() && s.identityService != nil && !account.IsRequestBodyPassthroughEnabled() {
 		// 1. 获取或创建指纹（包含随机生成的ClientID）
 		fp, err := s.identityService.GetOrCreateFingerprint(ctx, account.ID, c.Request.Header)
 		if err != nil {
@@ -3964,7 +3968,7 @@ func (s *GatewayService) buildCountTokensRequest(ctx context.Context, c *gin.Con
 
 	// OAuth 账号：应用统一指纹和重写 userID
 	// 如果启用了会话ID伪装，会在重写后替换 session 部分为固定值
-	if account.IsOAuth() && s.identityService != nil {
+	if account.IsOAuth() && s.identityService != nil && !account.IsRequestBodyPassthroughEnabled() {
 		fp, err := s.identityService.GetOrCreateFingerprint(ctx, account.ID, c.Request.Header)
 		if err == nil {
 			accountUUID := account.GetExtraString("account_uuid")

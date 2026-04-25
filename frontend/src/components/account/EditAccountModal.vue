@@ -516,6 +516,33 @@
         </div>
       </div>
 
+      <!-- Request Body Passthrough -->
+      <div class="border-t border-gray-200 pt-4 dark:border-dark-600">
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="input-label mb-0">{{ t('admin.accounts.requestBodyPassthrough') }}</label>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {{ t('admin.accounts.requestBodyPassthroughDesc') }}
+            </p>
+          </div>
+          <button
+            type="button"
+            @click="requestBodyPassthrough = !requestBodyPassthrough"
+            :class="[
+              'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
+              requestBodyPassthrough ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-600'
+            ]"
+          >
+            <span
+              :class="[
+                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                requestBodyPassthrough ? 'translate-x-5' : 'translate-x-0'
+              ]"
+            />
+          </button>
+        </div>
+      </div>
+
       <div>
         <label class="input-label">{{ t('admin.accounts.proxy') }}</label>
         <ProxySelector v-model="form.proxy_id" :proxies="proxies" />
@@ -918,6 +945,7 @@ const customErrorCodesEnabled = ref(false)
 const selectedErrorCodes = ref<number[]>([])
 const customErrorCodeInput = ref<number | null>(null)
 const interceptWarmupRequests = ref(false)
+const requestBodyPassthrough = ref(false)
 const autoPauseOnExpired = ref(false)
 const mixedScheduling = ref(false) // For antigravity accounts: enable mixed scheduling
 const tempUnschedEnabled = ref(false)
@@ -1019,6 +1047,7 @@ watch(
       // Load mixed scheduling setting (only for antigravity accounts)
       const extra = newAccount.extra as Record<string, unknown> | undefined
       mixedScheduling.value = extra?.mixed_scheduling === true
+      requestBodyPassthrough.value = newAccount.request_body_passthrough === true || extra?.request_body_passthrough === true
 
       // Load quota control settings (Anthropic OAuth/SetupToken only)
       loadQuotaControlSettings(newAccount)
@@ -1437,57 +1466,59 @@ const handleSubmit = async () => {
       updatePayload.credentials = newCredentials
     }
 
+    const currentExtra = (props.account.extra as Record<string, unknown>) || {}
+    const nextExtra: Record<string, unknown> = { ...currentExtra }
+    if (requestBodyPassthrough.value) {
+      nextExtra.request_body_passthrough = true
+    } else {
+      delete nextExtra.request_body_passthrough
+    }
+
     // For antigravity accounts, handle mixed_scheduling in extra
     if (props.account.platform === 'antigravity') {
-      const currentExtra = (props.account.extra as Record<string, unknown>) || {}
-      const newExtra: Record<string, unknown> = { ...currentExtra }
       if (mixedScheduling.value) {
-        newExtra.mixed_scheduling = true
+        nextExtra.mixed_scheduling = true
       } else {
-        delete newExtra.mixed_scheduling
+        delete nextExtra.mixed_scheduling
       }
-      updatePayload.extra = newExtra
     }
 
     // For Anthropic OAuth/SetupToken accounts, handle quota control settings in extra
     if (props.account.platform === 'anthropic' && (props.account.type === 'oauth' || props.account.type === 'setup-token')) {
-      const currentExtra = (props.account.extra as Record<string, unknown>) || {}
-      const newExtra: Record<string, unknown> = { ...currentExtra }
-
       // Window cost limit settings
       if (windowCostEnabled.value && windowCostLimit.value != null && windowCostLimit.value > 0) {
-        newExtra.window_cost_limit = windowCostLimit.value
-        newExtra.window_cost_sticky_reserve = windowCostStickyReserve.value ?? 10
+        nextExtra.window_cost_limit = windowCostLimit.value
+        nextExtra.window_cost_sticky_reserve = windowCostStickyReserve.value ?? 10
       } else {
-        delete newExtra.window_cost_limit
-        delete newExtra.window_cost_sticky_reserve
+        delete nextExtra.window_cost_limit
+        delete nextExtra.window_cost_sticky_reserve
       }
 
       // Session limit settings
       if (sessionLimitEnabled.value && maxSessions.value != null && maxSessions.value > 0) {
-        newExtra.max_sessions = maxSessions.value
-        newExtra.session_idle_timeout_minutes = sessionIdleTimeout.value ?? 5
+        nextExtra.max_sessions = maxSessions.value
+        nextExtra.session_idle_timeout_minutes = sessionIdleTimeout.value ?? 5
       } else {
-        delete newExtra.max_sessions
-        delete newExtra.session_idle_timeout_minutes
+        delete nextExtra.max_sessions
+        delete nextExtra.session_idle_timeout_minutes
       }
 
       // TLS fingerprint setting
       if (tlsFingerprintEnabled.value) {
-        newExtra.enable_tls_fingerprint = true
+        nextExtra.enable_tls_fingerprint = true
       } else {
-        delete newExtra.enable_tls_fingerprint
+        delete nextExtra.enable_tls_fingerprint
       }
 
       // Session ID masking setting
       if (sessionIdMaskingEnabled.value) {
-        newExtra.session_id_masking_enabled = true
+        nextExtra.session_id_masking_enabled = true
       } else {
-        delete newExtra.session_id_masking_enabled
+        delete nextExtra.session_id_masking_enabled
       }
-
-      updatePayload.extra = newExtra
     }
+
+    updatePayload.extra = nextExtra
 
     await adminAPI.accounts.update(props.account.id, updatePayload)
     appStore.showSuccess(t('admin.accounts.accountUpdated'))
