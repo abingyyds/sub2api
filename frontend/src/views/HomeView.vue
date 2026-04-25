@@ -335,6 +335,13 @@ const countdown = ref(0)
 let pollTimer: ReturnType<typeof setInterval> | null = null
 let countdownTimer: ReturnType<typeof setInterval> | null = null
 
+function hideRateFeatures(plan: PaymentPlan): PaymentPlan {
+  return {
+    ...plan,
+    features: (plan.features || []).filter(feature => !/(倍率|费率|\d+(?:\.\d+)?\s*x\b)/i.test(feature))
+  }
+}
+
 function toggleTheme() {
   isDark.value = !isDark.value
   document.documentElement.classList.toggle('dark', isDark.value)
@@ -365,7 +372,9 @@ onUnmounted(() => {
 async function loadPlans() {
   try {
     const allPlans = await paymentAPI.getPlans()
-    plans.value = allPlans.filter(p => (p.type || 'subscription') === 'subscription')
+    plans.value = allPlans
+      .filter(p => (p.type || 'subscription') === 'subscription')
+      .map(hideRateFeatures)
   } catch {
     // silently fail
   }

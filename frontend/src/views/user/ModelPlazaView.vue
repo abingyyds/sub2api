@@ -590,14 +590,6 @@ function formatMetricValue(value: number | null | undefined, unit: MetricUnit) {
   return unit === 'usd' ? `$${formatted}` : `¥${formatted}`
 }
 
-function formatMultiplierLabel(value: number | null | undefined) {
-  if (value === null || value === undefined || Number.isNaN(value)) {
-    return '-'
-  }
-  const digits = value >= 100 ? 2 : 3
-  return `${value.toFixed(digits).replace(/\.?0+$/, '')}x`
-}
-
 function normalizePositiveNumber(value: number | null | undefined) {
   if (value === null || value === undefined || Number.isNaN(value) || value <= 0) {
     return null
@@ -722,18 +714,18 @@ function buildMetricComparisonRows(
 function groupSummary(group: {
   display_discount?: string | null
   display_price?: string | null
-  rate_multiplier: number
-  display_rate_multiplier?: number | null
 }) {
-  const parts = [
-    group.display_discount || formatMultiplierLabel(group.display_rate_multiplier ?? group.rate_multiplier)
-  ]
+  const parts = []
 
   if (group.display_price) {
     parts.push(group.display_price)
   }
 
-  return parts.join(' · ')
+  if (group.display_discount) {
+    parts.push(group.display_discount)
+  }
+
+  return parts.join(' · ') || t('modelPlaza.groupAvailable')
 }
 
 function isExpanded(groupId: number) {

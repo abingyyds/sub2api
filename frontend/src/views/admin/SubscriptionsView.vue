@@ -480,6 +480,7 @@
                 :platform="(option as unknown as GroupOption).platform"
                 :subscription-type="(option as unknown as GroupOption).subscriptionType"
                 :rate-multiplier="(option as unknown as GroupOption).rate"
+                show-rate
               />
               <span v-else class="text-gray-400">{{ t('admin.subscriptions.selectGroup') }}</span>
             </template>

@@ -930,7 +930,7 @@ const planDecoZh: Record<string, Omit<DecoratedPlan, 'plan'>> = {
     features: [
       '<strong class="text-gray-900 dark:text-white text-base">总额 $650：</strong>充足算力储备，应对高频调用',
       '<strong class="text-gray-900 dark:text-white text-base">每周 $162.5 高速配额：</strong>生产级优先级，拒绝排队等待',
-      '<strong class="text-gray-900 dark:text-white text-base">无损计费机制：</strong>拒绝倍率陷阱，每一分实打实可用',
+      '<strong class="text-gray-900 dark:text-white text-base">透明计费机制：</strong>按量清晰结算，每一分实打实可用',
       '<strong class="text-gray-900 dark:text-white text-base">熔断智能防护：</strong>异常流量自动隔离，生产环境稳定如磐石',
     ],
     cta: '立即购买，释放生产力',
@@ -949,6 +949,13 @@ const planDecoZh: Record<string, Omit<DecoratedPlan, 'plan'>> = {
     cta: '购买旗舰版',
     featured: false,
   },
+}
+
+function hideRateFeatures(plan: PaymentPlan): PaymentPlan {
+  return {
+    ...plan,
+    features: (plan.features || []).filter(feature => !/(倍率|费率|\d+(?:\.\d+)?\s*x\b)/i.test(feature))
+  }
 }
 
 const decoratedPlans = computed<DecoratedPlan[]>(() => {
@@ -1216,7 +1223,9 @@ onMounted(async () => {
 
   try {
     const allPlans = await paymentAPI.getPlans()
-    plans.value = allPlans.filter(p => (p.type || 'subscription') === 'subscription')
+    plans.value = allPlans
+      .filter(p => (p.type || 'subscription') === 'subscription')
+      .map(hideRateFeatures)
   } catch {
     // silently fail
   } finally {
