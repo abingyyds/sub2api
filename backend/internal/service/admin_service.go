@@ -133,9 +133,10 @@ type CreateGroupInput struct {
 	// 套餐自定义特性列表
 	PlanFeatures []string
 	// 分组卡片展示字段
-	Tags            []string
-	DisplayPrice    string
-	DisplayDiscount string
+	Tags              []string
+	ModelPlazaVisible bool
+	DisplayPrice      string
+	DisplayDiscount   string
 }
 
 type UpdateGroupInput struct {
@@ -169,9 +170,10 @@ type UpdateGroupInput struct {
 	// 套餐自定义特性列表
 	PlanFeatures []string
 	// 分组卡片展示字段
-	Tags            []string
-	DisplayPrice    string
-	DisplayDiscount string
+	Tags              []string
+	ModelPlazaVisible *bool
+	DisplayPrice      string
+	DisplayDiscount   string
 }
 
 type CreateAccountInput struct {
@@ -815,6 +817,7 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 		DefaultValidityDays:   input.DefaultValidityDays,
 		PlanFeatures:          input.PlanFeatures,
 		Tags:                  input.Tags,
+		ModelPlazaVisible:     input.ModelPlazaVisible,
 		DisplayPrice:          input.DisplayPrice,
 		DisplayDiscount:       input.DisplayDiscount,
 	}
@@ -987,6 +990,9 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 
 	// 分组卡片展示字段（始终更新）
 	group.Tags = input.Tags
+	if input.ModelPlazaVisible != nil {
+		group.ModelPlazaVisible = *input.ModelPlazaVisible
+	}
 	group.DisplayPrice = input.DisplayPrice
 	group.DisplayDiscount = input.DisplayDiscount
 

@@ -162,6 +162,7 @@ func groupFromServiceBase(g *service.Group) Group {
 		DefaultValidityDays: g.DefaultValidityDays,
 		PlanFeatures:        g.PlanFeatures,
 		Tags:                g.Tags,
+		ModelPlazaVisible:   g.ModelPlazaVisible,
 		DisplayPrice:        g.DisplayPrice,
 		DisplayDiscount:     g.DisplayDiscount,
 		CreatedAt:           g.CreatedAt,

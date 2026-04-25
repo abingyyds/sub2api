@@ -6351,6 +6351,7 @@ type GroupMutation struct {
 	appendplan_features        []string
 	tags                       *[]string
 	appendtags                 []string
+	model_plaza_visible        *bool
 	display_price              *string
 	display_discount           *string
 	clearedFields              map[string]struct{}
@@ -7846,6 +7847,42 @@ func (m *GroupMutation) ResetTags() {
 	delete(m.clearedFields, group.FieldTags)
 }
 
+// SetModelPlazaVisible sets the "model_plaza_visible" field.
+func (m *GroupMutation) SetModelPlazaVisible(b bool) {
+	m.model_plaza_visible = &b
+}
+
+// ModelPlazaVisible returns the value of the "model_plaza_visible" field in the mutation.
+func (m *GroupMutation) ModelPlazaVisible() (r bool, exists bool) {
+	v := m.model_plaza_visible
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModelPlazaVisible returns the old "model_plaza_visible" field's value of the Group entity.
+// If the Group object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupMutation) OldModelPlazaVisible(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModelPlazaVisible is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModelPlazaVisible requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModelPlazaVisible: %w", err)
+	}
+	return oldValue.ModelPlazaVisible, nil
+}
+
+// ResetModelPlazaVisible resets all changes to the "model_plaza_visible" field.
+func (m *GroupMutation) ResetModelPlazaVisible() {
+	m.model_plaza_visible = nil
+}
+
 // SetDisplayPrice sets the "display_price" field.
 func (m *GroupMutation) SetDisplayPrice(s string) {
 	m.display_price = &s
@@ -8384,7 +8421,7 @@ func (m *GroupMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupMutation) Fields() []string {
-	fields := make([]string, 0, 28)
+	fields := make([]string, 0, 29)
 	if m.created_at != nil {
 		fields = append(fields, group.FieldCreatedAt)
 	}
@@ -8463,6 +8500,9 @@ func (m *GroupMutation) Fields() []string {
 	if m.tags != nil {
 		fields = append(fields, group.FieldTags)
 	}
+	if m.model_plaza_visible != nil {
+		fields = append(fields, group.FieldModelPlazaVisible)
+	}
 	if m.display_price != nil {
 		fields = append(fields, group.FieldDisplayPrice)
 	}
@@ -8529,6 +8569,8 @@ func (m *GroupMutation) Field(name string) (ent.Value, bool) {
 		return m.PlanFeatures()
 	case group.FieldTags:
 		return m.Tags()
+	case group.FieldModelPlazaVisible:
+		return m.ModelPlazaVisible()
 	case group.FieldDisplayPrice:
 		return m.DisplayPrice()
 	case group.FieldDisplayDiscount:
@@ -8594,6 +8636,8 @@ func (m *GroupMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldPlanFeatures(ctx)
 	case group.FieldTags:
 		return m.OldTags(ctx)
+	case group.FieldModelPlazaVisible:
+		return m.OldModelPlazaVisible(ctx)
 	case group.FieldDisplayPrice:
 		return m.OldDisplayPrice(ctx)
 	case group.FieldDisplayDiscount:
@@ -8788,6 +8832,13 @@ func (m *GroupMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetTags(v)
+		return nil
+	case group.FieldModelPlazaVisible:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModelPlazaVisible(v)
 		return nil
 	case group.FieldDisplayPrice:
 		v, ok := value.(string)
@@ -9145,6 +9196,9 @@ func (m *GroupMutation) ResetField(name string) error {
 		return nil
 	case group.FieldTags:
 		m.ResetTags()
+		return nil
+	case group.FieldModelPlazaVisible:
+		m.ResetModelPlazaVisible()
 		return nil
 	case group.FieldDisplayPrice:
 		m.ResetDisplayPrice()

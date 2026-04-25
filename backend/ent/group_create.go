@@ -362,6 +362,20 @@ func (_c *GroupCreate) SetTags(v []string) *GroupCreate {
 	return _c
 }
 
+// SetModelPlazaVisible sets the "model_plaza_visible" field.
+func (_c *GroupCreate) SetModelPlazaVisible(v bool) *GroupCreate {
+	_c.mutation.SetModelPlazaVisible(v)
+	return _c
+}
+
+// SetNillableModelPlazaVisible sets the "model_plaza_visible" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableModelPlazaVisible(v *bool) *GroupCreate {
+	if v != nil {
+		_c.SetModelPlazaVisible(*v)
+	}
+	return _c
+}
+
 // SetDisplayPrice sets the "display_price" field.
 func (_c *GroupCreate) SetDisplayPrice(v string) *GroupCreate {
 	_c.mutation.SetDisplayPrice(v)
@@ -601,6 +615,10 @@ func (_c *GroupCreate) defaults() error {
 		v := group.DefaultListed
 		_c.mutation.SetListed(v)
 	}
+	if _, ok := _c.mutation.ModelPlazaVisible(); !ok {
+		v := group.DefaultModelPlazaVisible
+		_c.mutation.SetModelPlazaVisible(v)
+	}
 	if _, ok := _c.mutation.DisplayPrice(); !ok {
 		v := group.DefaultDisplayPrice
 		_c.mutation.SetDisplayPrice(v)
@@ -672,6 +690,9 @@ func (_c *GroupCreate) check() error {
 	}
 	if _, ok := _c.mutation.Listed(); !ok {
 		return &ValidationError{Name: "listed", err: errors.New(`ent: missing required field "Group.listed"`)}
+	}
+	if _, ok := _c.mutation.ModelPlazaVisible(); !ok {
+		return &ValidationError{Name: "model_plaza_visible", err: errors.New(`ent: missing required field "Group.model_plaza_visible"`)}
 	}
 	if _, ok := _c.mutation.DisplayPrice(); !ok {
 		return &ValidationError{Name: "display_price", err: errors.New(`ent: missing required field "Group.display_price"`)}
@@ -809,6 +830,10 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Tags(); ok {
 		_spec.SetField(group.FieldTags, field.TypeJSON, value)
 		_node.Tags = value
+	}
+	if value, ok := _c.mutation.ModelPlazaVisible(); ok {
+		_spec.SetField(group.FieldModelPlazaVisible, field.TypeBool, value)
+		_node.ModelPlazaVisible = value
 	}
 	if value, ok := _c.mutation.DisplayPrice(); ok {
 		_spec.SetField(group.FieldDisplayPrice, field.TypeString, value)
@@ -1450,6 +1475,18 @@ func (u *GroupUpsert) ClearTags() *GroupUpsert {
 	return u
 }
 
+// SetModelPlazaVisible sets the "model_plaza_visible" field.
+func (u *GroupUpsert) SetModelPlazaVisible(v bool) *GroupUpsert {
+	u.Set(group.FieldModelPlazaVisible, v)
+	return u
+}
+
+// UpdateModelPlazaVisible sets the "model_plaza_visible" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateModelPlazaVisible() *GroupUpsert {
+	u.SetExcluded(group.FieldModelPlazaVisible)
+	return u
+}
+
 // SetDisplayPrice sets the "display_price" field.
 func (u *GroupUpsert) SetDisplayPrice(v string) *GroupUpsert {
 	u.Set(group.FieldDisplayPrice, v)
@@ -2034,6 +2071,20 @@ func (u *GroupUpsertOne) UpdateTags() *GroupUpsertOne {
 func (u *GroupUpsertOne) ClearTags() *GroupUpsertOne {
 	return u.Update(func(s *GroupUpsert) {
 		s.ClearTags()
+	})
+}
+
+// SetModelPlazaVisible sets the "model_plaza_visible" field.
+func (u *GroupUpsertOne) SetModelPlazaVisible(v bool) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetModelPlazaVisible(v)
+	})
+}
+
+// UpdateModelPlazaVisible sets the "model_plaza_visible" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateModelPlazaVisible() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateModelPlazaVisible()
 	})
 }
 
@@ -2791,6 +2842,20 @@ func (u *GroupUpsertBulk) UpdateTags() *GroupUpsertBulk {
 func (u *GroupUpsertBulk) ClearTags() *GroupUpsertBulk {
 	return u.Update(func(s *GroupUpsert) {
 		s.ClearTags()
+	})
+}
+
+// SetModelPlazaVisible sets the "model_plaza_visible" field.
+func (u *GroupUpsertBulk) SetModelPlazaVisible(v bool) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetModelPlazaVisible(v)
+	})
+}
+
+// UpdateModelPlazaVisible sets the "model_plaza_visible" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateModelPlazaVisible() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateModelPlazaVisible()
 	})
 }
 

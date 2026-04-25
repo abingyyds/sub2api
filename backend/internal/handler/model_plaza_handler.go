@@ -45,6 +45,7 @@ func (h *ModelPlazaHandler) List(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
+	groups = filterModelPlazaVisibleGroups(groups)
 
 	groupIDs := make([]int64, 0, len(groups))
 	for _, group := range groups {
@@ -62,4 +63,14 @@ func (h *ModelPlazaHandler) List(c *gin.Context) {
 	}
 
 	response.Success(c, result)
+}
+
+func filterModelPlazaVisibleGroups(groups []service.Group) []service.Group {
+	visibleGroups := make([]service.Group, 0, len(groups))
+	for _, group := range groups {
+		if group.ModelPlazaVisible {
+			visibleGroups = append(visibleGroups, group)
+		}
+	}
+	return visibleGroups
 }

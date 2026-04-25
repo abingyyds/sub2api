@@ -133,6 +133,11 @@ func (Group) Fields() []ent.Field {
 			Optional().
 			SchemaType(map[string]string{dialect.Postgres: "jsonb"}).
 			Comment("自定义标签列表，如「官方 API」「逆向」「推荐」「暂不可用」等"),
+
+		// 是否在模型广场展示 (added by migration 087)
+		field.Bool("model_plaza_visible").
+			Default(true).
+			Comment("是否在模型广场展示该分组"),
 		field.String("display_price").
 			Default("").
 			SchemaType(map[string]string{dialect.Postgres: "text"}).

@@ -32,6 +32,13 @@ func (o *OptionalFloat64) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func boolValueOrDefault(value *bool, defaultValue bool) bool {
+	if value == nil {
+		return defaultValue
+	}
+	return *value
+}
+
 // GroupHandler handles admin group management
 type GroupHandler struct {
 	adminService service.AdminService
@@ -74,9 +81,10 @@ type CreateGroupRequest struct {
 	// 套餐自定义特性列表
 	PlanFeatures []string `json:"plan_features"`
 	// 分组卡片展示字段
-	Tags            []string `json:"tags"`
-	DisplayPrice    string   `json:"display_price"`
-	DisplayDiscount string   `json:"display_discount"`
+	Tags              []string `json:"tags"`
+	ModelPlazaVisible *bool    `json:"model_plaza_visible"`
+	DisplayPrice      string   `json:"display_price"`
+	DisplayDiscount   string   `json:"display_discount"`
 }
 
 // UpdateGroupRequest represents update group request
@@ -110,9 +118,10 @@ type UpdateGroupRequest struct {
 	// 套餐自定义特性列表
 	PlanFeatures []string `json:"plan_features"`
 	// 分组卡片展示字段
-	Tags            []string `json:"tags"`
-	DisplayPrice    string   `json:"display_price"`
-	DisplayDiscount string   `json:"display_discount"`
+	Tags              []string `json:"tags"`
+	ModelPlazaVisible *bool    `json:"model_plaza_visible"`
+	DisplayPrice      string   `json:"display_price"`
+	DisplayDiscount   string   `json:"display_discount"`
 }
 
 // List handles listing all groups with pagination
@@ -224,6 +233,7 @@ func (h *GroupHandler) Create(c *gin.Context) {
 		DefaultValidityDays:   req.DefaultValidityDays,
 		PlanFeatures:          req.PlanFeatures,
 		Tags:                  req.Tags,
+		ModelPlazaVisible:     boolValueOrDefault(req.ModelPlazaVisible, true),
 		DisplayPrice:          req.DisplayPrice,
 		DisplayDiscount:       req.DisplayDiscount,
 	})
@@ -275,6 +285,7 @@ func (h *GroupHandler) Update(c *gin.Context) {
 		DefaultValidityDays:      req.DefaultValidityDays,
 		PlanFeatures:             req.PlanFeatures,
 		Tags:                     req.Tags,
+		ModelPlazaVisible:        req.ModelPlazaVisible,
 		DisplayPrice:             req.DisplayPrice,
 		DisplayDiscount:          req.DisplayDiscount,
 	})

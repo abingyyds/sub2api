@@ -150,6 +150,12 @@
             </span>
           </template>
 
+          <template #cell-model_plaza_visible="{ value }">
+            <span :class="['badge', value ? 'badge-success' : 'badge-gray']">
+              {{ value ? t('admin.groups.modelPlaza.visible') : t('admin.groups.modelPlaza.hidden') }}
+            </span>
+          </template>
+
           <template #cell-account_count="{ value }">
             <span
               class="inline-flex items-center rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-dark-600 dark:text-gray-300"
@@ -356,6 +362,27 @@
                 :placeholder="t('admin.groups.subscription.noLimit')"
               />
             </div>
+          </div>
+        </div>
+
+        <!-- 模型广场展示设置 -->
+        <div class="border-t pt-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <label class="input-label mb-0">{{ t('admin.groups.modelPlaza.visibleSwitch') }}</label>
+              <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('admin.groups.modelPlaza.visibleHint') }}</p>
+            </div>
+            <button
+              type="button"
+              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+              :class="createForm.model_plaza_visible ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-500'"
+              @click="createForm.model_plaza_visible = !createForm.model_plaza_visible"
+            >
+              <span
+                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                :class="createForm.model_plaza_visible ? 'translate-x-5' : 'translate-x-0'"
+              />
+            </button>
           </div>
         </div>
 
@@ -947,6 +974,27 @@
           </div>
         </div>
 
+        <!-- 模型广场展示设置 -->
+        <div class="border-t pt-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <label class="input-label mb-0">{{ t('admin.groups.modelPlaza.visibleSwitch') }}</label>
+              <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('admin.groups.modelPlaza.visibleHint') }}</p>
+            </div>
+            <button
+              type="button"
+              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+              :class="editForm.model_plaza_visible ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-500'"
+              @click="editForm.model_plaza_visible = !editForm.model_plaza_visible"
+            >
+              <span
+                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                :class="editForm.model_plaza_visible ? 'translate-x-5' : 'translate-x-0'"
+              />
+            </button>
+          </div>
+        </div>
+
         <!-- 套餐上架设置 -->
         <div class="border-t pt-4">
           <!-- 上架开关 -->
@@ -1418,6 +1466,7 @@ const columns = computed<Column[]>(() => [
   { key: 'billing_type', label: t('admin.groups.columns.billingType'), sortable: true },
   { key: 'rate_multiplier', label: t('admin.groups.columns.rateMultiplier'), sortable: true },
   { key: 'is_exclusive', label: t('admin.groups.columns.type'), sortable: true },
+  { key: 'model_plaza_visible', label: t('admin.groups.columns.modelPlaza'), sortable: true },
   { key: 'account_count', label: t('admin.groups.columns.accounts'), sortable: true },
   { key: 'status', label: t('admin.groups.columns.status'), sortable: true },
   { key: 'actions', label: t('admin.groups.columns.actions'), sortable: false }
@@ -1544,6 +1593,7 @@ const createForm = reactive({
   default_validity_days: 30,
   // 分组卡片展示字段
   tags: [] as string[],
+  model_plaza_visible: true,
   display_price: '',
   display_discount: ''
 })
@@ -1732,6 +1782,7 @@ const editForm = reactive({
   default_validity_days: 30,
   // 分组卡片展示字段
   tags: [] as string[],
+  model_plaza_visible: true,
   display_price: '',
   display_discount: ''
 })
@@ -1846,6 +1897,7 @@ const closeCreateModal = () => {
   createForm.listed = false
   createForm.default_validity_days = 30
   createForm.tags = []
+  createForm.model_plaza_visible = true
   createForm.display_price = ''
   createForm.display_discount = ''
   createModelRoutingRules.value = []
@@ -1907,6 +1959,7 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.listed = group.listed || false
   editForm.default_validity_days = group.default_validity_days || 30
   editForm.tags = group.tags ? [...group.tags] : []
+  editForm.model_plaza_visible = group.model_plaza_visible ?? true
   editForm.display_price = group.display_price || ''
   editForm.display_discount = group.display_discount || ''
   editPlanFeatures.value = group.plan_features ? [...group.plan_features] : []
