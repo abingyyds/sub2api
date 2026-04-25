@@ -170,6 +170,11 @@ func Listed(v bool) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldListed, v))
 }
 
+// ModelPlazaVisible applies equality check predicate on the "model_plaza_visible" field. It's identical to ModelPlazaVisibleEQ.
+func ModelPlazaVisible(v bool) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldModelPlazaVisible, v))
+}
+
 // DisplayPrice applies equality check predicate on the "display_price" field. It's identical to DisplayPriceEQ.
 func DisplayPrice(v string) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldDisplayPrice, v))
@@ -1233,6 +1238,16 @@ func TagsIsNil() predicate.Group {
 // TagsNotNil applies the NotNil predicate on the "tags" field.
 func TagsNotNil() predicate.Group {
 	return predicate.Group(sql.FieldNotNull(FieldTags))
+}
+
+// ModelPlazaVisibleEQ applies the EQ predicate on the "model_plaza_visible" field.
+func ModelPlazaVisibleEQ(v bool) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldModelPlazaVisible, v))
+}
+
+// ModelPlazaVisibleNEQ applies the NEQ predicate on the "model_plaza_visible" field.
+func ModelPlazaVisibleNEQ(v bool) predicate.Group {
+	return predicate.Group(sql.FieldNEQ(FieldModelPlazaVisible, v))
 }
 
 // DisplayPriceEQ applies the EQ predicate on the "display_price" field.

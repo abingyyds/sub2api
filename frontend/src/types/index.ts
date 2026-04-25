@@ -310,6 +310,7 @@ export interface Group {
   plan_features: string[]
   // 分组卡片展示字段
   tags: string[]
+  model_plaza_visible: boolean
   display_price: string
   display_discount: string
   created_at: string
@@ -375,6 +376,7 @@ export interface CreateGroupRequest {
   image_price_4k?: number | null
   claude_code_only?: boolean
   fallback_group_id?: number | null
+  model_plaza_visible?: boolean
 }
 
 export interface UpdateGroupRequest {
@@ -394,6 +396,7 @@ export interface UpdateGroupRequest {
   image_price_4k?: number | null
   claude_code_only?: boolean
   fallback_group_id?: number | null
+  model_plaza_visible?: boolean
 }
 
 // ==================== Account & Proxy Types ====================

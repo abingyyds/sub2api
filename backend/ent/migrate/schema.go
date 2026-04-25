@@ -370,6 +370,7 @@ var (
 		{Name: "listed", Type: field.TypeBool, Default: false},
 		{Name: "plan_features", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"postgres": "jsonb"}},
 		{Name: "tags", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "model_plaza_visible", Type: field.TypeBool, Default: true},
 		{Name: "display_price", Type: field.TypeString, Default: "", SchemaType: map[string]string{"postgres": "text"}},
 		{Name: "display_discount", Type: field.TypeString, Default: "", SchemaType: map[string]string{"postgres": "text"}},
 	}

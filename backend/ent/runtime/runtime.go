@@ -415,12 +415,16 @@ func init() {
 	groupDescListed := groupFields[20].Descriptor()
 	// group.DefaultListed holds the default value on creation for the listed field.
 	group.DefaultListed = groupDescListed.Default.(bool)
+	// groupDescModelPlazaVisible is the schema descriptor for model_plaza_visible field.
+	groupDescModelPlazaVisible := groupFields[23].Descriptor()
+	// group.DefaultModelPlazaVisible holds the default value on creation for the model_plaza_visible field.
+	group.DefaultModelPlazaVisible = groupDescModelPlazaVisible.Default.(bool)
 	// groupDescDisplayPrice is the schema descriptor for display_price field.
-	groupDescDisplayPrice := groupFields[23].Descriptor()
+	groupDescDisplayPrice := groupFields[24].Descriptor()
 	// group.DefaultDisplayPrice holds the default value on creation for the display_price field.
 	group.DefaultDisplayPrice = groupDescDisplayPrice.Default.(string)
 	// groupDescDisplayDiscount is the schema descriptor for display_discount field.
-	groupDescDisplayDiscount := groupFields[24].Descriptor()
+	groupDescDisplayDiscount := groupFields[25].Descriptor()
 	// group.DefaultDisplayDiscount holds the default value on creation for the display_discount field.
 	group.DefaultDisplayDiscount = groupDescDisplayDiscount.Default.(string)
 	orgauditlogFields := schema.OrgAuditLog{}.Fields()

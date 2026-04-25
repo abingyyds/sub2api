@@ -83,6 +83,7 @@ func (h *ModelPlazaHandler) PricingTable(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
+	groups = filterModelPlazaVisibleGroups(groups)
 
 	groupIDs := make([]int64, 0, len(groups))
 	for _, group := range groups {

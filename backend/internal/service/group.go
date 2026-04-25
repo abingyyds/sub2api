@@ -48,9 +48,10 @@ type Group struct {
 	PlanFeatures []string
 
 	// 分组卡片展示字段
-	Tags            []string // 自定义标签列表
-	DisplayPrice    string   // 展示价格文案
-	DisplayDiscount string   // 展示折扣文案
+	Tags              []string // 自定义标签列表
+	ModelPlazaVisible bool     // 是否在模型广场展示
+	DisplayPrice      string   // 展示价格文案
+	DisplayDiscount   string   // 展示折扣文案
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

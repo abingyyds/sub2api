@@ -70,6 +70,8 @@ type Group struct {
 	PlanFeatures []string `json:"plan_features,omitempty"`
 	// 自定义标签列表，如「官方 API」「逆向」「推荐」「暂不可用」等
 	Tags []string `json:"tags,omitempty"`
+	// 是否在模型广场展示该分组
+	ModelPlazaVisible bool `json:"model_plaza_visible,omitempty"`
 	// 展示价格文案，如「6 块 / 1 美元」
 	DisplayPrice string `json:"display_price,omitempty"`
 	// 展示折扣文案，如「8.3折」
@@ -204,7 +206,7 @@ func (*Group) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case group.FieldModelRouting, group.FieldPlanFeatures, group.FieldTags:
 			values[i] = new([]byte)
-		case group.FieldIsExclusive, group.FieldClaudeCodeOnly, group.FieldModelRoutingEnabled, group.FieldListed:
+		case group.FieldIsExclusive, group.FieldClaudeCodeOnly, group.FieldModelRoutingEnabled, group.FieldListed, group.FieldModelPlazaVisible:
 			values[i] = new(sql.NullBool)
 		case group.FieldRateMultiplier, group.FieldDisplayRateMultiplier, group.FieldDailyLimitUsd, group.FieldWeeklyLimitUsd, group.FieldMonthlyLimitUsd, group.FieldImagePrice1k, group.FieldImagePrice2k, group.FieldImagePrice4k:
 			values[i] = new(sql.NullFloat64)
@@ -407,6 +409,12 @@ func (_m *Group) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field tags: %w", err)
 				}
 			}
+		case group.FieldModelPlazaVisible:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field model_plaza_visible", values[i])
+			} else if value.Valid {
+				_m.ModelPlazaVisible = value.Bool
+			}
 		case group.FieldDisplayPrice:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field display_price", values[i])
@@ -602,6 +610,9 @@ func (_m *Group) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("tags=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Tags))
+	builder.WriteString(", ")
+	builder.WriteString("model_plaza_visible=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ModelPlazaVisible))
 	builder.WriteString(", ")
 	builder.WriteString("display_price=")
 	builder.WriteString(_m.DisplayPrice)

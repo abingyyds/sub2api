@@ -522,6 +522,20 @@ func (_u *GroupUpdate) ClearTags() *GroupUpdate {
 	return _u
 }
 
+// SetModelPlazaVisible sets the "model_plaza_visible" field.
+func (_u *GroupUpdate) SetModelPlazaVisible(v bool) *GroupUpdate {
+	_u.mutation.SetModelPlazaVisible(v)
+	return _u
+}
+
+// SetNillableModelPlazaVisible sets the "model_plaza_visible" field if the given value is not nil.
+func (_u *GroupUpdate) SetNillableModelPlazaVisible(v *bool) *GroupUpdate {
+	if v != nil {
+		_u.SetModelPlazaVisible(*v)
+	}
+	return _u
+}
+
 // SetDisplayPrice sets the "display_price" field.
 func (_u *GroupUpdate) SetDisplayPrice(v string) *GroupUpdate {
 	_u.mutation.SetDisplayPrice(v)
@@ -1078,6 +1092,9 @@ func (_u *GroupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.TagsCleared() {
 		_spec.ClearField(group.FieldTags, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.ModelPlazaVisible(); ok {
+		_spec.SetField(group.FieldModelPlazaVisible, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.DisplayPrice(); ok {
 		_spec.SetField(group.FieldDisplayPrice, field.TypeString, value)
@@ -1974,6 +1991,20 @@ func (_u *GroupUpdateOne) ClearTags() *GroupUpdateOne {
 	return _u
 }
 
+// SetModelPlazaVisible sets the "model_plaza_visible" field.
+func (_u *GroupUpdateOne) SetModelPlazaVisible(v bool) *GroupUpdateOne {
+	_u.mutation.SetModelPlazaVisible(v)
+	return _u
+}
+
+// SetNillableModelPlazaVisible sets the "model_plaza_visible" field if the given value is not nil.
+func (_u *GroupUpdateOne) SetNillableModelPlazaVisible(v *bool) *GroupUpdateOne {
+	if v != nil {
+		_u.SetModelPlazaVisible(*v)
+	}
+	return _u
+}
+
 // SetDisplayPrice sets the "display_price" field.
 func (_u *GroupUpdateOne) SetDisplayPrice(v string) *GroupUpdateOne {
 	_u.mutation.SetDisplayPrice(v)
@@ -2560,6 +2591,9 @@ func (_u *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error)
 	}
 	if _u.mutation.TagsCleared() {
 		_spec.ClearField(group.FieldTags, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.ModelPlazaVisible(); ok {
+		_spec.SetField(group.FieldModelPlazaVisible, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.DisplayPrice(); ok {
 		_spec.SetField(group.FieldDisplayPrice, field.TypeString, value)

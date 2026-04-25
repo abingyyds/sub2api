@@ -1105,6 +1105,7 @@ export default {
         priority: '优先级',
         apiKeys: 'API 密钥数',
         accounts: '账号数',
+        modelPlaza: '模型广场',
         status: '状态',
         actions: '操作',
         billingType: '计费类型'
@@ -1243,6 +1244,12 @@ export default {
       defaultValidityDaysPlaceholder: '30',
       defaultValidityDaysHint: '购买后订阅的有效期天数',
       listedConfig: '上架配置',
+      modelPlaza: {
+        visibleSwitch: '在模型广场展示',
+        visibleHint: '关闭后，此分组及其模型/价格不会在用户模型广场展示，不影响 API Key 使用。',
+        visible: '展示',
+        hidden: '隐藏'
+      },
       planFeatures: '自定义特性列表',
       addFeature: '添加特性',
       planFeaturesHint: '展示在购买页面的卖点特性，留空则自动根据分组配置生成',

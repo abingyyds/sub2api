@@ -67,6 +67,8 @@ const (
 	FieldPlanFeatures = "plan_features"
 	// FieldTags holds the string denoting the tags field in the database.
 	FieldTags = "tags"
+	// FieldModelPlazaVisible holds the string denoting the model_plaza_visible field in the database.
+	FieldModelPlazaVisible = "model_plaza_visible"
 	// FieldDisplayPrice holds the string denoting the display_price field in the database.
 	FieldDisplayPrice = "display_price"
 	// FieldDisplayDiscount holds the string denoting the display_discount field in the database.
@@ -190,6 +192,7 @@ var Columns = []string{
 	FieldListed,
 	FieldPlanFeatures,
 	FieldTags,
+	FieldModelPlazaVisible,
 	FieldDisplayPrice,
 	FieldDisplayDiscount,
 }
@@ -255,6 +258,8 @@ var (
 	DefaultPriceFen int
 	// DefaultListed holds the default value on creation for the "listed" field.
 	DefaultListed bool
+	// DefaultModelPlazaVisible holds the default value on creation for the "model_plaza_visible" field.
+	DefaultModelPlazaVisible bool
 	// DefaultDisplayPrice holds the default value on creation for the "display_price" field.
 	DefaultDisplayPrice string
 	// DefaultDisplayDiscount holds the default value on creation for the "display_discount" field.
@@ -382,6 +387,11 @@ func ByPriceFen(opts ...sql.OrderTermOption) OrderOption {
 // ByListed orders the results by the listed field.
 func ByListed(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldListed, opts...).ToFunc()
+}
+
+// ByModelPlazaVisible orders the results by the model_plaza_visible field.
+func ByModelPlazaVisible(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldModelPlazaVisible, opts...).ToFunc()
 }
 
 // ByDisplayPrice orders the results by the display_price field.

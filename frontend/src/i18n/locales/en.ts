@@ -1058,6 +1058,7 @@ export default {
         rateMultiplier: 'Billing Multiplier',
         type: 'Type',
         accounts: 'Accounts',
+        modelPlaza: 'Model Plaza',
         status: 'Status',
         actions: 'Actions',
         billingType: 'Billing Type'
@@ -1168,6 +1169,12 @@ export default {
       defaultValidityDaysPlaceholder: '30',
       defaultValidityDaysHint: 'Number of days the subscription is valid after purchase',
       listedConfig: 'Listing Configuration',
+      modelPlaza: {
+        visibleSwitch: 'Show in Model Plaza',
+        visibleHint: 'When disabled, this group and its models/prices are hidden from the user Model Plaza. API key usage is unaffected.',
+        visible: 'Visible',
+        hidden: 'Hidden'
+      },
       planFeatures: 'Custom Feature List',
       addFeature: 'Add Feature',
       planFeaturesHint: 'Features shown on the pricing page. Leave empty to auto-generate from group settings',

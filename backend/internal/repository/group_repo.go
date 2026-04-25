@@ -61,6 +61,7 @@ func (r *groupRepository) Create(ctx context.Context, groupIn *service.Group) er
 		SetListed(groupIn.Listed).
 		SetPlanFeatures(groupIn.PlanFeatures).
 		SetTags(groupIn.Tags).
+		SetModelPlazaVisible(groupIn.ModelPlazaVisible).
 		SetDisplayPrice(groupIn.DisplayPrice).
 		SetDisplayDiscount(groupIn.DisplayDiscount)
 
@@ -143,6 +144,7 @@ func (r *groupRepository) Update(ctx context.Context, groupIn *service.Group) er
 		SetListed(groupIn.Listed).
 		SetPlanFeatures(groupIn.PlanFeatures).
 		SetTags(groupIn.Tags).
+		SetModelPlazaVisible(groupIn.ModelPlazaVisible).
 		SetDisplayPrice(groupIn.DisplayPrice).
 		SetDisplayDiscount(groupIn.DisplayDiscount)
 
