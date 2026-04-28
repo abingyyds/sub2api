@@ -1,15 +1,21 @@
 <script setup lang="ts">
 import { RouterView, useRouter, useRoute, type RouteLocationNormalizedLoaded } from 'vue-router'
-import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import NavigationProgress from '@/components/common/NavigationProgress.vue'
+import ChunkLoadError from '@/components/common/ChunkLoadError.vue'
 import { useAppStore, useAuthStore, useSubscriptionStore } from '@/stores'
 import { getSetupStatus } from '@/api/setup'
+import { defineChunkResilientAsyncComponent } from '@/router/asyncComponent'
+import {
+  CHUNK_LOAD_ERROR_EVENT,
+  type ChunkLoadErrorDetail
+} from '@/router/chunkLoad'
 
-const Toast = defineAsyncComponent(() => import('@/components/common/Toast.vue'))
-const DiscoverySourceModal = defineAsyncComponent(
+const Toast = defineChunkResilientAsyncComponent(() => import('@/components/common/Toast.vue'))
+const DiscoverySourceModal = defineChunkResilientAsyncComponent(
   () => import('@/components/auth/DiscoverySourceModal.vue')
 )
-const AppLayout = defineAsyncComponent(() => import('@/components/layout/AppLayout.vue'))
+const AppLayout = defineChunkResilientAsyncComponent(() => import('@/components/layout/AppLayout.vue'))
 
 const router = useRouter()
 const route = useRoute()
@@ -18,6 +24,7 @@ const authStore = useAuthStore()
 const subscriptionStore = useSubscriptionStore()
 
 const showDiscoverySource = ref(false)
+const chunkLoadError = ref<ChunkLoadErrorDetail | null>(null)
 const shouldRenderToast = computed(() => appStore.toasts.length > 0)
 const shouldRenderDiscoverySource = computed(
   () => authStore.isAuthenticated && showDiscoverySource.value
@@ -85,7 +92,13 @@ watch(
   { immediate: true }
 )
 
+const handleChunkLoadError = (event: Event) => {
+  chunkLoadError.value = (event as CustomEvent<ChunkLoadErrorDetail>).detail
+}
+
 onMounted(() => {
+  window.addEventListener(CHUNK_LOAD_ERROR_EVENT, handleChunkLoadError)
+
   // 异步检查 setup 状态，不阻塞渲染
   getSetupStatus()
     .then((status) => {
@@ -98,6 +111,10 @@ onMounted(() => {
     })
 
   // Public settings are already loaded from injected config or will be loaded on-demand
+})
+
+onUnmounted(() => {
+  window.removeEventListener(CHUNK_LOAD_ERROR_EVENT, handleChunkLoadError)
 })
 </script>
 
@@ -117,4 +134,10 @@ onMounted(() => {
     :show="showDiscoverySource"
     @close="showDiscoverySource = false"
   />
+  <div
+    v-if="chunkLoadError"
+    class="fixed inset-0 z-[100000050] overflow-y-auto bg-white/95 backdrop-blur-sm dark:bg-dark-950/95"
+  >
+    <ChunkLoadError :path="chunkLoadError.path" />
+  </div>
 </template>

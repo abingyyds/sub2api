@@ -10,15 +10,18 @@ import { useNavigationLoadingState } from '@/composables/useNavigationLoading'
 import { useRoutePrefetch } from '@/composables/useRoutePrefetch'
 import {
   CHUNK_RELOAD_STORAGE_KEY,
+  CHUNK_RELOAD_QUERY_KEY,
   installChunkRecoveryListeners,
   isChunkLoadError,
+  notifyChunkLoadError,
   recoverFromChunkError
 } from './chunkLoad'
+import { wrapRouteLazyComponents } from './asyncComponent'
 
 /**
  * Route definitions with lazy loading
  */
-const routes: RouteRecordRaw[] = [
+const routes: RouteRecordRaw[] = wrapRouteLazyComponents([
   // ==================== Setup Routes ====================
   {
     path: '/setup',
@@ -708,7 +711,7 @@ const routes: RouteRecordRaw[] = [
       title: '404 Not Found'
     }
   }
-]
+])
 
 /**
  * Create router instance
@@ -869,7 +872,9 @@ router.beforeEach(async (to, _from, next) => {
 router.afterEach((to) => {
   // 结束导航加载状态
   navigationLoading.endNavigation()
-  sessionStorage.removeItem(CHUNK_RELOAD_STORAGE_KEY)
+  if (!to.query[CHUNK_RELOAD_QUERY_KEY]) {
+    sessionStorage.removeItem(CHUNK_RELOAD_STORAGE_KEY)
+  }
 
   // 懒初始化预加载（首次导航时创建，传入 router 实例）
   if (!routePrefetch) {
@@ -890,6 +895,7 @@ router.onError((error) => {
   if (recoverFromChunkError(lastRequestedLocation, error)) {
     console.warn('Chunk load error detected, hard reloading target route to fetch latest version...')
   } else if (isChunkLoadError(error)) {
+    notifyChunkLoadError(lastRequestedLocation, error)
     console.error('Chunk load error persists after reload. Please clear browser cache.')
   }
 })

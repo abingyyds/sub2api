@@ -510,25 +510,26 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, computed, onMounted, onUnmounted, defineAsyncComponent, nextTick, type ComponentPublicInstance } from 'vue'
+	import { ref, computed, onMounted, onUnmounted, nextTick, type ComponentPublicInstance } from 'vue'
 	import { useI18n } from 'vue-i18n'
 	import { useAppStore } from '@/stores/app'
 	import { useClipboard } from '@/composables/useClipboard'
 const { t } = useI18n()
 import { keysAPI, usageAPI, userGroupsAPI } from '@/api'
+import { defineChunkResilientAsyncComponent } from '@/router/asyncComponent'
 	import Icon from '@/components/icons/Icon.vue'
 	import GroupBadge from '@/components/common/GroupBadge.vue'
 	import GroupOptionItem from '@/components/common/GroupOptionItem.vue'
 	import PlatformIcon from '@/components/common/PlatformIcon.vue'
 
 	// 弹窗组件异步加载，用户交互时才加载
-	const DataTable = defineAsyncComponent(() => import('@/components/common/DataTable.vue'))
-	const Pagination = defineAsyncComponent(() => import('@/components/common/Pagination.vue'))
-	const EmptyState = defineAsyncComponent(() => import('@/components/common/EmptyState.vue'))
-	const BaseDialog = defineAsyncComponent(() => import('@/components/common/BaseDialog.vue'))
-	const ConfirmDialog = defineAsyncComponent(() => import('@/components/common/ConfirmDialog.vue'))
-	const KeyEditorDialog = defineAsyncComponent(() => import('@/components/keys/KeyEditorDialog.vue'))
-	const UseKeyModal = defineAsyncComponent(() => import('@/components/keys/UseKeyModal.vue'))
+	const DataTable = defineChunkResilientAsyncComponent(() => import('@/components/common/DataTable.vue'))
+	const Pagination = defineChunkResilientAsyncComponent(() => import('@/components/common/Pagination.vue'))
+	const EmptyState = defineChunkResilientAsyncComponent(() => import('@/components/common/EmptyState.vue'))
+	const BaseDialog = defineChunkResilientAsyncComponent(() => import('@/components/common/BaseDialog.vue'))
+	const ConfirmDialog = defineChunkResilientAsyncComponent(() => import('@/components/common/ConfirmDialog.vue'))
+	const KeyEditorDialog = defineChunkResilientAsyncComponent(() => import('@/components/keys/KeyEditorDialog.vue'))
+	const UseKeyModal = defineChunkResilientAsyncComponent(() => import('@/components/keys/UseKeyModal.vue'))
 
 import type { ApiKey, Group, GroupPlatform, SelectOption, SubscriptionType } from '@/types'
 import type { Column } from '@/components/common/types'
@@ -685,9 +686,18 @@ let usageStatsIdleHandle: number | ReturnType<typeof setTimeout> | null = null
 let keysManagementObserver: IntersectionObserver | null = null
 let faqObserver: IntersectionObserver | null = null
 
+type IdleCallbackDeadline = {
+  didTimeout: boolean
+  timeRemaining: () => number
+}
+type IdleCallbackFn = (deadline: IdleCallbackDeadline) => void
+type IdleCallbackOptions = {
+  timeout?: number
+}
+
 const scheduleIdleCallback = (
-  callback: IdleRequestCallback,
-  options?: IdleRequestOptions
+  callback: IdleCallbackFn,
+  options?: IdleCallbackOptions
 ): number | ReturnType<typeof setTimeout> => {
   if (typeof window.requestIdleCallback === 'function') {
     return window.requestIdleCallback(callback, options)
