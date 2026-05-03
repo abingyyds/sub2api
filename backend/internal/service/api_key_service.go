@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
@@ -28,6 +29,8 @@ var (
 
 const (
 	apiKeyMaxErrorsPerHour = 20
+	apiKeyDefaultNameLen   = 6
+	apiKeyDefaultNameChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 
 type APIKeyRepository interface {
@@ -150,6 +153,20 @@ func (s *APIKeyService) GenerateKey() (string, error) {
 	return key, nil
 }
 
+func generateRandomAPIKeyName() (string, error) {
+	bytes := make([]byte, apiKeyDefaultNameLen)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", fmt.Errorf("generate random api key name: %w", err)
+	}
+
+	var builder strings.Builder
+	builder.Grow(apiKeyDefaultNameLen)
+	for _, b := range bytes {
+		builder.WriteByte(apiKeyDefaultNameChars[int(b)%len(apiKeyDefaultNameChars)])
+	}
+	return builder.String(), nil
+}
+
 // ValidateCustomKey 验证自定义API Key格式
 func (s *APIKeyService) ValidateCustomKey(key string) error {
 	// 检查长度
@@ -220,6 +237,14 @@ func (s *APIKeyService) Create(ctx context.Context, userID int64, req CreateAPIK
 		return nil, fmt.Errorf("get user: %w", err)
 	}
 
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		name, err = generateRandomAPIKeyName()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// 验证 IP 白名单格式
 	if len(req.IPWhitelist) > 0 {
 		if invalid := ip.ValidateIPPatterns(req.IPWhitelist); len(invalid) > 0 {
@@ -286,7 +311,7 @@ func (s *APIKeyService) Create(ctx context.Context, userID int64, req CreateAPIK
 	apiKey := &APIKey{
 		UserID:      userID,
 		Key:         key,
-		Name:        req.Name,
+		Name:        name,
 		GroupID:     req.GroupID,
 		Status:      StatusActive,
 		IPWhitelist: req.IPWhitelist,
