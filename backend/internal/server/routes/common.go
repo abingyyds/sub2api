@@ -87,22 +87,22 @@ var tutorialDownloadAssets = map[string]downloadAsset{
 	},
 	"codex-windows-x64-exe": {
 		FileName:    "codex-x86_64-pc-windows-msvc.exe",
-		UpstreamURL: "https://github.com/openai/codex/releases/download/rust-v0.122.0/codex-x86_64-pc-windows-msvc.exe",
+		UpstreamURL: "https://github.com/openai/codex/releases/download/rust-v0.128.0/codex-x86_64-pc-windows-msvc.exe",
 		ContentType: "application/octet-stream",
 	},
 	"codex-windows-arm64-exe": {
 		FileName:    "codex-aarch64-pc-windows-msvc.exe",
-		UpstreamURL: "https://github.com/openai/codex/releases/download/rust-v0.122.0/codex-aarch64-pc-windows-msvc.exe",
+		UpstreamURL: "https://github.com/openai/codex/releases/download/rust-v0.128.0/codex-aarch64-pc-windows-msvc.exe",
 		ContentType: "application/octet-stream",
 	},
 	"codex-macos-arm64-dmg": {
 		FileName:    "codex-aarch64-apple-darwin.dmg",
-		UpstreamURL: "https://github.com/openai/codex/releases/download/rust-v0.122.0/codex-aarch64-apple-darwin.dmg",
+		UpstreamURL: "https://github.com/openai/codex/releases/download/rust-v0.128.0/codex-aarch64-apple-darwin.dmg",
 		ContentType: "application/x-apple-diskimage",
 	},
 	"codex-macos-intel-dmg": {
 		FileName:    "codex-x86_64-apple-darwin.dmg",
-		UpstreamURL: "https://github.com/openai/codex/releases/download/rust-v0.122.0/codex-x86_64-apple-darwin.dmg",
+		UpstreamURL: "https://github.com/openai/codex/releases/download/rust-v0.128.0/codex-x86_64-apple-darwin.dmg",
 		ContentType: "application/x-apple-diskimage",
 	},
 	"codex-linux-x64-tar-gz": {

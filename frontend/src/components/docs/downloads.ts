@@ -129,9 +129,9 @@ export const tutorialDownloadTools: DownloadTool[] = [
   },
   {
     title: 'Codex',
-    version: '0.122.0',
-    descZh: 'OpenAI 官方 Codex 工具，提供 Windows / macOS / Linux 直链安装包。',
-    descEn: 'OpenAI official Codex tool with direct Windows, macOS, and Linux package links.',
+    version: '0.128.0',
+    descZh: 'OpenAI 官方 Codex 桌面版，提供 Windows / macOS 站内直链下载。Linux 暂无官方桌面安装包。',
+    descEn: 'OpenAI official Codex desktop app with direct Windows and macOS downloads. No official Linux desktop package is currently available.',
     installGuide: 'https://github.com/openai/codex#installation',
     releases: 'https://github.com/openai/codex/releases/latest',
     groups: [
@@ -139,12 +139,12 @@ export const tutorialDownloadTools: DownloadTool[] = [
         title: 'Windows',
         links: [
           {
-            label: 'Windows x64 EXE',
+            label: 'Windows x64 Desktop EXE',
             href: localDownload('codex-windows-x64-exe'),
             recommended: true,
           },
           {
-            label: 'Windows ARM64 EXE',
+            label: 'Windows ARM64 Desktop EXE',
             href: localDownload('codex-windows-arm64-exe'),
           },
         ],
@@ -153,27 +153,13 @@ export const tutorialDownloadTools: DownloadTool[] = [
         title: 'macOS',
         links: [
           {
-            label: 'macOS Apple Silicon DMG',
+            label: 'macOS Apple Silicon Desktop DMG',
             href: localDownload('codex-macos-arm64-dmg'),
             recommended: true,
           },
           {
-            label: 'macOS Intel DMG',
+            label: 'macOS Intel Desktop DMG',
             href: localDownload('codex-macos-intel-dmg'),
-          },
-        ],
-      },
-      {
-        title: 'Linux',
-        links: [
-          {
-            label: 'Linux x64 TAR.GZ',
-            href: localDownload('codex-linux-x64-tar-gz'),
-            recommended: true,
-          },
-          {
-            label: 'Linux ARM64 TAR.GZ',
-            href: localDownload('codex-linux-arm64-tar-gz'),
           },
         ],
       },
