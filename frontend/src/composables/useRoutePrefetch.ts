@@ -9,11 +9,7 @@
  */
 import { ref, readonly } from 'vue'
 import type { RouteLocationNormalized, Router } from 'vue-router'
-
-/**
- * 组件导入函数类型
- */
-type ComponentImportFn = () => Promise<unknown>
+import { getChunkResilientLoader, type ComponentImportFn } from '@/router/asyncComponent'
 
 /**
  * 预加载邻接表：定义每个路由应该预加载哪些相邻路由
@@ -163,6 +159,11 @@ export function useRoutePrefetch(router?: Router) {
 
     if (route && route.components?.default) {
       const component = route.components.default
+      const chunkResilientLoader = getChunkResilientLoader(component)
+      if (chunkResilientLoader) {
+        return chunkResilientLoader
+      }
+
       // 检查是否是懒加载组件（函数形式）
       if (typeof component === 'function') {
         return component as ComponentImportFn

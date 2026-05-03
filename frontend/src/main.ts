@@ -4,11 +4,30 @@ import App from './App.vue'
 import router from './router'
 import i18n, { getLocale, loadLocaleMessages } from './i18n'
 import { useAppStore } from '@/stores/app'
+import {
+  getCurrentLocationPath,
+  isChunkLoadError,
+  notifyChunkLoadError,
+  recoverFromChunkError
+} from '@/router/chunkLoad'
 import './style.css'
 import './styles/animations.css'
 
 async function bootstrap() {
   const app = createApp(App)
+  app.config.errorHandler = (error, _instance, info) => {
+    if (recoverFromChunkError(getCurrentLocationPath(), error)) {
+      return
+    }
+
+    if (isChunkLoadError(error)) {
+      notifyChunkLoadError(getCurrentLocationPath(), error)
+      return
+    }
+
+    console.error(`[Vue error] ${info}:`, error)
+  }
+
   const pinia = createPinia()
   app.use(pinia)
 

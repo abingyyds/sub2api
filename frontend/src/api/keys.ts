@@ -55,7 +55,7 @@ export async function create(
   ipBlacklist?: string[],
   usageLimit?: number | null
 ): Promise<ApiKey> {
-  const payload: CreateApiKeyRequest = { name }
+  const payload: CreateApiKeyRequest = { name: name.trim() }
   if (groupId !== undefined) {
     payload.group_id = groupId
   }

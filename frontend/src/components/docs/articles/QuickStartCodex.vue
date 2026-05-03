@@ -30,9 +30,9 @@
         </template>
       </DocTabGroup>
 
-      <p class="text-sm text-gray-600 dark:text-dark-300 mt-2 mb-2">以上命令会从 npm 官方仓库下载并安装最新版本的 Codex 工具。</p>
+      <p class="text-sm text-gray-600 dark:text-dark-300 mt-2 mb-2">以上命令会从 npm 官方仓库下载并安装最新版本的 Codex CLI。</p>
       <div class="mb-2 space-y-3">
-        <p class="text-sm text-gray-600 dark:text-dark-300">如果你更希望直接下载安装包，可以直接选择对应系统版本：</p>
+        <p class="text-sm text-gray-600 dark:text-dark-300">如果你要桌面版，可以直接下载官方 Windows / macOS 安装包；Linux 暂无官方桌面版，继续使用 npm 安装。</p>
         <div
           v-for="group in codexDownloads"
           :key="group.title"
@@ -44,7 +44,6 @@
               v-for="link in group.links"
               :key="link.href"
               :href="link.href"
-              target="_blank"
               rel="noopener noreferrer"
               class="inline-flex items-center rounded-lg border px-3 py-2 text-sm font-medium transition-colors"
               :class="link.recommended

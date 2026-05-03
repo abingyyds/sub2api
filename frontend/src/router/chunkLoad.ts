@@ -1,5 +1,6 @@
 export const CHUNK_RELOAD_QUERY_KEY = '__chunk_reload'
 export const CHUNK_RELOAD_STORAGE_KEY = 'chunk_reload_attempted'
+export const CHUNK_LOAD_ERROR_EVENT = 'sub2api:chunk-load-error'
 const CHUNK_RELOAD_COOLDOWN_MS = 10_000
 const CHUNK_ERROR_PATTERNS = [
   'failed to fetch dynamically imported module',
@@ -14,6 +15,12 @@ const CHUNK_ERROR_PATTERNS = [
 ]
 
 type ChunkErrorTarget = EventTarget | null | undefined
+
+export interface ChunkLoadErrorDetail {
+  path: string
+  reloadUrl: string
+  error: unknown
+}
 
 function extractTargetAssetUrl(target: ChunkErrorTarget): string {
   if (!target) {
@@ -123,20 +130,63 @@ export function buildChunkReloadUrl(path: string, reloadMarker: string | number)
   return url.toString()
 }
 
+export function getCurrentLocationPath(): string {
+  return window.location.pathname + window.location.search + window.location.hash
+}
+
+function getCurrentReloadMarker(): number | null {
+  try {
+    const marker = new URL(window.location.href).searchParams.get(CHUNK_RELOAD_QUERY_KEY)
+    if (!marker) {
+      return null
+    }
+
+    const parsed = Number(marker)
+    return Number.isFinite(parsed) ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+export function notifyChunkLoadError(path: string, error: unknown): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const detail: ChunkLoadErrorDetail = {
+    path,
+    reloadUrl: buildChunkReloadUrl(path, Date.now()),
+    error
+  }
+
+  window.dispatchEvent(new CustomEvent<ChunkLoadErrorDetail>(CHUNK_LOAD_ERROR_EVENT, { detail }))
+}
+
+export function forceReloadForChunkError(path: string = getCurrentLocationPath()): void {
+  const now = Date.now()
+  sessionStorage.setItem(CHUNK_RELOAD_STORAGE_KEY, String(now))
+  window.location.assign(buildChunkReloadUrl(path, now))
+}
+
 export function recoverFromChunkError(path: string, error: unknown): boolean {
   if (!isChunkLoadError(error)) {
     return false
   }
 
   const lastReload = sessionStorage.getItem(CHUNK_RELOAD_STORAGE_KEY)
+  const currentReloadMarker = getCurrentReloadMarker()
   const now = Date.now()
 
-  if (lastReload && now - Number(lastReload) <= CHUNK_RELOAD_COOLDOWN_MS) {
+  const reloadedRecently =
+    (lastReload && now - Number(lastReload) <= CHUNK_RELOAD_COOLDOWN_MS) ||
+    (currentReloadMarker && now - currentReloadMarker <= CHUNK_RELOAD_COOLDOWN_MS)
+
+  if (reloadedRecently) {
+    notifyChunkLoadError(path, error)
     return false
   }
 
-  sessionStorage.setItem(CHUNK_RELOAD_STORAGE_KEY, String(now))
-  window.location.assign(buildChunkReloadUrl(path, now))
+  forceReloadForChunkError(path)
   return true
 }
 
