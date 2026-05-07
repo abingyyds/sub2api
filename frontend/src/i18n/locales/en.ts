@@ -1127,7 +1127,7 @@ export default {
         type: 'Billing Type',
         typeHint:
           'Standard billing deducts from user balance. Subscription mode uses quota limits instead.',
-        typeNotEditable: 'Billing type cannot be changed after group creation.',
+        typeNotEditable: 'Billing type cannot be changed after group creation. To sell an existing subscription plan as a stackable quota package, enable the quota package switch below.',
         standard: 'Standard (Balance)',
         subscription: 'Subscription (Quota)',
         dailyLimit: 'Daily Limit (USD)',
@@ -1181,7 +1181,7 @@ export default {
       listedConfig: 'Listing Configuration',
       quotaPackage: {
         title: 'Quota Package',
-        hint: 'When enabled, this group is sold as a stackable quota package. Repeat purchases add quota and do not affect subscription refresh rules.',
+        hint: 'When enabled, this group is sold as a stackable quota package. Existing subscriptions keep working, while new purchases add quota and do not affect subscription refresh rules.',
         quotaUsd: 'Quota Amount (USD)',
         quotaUsdPlaceholder: 'e.g. 50',
         quotaUsdHint: 'Available quota added by each purchase, deducted by actual usage.',

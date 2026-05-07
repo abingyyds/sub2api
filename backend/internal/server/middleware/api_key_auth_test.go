@@ -59,7 +59,7 @@ func TestSimpleModeBypassesQuotaCheck(t *testing.T) {
 
 	t.Run("simple_mode_bypasses_quota_check", func(t *testing.T) {
 		cfg := &config.Config{RunMode: config.RunModeSimple}
-		apiKeyService := service.NewAPIKeyService(apiKeyRepo, nil, nil, nil, nil, cfg)
+		apiKeyService := service.NewAPIKeyService(apiKeyRepo, nil, nil, nil, nil, nil, cfg)
 		subscriptionService := service.NewSubscriptionService(nil, &stubUserSubscriptionRepo{}, nil)
 		router := newAuthTestRouter(apiKeyService, subscriptionService, cfg)
 
@@ -73,7 +73,7 @@ func TestSimpleModeBypassesQuotaCheck(t *testing.T) {
 
 	t.Run("standard_mode_enforces_quota_check", func(t *testing.T) {
 		cfg := &config.Config{RunMode: config.RunModeStandard}
-		apiKeyService := service.NewAPIKeyService(apiKeyRepo, nil, nil, nil, nil, cfg)
+		apiKeyService := service.NewAPIKeyService(apiKeyRepo, nil, nil, nil, nil, nil, cfg)
 
 		now := time.Now()
 		sub := &service.UserSubscription{
@@ -150,7 +150,7 @@ func TestAPIKeyAuthSetsGroupContext(t *testing.T) {
 	}
 
 	cfg := &config.Config{RunMode: config.RunModeSimple}
-	apiKeyService := service.NewAPIKeyService(apiKeyRepo, nil, nil, nil, nil, cfg)
+	apiKeyService := service.NewAPIKeyService(apiKeyRepo, nil, nil, nil, nil, nil, cfg)
 	router := gin.New()
 	router.Use(gin.HandlerFunc(NewAPIKeyAuthMiddleware(apiKeyService, nil, nil, nil, nil, nil, cfg)))
 	router.GET("/t", func(c *gin.Context) {
@@ -208,7 +208,7 @@ func TestAPIKeyAuthOverwritesInvalidContextGroup(t *testing.T) {
 	}
 
 	cfg := &config.Config{RunMode: config.RunModeSimple}
-	apiKeyService := service.NewAPIKeyService(apiKeyRepo, nil, nil, nil, nil, cfg)
+	apiKeyService := service.NewAPIKeyService(apiKeyRepo, nil, nil, nil, nil, nil, cfg)
 	router := gin.New()
 	router.Use(gin.HandlerFunc(NewAPIKeyAuthMiddleware(apiKeyService, nil, nil, nil, nil, nil, cfg)))
 
@@ -233,6 +233,159 @@ func TestAPIKeyAuthOverwritesInvalidContextGroup(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	require.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestQuotaPackageGroupPrefersActiveSubscriptionDuringTransition(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	group := &service.Group{
+		ID:                  101,
+		Name:                "quota-transition",
+		Status:              service.StatusActive,
+		Hydrated:            true,
+		SubscriptionType:    service.SubscriptionTypeSubscription,
+		QuotaPackageEnabled: true,
+	}
+	user := &service.User{
+		ID:          7,
+		Role:        service.RoleUser,
+		Status:      service.StatusActive,
+		Balance:     0,
+		Concurrency: 3,
+	}
+	apiKey := &service.APIKey{
+		ID:     100,
+		UserID: user.ID,
+		Key:    "test-key",
+		Status: service.StatusActive,
+		User:   user,
+		Group:  group,
+	}
+	apiKey.GroupID = &group.ID
+	sub := &service.UserSubscription{
+		ID:        55,
+		UserID:    user.ID,
+		GroupID:   group.ID,
+		Status:    service.SubscriptionStatusActive,
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+	apiKeyRepo := &stubApiKeyRepo{
+		getByKey: func(ctx context.Context, key string) (*service.APIKey, error) {
+			if key != apiKey.Key {
+				return nil, service.ErrAPIKeyNotFound
+			}
+			clone := *apiKey
+			return &clone, nil
+		},
+	}
+	subscriptionRepo := &stubUserSubscriptionRepo{
+		getActive: func(ctx context.Context, userID, groupID int64) (*service.UserSubscription, error) {
+			if userID != user.ID || groupID != group.ID {
+				return nil, service.ErrSubscriptionNotFound
+			}
+			clone := *sub
+			return &clone, nil
+		},
+		activateWindow: func(ctx context.Context, id int64, start time.Time) error { return nil },
+		resetDaily:     func(ctx context.Context, id int64, start time.Time) error { return nil },
+		resetWeekly:    func(ctx context.Context, id int64, start time.Time) error { return nil },
+		resetMonthly:   func(ctx context.Context, id int64, start time.Time) error { return nil },
+	}
+	quotaRepo := &stubQuotaPackageRepo{
+		getAvailableTotal: func(ctx context.Context, userID, groupID int64) (float64, error) {
+			t.Fatalf("quota package should not be checked while active subscription is usable")
+			return 0, nil
+		},
+	}
+
+	cfg := &config.Config{RunMode: config.RunModeStandard}
+	apiKeyService := service.NewAPIKeyService(apiKeyRepo, nil, nil, nil, nil, nil, cfg)
+	subscriptionService := service.NewSubscriptionService(nil, subscriptionRepo, nil)
+	router := gin.New()
+	router.Use(gin.HandlerFunc(NewAPIKeyAuthMiddleware(apiKeyService, subscriptionService, quotaRepo, nil, nil, nil, cfg)))
+	router.GET("/t", func(c *gin.Context) {
+		_, ok := GetSubscriptionFromContext(c)
+		require.True(t, ok)
+		c.JSON(http.StatusOK, gin.H{"ok": true})
+	})
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/t", nil)
+	req.Header.Set("x-api-key", apiKey.Key)
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestQuotaPackageGroupFallsBackWhenSubscriptionMissing(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	group := &service.Group{
+		ID:                  101,
+		Name:                "quota-transition",
+		Status:              service.StatusActive,
+		Hydrated:            true,
+		SubscriptionType:    service.SubscriptionTypeSubscription,
+		QuotaPackageEnabled: true,
+	}
+	user := &service.User{
+		ID:          7,
+		Role:        service.RoleUser,
+		Status:      service.StatusActive,
+		Balance:     0,
+		Concurrency: 3,
+	}
+	apiKey := &service.APIKey{
+		ID:     100,
+		UserID: user.ID,
+		Key:    "test-key",
+		Status: service.StatusActive,
+		User:   user,
+		Group:  group,
+	}
+	apiKey.GroupID = &group.ID
+	apiKeyRepo := &stubApiKeyRepo{
+		getByKey: func(ctx context.Context, key string) (*service.APIKey, error) {
+			if key != apiKey.Key {
+				return nil, service.ErrAPIKeyNotFound
+			}
+			clone := *apiKey
+			return &clone, nil
+		},
+	}
+	subscriptionRepo := &stubUserSubscriptionRepo{
+		getActive: func(ctx context.Context, userID, groupID int64) (*service.UserSubscription, error) {
+			return nil, service.ErrSubscriptionNotFound
+		},
+	}
+	quotaChecked := false
+	quotaRepo := &stubQuotaPackageRepo{
+		getAvailableTotal: func(ctx context.Context, userID, groupID int64) (float64, error) {
+			quotaChecked = true
+			require.Equal(t, user.ID, userID)
+			require.Equal(t, group.ID, groupID)
+			return 10, nil
+		},
+	}
+
+	cfg := &config.Config{RunMode: config.RunModeStandard}
+	apiKeyService := service.NewAPIKeyService(apiKeyRepo, nil, nil, nil, nil, nil, cfg)
+	subscriptionService := service.NewSubscriptionService(nil, subscriptionRepo, nil)
+	router := gin.New()
+	router.Use(gin.HandlerFunc(NewAPIKeyAuthMiddleware(apiKeyService, subscriptionService, quotaRepo, nil, nil, nil, cfg)))
+	router.GET("/t", func(c *gin.Context) {
+		_, ok := GetSubscriptionFromContext(c)
+		require.False(t, ok)
+		c.JSON(http.StatusOK, gin.H{"ok": true})
+	})
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/t", nil)
+	req.Header.Set("x-api-key", apiKey.Key)
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	require.True(t, quotaChecked)
 }
 
 func newAuthTestRouter(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, cfg *config.Config) *gin.Engine {
@@ -424,4 +577,31 @@ func (r *stubUserSubscriptionRepo) IncrementUsage(ctx context.Context, id int64,
 
 func (r *stubUserSubscriptionRepo) BatchUpdateExpiredStatus(ctx context.Context) (int64, error) {
 	return 0, errors.New("not implemented")
+}
+
+type stubQuotaPackageRepo struct {
+	createFromOrder   func(ctx context.Context, userID, groupID, orderID int64, quotaUSD float64, expiresAt time.Time) error
+	getAvailableTotal func(ctx context.Context, userID, groupID int64) (float64, error)
+	deduct            func(ctx context.Context, userID, groupID int64, amount float64) error
+}
+
+func (r *stubQuotaPackageRepo) CreateFromOrder(ctx context.Context, userID, groupID, orderID int64, quotaUSD float64, expiresAt time.Time) error {
+	if r.createFromOrder != nil {
+		return r.createFromOrder(ctx, userID, groupID, orderID, quotaUSD, expiresAt)
+	}
+	return errors.New("not implemented")
+}
+
+func (r *stubQuotaPackageRepo) GetAvailableTotal(ctx context.Context, userID, groupID int64) (float64, error) {
+	if r.getAvailableTotal != nil {
+		return r.getAvailableTotal(ctx, userID, groupID)
+	}
+	return 0, errors.New("not implemented")
+}
+
+func (r *stubQuotaPackageRepo) Deduct(ctx context.Context, userID, groupID int64, amount float64) error {
+	if r.deduct != nil {
+		return r.deduct(ctx, userID, groupID, amount)
+	}
+	return errors.New("not implemented")
 }

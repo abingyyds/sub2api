@@ -32,6 +32,7 @@ type GatewayHandler struct {
 	userService               *service.UserService
 	billingCacheService       *service.BillingCacheService
 	settingService            *service.SettingService
+	quotaPackageRepo          service.QuotaPackageRepository
 	concurrencyHelper         *ConcurrencyHelper
 	maxAccountSwitches        int
 	maxAccountSwitchesGemini  int
@@ -46,6 +47,7 @@ func NewGatewayHandler(
 	concurrencyService *service.ConcurrencyService,
 	billingCacheService *service.BillingCacheService,
 	settingService *service.SettingService,
+	quotaPackageRepo service.QuotaPackageRepository,
 	cfg *config.Config,
 ) *GatewayHandler {
 	pingInterval := time.Duration(0)
@@ -67,6 +69,7 @@ func NewGatewayHandler(
 		userService:               userService,
 		billingCacheService:       billingCacheService,
 		settingService:            settingService,
+		quotaPackageRepo:          quotaPackageRepo,
 		concurrencyHelper:         NewConcurrencyHelper(concurrencyService, SSEPingFormatClaude, pingInterval),
 		maxAccountSwitches:        maxAccountSwitches,
 		maxAccountSwitchesGemini:  maxAccountSwitchesGemini,
@@ -178,11 +181,13 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 	}
 
 	// 2. 【新增】Wait后二次检查余额/订阅
-	if err := h.billingCacheService.CheckBillingEligibility(c.Request.Context(), apiKey.User, apiKey, apiKey.Group, subscription); err != nil {
-		log.Printf("Billing eligibility check failed after wait: %v", err)
-		status, code, message := billingErrorDetails(err)
-		h.handleStreamingAwareError(c, status, code, message, streamStarted)
-		return
+	if !isQuotaPackageFallbackBilling(apiKey, subscription) {
+		if err := h.billingCacheService.CheckBillingEligibility(c.Request.Context(), apiKey.User, apiKey, apiKey.Group, subscription); err != nil {
+			log.Printf("Billing eligibility check failed after wait: %v", err)
+			status, code, message := billingErrorDetails(err)
+			h.handleStreamingAwareError(c, status, code, message, streamStarted)
+			return
+		}
 	}
 
 	// 计算粘性会话hash
@@ -562,22 +567,42 @@ func (h *GatewayHandler) Usage(c *gin.Context) {
 		return
 	}
 
-	// 订阅模式：返回订阅限额信息
-	if apiKey.Group != nil && apiKey.Group.IsSubscriptionType() {
-		subscription, ok := middleware2.GetSubscriptionFromContext(c)
-		if !ok {
-			h.errorResponse(c, http.StatusForbidden, "subscription_error", "No active subscription")
+	if apiKey.Group != nil {
+		if subscription, ok := middleware2.GetSubscriptionFromContext(c); ok {
+			remaining := h.calculateSubscriptionRemaining(apiKey.Group, subscription)
+			c.JSON(http.StatusOK, gin.H{
+				"isValid":   true,
+				"planName":  apiKey.Group.Name,
+				"remaining": remaining,
+				"unit":      "USD",
+			})
 			return
 		}
 
-		remaining := h.calculateSubscriptionRemaining(apiKey.Group, subscription)
-		c.JSON(http.StatusOK, gin.H{
-			"isValid":   true,
-			"planName":  apiKey.Group.Name,
-			"remaining": remaining,
-			"unit":      "USD",
-		})
-		return
+		if apiKey.Group.IsQuotaPackage() {
+			if h.quotaPackageRepo == nil {
+				h.errorResponse(c, http.StatusServiceUnavailable, "api_error", "Quota package billing is unavailable")
+				return
+			}
+			remaining, err := h.quotaPackageRepo.GetAvailableTotal(c.Request.Context(), subject.UserID, apiKey.Group.ID)
+			if err != nil {
+				h.errorResponse(c, http.StatusInternalServerError, "api_error", "Failed to get quota package balance")
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"isValid":   true,
+				"planName":  apiKey.Group.Name,
+				"remaining": remaining,
+				"unit":      "USD",
+			})
+			return
+		}
+
+		if apiKey.Group.IsSubscriptionType() {
+			h.errorResponse(c, http.StatusForbidden, "subscription_error", "No active subscription")
+			return
+		}
 	}
 
 	// 余额模式：返回钱包余额
@@ -593,6 +618,13 @@ func (h *GatewayHandler) Usage(c *gin.Context) {
 		"remaining": latestUser.Balance,
 		"unit":      "USD",
 	})
+}
+
+func isQuotaPackageFallbackBilling(apiKey *service.APIKey, subscription *service.UserSubscription) bool {
+	return subscription == nil &&
+		apiKey != nil &&
+		apiKey.Group != nil &&
+		apiKey.Group.IsQuotaPackage()
 }
 
 // calculateSubscriptionRemaining 计算订阅剩余可用额度
@@ -773,10 +805,12 @@ func (h *GatewayHandler) CountTokens(c *gin.Context) {
 
 	// 校验 billing eligibility（订阅/余额）
 	// 【注意】不计算并发，但需要校验订阅/余额
-	if err := h.billingCacheService.CheckBillingEligibility(c.Request.Context(), apiKey.User, apiKey, apiKey.Group, subscription); err != nil {
-		status, code, message := billingErrorDetails(err)
-		h.errorResponse(c, status, code, message)
-		return
+	if !isQuotaPackageFallbackBilling(apiKey, subscription) {
+		if err := h.billingCacheService.CheckBillingEligibility(c.Request.Context(), apiKey.User, apiKey, apiKey.Group, subscription); err != nil {
+			status, code, message := billingErrorDetails(err)
+			h.errorResponse(c, status, code, message)
+			return
+		}
 	}
 
 	// 计算粘性会话 hash

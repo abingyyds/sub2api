@@ -238,11 +238,13 @@ func (h *OpenAIGatewayHandler) handleRequest(c *gin.Context, endpoint string) {
 	}
 
 	// 2. Re-check billing eligibility after wait
-	if err := h.billingCacheService.CheckBillingEligibility(c.Request.Context(), apiKey.User, apiKey, apiKey.Group, subscription); err != nil {
-		log.Printf("[OpenAI Handler] Billing re-check 403: user=%d path=%s err=%v", apiKey.User.ID, c.Request.URL.Path, err)
-		status, code, message := billingErrorDetails(err)
-		h.handleStreamingAwareError(c, status, code, message, streamStarted)
-		return
+	if !isQuotaPackageFallbackBilling(apiKey, subscription) {
+		if err := h.billingCacheService.CheckBillingEligibility(c.Request.Context(), apiKey.User, apiKey, apiKey.Group, subscription); err != nil {
+			log.Printf("[OpenAI Handler] Billing re-check 403: user=%d path=%s err=%v", apiKey.User.ID, c.Request.URL.Path, err)
+			status, code, message := billingErrorDetails(err)
+			h.handleStreamingAwareError(c, status, code, message, streamStarted)
+			return
+		}
 	}
 
 	// Generate session hash (header first; fallback to prompt_cache_key)

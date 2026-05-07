@@ -164,11 +164,27 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 			return
 		}
 
-		// 判断计费方式：订阅模式 / 额度包 / 余额模式
+		// 判断计费方式：订阅模式 / 额度包 / 余额模式。
+		// 额度包分组允许从既有订阅套餐平滑切换：已有活跃订阅继续生效；
+		// 订阅不存在或当前窗口额度已用完时，再回落到额度包扣费。
 		isSubscriptionType := apiKey.Group != nil && apiKey.Group.IsSubscriptionType()
 		isQuotaPackageType := apiKey.Group != nil && apiKey.Group.IsQuotaPackage()
 
-		if isQuotaPackageType {
+		subscriptionAuthorized := false
+		if isSubscriptionType && subscriptionService != nil {
+			subscription, err := validateSubscriptionForAPIKeyAuth(c.Request.Context(), subscriptionService, apiKey)
+			if err == nil {
+				c.Set(string(ContextKeySubscription), subscription)
+				subscriptionAuthorized = true
+			} else if !isQuotaPackageType {
+				abortSubscriptionAuthError(c, apiKey, err)
+				return
+			} else {
+				log.Printf("[Auth] quota package fallback after subscription check failed: user=%d group=%d path=%s err=%v", apiKey.User.ID, apiKey.Group.ID, c.Request.URL.Path, err)
+			}
+		}
+
+		if isQuotaPackageType && !subscriptionAuthorized {
 			if quotaPackageRepo == nil {
 				AbortWithError(c, 503, "QUOTA_PACKAGE_UNAVAILABLE", "Quota package billing is unavailable")
 				return
@@ -184,45 +200,7 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 				AbortWithError(c, 403, "QUOTA_PACKAGE_INSUFFICIENT", "Quota package balance is insufficient")
 				return
 			}
-		} else if isSubscriptionType && subscriptionService != nil {
-			// 订阅模式：验证订阅
-			subscription, err := subscriptionService.GetActiveSubscription(
-				c.Request.Context(),
-				apiKey.User.ID,
-				apiKey.Group.ID,
-			)
-			if err != nil {
-				log.Printf("[Auth] 403 SUBSCRIPTION_NOT_FOUND: user=%d group=%d path=%s", apiKey.User.ID, apiKey.Group.ID, c.Request.URL.Path)
-				AbortWithError(c, 403, "SUBSCRIPTION_NOT_FOUND", "No active subscription found for this group")
-				return
-			}
-
-			// 验证订阅状态（是否过期、暂停等）
-			if err := subscriptionService.ValidateSubscription(c.Request.Context(), subscription); err != nil {
-				log.Printf("[Auth] 403 SUBSCRIPTION_INVALID: user=%d group=%d path=%s err=%v", apiKey.User.ID, apiKey.Group.ID, c.Request.URL.Path, err)
-				AbortWithError(c, 403, "SUBSCRIPTION_INVALID", err.Error())
-				return
-			}
-
-			// 激活滑动窗口（首次使用时）
-			if err := subscriptionService.CheckAndActivateWindow(c.Request.Context(), subscription); err != nil {
-				log.Printf("Failed to activate subscription windows: %v", err)
-			}
-
-			// 检查并重置过期窗口
-			if err := subscriptionService.CheckAndResetWindows(c.Request.Context(), subscription); err != nil {
-				log.Printf("Failed to reset subscription windows: %v", err)
-			}
-
-			// 预检查用量限制（使用0作为额外费用进行预检查）
-			if err := subscriptionService.CheckUsageLimits(c.Request.Context(), subscription, apiKey.Group, 0); err != nil {
-				AbortWithError(c, 429, "USAGE_LIMIT_EXCEEDED", err.Error()+", please switch to balance mode")
-				return
-			}
-
-			// 将订阅信息存入上下文
-			c.Set(string(ContextKeySubscription), subscription)
-		} else {
+		} else if !isSubscriptionType || subscriptionService == nil {
 			// 余额模式：检查用户余额
 			if apiKey.User.Balance <= 0 {
 				log.Printf("[Auth] 403 INSUFFICIENT_BALANCE: user=%d balance=%.4f path=%s", apiKey.User.ID, apiKey.User.Balance, c.Request.URL.Path)
@@ -242,6 +220,46 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 
 		c.Next()
 	}
+}
+
+func validateSubscriptionForAPIKeyAuth(ctx context.Context, subscriptionService *service.SubscriptionService, apiKey *service.APIKey) (*service.UserSubscription, error) {
+	subscription, err := subscriptionService.GetActiveSubscription(
+		ctx,
+		apiKey.User.ID,
+		apiKey.Group.ID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if err := subscriptionService.ValidateSubscription(ctx, subscription); err != nil {
+		return nil, err
+	}
+	if err := subscriptionService.CheckAndActivateWindow(ctx, subscription); err != nil {
+		log.Printf("Failed to activate subscription windows: %v", err)
+	}
+	if err := subscriptionService.CheckAndResetWindows(ctx, subscription); err != nil {
+		log.Printf("Failed to reset subscription windows: %v", err)
+	}
+	if err := subscriptionService.CheckUsageLimits(ctx, subscription, apiKey.Group, 0); err != nil {
+		return nil, err
+	}
+	return subscription, nil
+}
+
+func abortSubscriptionAuthError(c *gin.Context, apiKey *service.APIKey, err error) {
+	if errors.Is(err, service.ErrSubscriptionNotFound) {
+		log.Printf("[Auth] 403 SUBSCRIPTION_NOT_FOUND: user=%d group=%d path=%s", apiKey.User.ID, apiKey.Group.ID, c.Request.URL.Path)
+		AbortWithError(c, 403, "SUBSCRIPTION_NOT_FOUND", "No active subscription found for this group")
+		return
+	}
+	if errors.Is(err, service.ErrDailyLimitExceeded) ||
+		errors.Is(err, service.ErrWeeklyLimitExceeded) ||
+		errors.Is(err, service.ErrMonthlyLimitExceeded) {
+		AbortWithError(c, 429, "USAGE_LIMIT_EXCEEDED", err.Error()+", please switch to balance mode")
+		return
+	}
+	log.Printf("[Auth] 403 SUBSCRIPTION_INVALID: user=%d group=%d path=%s err=%v", apiKey.User.ID, apiKey.Group.ID, c.Request.URL.Path, err)
+	AbortWithError(c, 403, "SUBSCRIPTION_INVALID", err.Error())
 }
 
 // GetAPIKeyFromContext 从上下文中获取API key

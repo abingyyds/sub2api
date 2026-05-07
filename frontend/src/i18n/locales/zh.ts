@@ -1202,7 +1202,7 @@ export default {
         title: '订阅设置',
         type: '计费类型',
         typeHint: '标准计费从用户余额扣除。订阅模式使用配额限制。',
-        typeNotEditable: '分组创建后无法修改计费类型。',
+        typeNotEditable: '分组创建后无法修改计费类型；要把已有订阅套餐改为可叠加销售，请开启下方额度包开关。',
         standard: '标准（余额）',
         subscription: '订阅（配额）',
         dailyLimit: '每日限额（USD）',
@@ -1256,7 +1256,7 @@ export default {
       listedConfig: '上架配置',
       quotaPackage: {
         title: '额度包',
-        hint: '开启后该分组作为可叠加额度包销售，重复购买会叠加额度，不影响订阅刷新逻辑。',
+        hint: '开启后该分组作为可叠加额度包销售；已有订阅继续按原订阅生效，新购买叠加额度，不影响订阅刷新逻辑。',
         quotaUsd: '额度金额（USD）',
         quotaUsdPlaceholder: '例如 50',
         quotaUsdHint: '每次购买增加的可用额度，按实际用量扣减。',

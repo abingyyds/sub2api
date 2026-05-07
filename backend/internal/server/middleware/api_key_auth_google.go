@@ -68,9 +68,24 @@ func APIKeyAuthWithSubscriptionGoogle(apiKeyService *service.APIKeyService, subs
 			return
 		}
 
+		// Quota package groups can be enabled on existing subscription groups.
+		// Keep active subscriptions working first; fall back to quota packages when
+		// no active subscription is available or the current subscription window is exhausted.
 		isSubscriptionType := apiKey.Group != nil && apiKey.Group.IsSubscriptionType()
 		isQuotaPackageType := apiKey.Group != nil && apiKey.Group.IsQuotaPackage()
-		if isQuotaPackageType {
+		subscriptionAuthorized := false
+		if isSubscriptionType && subscriptionService != nil {
+			subscription, err := validateSubscriptionForAPIKeyAuth(c.Request.Context(), subscriptionService, apiKey)
+			if err == nil {
+				c.Set(string(ContextKeySubscription), subscription)
+				subscriptionAuthorized = true
+			} else if !isQuotaPackageType {
+				abortSubscriptionGoogleError(c, err)
+				return
+			}
+		}
+
+		if isQuotaPackageType && !subscriptionAuthorized {
 			if quotaPackageRepo == nil {
 				abortWithGoogleError(c, 503, "Quota package billing is unavailable")
 				return
@@ -84,28 +99,7 @@ func APIKeyAuthWithSubscriptionGoogle(apiKeyService *service.APIKeyService, subs
 				abortWithGoogleError(c, 403, "Quota package balance is insufficient")
 				return
 			}
-		} else if isSubscriptionType && subscriptionService != nil {
-			subscription, err := subscriptionService.GetActiveSubscription(
-				c.Request.Context(),
-				apiKey.User.ID,
-				apiKey.Group.ID,
-			)
-			if err != nil {
-				abortWithGoogleError(c, 403, "No active subscription found for this group")
-				return
-			}
-			if err := subscriptionService.ValidateSubscription(c.Request.Context(), subscription); err != nil {
-				abortWithGoogleError(c, 403, err.Error())
-				return
-			}
-			_ = subscriptionService.CheckAndActivateWindow(c.Request.Context(), subscription)
-			_ = subscriptionService.CheckAndResetWindows(c.Request.Context(), subscription)
-			if err := subscriptionService.CheckUsageLimits(c.Request.Context(), subscription, apiKey.Group, 0); err != nil {
-				abortWithGoogleError(c, 429, err.Error())
-				return
-			}
-			c.Set(string(ContextKeySubscription), subscription)
-		} else {
+		} else if !isSubscriptionType || subscriptionService == nil {
 			if apiKey.User.Balance <= 0 {
 				abortWithGoogleError(c, 403, "Insufficient account balance")
 				return
@@ -158,4 +152,18 @@ func abortWithGoogleError(c *gin.Context, status int, message string) {
 		},
 	})
 	c.Abort()
+}
+
+func abortSubscriptionGoogleError(c *gin.Context, err error) {
+	if errors.Is(err, service.ErrSubscriptionNotFound) {
+		abortWithGoogleError(c, 403, "No active subscription found for this group")
+		return
+	}
+	if errors.Is(err, service.ErrDailyLimitExceeded) ||
+		errors.Is(err, service.ErrWeeklyLimitExceeded) ||
+		errors.Is(err, service.ErrMonthlyLimitExceeded) {
+		abortWithGoogleError(c, 429, err.Error())
+		return
+	}
+	abortWithGoogleError(c, 403, err.Error())
 }
