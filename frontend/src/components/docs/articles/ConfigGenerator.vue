@@ -38,7 +38,7 @@
           <code class="mx-1 rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">https://airiver.cn</code>
           或
           <code class="mx-1 rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">https://api.airiver.cn</code>；
-          Claude / OpenAI 追加 <code class="rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">/v1</code>，Gemini 追加
+          Claude Code 不追加后缀，Anthropic SDK / OpenAI 追加 <code class="rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">/v1</code>，Gemini 追加
           <code class="rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">/v1beta</code>。
         </div>
       </div>

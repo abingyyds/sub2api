@@ -246,7 +246,7 @@ func (h *UsageHandler) Stats(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, stats)
+	response.Success(c, dto.UserUsageStatsFromService(stats))
 }
 
 // parseUserTimeRange parses start_date, end_date query parameters for user dashboard
@@ -297,7 +297,7 @@ func (h *UsageHandler) DashboardStats(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, stats)
+	response.Success(c, dto.UserDashboardStatsFromUsageStats(stats))
 }
 
 // DashboardTrend handles getting user usage trend data
@@ -319,7 +319,7 @@ func (h *UsageHandler) DashboardTrend(c *gin.Context) {
 	}
 
 	response.Success(c, gin.H{
-		"trend":       trend,
+		"trend":       dto.UserTrendDataPointFromUsageStats(trend),
 		"start_date":  startTime.Format("2006-01-02"),
 		"end_date":    endTime.Add(-24 * time.Hour).Format("2006-01-02"),
 		"granularity": granularity,
@@ -344,7 +344,7 @@ func (h *UsageHandler) DashboardModels(c *gin.Context) {
 	}
 
 	response.Success(c, gin.H{
-		"models":     stats,
+		"models":     dto.UserModelStatFromUsageStats(stats),
 		"start_date": startTime.Format("2006-01-02"),
 		"end_date":   endTime.Add(-24 * time.Hour).Format("2006-01-02"),
 	})

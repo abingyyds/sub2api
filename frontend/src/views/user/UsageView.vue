@@ -64,9 +64,7 @@
                       ${{ (usageStats?.total_actual_cost || 0).toFixed(4) }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">
-                      {{ t('usage.actualCost') }} /
-                      <span class="line-through">${{ (usageStats?.total_cost || 0).toFixed(4) }}</span>
-                      {{ t('usage.standardCost') }}
+                      {{ t('usage.actualDeduction') }}
                     </p>
                   </div>
                 </div>
@@ -391,33 +389,33 @@
         class="whitespace-nowrap rounded-lg border border-gray-700 bg-gray-900 px-3 py-2.5 text-xs text-white shadow-xl dark:border-gray-600 dark:bg-gray-800"
       >
         <div class="space-y-1.5">
-          <!-- Cost Breakdown -->
+          <!-- Billing Breakdown -->
           <div class="mb-2 border-b border-gray-700 pb-1.5">
-            <div class="text-xs font-semibold text-gray-300 mb-1">{{ t('usage.costDetails') }}</div>
-            <div v-if="tooltipData && tooltipData.input_cost > 0" class="flex items-center justify-between gap-4">
-              <span class="text-gray-400">{{ t('admin.usage.inputCost') }}</span>
-              <span class="font-medium text-white">${{ tooltipData.input_cost.toFixed(6) }}</span>
+            <div class="text-xs font-semibold text-gray-300 mb-1">{{ t('usage.billingDetails') }}</div>
+            <div v-if="tooltipData && (tooltipData.input_billed_cost || 0) > 0" class="flex items-center justify-between gap-4">
+              <span class="text-gray-400">{{ t('usage.inputBilled') }}</span>
+              <span class="font-medium text-white">${{ (tooltipData.input_billed_cost || 0).toFixed(6) }}</span>
             </div>
-            <div v-if="tooltipData && tooltipData.output_cost > 0" class="flex items-center justify-between gap-4">
-              <span class="text-gray-400">{{ t('admin.usage.outputCost') }}</span>
-              <span class="font-medium text-white">${{ tooltipData.output_cost.toFixed(6) }}</span>
+            <div v-if="tooltipData && (tooltipData.output_billed_cost || 0) > 0" class="flex items-center justify-between gap-4">
+              <span class="text-gray-400">{{ t('usage.outputBilled') }}</span>
+              <span class="font-medium text-white">${{ (tooltipData.output_billed_cost || 0).toFixed(6) }}</span>
             </div>
-            <div v-if="tooltipData && tooltipData.cache_creation_cost > 0" class="flex items-center justify-between gap-4">
-              <span class="text-gray-400">{{ t('admin.usage.cacheCreationCost') }}</span>
-              <span class="font-medium text-white">${{ tooltipData.cache_creation_cost.toFixed(6) }}</span>
+            <div v-if="tooltipData && (tooltipData.cache_creation_billed_cost || 0) > 0" class="flex items-center justify-between gap-4">
+              <span class="text-gray-400">{{ t('usage.cacheCreationBilled') }}</span>
+              <span class="font-medium text-white">${{ (tooltipData.cache_creation_billed_cost || 0).toFixed(6) }}</span>
             </div>
-            <div v-if="tooltipData && tooltipData.cache_read_cost > 0" class="flex items-center justify-between gap-4">
-              <span class="text-gray-400">{{ t('admin.usage.cacheReadCost') }}</span>
-              <span class="font-medium text-white">${{ tooltipData.cache_read_cost.toFixed(6) }}</span>
+            <div v-if="tooltipData && (tooltipData.cache_read_billed_cost || 0) > 0" class="flex items-center justify-between gap-4">
+              <span class="text-gray-400">{{ t('usage.cacheReadBilled') }}</span>
+              <span class="font-medium text-white">${{ (tooltipData.cache_read_billed_cost || 0).toFixed(6) }}</span>
             </div>
           </div>
-          <!-- Cost Summary -->
+          <!-- Billing Summary -->
           <div class="flex items-center justify-between gap-6">
-            <span class="text-gray-400">{{ t('usage.original') }}</span>
-            <span class="font-medium text-white">${{ tooltipData?.total_cost.toFixed(6) }}</span>
+            <span class="text-gray-400">{{ t('usage.billingStandard') }}</span>
+            <span class="font-semibold text-blue-400">{{ (tooltipData?.rate_multiplier ?? 1).toFixed(2) }}x</span>
           </div>
           <div class="flex items-center justify-between gap-6 border-t border-gray-700 pt-1.5">
-            <span class="text-gray-400">{{ t('usage.billed') }}</span>
+            <span class="text-gray-400">{{ t('usage.actualDeduction') }}</span>
             <span class="font-semibold text-green-400"
               >${{ tooltipData?.actual_cost.toFixed(6) }}</span
             >
@@ -836,8 +834,8 @@ const exportToCSV = async () => {
       'Output Tokens',
       'Cache Read Tokens',
       'Cache Creation Tokens',
-      'Billed Cost',
-      'Original Cost',
+      'Actual Deduction',
+      'Billing Rate',
       'First Token (ms)',
       'Duration (ms)'
     ]
@@ -852,7 +850,7 @@ const exportToCSV = async () => {
         log.cache_read_tokens,
         log.cache_creation_tokens,
         log.actual_cost.toFixed(8),
-        log.total_cost.toFixed(8),
+        log.rate_multiplier.toFixed(4),
         log.first_token_ms ?? '',
         log.duration_ms
       ].map(escapeCSVValue)

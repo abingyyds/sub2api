@@ -1884,8 +1884,14 @@ func generateNonce() string {
 // handlePaymentSuccess 处理支付成功后的共享逻辑（订阅分配/余额充值/缓存失效/优惠码记录）
 func (s *PaymentService) handlePaymentSuccess(ctx context.Context, order *PaymentOrder) error {
 	if order.OrderType == PaymentOrderTypeBalance {
-		// 充值余额
-		if err := s.userRepo.UpdateBalance(ctx, order.UserID, order.BalanceAmount); err != nil {
+		// 充值余额。pool 分站的自动进货必须和用户余额入账同事务完成，避免账实不一致。
+		if _, siteID, ok := parseBalanceSubSitePlanKey(order.PlanKey); ok && siteID > 0 && s.subSiteService != nil {
+			if err := s.subSiteService.CreditUserBalanceWithAutoRestock(ctx, order.UserID, siteID, order.ID, order.BalanceAmount, int64(order.AmountFen), order.OrderNo); err != nil {
+				log.Printf("[Payment] Failed to credit balance with auto-restock for order %s, user %d, site %d: %v", order.OrderNo, order.UserID, siteID, err)
+				return fmt.Errorf("credit balance with auto-restock: %w", err)
+			}
+			log.Printf("[Payment] Order %s auto-restock: site %d pool -%d fen", order.OrderNo, siteID, order.AmountFen)
+		} else if err := s.userRepo.UpdateBalance(ctx, order.UserID, order.BalanceAmount); err != nil {
 			log.Printf("[Payment] Failed to update balance for order %s, user %d: %v", order.OrderNo, order.UserID, err)
 			return fmt.Errorf("update balance: %w", err)
 		}
@@ -1893,20 +1899,6 @@ func (s *PaymentService) handlePaymentSuccess(ctx context.Context, order *Paymen
 		if s.billingCache != nil {
 			if err := s.billingCache.InvalidateUserBalance(ctx, order.UserID); err != nil {
 				log.Printf("[Payment] Failed to invalidate balance cache for user %d: %v", order.UserID, err)
-			}
-		}
-		// 如果此充值订单绑定了 pool 模式分站，执行自动进货（扣分站池等额）
-		if _, siteID, ok := parseBalanceSubSitePlanKey(order.PlanKey); ok && siteID > 0 && s.subSiteService != nil {
-			entry := SubSiteLedgerEntry{
-				TxType:         SubSiteLedgerAutoRestock,
-				RelatedUserID:  &order.UserID,
-				RelatedOrderID: &order.ID,
-				Note:           fmt.Sprintf("用户线上充值自动进货，订单 %s", order.OrderNo),
-			}
-			if _, err := s.subSiteService.AdjustPoolBalance(ctx, siteID, -int64(order.AmountFen), entry); err != nil {
-				log.Printf("[Payment] WARN: auto-restock failed for order %s site %d: %v (balance already credited to user)", order.OrderNo, siteID, err)
-			} else {
-				log.Printf("[Payment] Order %s auto-restock: site %d pool -%d fen", order.OrderNo, siteID, order.AmountFen)
 			}
 		}
 		log.Printf("[Payment] Order %s paid successfully, balance +%.2f for user %d",

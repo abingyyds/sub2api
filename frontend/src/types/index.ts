@@ -689,11 +689,10 @@ export interface UsageLog {
   cache_creation_5m_tokens: number
   cache_creation_1h_tokens: number
 
-  input_cost: number
-  output_cost: number
-  cache_creation_cost: number
-  cache_read_cost: number
-  total_cost: number
+  input_billed_cost?: number
+  output_billed_cost?: number
+  cache_creation_billed_cost?: number
+  cache_read_billed_cost?: number
   actual_cost: number
   rate_multiplier: number
   billing_type: number
@@ -723,6 +722,16 @@ export interface UsageLogAccountSummary {
 }
 
 export interface AdminUsageLog extends UsageLog {
+  // 真实成本字段（仅管理员接口返回）
+  input_cost: number
+  output_cost: number
+  cache_creation_cost: number
+  cache_read_cost: number
+  total_cost: number
+
+  // 账号维度计费（真实成本 * 账号倍率，仅管理员接口返回）
+  account_cost: number
+
   // 账号计费倍率（仅管理员可见）
   account_rate_multiplier?: number | null
 
@@ -846,7 +855,6 @@ export interface UsageStatsResponse {
   total_output_tokens: number
   total_cache_tokens: number
   total_tokens: number
-  total_cost: number // 标准计费
   total_actual_cost: number // 实际扣除
   average_duration_ms: number
   models?: Record<string, number>
@@ -861,7 +869,7 @@ export interface TrendDataPoint {
   output_tokens: number
   cache_tokens: number
   total_tokens: number
-  cost: number // 标准计费
+  cost?: number // 标准计费（管理员接口返回）
   actual_cost: number // 实际扣除
 }
 
@@ -871,7 +879,7 @@ export interface ModelStat {
   input_tokens: number
   output_tokens: number
   total_tokens: number
-  cost: number // 标准计费
+  cost?: number // 标准计费（管理员接口返回）
   actual_cost: number // 实际扣除
 }
 

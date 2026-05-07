@@ -451,28 +451,79 @@ func (r *subSiteRepository) AdjustBalance(ctx context.Context, siteID int64, del
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	var (
-		// 累计入账：topup 常规 + 分站利润
-		isTopup = deltaFen > 0 && (entry.TxType == service.SubSiteLedgerTopupOnline ||
-			entry.TxType == service.SubSiteLedgerTopupAdmin ||
-			entry.TxType == service.SubSiteLedgerManualCredit ||
-			entry.TxType == service.SubSiteLedgerProfit)
-		// 累计出账：pool 模式消费扣池
-		isConsume  = deltaFen < 0 && entry.TxType == service.SubSiteLedgerConsume
-		newBalance int64
-	)
+	newBalance, err := r.adjustBalanceInTx(ctx, tx, siteID, deltaFen, entry, false)
+	if err != nil {
+		return 0, err
+	}
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+	return newBalance, nil
+}
+
+// ApplyUserBalanceAndPoolLedger 在单个 SQL 事务内完成用户余额变动和资金池流水。
+// 与 AdjustBalance 不同，这条路径禁止任何分站池扣成负数，避免“用户已加余额但池扣款失败”的账实不一致。
+func (r *subSiteRepository) ApplyUserBalanceAndPoolLedger(ctx context.Context, userID int64, balanceDelta float64, entries []service.SubSiteLedgerEntry) error {
+	if userID <= 0 {
+		return service.ErrUserNotFound
+	}
+	if len(entries) == 0 {
+		return nil
+	}
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	res, err := tx.ExecContext(ctx, `UPDATE users SET balance = balance + $2, updated_at = NOW() WHERE id = $1`, userID, balanceDelta)
+	if err != nil {
+		return err
+	}
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		return service.ErrUserNotFound
+	}
+	for _, entry := range entries {
+		if entry.SubSiteID <= 0 {
+			return service.ErrSubSiteNotFound
+		}
+		if _, err := r.adjustBalanceInTx(ctx, tx, entry.SubSiteID, entry.DeltaFen, entry, true); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+func (r *subSiteRepository) adjustBalanceInTx(ctx context.Context, tx *sql.Tx, siteID int64, deltaFen int64, entry service.SubSiteLedgerEntry, preventNegative bool) (int64, error) {
+	// 累计入账：topup 常规 + 分站利润
+	isTopup := deltaFen > 0 && (entry.TxType == service.SubSiteLedgerTopupOnline ||
+		entry.TxType == service.SubSiteLedgerTopupAdmin ||
+		entry.TxType == service.SubSiteLedgerManualCredit ||
+		entry.TxType == service.SubSiteLedgerProfit)
+	// 累计出账：pool 模式消费扣池
+	isConsume := deltaFen < 0 && entry.TxType == service.SubSiteLedgerConsume
+
+	var newBalance int64
 	updateQuery := `
 		UPDATE sub_sites
 		SET balance_fen = balance_fen + $2,
 			total_topup_fen = total_topup_fen + CASE WHEN $3 THEN $2 ELSE 0 END,
 			total_consumed_fen = total_consumed_fen + CASE WHEN $4 THEN -$2 ELSE 0 END,
 			updated_at = NOW()
-		WHERE id = $1
+		WHERE id = $1 AND (NOT $5 OR balance_fen + $2 >= 0)
 		RETURNING balance_fen
 	`
-	if err := tx.QueryRowContext(ctx, updateQuery, siteID, deltaFen, isTopup, isConsume).Scan(&newBalance); err != nil {
+	if err := tx.QueryRowContext(ctx, updateQuery, siteID, deltaFen, isTopup, isConsume, preventNegative).Scan(&newBalance); err != nil {
 		if err == sql.ErrNoRows {
-			return 0, service.ErrSubSiteNotFound
+			var exists bool
+			if existsErr := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM sub_sites WHERE id = $1)`, siteID).Scan(&exists); existsErr != nil {
+				return 0, existsErr
+			}
+			if !exists {
+				return 0, service.ErrSubSiteNotFound
+			}
+			return 0, service.ErrSubSitePoolInsufficient
 		}
 		return 0, err
 	}
@@ -485,9 +536,6 @@ func (r *subSiteRepository) AdjustBalance(ctx context.Context, siteID int64, del
 		siteID, entry.TxType, deltaFen, newBalance,
 		entry.RelatedUserID, entry.RelatedUsageLogID, entry.RelatedOrderID, entry.OperatorID, entry.Note,
 	); err != nil {
-		return 0, err
-	}
-	if err := tx.Commit(); err != nil {
 		return 0, err
 	}
 	return newBalance, nil

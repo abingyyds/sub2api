@@ -3648,7 +3648,7 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 		billingType = BillingTypeSubscription
 	}
 
-	// 应用账号计费倍率到用户扣费
+	// 应用账号计费倍率到真实扣费；展示层会按角色决定是否暴露成本明细。
 	cost.ActualCost *= account.BillingRateMultiplier()
 
 	// 创建使用日志

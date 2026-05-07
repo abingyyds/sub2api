@@ -81,9 +81,9 @@
         </template>
 
         <template #cell-cost="{ row }">
-          <div class="text-sm">
+          <div class="space-y-0.5 text-sm">
             <div class="flex items-center gap-1.5">
-              <span class="font-medium text-green-600 dark:text-green-400">${{ row.actual_cost?.toFixed(6) || '0.000000' }}</span>
+              <span class="font-medium text-green-600 dark:text-green-400">{{ t('usage.actualDeduction') }} ${{ row.actual_cost?.toFixed(6) || '0.000000' }}</span>
               <!-- Cost Detail Tooltip -->
               <div
                 class="group relative"
@@ -95,8 +95,11 @@
                 </div>
               </div>
             </div>
-            <div v-if="row.account_rate_multiplier != null" class="mt-0.5 text-[11px] text-gray-400">
-              A ${{ (row.total_cost * row.account_rate_multiplier).toFixed(6) }}
+            <div class="text-[11px] text-gray-500 dark:text-gray-400">
+              {{ t('usage.trueCost') }} ${{ row.total_cost?.toFixed(6) || '0.000000' }}
+            </div>
+            <div v-if="row.account_rate_multiplier != null" class="text-[11px] text-gray-400">
+              {{ t('usage.accountCost') }} ${{ formatAccountCost(row) }}
             </div>
           </div>
         </template>
@@ -184,7 +187,7 @@
         <div class="space-y-1.5">
           <!-- Cost Breakdown -->
           <div class="mb-2 border-b border-gray-700 pb-1.5">
-            <div class="text-xs font-semibold text-gray-300 mb-1">{{ t('usage.costDetails') }}</div>
+            <div class="text-xs font-semibold text-gray-300 mb-1">{{ t('usage.trueCostDetails') }}</div>
             <div v-if="tooltipData && tooltipData.input_cost > 0" class="flex items-center justify-between gap-4">
               <span class="text-gray-400">{{ t('admin.usage.inputCost') }}</span>
               <span class="font-medium text-white">${{ tooltipData.input_cost.toFixed(6) }}</span>
@@ -205,7 +208,7 @@
           <!-- Rate and Summary -->
           <div class="flex items-center justify-between gap-6">
             <span class="text-gray-400">{{ t('usage.rate') }}</span>
-            <span class="font-semibold text-blue-400">{{ (tooltipData?.rate_multiplier || 1).toFixed(2) }}x</span>
+            <span class="font-semibold text-blue-400">{{ (tooltipData?.rate_multiplier ?? 1).toFixed(2) }}x</span>
           </div>
           <div class="flex items-center justify-between gap-6">
             <span class="text-gray-400">{{ t('usage.accountMultiplier') }}</span>
@@ -220,9 +223,9 @@
             <span class="font-semibold text-green-400">${{ tooltipData?.actual_cost?.toFixed(6) || '0.000000' }}</span>
           </div>
           <div class="flex items-center justify-between gap-6 border-t border-gray-700 pt-1.5">
-            <span class="text-gray-400">{{ t('usage.accountBilled') }}</span>
+            <span class="text-gray-400">{{ t('usage.accountCost') }}</span>
             <span class="font-semibold text-green-400">
-              ${{ (((tooltipData?.total_cost || 0) * (tooltipData?.account_rate_multiplier ?? 1)) || 0).toFixed(6) }}
+              ${{ tooltipData ? formatAccountCost(tooltipData) : '0.000000' }}
             </span>
           </div>
         </div>
@@ -293,6 +296,11 @@ const formatDuration = (ms: number | null | undefined): string => {
   if (ms == null) return '-'
   if (ms < 1000) return `${ms}ms`
   return `${(ms / 1000).toFixed(2)}s`
+}
+
+const formatAccountCost = (row: AdminUsageLog): string => {
+  const value = row.account_cost ?? ((row.total_cost || 0) * (row.account_rate_multiplier ?? 1))
+  return value.toFixed(6)
 }
 
 // Cost tooltip functions

@@ -58,9 +58,10 @@
           <div class="mt-4 rounded-xl border border-blue-200 bg-blue-50/80 p-4 dark:border-blue-500/30 dark:bg-blue-500/10">
             <p class="text-sm font-medium text-blue-900 dark:text-blue-200">API 调用链接示例</p>
             <ul class="mt-2 space-y-1 text-sm text-blue-800 dark:text-blue-300">
-              <li><strong>Claude / OpenAI：</strong><code class="rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">所选路线 + /v1</code></li>
+              <li><strong>Claude Code：</strong><code class="rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">所选路线</code>（不加 <code class="rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">/v1</code>）</li>
+              <li><strong>Anthropic SDK / OpenAI：</strong><code class="rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">所选路线 + /v1</code></li>
               <li><strong>Gemini：</strong><code class="rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">所选路线 + /v1beta</code></li>
-              <li><strong>示例：</strong><code class="rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">https://airiver.cn/v1</code>、<code class="rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">https://api.airiver.cn/v1beta</code></li>
+              <li><strong>示例：</strong><code class="rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">https://airiver.cn</code>、<code class="rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">https://airiver.cn/v1</code>、<code class="rounded bg-white px-1.5 py-0.5 text-xs dark:bg-dark-800">https://api.airiver.cn/v1beta</code></li>
             </ul>
           </div>
         </div>

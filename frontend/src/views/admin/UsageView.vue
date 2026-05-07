@@ -134,7 +134,7 @@ const exportToExcel = async () => {
         (log.account_rate_multiplier ?? 1).toFixed(2),
         log.total_cost?.toFixed(6) || '0.000000',
         log.actual_cost?.toFixed(6) || '0.000000',
-        (log.total_cost * (log.account_rate_multiplier ?? 1)).toFixed(6),
+        (log.account_cost ?? (log.total_cost * (log.account_rate_multiplier ?? 1))).toFixed(6),
         log.first_token_ms ?? '',
         log.duration_ms,
         log.request_id || '',

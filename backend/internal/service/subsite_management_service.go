@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -232,7 +233,7 @@ func (s *SubSiteService) AuthorizeOwner(ctx context.Context, ownerUserID int64, 
 }
 
 // UpdateOwnedSite 分站主自助编辑。采用严格白名单：仅允许修改展示/风格/域名/倍率/分销价等非敏感字段；
-// 任何涉及订阅到期、模式、上级关系、开关总阀的改动都必须通过 admin 接口（UpdateSubSite / SetSubSiteMode）。
+// 任何涉及订阅到期、模式、上级关系、平台开关总阀的改动都必须通过 admin 接口（UpdateSubSite / SetSubSiteMode）。
 // ConsumeRateMultiplier 服务端强制上限 MaxSubSiteConsumeRateMultiplier，避免 owner 将倍率设得离谱。
 func (s *SubSiteService) UpdateOwnedSite(ctx context.Context, ownerUserID int64, input UpdateOwnedSubSiteInput) (*SubSite, error) {
 	current, err := s.repo.GetByID(ctx, input.ID)
@@ -276,7 +277,7 @@ func (s *SubSiteService) UpdateOwnedSite(ctx context.Context, ownerUserID int64,
 		ThemeTemplate:         input.ThemeTemplate,
 		RegistrationMode:      input.RegistrationMode,
 		EnableTopup:           boolPtr(current.EnableTopup),
-		AllowSubSite:          boolPtr(current.AllowSubSite),
+		AllowSubSite:          input.AllowSubSite,
 		SubSitePriceFen:       input.SubSitePriceFen,
 		ConsumeRateMultiplier: input.ConsumeRateMultiplier,
 		AllowOnlineTopup:      boolPtr(current.AllowOnlineTopup),
@@ -286,6 +287,9 @@ func (s *SubSiteService) UpdateOwnedSite(ctx context.Context, ownerUserID int64,
 	}
 	if input.AllowOfflineTopup == nil {
 		merged.AllowOfflineTopup = boolPtr(current.AllowOfflineTopup)
+	}
+	if input.AllowSubSite == nil {
+		merged.AllowSubSite = boolPtr(current.AllowSubSite)
 	}
 	// 未传 OwnerPaymentConfig 时保留现值；显式传空对象表示清空。
 	if input.OwnerPaymentConfig == nil {
@@ -474,6 +478,20 @@ func (s *SubSiteService) ActivatePaidOrder(ctx context.Context, order *PaymentOr
 	}
 	if err := s.repo.MarkActivationRequestCompleted(ctx, order.ID, site.ID); err != nil {
 		return nil, err
+	}
+	if request.ParentSubSiteID != nil && *request.ParentSubSiteID > 0 && order.AmountFen > 0 {
+		parentID := *request.ParentSubSiteID
+		relatedUser := request.UserID
+		relatedOrder := order.ID
+		_, err := s.AdjustPoolBalance(ctx, parentID, int64(order.AmountFen), SubSiteLedgerEntry{
+			TxType:         SubSiteLedgerProfit,
+			RelatedUserID:  &relatedUser,
+			RelatedOrderID: &relatedOrder,
+			Note:           fmt.Sprintf("下级分站开通收益，订单 %s", order.OrderNo),
+		})
+		if err != nil {
+			log.Printf("[SubSite] failed to credit parent sub-site activation profit parent=%d child=%d order=%s: %v", parentID, site.ID, order.OrderNo, err)
+		}
 	}
 	return site, nil
 }

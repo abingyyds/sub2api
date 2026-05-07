@@ -253,7 +253,7 @@ type UpdateSubSiteInput struct {
 }
 
 // UpdateOwnedSubSiteInput 分站主自助可改字段；敏感字段（Mode/Status/ParentSubSiteID/
-// SubscriptionExpiredAt/AllowSubSite/AllowOnlineTopup/EnableTopup/Level）由 admin 接口管理。
+// SubscriptionExpiredAt/AllowOnlineTopup/EnableTopup/Level）由 admin 接口管理。
 type UpdateOwnedSubSiteInput struct {
 	ID                    int64               `json:"id"`
 	Name                  string              `json:"name"`
@@ -268,6 +268,7 @@ type UpdateOwnedSubSiteInput struct {
 	HomeContent           string              `json:"home_content"`
 	ThemeTemplate         string              `json:"theme_template"`
 	RegistrationMode      string              `json:"registration_mode"`
+	AllowSubSite          *bool               `json:"allow_sub_site,omitempty"`
 	SubSitePriceFen       int                 `json:"sub_site_price_fen"`
 	ConsumeRateMultiplier float64             `json:"consume_rate_multiplier"`
 	AllowOfflineTopup     *bool               `json:"allow_offline_topup,omitempty"`

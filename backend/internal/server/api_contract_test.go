@@ -324,7 +324,6 @@ func TestAPIContracts(t *testing.T) {
 					"total_output_tokens": 35,
 					"total_cache_tokens": 3,
 					"total_tokens": 53,
-					"total_cost": 0.75,
 					"total_actual_cost": 0.75,
 					"average_duration_ms": 200
 				}
@@ -347,9 +346,13 @@ func TestAPIContracts(t *testing.T) {
 						OutputTokens:          20,
 						CacheCreationTokens:   1,
 						CacheReadTokens:       2,
+						InputCost:             0.1,
+						OutputCost:            0.2,
+						CacheCreationCost:     0.05,
+						CacheReadCost:         0.15,
 						TotalCost:             0.5,
-						ActualCost:            0.5,
-						RateMultiplier:        1,
+						ActualCost:            1,
+						RateMultiplier:        2,
 						BillingType:           service.BillingTypeBalance,
 						Stream:                true,
 						DurationMs:            ptr(100),
@@ -381,14 +384,13 @@ func TestAPIContracts(t *testing.T) {
 							"cache_read_tokens": 2,
 							"cache_creation_5m_tokens": 0,
 							"cache_creation_1h_tokens": 0,
-							"input_cost": 0,
-							"output_cost": 0,
-							"cache_creation_cost": 0,
-							"cache_read_cost": 0,
-						"total_cost": 0.5,
-						"actual_cost": 0.5,
-						"rate_multiplier": 1,
-						"billing_type": 0,
+							"input_billed_cost": 0.2,
+							"output_billed_cost": 0.4,
+							"cache_creation_billed_cost": 0.1,
+							"cache_read_billed_cost": 0.3,
+							"actual_cost": 1,
+							"rate_multiplier": 2,
+							"billing_type": 0,
 							"stream": true,
 							"duration_ms": 100,
 							"first_token_ms": 50,
@@ -588,10 +590,10 @@ func newContractDeps(t *testing.T) *contractDeps {
 	usageRepo := newStubUsageLogRepo()
 	usageService := service.NewUsageService(usageRepo, userRepo, nil, nil)
 
-	subscriptionService := service.NewSubscriptionService(groupRepo, userSubRepo, nil)
+	subscriptionService := service.NewSubscriptionService(groupRepo, userSubRepo, nil, nil)
 	subscriptionHandler := handler.NewSubscriptionHandler(subscriptionService)
 
-	redeemService := service.NewRedeemService(redeemRepo, userRepo, subscriptionService, nil, nil, nil, nil)
+	redeemService := service.NewRedeemService(redeemRepo, userRepo, subscriptionService, nil, nil, nil, nil, nil)
 	redeemHandler := handler.NewRedeemHandler(redeemService)
 
 	settingRepo := newStubSettingRepo()
@@ -767,6 +769,18 @@ func (r *stubUserRepo) EnableTotp(ctx context.Context, userID int64) error {
 
 func (r *stubUserRepo) DisableTotp(ctx context.Context, userID int64) error {
 	return errors.New("not implemented")
+}
+
+func (r *stubUserRepo) GetByInviteCode(ctx context.Context, code string) (*service.User, error) {
+	return nil, service.ErrUserNotFound
+}
+
+func (r *stubUserRepo) GetDiscoverySourceStats(ctx context.Context, startTime, endTime time.Time) ([]service.DiscoverySourceStat, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (r *stubUserRepo) ClearExpiredInitialBalances(ctx context.Context) ([]int64, error) {
+	return nil, nil
 }
 
 type stubApiKeyCache struct{}
@@ -1484,6 +1498,10 @@ func (r *stubUsageLogRepo) GetAccountWindowStats(ctx context.Context, accountID 
 }
 
 func (r *stubUsageLogRepo) GetAccountTodayStats(ctx context.Context, accountID int64) (*usagestats.AccountStats, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (r *stubUsageLogRepo) GetBatchAccountTodayStats(ctx context.Context, accountIDs []int64) (map[int64]*usagestats.AccountStats, error) {
 	return nil, errors.New("not implemented")
 }
 

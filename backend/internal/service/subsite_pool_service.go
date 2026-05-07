@@ -16,7 +16,7 @@ func (s *SubSiteService) AdjustPoolBalance(ctx context.Context, siteID int64, de
 	if siteID <= 0 {
 		return 0, ErrSubSiteNotFound
 	}
-	if deltaFen == 0 {
+	if deltaFen == 0 && entry.TxType != SubSiteLedgerWithdrawPaid {
 		return 0, infraerrors.BadRequest("SUBSITE_LEDGER_DELTA_ZERO", "ledger delta must be non-zero")
 	}
 	entry.SubSiteID = siteID
@@ -99,7 +99,7 @@ func (s *SubSiteService) OfflineTopupUser(ctx context.Context, ownerUserID, site
 		return nil, infraerrors.Forbidden("SUBSITE_OFFLINE_TOPUP_DISABLED", "offline topup is disabled for this sub-site")
 	}
 	if site.BalanceFen < amountFen {
-		return nil, infraerrors.BadRequest("SUBSITE_POOL_INSUFFICIENT", "sub-site pool balance is insufficient")
+		return nil, ErrSubSitePoolInsufficient
 	}
 	bound, err := s.repo.GetBoundSubSiteByUserID(ctx, targetUserID)
 	if err != nil || bound == nil || bound.ID != site.ID {
@@ -108,44 +108,28 @@ func (s *SubSiteService) OfflineTopupUser(ctx context.Context, ownerUserID, site
 	if s.userRepo == nil {
 		return nil, infraerrors.ServiceUnavailable("USER_REPOSITORY_UNAVAILABLE", "user repository is unavailable")
 	}
-	// 用户加余额（amount 单位：元）
-	if err := s.userRepo.UpdateBalance(ctx, targetUserID, float64(amountFen)/100.0); err != nil {
+
+	chain, err := s.GetSiteChain(ctx, siteID)
+	if err != nil || len(chain) == 0 {
 		return nil, err
 	}
-	// leaf 池扣
-	related := targetUserID
-	leafEntry := SubSiteLedgerEntry{
-		TxType:        SubSiteLedgerOfflineUserTopup,
-		RelatedUserID: &related,
-		Note:          strings.TrimSpace(note),
-	}
-	op := ownerUserID
-	leafEntry.OperatorID = &op
-	if _, err := s.AdjustPoolBalance(ctx, siteID, -amountFen, leafEntry); err != nil {
-		log.Printf("[SubSitePool] offline topup pool debit failed, user=%d site=%d amount=%d: %v", targetUserID, siteID, amountFen, err)
-		return nil, err
-	}
-	// parent 链同步扣（仅 pool 祖先）：补齐后续消费路径中 DebitPoolForConsumption 会扣 parent 池的那一份"进货成本"。
-	// 若不扣 parent，DebitPoolForConsumption 将导致 parent 池透支。
-	if chain, err := s.GetSiteChain(ctx, siteID); err == nil {
-		for idx, ancestor := range chain {
-			if idx == 0 || ancestor == nil {
-				continue // 跳过 leaf，自身已扣
+	for idx, ancestor := range chain {
+		if ancestor == nil || ancestor.Mode != SubSiteModePool {
+			continue
+		}
+		if ancestor.BalanceFen < amountFen {
+			if idx == 0 {
+				return nil, ErrSubSitePoolInsufficient
 			}
-			if ancestor.Mode != SubSiteModePool {
-				continue
-			}
-			ancestorEntry := SubSiteLedgerEntry{
-				TxType:        SubSiteLedgerOfflineUserTopup,
-				RelatedUserID: &related,
-				Note:          "[parent sync] " + strings.TrimSpace(note),
-			}
-			ancestorEntry.OperatorID = &op
-			if _, err := s.AdjustPoolBalance(ctx, ancestor.ID, -amountFen, ancestorEntry); err != nil {
-				log.Printf("[SubSitePool] offline topup parent debit failed, ancestor=%d leaf=%d amount=%d: %v", ancestor.ID, siteID, amountFen, err)
-			}
+			return nil, infraerrors.BadRequest("SUBSITE_PARENT_POOL_INSUFFICIENT", "parent sub-site pool balance is insufficient")
 		}
 	}
+
+	entries := makePoolDebitEntries(chain, amountFen, targetUserID, ownerUserID, 0, SubSiteLedgerOfflineUserTopup, strings.TrimSpace(note))
+	if err := s.repo.ApplyUserBalanceAndPoolLedger(ctx, targetUserID, float64(amountFen)/100.0, entries); err != nil {
+		return nil, err
+	}
+	s.invalidateCaches()
 	refreshed, err := s.repo.GetByID(ctx, site.ID)
 	if err != nil {
 		return nil, err
@@ -153,13 +137,83 @@ func (s *SubSiteService) OfflineTopupUser(ctx context.Context, ownerUserID, site
 	return s.populateComputedFields(ctx, refreshed, true)
 }
 
+// CreditUserBalanceWithAutoRestock 原子处理 pool 分站用户线上充值：
+// 用户余额入账和分站池自动进货扣款必须同事务完成，任一失败都不落半边账。
+func (s *SubSiteService) CreditUserBalanceWithAutoRestock(ctx context.Context, userID, siteID, orderID int64, balanceAmount float64, amountFen int64, orderNo string) error {
+	if userID <= 0 {
+		return ErrUserNotFound
+	}
+	if siteID <= 0 || amountFen <= 0 {
+		return infraerrors.BadRequest("SUBSITE_AUTO_RESTOCK_INVALID", "auto-restock payload is invalid")
+	}
+	chain, err := s.GetSiteChain(ctx, siteID)
+	if err != nil || len(chain) == 0 {
+		return err
+	}
+	if chain[0] == nil || chain[0].Mode != SubSiteModePool {
+		return infraerrors.BadRequest("SUBSITE_AUTO_RESTOCK_MODE_INVALID", "auto-restock is only available in pool mode")
+	}
+	for idx, site := range chain {
+		if site == nil || site.Mode != SubSiteModePool {
+			continue
+		}
+		if site.BalanceFen < amountFen {
+			if idx == 0 {
+				return ErrSubSitePoolInsufficient
+			}
+			return infraerrors.BadRequest("SUBSITE_PARENT_POOL_INSUFFICIENT", "parent sub-site pool balance is insufficient")
+		}
+	}
+	entries := makePoolDebitEntries(chain, amountFen, userID, 0, orderID, SubSiteLedgerAutoRestock, "用户线上充值自动进货，订单 "+orderNo)
+	if err := s.repo.ApplyUserBalanceAndPoolLedger(ctx, userID, balanceAmount, entries); err != nil {
+		return err
+	}
+	s.invalidateCaches()
+	return nil
+}
+
+func makePoolDebitEntries(chain []*SubSite, amountFen int64, relatedUserID int64, operatorID int64, relatedOrderID int64, txType string, note string) []SubSiteLedgerEntry {
+	entries := make([]SubSiteLedgerEntry, 0, len(chain))
+	for idx, site := range chain {
+		if site == nil || site.Mode != SubSiteModePool {
+			continue
+		}
+		entryNote := note
+		if idx > 0 && entryNote != "" {
+			entryNote = "[parent sync] " + entryNote
+		}
+		entry := SubSiteLedgerEntry{
+			SubSiteID: site.ID,
+			TxType:    txType,
+			DeltaFen:  -amountFen,
+			Note:      entryNote,
+		}
+		if relatedUserID > 0 {
+			u := relatedUserID
+			entry.RelatedUserID = &u
+		}
+		if operatorID > 0 {
+			op := operatorID
+			entry.OperatorID = &op
+		}
+		if relatedOrderID > 0 {
+			o := relatedOrderID
+			entry.RelatedOrderID = &o
+		}
+		entries = append(entries, entry)
+	}
+	return entries
+}
+
 // DebitPoolForConsumption 分站用户消费时按链上每个分站的 mode 分别结算：
 //
-//   pool 模式：扣 1× 基础成本到分站池（代表该级向上游采购的"进货成本"）；
-//   rate 模式：不扣池，而是把本级"加价差额"作为分站主利润入账到同一 balance_fen。
+//	pool 模式：扣 1× 基础成本到分站池（代表该级向上游采购的"进货成本"）；
+//	rate 模式：不扣池，而是把本级"加价差额"作为分站主利润入账到同一 balance_fen。
 //
 // 利润公式（rate 级 i 按 leaf→root 索引，0 = leaf）：
-//   profit_i = base × (compound_i - compound_{i-1}),  compound_{-1} = 1.0
+//
+//	profit_i = base × (compound_i - compound_{i-1}),  compound_{-1} = 1.0
+//
 // 其中 compound_i 为 leaf 到 i 级累计倍率乘积。
 // 这样从用户余额扣掉的 amountUSD = base × compoundRate 会按级别精确分配：
 //   - 纯 rate 链：Σ profit_i = base × (compoundRate - 1)，平台留 base

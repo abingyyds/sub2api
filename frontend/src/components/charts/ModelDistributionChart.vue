@@ -43,7 +43,7 @@
                 ${{ formatCost(model.actual_cost) }}
               </td>
               <td class="py-1.5 text-right text-gray-400 dark:text-gray-500">
-                ${{ formatCost(model.cost) }}
+                ${{ formatCost(model.cost ?? 0) }}
               </td>
             </tr>
           </tbody>

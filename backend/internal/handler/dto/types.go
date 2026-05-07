@@ -267,13 +267,13 @@ type UsageLog struct {
 	CacheCreation5mTokens int `json:"cache_creation_5m_tokens"`
 	CacheCreation1hTokens int `json:"cache_creation_1h_tokens"`
 
-	InputCost         float64 `json:"input_cost"`
-	OutputCost        float64 `json:"output_cost"`
-	CacheCreationCost float64 `json:"cache_creation_cost"`
-	CacheReadCost     float64 `json:"cache_read_cost"`
-	TotalCost         float64 `json:"total_cost"`
-	ActualCost        float64 `json:"actual_cost"`
-	RateMultiplier    float64 `json:"rate_multiplier"`
+	// 普通用户只能看到按计费规则折算后的扣费明细，不能看到真实成本。
+	InputBilledCost         float64 `json:"input_billed_cost,omitempty"`
+	OutputBilledCost        float64 `json:"output_billed_cost,omitempty"`
+	CacheCreationBilledCost float64 `json:"cache_creation_billed_cost,omitempty"`
+	CacheReadBilledCost     float64 `json:"cache_read_billed_cost,omitempty"`
+	ActualCost              float64 `json:"actual_cost"`
+	RateMultiplier          float64 `json:"rate_multiplier"`
 
 	BillingType  int8 `json:"billing_type"`
 	Stream       bool `json:"stream"`
@@ -298,6 +298,16 @@ type UsageLog struct {
 // AdminUsageLog 是管理员接口使用的 usage log DTO（包含管理员字段）。
 type AdminUsageLog struct {
 	UsageLog
+
+	// 真实成本字段，仅管理员可见。
+	InputCost         float64 `json:"input_cost"`
+	OutputCost        float64 `json:"output_cost"`
+	CacheCreationCost float64 `json:"cache_creation_cost"`
+	CacheReadCost     float64 `json:"cache_read_cost"`
+	TotalCost         float64 `json:"total_cost"`
+
+	// AccountCost 账号维度计费（真实成本 * 账号倍率），仅管理员可见。
+	AccountCost float64 `json:"account_cost"`
 
 	// AccountRateMultiplier 账号计费倍率快照（nil 表示按 1.0 处理）
 	AccountRateMultiplier *float64 `json:"account_rate_multiplier"`
@@ -334,6 +344,64 @@ type UsageCleanupTask struct {
 	FinishedAt   *time.Time          `json:"finished_at,omitempty"`
 	CreatedAt    time.Time           `json:"created_at"`
 	UpdatedAt    time.Time           `json:"updated_at"`
+}
+
+// UserUsageStats 是普通用户接口使用的 usage stats DTO，不包含真实成本。
+type UserUsageStats struct {
+	TotalRequests     int64   `json:"total_requests"`
+	TotalInputTokens  int64   `json:"total_input_tokens"`
+	TotalOutputTokens int64   `json:"total_output_tokens"`
+	TotalCacheTokens  int64   `json:"total_cache_tokens"`
+	TotalTokens       int64   `json:"total_tokens"`
+	TotalActualCost   float64 `json:"total_actual_cost"`
+	AverageDurationMs float64 `json:"average_duration_ms"`
+}
+
+// UserDashboardStats 是普通用户仪表盘 DTO，不包含真实成本。
+type UserDashboardStats struct {
+	TotalAPIKeys  int64 `json:"total_api_keys"`
+	ActiveAPIKeys int64 `json:"active_api_keys"`
+
+	TotalRequests            int64   `json:"total_requests"`
+	TotalInputTokens         int64   `json:"total_input_tokens"`
+	TotalOutputTokens        int64   `json:"total_output_tokens"`
+	TotalCacheCreationTokens int64   `json:"total_cache_creation_tokens"`
+	TotalCacheReadTokens     int64   `json:"total_cache_read_tokens"`
+	TotalTokens              int64   `json:"total_tokens"`
+	TotalActualCost          float64 `json:"total_actual_cost"`
+
+	TodayRequests            int64   `json:"today_requests"`
+	TodayInputTokens         int64   `json:"today_input_tokens"`
+	TodayOutputTokens        int64   `json:"today_output_tokens"`
+	TodayCacheCreationTokens int64   `json:"today_cache_creation_tokens"`
+	TodayCacheReadTokens     int64   `json:"today_cache_read_tokens"`
+	TodayTokens              int64   `json:"today_tokens"`
+	TodayActualCost          float64 `json:"today_actual_cost"`
+
+	AverageDurationMs float64 `json:"average_duration_ms"`
+	Rpm               int64   `json:"rpm"`
+	Tpm               int64   `json:"tpm"`
+}
+
+// UserTrendDataPoint 是普通用户趋势 DTO，不包含真实成本。
+type UserTrendDataPoint struct {
+	Date         string  `json:"date"`
+	Requests     int64   `json:"requests"`
+	InputTokens  int64   `json:"input_tokens"`
+	OutputTokens int64   `json:"output_tokens"`
+	CacheTokens  int64   `json:"cache_tokens"`
+	TotalTokens  int64   `json:"total_tokens"`
+	ActualCost   float64 `json:"actual_cost"`
+}
+
+// UserModelStat 是普通用户模型统计 DTO，不包含真实成本。
+type UserModelStat struct {
+	Model        string  `json:"model"`
+	Requests     int64   `json:"requests"`
+	InputTokens  int64   `json:"input_tokens"`
+	OutputTokens int64   `json:"output_tokens"`
+	TotalTokens  int64   `json:"total_tokens"`
+	ActualCost   float64 `json:"actual_cost"`
 }
 
 // AccountSummary is a minimal account info for usage log display.

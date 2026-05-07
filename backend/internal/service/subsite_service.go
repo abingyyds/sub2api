@@ -33,6 +33,7 @@ var (
 	ErrSubSiteActivationNotFound   = infraerrors.NotFound("SUBSITE_ACTIVATION_NOT_FOUND", "sub-site activation request not found")
 	ErrSubSiteForbidden            = infraerrors.Forbidden("SUBSITE_FORBIDDEN", "you do not have permission to manage this sub-site")
 	ErrSubSiteUserScopeMismatch    = infraerrors.Forbidden("SUBSITE_USER_SCOPE_MISMATCH", "your account is bound to a different site")
+	ErrSubSitePoolInsufficient     = infraerrors.BadRequest("SUBSITE_POOL_INSUFFICIENT", "sub-site pool balance is insufficient")
 )
 
 var subSiteSlugPattern = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
@@ -60,6 +61,9 @@ type SubSiteRepository interface {
 	CascadeUpdateStatus(ctx context.Context, rootID int64, newStatus string) ([]int64, error)
 	// 分站余额池：原子增减，返回变动后余额（正数入账、负数出账；允许负余额：透支在业务层记 warn）
 	AdjustBalance(ctx context.Context, siteID int64, deltaFen int64, entry SubSiteLedgerEntry) (int64, error)
+	// ApplyUserBalanceAndPoolLedger 在同一数据库事务内更新用户余额并写入一组分站池流水。
+	// 用于线下加余额 / 自动进货这类必须账实一致的路径；所有负数池变动都禁止透支。
+	ApplyUserBalanceAndPoolLedger(ctx context.Context, userID int64, balanceDelta float64, entries []SubSiteLedgerEntry) error
 	ListLedger(ctx context.Context, siteID int64, params pagination.PaginationParams, txType string) ([]SubSiteLedgerEntry, *pagination.PaginationResult, error)
 	CreateActivationRequest(ctx context.Context, request *SubSiteActivationRequest) error
 	GetActivationRequestByOrderID(ctx context.Context, orderID int64) (*SubSiteActivationRequest, error)

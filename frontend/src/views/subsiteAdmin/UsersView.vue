@@ -41,7 +41,7 @@
                 <td class="px-4 py-3 text-xs">
                   <span :class="['badge', u.status === 'active' ? 'badge-green' : 'badge-gray']">{{ u.status }}</span>
                 </td>
-                <td class="px-4 py-3 text-right text-sm">¥{{ fenToYuan(u.balance) }}</td>
+                <td class="px-4 py-3 text-right text-sm">¥{{ yuanAmount(u.balance) }}</td>
                 <td class="px-4 py-3 text-xs text-gray-500 dark:text-dark-400">{{ formatDate(u.bound_at) }}</td>
                 <td class="px-4 py-3 text-right">
                   <button class="btn btn-secondary btn-sm" @click="openTopup(u)">加余额</button>
@@ -65,7 +65,7 @@
       <div v-if="topupTarget" class="space-y-4">
         <div class="rounded-2xl border border-gray-200 px-4 py-3 text-sm dark:border-dark-700">
           <div class="font-medium text-gray-900 dark:text-white">{{ topupTarget.email }}</div>
-          <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">当前余额：¥{{ fenToYuan(topupTarget.balance) }}</div>
+          <div class="mt-1 text-xs text-gray-500 dark:text-dark-400">当前余额：¥{{ yuanAmount(topupTarget.balance) }}</div>
           <div class="text-xs text-gray-500 dark:text-dark-400">说明：给用户加余额的同时会从分站池按等额扣除。</div>
         </div>
         <div>
@@ -173,8 +173,8 @@ async function handleTopupSubmit() {
   }
 }
 
-function fenToYuan(value: number): string {
-  const num = Number(value || 0) / 100
+function yuanAmount(value: number): string {
+  const num = Number(value || 0)
   return num.toFixed(num % 1 === 0 ? 0 : 2)
 }
 

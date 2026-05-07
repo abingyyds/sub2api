@@ -4,6 +4,7 @@ package dto
 import (
 	"time"
 
+	"github.com/Wei-Shaw/sub2api/internal/pkg/usagestats"
 	"github.com/Wei-Shaw/sub2api/internal/service"
 )
 
@@ -377,43 +378,93 @@ func AccountSummaryFromService(a *service.Account) *AccountSummary {
 	}
 }
 
-func usageLogFromServiceUser(l *service.UsageLog) UsageLog {
-	// 普通用户 DTO：严禁包含管理员字段（例如 account_rate_multiplier、ip_address、account）。
-	return UsageLog{
-		ID:                    l.ID,
-		UserID:                l.UserID,
-		APIKeyID:              l.APIKeyID,
-		AccountID:             l.AccountID,
-		RequestID:             l.RequestID,
-		Model:                 l.Model,
-		GroupID:               l.GroupID,
-		SubscriptionID:        l.SubscriptionID,
-		InputTokens:           l.InputTokens,
-		OutputTokens:          l.OutputTokens,
-		CacheCreationTokens:   l.CacheCreationTokens,
-		CacheReadTokens:       l.CacheReadTokens,
-		CacheCreation5mTokens: l.CacheCreation5mTokens,
-		CacheCreation1hTokens: l.CacheCreation1hTokens,
-		InputCost:             l.InputCost,
-		OutputCost:            l.OutputCost,
-		CacheCreationCost:     l.CacheCreationCost,
-		CacheReadCost:         l.CacheReadCost,
-		TotalCost:             l.TotalCost,
-		ActualCost:            l.ActualCost,
-		RateMultiplier:        l.RateMultiplier,
-		BillingType:           l.BillingType,
-		Stream:                l.Stream,
-		DurationMs:            l.DurationMs,
-		FirstTokenMs:          l.FirstTokenMs,
-		ImageCount:            l.ImageCount,
-		ImageSize:             l.ImageSize,
-		UserAgent:             l.UserAgent,
-		CreatedAt:             l.CreatedAt,
-		User:                  UserFromServiceShallow(l.User),
-		APIKey:                APIKeyFromService(l.APIKey),
-		Group:                 GroupFromServiceShallow(l.Group),
-		Subscription:          UserSubscriptionFromService(l.Subscription),
+func usageLogBilledBreakdown(l *service.UsageLog) (input, output, cacheCreation, cacheRead float64) {
+	if l == nil {
+		return 0, 0, 0, 0
 	}
+	if l.TotalCost > 0 {
+		factor := l.ActualCost / l.TotalCost
+		return l.InputCost * factor, l.OutputCost * factor, l.CacheCreationCost * factor, l.CacheReadCost * factor
+	}
+	multiplier := l.RateMultiplier
+	if multiplier <= 0 {
+		multiplier = 1
+	}
+	return l.InputCost * multiplier, l.OutputCost * multiplier, l.CacheCreationCost * multiplier, l.CacheReadCost * multiplier
+}
+
+func usageLogEffectiveRateMultiplier(l *service.UsageLog) float64 {
+	if l == nil {
+		return 1
+	}
+	if l.TotalCost > 0 {
+		return l.ActualCost / l.TotalCost
+	}
+	if l.RateMultiplier > 0 {
+		return l.RateMultiplier
+	}
+	return 1
+}
+
+func usageLogAccountCost(l *service.UsageLog) float64 {
+	if l == nil {
+		return 0
+	}
+	multiplier := 1.0
+	if l.AccountRateMultiplier != nil {
+		multiplier = *l.AccountRateMultiplier
+		if multiplier < 0 {
+			multiplier = 1
+		}
+	}
+	return l.TotalCost * multiplier
+}
+
+func usageLogFromService(l *service.UsageLog, userVisibleRate bool) UsageLog {
+	// 基础调用日志 DTO 不包含真实成本和管理员字段；管理员字段由 AdminUsageLog 额外承载。
+	inputBilledCost, outputBilledCost, cacheCreationBilledCost, cacheReadBilledCost := usageLogBilledBreakdown(l)
+	rateMultiplier := l.RateMultiplier
+	if userVisibleRate {
+		rateMultiplier = usageLogEffectiveRateMultiplier(l)
+	}
+	return UsageLog{
+		ID:                      l.ID,
+		UserID:                  l.UserID,
+		APIKeyID:                l.APIKeyID,
+		AccountID:               l.AccountID,
+		RequestID:               l.RequestID,
+		Model:                   l.Model,
+		GroupID:                 l.GroupID,
+		SubscriptionID:          l.SubscriptionID,
+		InputTokens:             l.InputTokens,
+		OutputTokens:            l.OutputTokens,
+		CacheCreationTokens:     l.CacheCreationTokens,
+		CacheReadTokens:         l.CacheReadTokens,
+		CacheCreation5mTokens:   l.CacheCreation5mTokens,
+		CacheCreation1hTokens:   l.CacheCreation1hTokens,
+		InputBilledCost:         inputBilledCost,
+		OutputBilledCost:        outputBilledCost,
+		CacheCreationBilledCost: cacheCreationBilledCost,
+		CacheReadBilledCost:     cacheReadBilledCost,
+		ActualCost:              l.ActualCost,
+		RateMultiplier:          rateMultiplier,
+		BillingType:             l.BillingType,
+		Stream:                  l.Stream,
+		DurationMs:              l.DurationMs,
+		FirstTokenMs:            l.FirstTokenMs,
+		ImageCount:              l.ImageCount,
+		ImageSize:               l.ImageSize,
+		UserAgent:               l.UserAgent,
+		CreatedAt:               l.CreatedAt,
+		User:                    UserFromServiceShallow(l.User),
+		APIKey:                  APIKeyFromService(l.APIKey),
+		Group:                   GroupFromServiceShallow(l.Group),
+		Subscription:            UserSubscriptionFromService(l.Subscription),
+	}
+}
+
+func usageLogFromServiceUser(l *service.UsageLog) UsageLog {
+	return usageLogFromService(l, true)
 }
 
 // UsageLogFromService converts a service UsageLog to DTO for regular users.
@@ -433,11 +484,92 @@ func UsageLogFromServiceAdmin(l *service.UsageLog) *AdminUsageLog {
 		return nil
 	}
 	return &AdminUsageLog{
-		UsageLog:              usageLogFromServiceUser(l),
+		UsageLog:              usageLogFromService(l, false),
+		InputCost:             l.InputCost,
+		OutputCost:            l.OutputCost,
+		CacheCreationCost:     l.CacheCreationCost,
+		CacheReadCost:         l.CacheReadCost,
+		TotalCost:             l.TotalCost,
+		AccountCost:           usageLogAccountCost(l),
 		AccountRateMultiplier: l.AccountRateMultiplier,
 		IPAddress:             l.IPAddress,
 		Account:               AccountSummaryFromService(l.Account),
 	}
+}
+
+func UserUsageStatsFromService(stats *service.UsageStats) *UserUsageStats {
+	if stats == nil {
+		return nil
+	}
+	return &UserUsageStats{
+		TotalRequests:     stats.TotalRequests,
+		TotalInputTokens:  stats.TotalInputTokens,
+		TotalOutputTokens: stats.TotalOutputTokens,
+		TotalCacheTokens:  stats.TotalCacheTokens,
+		TotalTokens:       stats.TotalTokens,
+		TotalActualCost:   stats.TotalActualCost,
+		AverageDurationMs: stats.AverageDurationMs,
+	}
+}
+
+func UserDashboardStatsFromUsageStats(stats *usagestats.UserDashboardStats) *UserDashboardStats {
+	if stats == nil {
+		return nil
+	}
+	return &UserDashboardStats{
+		TotalAPIKeys:             stats.TotalAPIKeys,
+		ActiveAPIKeys:            stats.ActiveAPIKeys,
+		TotalRequests:            stats.TotalRequests,
+		TotalInputTokens:         stats.TotalInputTokens,
+		TotalOutputTokens:        stats.TotalOutputTokens,
+		TotalCacheCreationTokens: stats.TotalCacheCreationTokens,
+		TotalCacheReadTokens:     stats.TotalCacheReadTokens,
+		TotalTokens:              stats.TotalTokens,
+		TotalActualCost:          stats.TotalActualCost,
+		TodayRequests:            stats.TodayRequests,
+		TodayInputTokens:         stats.TodayInputTokens,
+		TodayOutputTokens:        stats.TodayOutputTokens,
+		TodayCacheCreationTokens: stats.TodayCacheCreationTokens,
+		TodayCacheReadTokens:     stats.TodayCacheReadTokens,
+		TodayTokens:              stats.TodayTokens,
+		TodayActualCost:          stats.TodayActualCost,
+		AverageDurationMs:        stats.AverageDurationMs,
+		Rpm:                      stats.Rpm,
+		Tpm:                      stats.Tpm,
+	}
+}
+
+func UserTrendDataPointFromUsageStats(points []usagestats.TrendDataPoint) []UserTrendDataPoint {
+	out := make([]UserTrendDataPoint, 0, len(points))
+	for i := range points {
+		point := points[i]
+		out = append(out, UserTrendDataPoint{
+			Date:         point.Date,
+			Requests:     point.Requests,
+			InputTokens:  point.InputTokens,
+			OutputTokens: point.OutputTokens,
+			CacheTokens:  point.CacheTokens,
+			TotalTokens:  point.TotalTokens,
+			ActualCost:   point.ActualCost,
+		})
+	}
+	return out
+}
+
+func UserModelStatFromUsageStats(stats []usagestats.ModelStat) []UserModelStat {
+	out := make([]UserModelStat, 0, len(stats))
+	for i := range stats {
+		stat := stats[i]
+		out = append(out, UserModelStat{
+			Model:        stat.Model,
+			Requests:     stat.Requests,
+			InputTokens:  stat.InputTokens,
+			OutputTokens: stat.OutputTokens,
+			TotalTokens:  stat.TotalTokens,
+			ActualCost:   stat.ActualCost,
+		})
+	}
+	return out
 }
 
 func UsageCleanupTaskFromService(task *service.UsageCleanupTask) *UsageCleanupTask {
