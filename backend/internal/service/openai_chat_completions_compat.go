@@ -44,11 +44,16 @@ func ConvertChatCompletionsRequest(reqBody map[string]any) (bool, error) {
 
 	if rawMaxTokens, ok := reqBody["max_tokens"]; ok {
 		if _, hasMaxOutputTokens := reqBody["max_output_tokens"]; !hasMaxOutputTokens {
-			if _, hasMaxCompletionTokens := reqBody["max_completion_tokens"]; !hasMaxCompletionTokens {
-				reqBody["max_output_tokens"] = rawMaxTokens
-			}
+			reqBody["max_output_tokens"] = rawMaxTokens
 		}
 		delete(reqBody, "max_tokens")
+		modified = true
+	}
+	if rawMaxCompletionTokens, ok := reqBody["max_completion_tokens"]; ok {
+		if _, hasMaxOutputTokens := reqBody["max_output_tokens"]; !hasMaxOutputTokens {
+			reqBody["max_output_tokens"] = rawMaxCompletionTokens
+		}
+		delete(reqBody, "max_completion_tokens")
 		modified = true
 	}
 

@@ -72,6 +72,13 @@ func OpenAIEndpointFromPath(path string) string {
 	}
 }
 
+func OpenAIUpstreamEndpoint(endpoint string) string {
+	if endpoint == OpenAIEndpointChatCompletions {
+		return OpenAIEndpointResponses
+	}
+	return endpoint
+}
+
 func IsOpenAIImageEndpoint(endpoint string) bool {
 	return endpoint == OpenAIEndpointImagesGenerations || endpoint == OpenAIEndpointImagesEdits
 }
@@ -944,6 +951,7 @@ func parseMultipartBool(value string) bool {
 func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, account *Account, body []byte) (*OpenAIForwardResult, error) {
 	startTime := time.Now()
 	endpoint := OpenAIEndpointFromPath(c.Request.URL.Path)
+	upstreamEndpoint := OpenAIUpstreamEndpoint(endpoint)
 	reqPayload, err := parseOpenAIRequestPayload(body, c.GetHeader("Content-Type"))
 	if err != nil {
 		return nil, err
@@ -1006,7 +1014,7 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 		}
 	}
 
-	if endpoint == OpenAIEndpointResponses && account.Type == AccountTypeOAuth && !isCodexCLI && !requestBodyPassthrough {
+	if upstreamEndpoint == OpenAIEndpointResponses && account.Type == AccountTypeOAuth && !isCodexCLI && !requestBodyPassthrough {
 		codexResult := applyCodexOAuthTransform(reqPayload.JSONBody)
 		if codexResult.Modified {
 			bodyModified = true
@@ -1026,7 +1034,7 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 			case PlatformOpenAI:
 				// For OpenAI API Key, remove max_output_tokens (not supported)
 				// For OpenAI OAuth (Responses API), keep it (supported)
-				if account.Type == AccountTypeAPIKey && endpoint != OpenAIEndpointImagesGenerations && endpoint != OpenAIEndpointImagesEdits {
+				if account.Type == AccountTypeAPIKey && upstreamEndpoint != OpenAIEndpointResponses && !IsOpenAIImageEndpoint(upstreamEndpoint) {
 					delete(reqPayload.JSONBody, "max_output_tokens")
 					bodyModified = true
 				}
@@ -1083,7 +1091,7 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 	}
 
 	// Build upstream request
-	upstreamReq, err := s.buildUpstreamRequest(ctx, c, account, body, token, reqPayload.Stream, reqPayload.PromptCacheKey, isCodexCLI, endpoint, reqPayload.ContentType)
+	upstreamReq, err := s.buildUpstreamRequest(ctx, c, account, body, token, reqPayload.Stream, reqPayload.PromptCacheKey, isCodexCLI, upstreamEndpoint, reqPayload.ContentType)
 	if err != nil {
 		return nil, err
 	}

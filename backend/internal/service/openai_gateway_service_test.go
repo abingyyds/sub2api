@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"mime/multipart"
@@ -142,6 +143,63 @@ func TestOpenAIGatewayService_GenerateSessionHash_Priority(t *testing.T) {
 	}
 }
 
+func TestOpenAIChatCompletionsForwardsResponsesRequest(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	rec := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(rec)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/chat/completions", nil)
+	c.Request.Header.Set("Content-Type", "application/json")
+	EnableOpenAIChatCompletionsMode(c)
+
+	reqBody := map[string]any{
+		"model": "gpt-5.4",
+		"messages": []any{
+			map[string]any{"role": "system", "content": "Be terse."},
+			map[string]any{"role": "user", "content": "hello"},
+		},
+		"max_tokens": 64,
+	}
+	_, err := ConvertChatCompletionsRequest(reqBody)
+	require.NoError(t, err)
+	body, err := json.Marshal(reqBody)
+	require.NoError(t, err)
+
+	upstream := &captureOpenAIUpstream{}
+	svc := &OpenAIGatewayService{
+		cfg: &config.Config{
+			Security: config.SecurityConfig{
+				ResponseHeaders: config.ResponseHeaderConfig{Enabled: false},
+			},
+		},
+		httpUpstream:  upstream,
+		toolCorrector: NewCodexToolCorrector(),
+	}
+	account := &Account{
+		ID:          1,
+		Platform:    PlatformOpenAI,
+		Type:        AccountTypeAPIKey,
+		Credentials: map[string]any{"api_key": "sk-test"},
+	}
+
+	result, err := svc.Forward(c.Request.Context(), c, account, body)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	require.NotNil(t, upstream.req)
+	require.Equal(t, "https://api.openai.com/v1/responses", upstream.req.URL.String())
+
+	var upstreamBody map[string]any
+	require.NoError(t, json.Unmarshal(upstream.body, &upstreamBody))
+	require.NotContains(t, upstreamBody, "messages")
+	require.Contains(t, upstreamBody, "input")
+	require.Equal(t, "Be terse.", upstreamBody["instructions"])
+	require.Equal(t, float64(64), upstreamBody["max_output_tokens"])
+
+	var chatResponse map[string]any
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &chatResponse))
+	require.Equal(t, "chat.completion", chatResponse["object"])
+	require.Equal(t, "gpt-5.4", chatResponse["model"])
+}
+
 func (c stubConcurrencyCache) GetAccountWaitingCount(ctx context.Context, accountID int64) (int, error) {
 	if c.waitCounts != nil {
 		if count, ok := c.waitCounts[accountID]; ok {
@@ -185,6 +243,35 @@ func (c *stubGatewayCache) DeleteSessionAccountID(ctx context.Context, groupID i
 	c.deletedSessions[sessionHash]++
 	delete(c.sessionBindings, sessionHash)
 	return nil
+}
+
+type captureOpenAIUpstream struct {
+	req  *http.Request
+	body []byte
+}
+
+func (u *captureOpenAIUpstream) Do(req *http.Request, proxyURL string, accountID int64, accountConcurrency int) (*http.Response, error) {
+	u.req = req
+	if req != nil && req.Body != nil {
+		u.body, _ = io.ReadAll(req.Body)
+	}
+	return &http.Response{
+		StatusCode: http.StatusOK,
+		Header: http.Header{
+			"Content-Type": []string{"application/json"},
+			"X-Request-Id": []string{"req-chat"},
+		},
+		Body: io.NopCloser(strings.NewReader(`{
+			"id":"resp_chat",
+			"model":"gpt-5.4",
+			"output":[{"type":"message","role":"assistant","content":[{"type":"output_text","text":"hello"}]}],
+			"usage":{"input_tokens":3,"output_tokens":2}
+		}`)),
+	}, nil
+}
+
+func (u *captureOpenAIUpstream) DoWithTLS(req *http.Request, proxyURL string, accountID int64, accountConcurrency int, enableTLSFingerprint bool) (*http.Response, error) {
+	return u.Do(req, proxyURL, accountID, accountConcurrency)
 }
 
 func TestOpenAISelectAccountWithLoadAwareness_FiltersUnschedulable(t *testing.T) {

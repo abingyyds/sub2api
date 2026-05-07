@@ -68,6 +68,7 @@ func RegisterGatewayRoutes(
 
 	// OpenAI Responses API（不带v1前缀的别名）
 	r.POST("/responses", bodyLimit, clientRequestID, opsErrorLogger, gin.HandlerFunc(apiKeyAuth), h.OpenAIGateway.Responses)
+	r.POST("/chat/completions", bodyLimit, clientRequestID, opsErrorLogger, middleware.RoutePlatform(service.PlatformOpenAI), gin.HandlerFunc(apiKeyAuth), h.OpenAIGateway.ChatCompletions)
 
 	// Antigravity 模型列表
 	r.GET("/antigravity/models", gin.HandlerFunc(apiKeyAuth), h.Gateway.AntigravityModels)
