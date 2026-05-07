@@ -85,6 +85,10 @@ type CreateGroupRequest struct {
 	ModelPlazaVisible *bool    `json:"model_plaza_visible"`
 	DisplayPrice      string   `json:"display_price"`
 	DisplayDiscount   string   `json:"display_discount"`
+	// 额度包配置
+	QuotaPackageEnabled      bool     `json:"quota_package_enabled"`
+	QuotaPackageQuotaUSD     *float64 `json:"quota_package_quota_usd"`
+	QuotaPackageValidityDays int      `json:"quota_package_validity_days"`
 }
 
 // UpdateGroupRequest represents update group request
@@ -122,6 +126,10 @@ type UpdateGroupRequest struct {
 	ModelPlazaVisible *bool    `json:"model_plaza_visible"`
 	DisplayPrice      string   `json:"display_price"`
 	DisplayDiscount   string   `json:"display_discount"`
+	// 额度包配置
+	QuotaPackageEnabled      *bool    `json:"quota_package_enabled"`
+	QuotaPackageQuotaUSD     *float64 `json:"quota_package_quota_usd"`
+	QuotaPackageValidityDays *int     `json:"quota_package_validity_days"`
 }
 
 // List handles listing all groups with pagination
@@ -211,31 +219,34 @@ func (h *GroupHandler) Create(c *gin.Context) {
 	}
 
 	group, err := h.adminService.CreateGroup(c.Request.Context(), &service.CreateGroupInput{
-		Name:                  req.Name,
-		Description:           req.Description,
-		Platform:              req.Platform,
-		RateMultiplier:        req.RateMultiplier,
-		DisplayRateMultiplier: req.DisplayRateMultiplier,
-		IsExclusive:           req.IsExclusive,
-		SubscriptionType:      req.SubscriptionType,
-		DailyLimitUSD:         req.DailyLimitUSD,
-		WeeklyLimitUSD:        req.WeeklyLimitUSD,
-		MonthlyLimitUSD:       req.MonthlyLimitUSD,
-		ImagePrice1K:          req.ImagePrice1K,
-		ImagePrice2K:          req.ImagePrice2K,
-		ImagePrice4K:          req.ImagePrice4K,
-		ClaudeCodeOnly:        req.ClaudeCodeOnly,
-		FallbackGroupID:       req.FallbackGroupID,
-		ModelRouting:          req.ModelRouting,
-		ModelRoutingEnabled:   req.ModelRoutingEnabled,
-		PriceFen:              req.PriceFen,
-		Listed:                req.Listed,
-		DefaultValidityDays:   req.DefaultValidityDays,
-		PlanFeatures:          req.PlanFeatures,
-		Tags:                  req.Tags,
-		ModelPlazaVisible:     boolValueOrDefault(req.ModelPlazaVisible, true),
-		DisplayPrice:          req.DisplayPrice,
-		DisplayDiscount:       req.DisplayDiscount,
+		Name:                     req.Name,
+		Description:              req.Description,
+		Platform:                 req.Platform,
+		RateMultiplier:           req.RateMultiplier,
+		DisplayRateMultiplier:    req.DisplayRateMultiplier,
+		IsExclusive:              req.IsExclusive,
+		SubscriptionType:         req.SubscriptionType,
+		DailyLimitUSD:            req.DailyLimitUSD,
+		WeeklyLimitUSD:           req.WeeklyLimitUSD,
+		MonthlyLimitUSD:          req.MonthlyLimitUSD,
+		ImagePrice1K:             req.ImagePrice1K,
+		ImagePrice2K:             req.ImagePrice2K,
+		ImagePrice4K:             req.ImagePrice4K,
+		ClaudeCodeOnly:           req.ClaudeCodeOnly,
+		FallbackGroupID:          req.FallbackGroupID,
+		ModelRouting:             req.ModelRouting,
+		ModelRoutingEnabled:      req.ModelRoutingEnabled,
+		PriceFen:                 req.PriceFen,
+		Listed:                   req.Listed,
+		DefaultValidityDays:      req.DefaultValidityDays,
+		PlanFeatures:             req.PlanFeatures,
+		Tags:                     req.Tags,
+		ModelPlazaVisible:        boolValueOrDefault(req.ModelPlazaVisible, true),
+		DisplayPrice:             req.DisplayPrice,
+		DisplayDiscount:          req.DisplayDiscount,
+		QuotaPackageEnabled:      req.QuotaPackageEnabled,
+		QuotaPackageQuotaUSD:     req.QuotaPackageQuotaUSD,
+		QuotaPackageValidityDays: req.QuotaPackageValidityDays,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)
@@ -288,6 +299,9 @@ func (h *GroupHandler) Update(c *gin.Context) {
 		ModelPlazaVisible:        req.ModelPlazaVisible,
 		DisplayPrice:             req.DisplayPrice,
 		DisplayDiscount:          req.DisplayDiscount,
+		QuotaPackageEnabled:      req.QuotaPackageEnabled,
+		QuotaPackageQuotaUSD:     req.QuotaPackageQuotaUSD,
+		QuotaPackageValidityDays: req.QuotaPackageValidityDays,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)

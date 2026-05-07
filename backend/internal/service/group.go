@@ -53,6 +53,11 @@ type Group struct {
 	DisplayPrice      string   // 展示价格文案
 	DisplayDiscount   string   // 展示折扣文案
 
+	// 额度包配置：独立于订阅刷新逻辑，可重复购买并叠加额度。
+	QuotaPackageEnabled      bool
+	QuotaPackageQuotaUSD     *float64
+	QuotaPackageValidityDays int
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
@@ -73,6 +78,10 @@ func (g *Group) EffectiveDisplayRateMultiplier() float64 {
 
 func (g *Group) IsSubscriptionType() bool {
 	return g.SubscriptionType == SubscriptionTypeSubscription
+}
+
+func (g *Group) IsQuotaPackage() bool {
+	return g.QuotaPackageEnabled
 }
 
 func (g *Group) IsFreeSubscription() bool {

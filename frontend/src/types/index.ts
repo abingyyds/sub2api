@@ -313,6 +313,9 @@ export interface Group {
   model_plaza_visible: boolean
   display_price: string
   display_discount: string
+  quota_package_enabled: boolean
+  quota_package_quota_usd: number | null
+  quota_package_validity_days: number
   created_at: string
   updated_at: string
 }
@@ -377,6 +380,16 @@ export interface CreateGroupRequest {
   claude_code_only?: boolean
   fallback_group_id?: number | null
   model_plaza_visible?: boolean
+  price_fen?: number
+  listed?: boolean
+  default_validity_days?: number
+  plan_features?: string[]
+  tags?: string[]
+  display_price?: string
+  display_discount?: string
+  quota_package_enabled?: boolean
+  quota_package_quota_usd?: number | null
+  quota_package_validity_days?: number
 }
 
 export interface UpdateGroupRequest {
@@ -397,6 +410,16 @@ export interface UpdateGroupRequest {
   claude_code_only?: boolean
   fallback_group_id?: number | null
   model_plaza_visible?: boolean
+  price_fen?: number
+  listed?: boolean
+  default_validity_days?: number
+  plan_features?: string[]
+  tags?: string[]
+  display_price?: string
+  display_discount?: string
+  quota_package_enabled?: boolean
+  quota_package_quota_usd?: number | null
+  quota_package_validity_days?: number
 }
 
 // ==================== Account & Proxy Types ====================

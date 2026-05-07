@@ -130,6 +130,7 @@ type PaymentService struct {
 	orderRepo           PaymentOrderRepository
 	settingService      *SettingService
 	subscriptionService *SubscriptionService
+	quotaPackageRepo    QuotaPackageRepository
 	billingCache        *BillingCacheService
 	userRepo            UserRepository
 	groupRepo           GroupRepository
@@ -143,6 +144,7 @@ func NewPaymentService(
 	orderRepo PaymentOrderRepository,
 	settingService *SettingService,
 	subscriptionService *SubscriptionService,
+	quotaPackageRepo QuotaPackageRepository,
 	billingCache *BillingCacheService,
 	userRepo UserRepository,
 	groupRepo GroupRepository,
@@ -154,6 +156,7 @@ func NewPaymentService(
 		orderRepo:           orderRepo,
 		settingService:      settingService,
 		subscriptionService: subscriptionService,
+		quotaPackageRepo:    quotaPackageRepo,
 		billingCache:        billingCache,
 		userRepo:            userRepo,
 		groupRepo:           groupRepo,
@@ -224,20 +227,29 @@ func (s *PaymentService) GetPlans(ctx context.Context) ([]PaymentPlan, error) {
 			if !g.Listed || g.PriceFen <= 0 {
 				continue
 			}
+			planType := PaymentOrderTypeSubscription
+			validityDays := g.DefaultValidityDays
+			if g.IsQuotaPackage() {
+				planType = PaymentOrderTypeQuotaPackage
+				validityDays = g.QuotaPackageValidityDays
+			}
 			plan := PaymentPlan{
 				Key:          fmt.Sprintf("group_%d", g.ID),
 				Name:         g.Name,
 				Description:  g.Description,
 				AmountFen:    g.PriceFen,
 				GroupID:      g.ID,
-				ValidityDays: g.DefaultValidityDays,
-				Type:         PaymentOrderTypeSubscription,
+				ValidityDays: validityDays,
+				Type:         planType,
 			}
 			// 特性列表：优先使用管理员自定义，否则自动生成
 			if len(g.PlanFeatures) > 0 {
 				plan.Features = g.PlanFeatures
 			} else {
 				features := make([]string, 0, 4)
+				if g.IsQuotaPackage() && g.QuotaPackageQuotaUSD != nil && *g.QuotaPackageQuotaUSD > 0 {
+					features = append(features, fmt.Sprintf("可叠加额度 $%.0f", *g.QuotaPackageQuotaUSD))
+				}
 				if g.DailyLimitUSD != nil && *g.DailyLimitUSD > 0 {
 					features = append(features, fmt.Sprintf("每日额度 $%.0f", *g.DailyLimitUSD))
 				}
@@ -526,7 +538,7 @@ func (s *PaymentService) CheckNewcomerEligibility(ctx context.Context, userID in
 func (s *PaymentService) enrichPlansFromGroups(ctx context.Context, plans []PaymentPlan) {
 	for i := range plans {
 		plan := &plans[i]
-		if plan.Type != PaymentOrderTypeSubscription || plan.GroupID == 0 {
+		if (plan.Type != PaymentOrderTypeSubscription && plan.Type != PaymentOrderTypeQuotaPackage) || plan.GroupID == 0 {
 			continue
 		}
 		// 如果已手动配置了 features，跳过
@@ -1903,6 +1915,32 @@ func (s *PaymentService) handlePaymentSuccess(ctx context.Context, order *Paymen
 		}
 		log.Printf("[Payment] Order %s paid successfully, balance +%.2f for user %d",
 			order.OrderNo, order.BalanceAmount, order.UserID)
+	} else if order.OrderType == PaymentOrderTypeQuotaPackage {
+		group, err := s.groupRepo.GetByID(ctx, order.GroupID)
+		if err != nil {
+			log.Printf("[Payment] Failed to load quota package group %d for order %s: %v", order.GroupID, order.OrderNo, err)
+			return fmt.Errorf("load quota package group: %w", err)
+		}
+		if !group.IsQuotaPackage() || group.QuotaPackageQuotaUSD == nil || *group.QuotaPackageQuotaUSD <= 0 {
+			return ErrQuotaPackageInvalid
+		}
+		validityDays := order.ValidityDays
+		if validityDays <= 0 {
+			validityDays = group.QuotaPackageValidityDays
+		}
+		if validityDays <= 0 {
+			validityDays = 30
+		}
+		expiresAt := time.Now().Add(time.Duration(validityDays) * 24 * time.Hour)
+		if s.quotaPackageRepo == nil {
+			return infraerrors.ServiceUnavailable("QUOTA_PACKAGE_REPO_UNAVAILABLE", "quota package repository is unavailable")
+		}
+		if err := s.quotaPackageRepo.CreateFromOrder(ctx, order.UserID, order.GroupID, order.ID, *group.QuotaPackageQuotaUSD, expiresAt); err != nil {
+			log.Printf("[Payment] Failed to create quota package for order %s user %d group %d: %v", order.OrderNo, order.UserID, order.GroupID, err)
+			return fmt.Errorf("create quota package: %w", err)
+		}
+		log.Printf("[Payment] Order %s paid successfully, quota package added for user %d, group %d, %.4f USD, expires %s",
+			order.OrderNo, order.UserID, order.GroupID, *group.QuotaPackageQuotaUSD, expiresAt.Format(time.RFC3339))
 	} else if order.OrderType == PaymentOrderTypeAgentActivation {
 		if s.agentService != nil {
 			if err := s.agentService.MarkActivationFeePaid(ctx, order.UserID, order.ID); err != nil {

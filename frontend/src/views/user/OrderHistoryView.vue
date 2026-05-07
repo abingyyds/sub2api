@@ -139,11 +139,9 @@
                     <td class="px-4 py-3">
                       <span
                         class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-                        :class="getOrderType(order) === 'recharge'
-                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                          : 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'"
+                        :class="orderTypeBadgeClass(order)"
                       >
-                        {{ getOrderType(order) === 'recharge' ? t('orderHistory.typeRecharge') : t('orderHistory.typeSubscription') }}
+                        {{ orderTypeText(order) }}
                       </span>
                     </td>
                     <!-- Amount -->
@@ -376,12 +374,39 @@ function canRequestInvoice(order: PaymentOrder) {
   return !isLegacySubscriptionFallback(order) && order.status === 'paid' && !order.invoice_requested_at
 }
 
-function getOrderType(order: PaymentOrder): 'recharge' | 'subscription' {
-  // If plan_key contains "recharge" or is empty, treat as recharge
+function getOrderType(order: PaymentOrder): 'recharge' | 'subscription' | 'quota_package' {
+  if (order.order_type === 'quota_package') {
+    return 'quota_package'
+  }
+  if (order.order_type === 'balance') {
+    return 'recharge'
+  }
+  if (order.order_type === 'subscription') {
+    return 'subscription'
+  }
   if (!order.plan_key || order.plan_key.includes('recharge') || order.plan_key.startsWith('custom')) {
     return 'recharge'
   }
   return 'subscription'
+}
+
+function orderTypeText(order: PaymentOrder): string {
+  switch (getOrderType(order)) {
+    case 'recharge': return t('orderHistory.typeRecharge')
+    case 'quota_package': return t('orderHistory.typeQuotaPackage')
+    default: return t('orderHistory.typeSubscription')
+  }
+}
+
+function orderTypeBadgeClass(order: PaymentOrder): string {
+  switch (getOrderType(order)) {
+    case 'recharge':
+      return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+    case 'quota_package':
+      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+    default:
+      return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+  }
 }
 
 function statusClass(status: string): string {

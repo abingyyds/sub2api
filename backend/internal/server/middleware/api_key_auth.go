@@ -15,12 +15,12 @@ import (
 )
 
 // NewAPIKeyAuthMiddleware 创建 API Key 认证中间件
-func NewAPIKeyAuthMiddleware(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, orgService *service.OrganizationService, orgMemberService *service.OrgMemberService, orgProjectService *service.OrgProjectService, cfg *config.Config) APIKeyAuthMiddleware {
-	return APIKeyAuthMiddleware(apiKeyAuthWithSubscription(apiKeyService, subscriptionService, orgService, orgMemberService, orgProjectService, cfg))
+func NewAPIKeyAuthMiddleware(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, quotaPackageRepo service.QuotaPackageRepository, orgService *service.OrganizationService, orgMemberService *service.OrgMemberService, orgProjectService *service.OrgProjectService, cfg *config.Config) APIKeyAuthMiddleware {
+	return APIKeyAuthMiddleware(apiKeyAuthWithSubscription(apiKeyService, subscriptionService, quotaPackageRepo, orgService, orgMemberService, orgProjectService, cfg))
 }
 
 // apiKeyAuthWithSubscription API Key认证中间件（支持订阅验证）
-func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, orgService *service.OrganizationService, orgMemberService *service.OrgMemberService, orgProjectService *service.OrgProjectService, cfg *config.Config) gin.HandlerFunc {
+func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, quotaPackageRepo service.QuotaPackageRepository, orgService *service.OrganizationService, orgMemberService *service.OrgMemberService, orgProjectService *service.OrgProjectService, cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		queryKey := strings.TrimSpace(c.Query("key"))
 		queryApiKey := strings.TrimSpace(c.Query("api_key"))
@@ -164,10 +164,27 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 			return
 		}
 
-		// 判断计费方式：订阅模式 vs 余额模式
+		// 判断计费方式：订阅模式 / 额度包 / 余额模式
 		isSubscriptionType := apiKey.Group != nil && apiKey.Group.IsSubscriptionType()
+		isQuotaPackageType := apiKey.Group != nil && apiKey.Group.IsQuotaPackage()
 
-		if isSubscriptionType && subscriptionService != nil {
+		if isQuotaPackageType {
+			if quotaPackageRepo == nil {
+				AbortWithError(c, 503, "QUOTA_PACKAGE_UNAVAILABLE", "Quota package billing is unavailable")
+				return
+			}
+			available, err := quotaPackageRepo.GetAvailableTotal(c.Request.Context(), apiKey.User.ID, apiKey.Group.ID)
+			if err != nil {
+				log.Printf("[Auth] 500 QUOTA_PACKAGE_CHECK_FAILED: user=%d group=%d path=%s err=%v", apiKey.User.ID, apiKey.Group.ID, c.Request.URL.Path, err)
+				AbortWithError(c, 500, "QUOTA_PACKAGE_CHECK_FAILED", "Failed to validate quota package")
+				return
+			}
+			if available <= 0 {
+				log.Printf("[Auth] 403 QUOTA_PACKAGE_INSUFFICIENT: user=%d group=%d path=%s", apiKey.User.ID, apiKey.Group.ID, c.Request.URL.Path)
+				AbortWithError(c, 403, "QUOTA_PACKAGE_INSUFFICIENT", "Quota package balance is insufficient")
+				return
+			}
+		} else if isSubscriptionType && subscriptionService != nil {
 			// 订阅模式：验证订阅
 			subscription, err := subscriptionService.GetActiveSubscription(
 				c.Request.Context(),

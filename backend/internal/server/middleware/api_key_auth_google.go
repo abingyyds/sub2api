@@ -13,14 +13,14 @@ import (
 
 // APIKeyAuthGoogle is a Google-style error wrapper for API key auth.
 func APIKeyAuthGoogle(apiKeyService *service.APIKeyService, cfg *config.Config) gin.HandlerFunc {
-	return APIKeyAuthWithSubscriptionGoogle(apiKeyService, nil, cfg)
+	return APIKeyAuthWithSubscriptionGoogle(apiKeyService, nil, nil, cfg)
 }
 
 // APIKeyAuthWithSubscriptionGoogle behaves like ApiKeyAuthWithSubscription but returns Google-style errors:
 // {"error":{"code":401,"message":"...","status":"UNAUTHENTICATED"}}
 //
 // It is intended for Gemini native endpoints (/v1beta) to match Gemini SDK expectations.
-func APIKeyAuthWithSubscriptionGoogle(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, cfg *config.Config) gin.HandlerFunc {
+func APIKeyAuthWithSubscriptionGoogle(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, quotaPackageRepo service.QuotaPackageRepository, cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if v := strings.TrimSpace(c.Query("api_key")); v != "" {
 			abortWithGoogleError(c, 400, "Query parameter api_key is deprecated. Use Authorization header or key instead.")
@@ -69,7 +69,22 @@ func APIKeyAuthWithSubscriptionGoogle(apiKeyService *service.APIKeyService, subs
 		}
 
 		isSubscriptionType := apiKey.Group != nil && apiKey.Group.IsSubscriptionType()
-		if isSubscriptionType && subscriptionService != nil {
+		isQuotaPackageType := apiKey.Group != nil && apiKey.Group.IsQuotaPackage()
+		if isQuotaPackageType {
+			if quotaPackageRepo == nil {
+				abortWithGoogleError(c, 503, "Quota package billing is unavailable")
+				return
+			}
+			available, err := quotaPackageRepo.GetAvailableTotal(c.Request.Context(), apiKey.User.ID, apiKey.Group.ID)
+			if err != nil {
+				abortWithGoogleError(c, 500, "Failed to validate quota package")
+				return
+			}
+			if available <= 0 {
+				abortWithGoogleError(c, 403, "Quota package balance is insufficient")
+				return
+			}
+		} else if isSubscriptionType && subscriptionService != nil {
 			subscription, err := subscriptionService.GetActiveSubscription(
 				c.Request.Context(),
 				apiKey.User.ID,

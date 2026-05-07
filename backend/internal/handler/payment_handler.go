@@ -311,6 +311,7 @@ func (h *PaymentHandler) QueryOrder(c *gin.Context) {
 	response.Success(c, gin.H{
 		"order_no":             order.OrderNo,
 		"plan_key":             order.PlanKey,
+		"order_type":           order.OrderType,
 		"amount_fen":           order.AmountFen,
 		"discount_amount":      order.DiscountAmount,
 		"status":               order.Status,
@@ -354,6 +355,7 @@ func (h *PaymentHandler) ListOrders(c *gin.Context) {
 		items[i] = gin.H{
 			"order_no":             order.OrderNo,
 			"plan_key":             order.PlanKey,
+			"order_type":           order.OrderType,
 			"amount_fen":           order.AmountFen,
 			"discount_amount":      order.DiscountAmount,
 			"status":               order.Status,

@@ -97,6 +97,11 @@ type Group struct {
 	DisplayPrice      string   `json:"display_price"`
 	DisplayDiscount   string   `json:"display_discount"`
 
+	// 额度包配置
+	QuotaPackageEnabled      bool     `json:"quota_package_enabled"`
+	QuotaPackageQuotaUSD     *float64 `json:"quota_package_quota_usd"`
+	QuotaPackageValidityDays int      `json:"quota_package_validity_days"`
+
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

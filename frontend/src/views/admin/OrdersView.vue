@@ -17,8 +17,8 @@
             <span class="font-medium">¥{{ (value / 100).toFixed(value % 100 === 0 ? 0 : 2) }}</span>
           </template>
           <template #cell-order_type="{ value }">
-            <span :class="['badge', value === 'balance' ? 'badge-primary' : 'badge-gray']">
-              {{ value === 'balance' ? t('admin.orders.typeBalance') : t('admin.orders.typeSubscription') }}
+            <span :class="['badge', orderTypeBadgeClass(value)]">
+              {{ orderTypeLabel(value) }}
             </span>
           </template>
           <template #cell-sub_site_id="{ value }">
@@ -136,8 +136,26 @@ const statusOptions = computed(() => [
 const typeOptions = computed(() => [
   { value: '', label: t('admin.orders.allTypes') },
   { value: 'subscription', label: t('admin.orders.typeSubscription') },
+  { value: 'quota_package', label: t('admin.orders.typeQuotaPackage') },
   { value: 'balance', label: t('admin.orders.typeBalance') }
 ])
+
+function orderTypeLabel(value: string) {
+  switch (value) {
+    case 'balance': return t('admin.orders.typeBalance')
+    case 'quota_package': return t('admin.orders.typeQuotaPackage')
+    case 'subscription': return t('admin.orders.typeSubscription')
+    default: return value
+  }
+}
+
+function orderTypeBadgeClass(value: string) {
+  switch (value) {
+    case 'balance': return 'badge-primary'
+    case 'quota_package': return 'badge-success'
+    default: return 'badge-gray'
+  }
+}
 
 function statusBadgeClass(status: string) {
   switch (status) {

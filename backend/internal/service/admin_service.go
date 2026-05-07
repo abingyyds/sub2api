@@ -137,6 +137,10 @@ type CreateGroupInput struct {
 	ModelPlazaVisible bool
 	DisplayPrice      string
 	DisplayDiscount   string
+	// 额度包配置
+	QuotaPackageEnabled      bool
+	QuotaPackageQuotaUSD     *float64
+	QuotaPackageValidityDays int
 }
 
 type UpdateGroupInput struct {
@@ -174,6 +178,10 @@ type UpdateGroupInput struct {
 	ModelPlazaVisible *bool
 	DisplayPrice      string
 	DisplayDiscount   string
+	// 额度包配置
+	QuotaPackageEnabled      *bool
+	QuotaPackageQuotaUSD     *float64
+	QuotaPackageValidityDays *int
 }
 
 type CreateAccountInput struct {
@@ -820,6 +828,12 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 		ModelPlazaVisible:     input.ModelPlazaVisible,
 		DisplayPrice:          input.DisplayPrice,
 		DisplayDiscount:       input.DisplayDiscount,
+		QuotaPackageEnabled:   input.QuotaPackageEnabled,
+		QuotaPackageQuotaUSD:  normalizeQuotaPackageQuota(input.QuotaPackageQuotaUSD),
+	}
+	group.QuotaPackageValidityDays = normalizeQuotaPackageValidityDays(input.QuotaPackageValidityDays)
+	if group.QuotaPackageEnabled && group.QuotaPackageQuotaUSD == nil {
+		return nil, fmt.Errorf("quota package quota must be positive")
 	}
 	if err := s.groupRepo.Create(ctx, group); err != nil {
 		return nil, err
@@ -852,6 +866,21 @@ func normalizeDisplayRateMultiplier(multiplier *float64) *float64 {
 	}
 	value := *multiplier
 	return &value
+}
+
+func normalizeQuotaPackageQuota(quota *float64) *float64 {
+	if quota == nil || *quota <= 0 {
+		return nil
+	}
+	value := *quota
+	return &value
+}
+
+func normalizeQuotaPackageValidityDays(days int) int {
+	if days <= 0 {
+		return 30
+	}
+	return days
 }
 
 // validateFallbackGroup 校验降级分组的有效性
@@ -995,6 +1024,18 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 	}
 	group.DisplayPrice = input.DisplayPrice
 	group.DisplayDiscount = input.DisplayDiscount
+	if input.QuotaPackageEnabled != nil {
+		group.QuotaPackageEnabled = *input.QuotaPackageEnabled
+	}
+	if input.QuotaPackageQuotaUSD != nil {
+		group.QuotaPackageQuotaUSD = normalizeQuotaPackageQuota(input.QuotaPackageQuotaUSD)
+	}
+	if input.QuotaPackageValidityDays != nil {
+		group.QuotaPackageValidityDays = normalizeQuotaPackageValidityDays(*input.QuotaPackageValidityDays)
+	}
+	if group.QuotaPackageEnabled && group.QuotaPackageQuotaUSD == nil {
+		return nil, fmt.Errorf("quota package quota must be positive")
+	}
 
 	if err := s.groupRepo.Update(ctx, group); err != nil {
 		return nil, err

@@ -626,7 +626,7 @@
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {{ paymentOrderType === 'subscription' ? t('pricing.payment.paymentSuccess') : t('recharge.payment.success') }}
+                {{ paymentSuccessText }}
               </div>
               <div v-else-if="paymentStatus === 'closed'" class="text-sm font-bold text-red-500">
                 {{ t('pricing.payment.orderExpired') }}
@@ -700,7 +700,7 @@ const pendingPaymentAction = ref<(() => Promise<void>) | null>(null)
 const qrLoading = ref(false)
 const qrCanvas = ref<HTMLCanvasElement | null>(null)
 const paymentStatus = ref<'pending' | 'paid' | 'closed'>('pending')
-const paymentOrderType = ref<'subscription' | 'recharge'>('subscription')
+const paymentOrderType = ref<'subscription' | 'recharge' | 'quota_package'>('subscription')
 const currentOrderNo = ref('')
 const currentOrderAmount = ref('')
 const countdown = ref(0)
@@ -759,6 +759,15 @@ function makeOrderActionKey(type: 'subscription' | 'recharge' | 'custom', key?: 
 function isProcessingOrderAction(type: 'subscription' | 'recharge' | 'custom', key?: string) {
   return orderFlowBusy.value && activeOrderActionKey.value === makeOrderActionKey(type, key)
 }
+
+const paymentSuccessText = computed(() => {
+  if (paymentOrderType.value === 'quota_package') {
+    return t('pricing.payment.quotaPackageSuccess')
+  }
+  return paymentOrderType.value === 'subscription'
+    ? t('pricing.payment.paymentSuccess')
+    : t('recharge.payment.success')
+})
 
 function getCreateOrderErrorMessage(err: any) {
   if (err?.reason === 'SUBSCRIPTION_REPURCHASE_BLOCKED') {
@@ -1224,7 +1233,10 @@ onMounted(async () => {
   try {
     const allPlans = await paymentAPI.getPlans()
     plans.value = allPlans
-      .filter(p => (p.type || 'subscription') === 'subscription')
+      .filter(p => {
+        const type = p.type || 'subscription'
+        return type === 'subscription' || type === 'quota_package'
+      })
       .map(hideRateFeatures)
   } catch {
     // silently fail
@@ -1318,7 +1330,7 @@ async function handleBuy(plan: PaymentPlan) {
 
   try {
     await showPayMethodOrDirect(async () => {
-      paymentOrderType.value = 'subscription'
+      paymentOrderType.value = plan.type === 'quota_package' ? 'quota_package' : 'subscription'
       creatingOrder.value = true
       try {
         const order = await paymentAPI.createOrder(plan.key, code || undefined, selectedPayMethod.value)
@@ -1509,9 +1521,11 @@ async function syncPaymentSuccessState() {
   }
 
   appStore.showSuccess(
-    paymentOrderType.value === 'subscription'
-      ? t('pricing.payment.paymentSuccessToast')
-      : t('pricing.payment.rechargeSuccessToast'),
+    paymentOrderType.value === 'quota_package'
+      ? t('pricing.payment.quotaPackageSuccessToast')
+      : paymentOrderType.value === 'subscription'
+        ? t('pricing.payment.paymentSuccessToast')
+        : t('pricing.payment.rechargeSuccessToast'),
     5000
   )
 }

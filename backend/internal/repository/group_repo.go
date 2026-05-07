@@ -77,6 +77,9 @@ func (r *groupRepository) Create(ctx context.Context, groupIn *service.Group) er
 	if err := setGroupDisplayRateMultiplier(ctx, tx.Client(), created.ID, groupIn.DisplayRateMultiplier); err != nil {
 		return err
 	}
+	if err := setGroupQuotaPackageFields(ctx, tx.Client(), created.ID, groupIn); err != nil {
+		return err
+	}
 	if err := tx.Commit(); err != nil {
 		return err
 	}
@@ -111,6 +114,9 @@ func (r *groupRepository) GetByIDLite(ctx context.Context, id int64) (*service.G
 
 	out := groupEntityToService(m)
 	if err := r.hydrateDisplayRateMultiplier(ctx, out); err != nil {
+		return nil, err
+	}
+	if err := r.hydrateQuotaPackageFields(ctx, out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -167,6 +173,9 @@ func (r *groupRepository) Update(ctx context.Context, groupIn *service.Group) er
 		return translatePersistenceError(err, service.ErrGroupNotFound, service.ErrGroupExists)
 	}
 	if err := setGroupDisplayRateMultiplier(ctx, tx.Client(), groupIn.ID, groupIn.DisplayRateMultiplier); err != nil {
+		return err
+	}
+	if err := setGroupQuotaPackageFields(ctx, tx.Client(), groupIn.ID, groupIn); err != nil {
 		return err
 	}
 	if err := tx.Commit(); err != nil {
@@ -237,6 +246,9 @@ func (r *groupRepository) ListWithFilters(ctx context.Context, params pagination
 	if err := r.hydrateDisplayRateMultipliers(ctx, outGroups); err != nil {
 		return nil, nil, err
 	}
+	if err := r.hydrateQuotaPackageFieldsForGroups(ctx, outGroups); err != nil {
+		return nil, nil, err
+	}
 
 	counts, err := r.loadAccountCounts(ctx, groupIDs)
 	if err == nil {
@@ -267,6 +279,9 @@ func (r *groupRepository) ListActive(ctx context.Context) ([]service.Group, erro
 	if err := r.hydrateDisplayRateMultipliers(ctx, outGroups); err != nil {
 		return nil, err
 	}
+	if err := r.hydrateQuotaPackageFieldsForGroups(ctx, outGroups); err != nil {
+		return nil, err
+	}
 
 	counts, err := r.loadAccountCounts(ctx, groupIDs)
 	if err == nil {
@@ -295,6 +310,9 @@ func (r *groupRepository) ListActiveByPlatform(ctx context.Context, platform str
 		groupIDs = append(groupIDs, g.ID)
 	}
 	if err := r.hydrateDisplayRateMultipliers(ctx, outGroups); err != nil {
+		return nil, err
+	}
+	if err := r.hydrateQuotaPackageFieldsForGroups(ctx, outGroups); err != nil {
 		return nil, err
 	}
 
@@ -489,6 +507,26 @@ func setGroupDisplayRateMultiplier(ctx context.Context, exec sqlExecutor, groupI
 	return err
 }
 
+func setGroupQuotaPackageFields(ctx context.Context, exec sqlExecutor, groupID int64, groupIn *service.Group) error {
+	validityDays := groupIn.QuotaPackageValidityDays
+	if validityDays <= 0 {
+		validityDays = 30
+	}
+	_, err := exec.ExecContext(
+		ctx,
+		`UPDATE groups
+		 SET quota_package_enabled = $1,
+		     quota_package_quota_usd = $2,
+		     quota_package_validity_days = $3
+		 WHERE id = $4`,
+		groupIn.QuotaPackageEnabled,
+		optionalFloat64Arg(groupIn.QuotaPackageQuotaUSD),
+		validityDays,
+		groupID,
+	)
+	return err
+}
+
 func optionalFloat64Arg(value *float64) any {
 	if value == nil {
 		return nil
@@ -561,6 +599,101 @@ func (r *groupRepository) loadDisplayRateMultiplierMap(ctx context.Context, grou
 		values[groupID] = nil
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return values, nil
+}
+
+func (r *groupRepository) hydrateQuotaPackageFields(ctx context.Context, group *service.Group) error {
+	if group == nil || group.ID <= 0 {
+		return nil
+	}
+	values, err := r.loadQuotaPackageFieldMap(ctx, []int64{group.ID})
+	if err != nil {
+		return err
+	}
+	if value, ok := values[group.ID]; ok {
+		group.QuotaPackageEnabled = value.enabled
+		group.QuotaPackageQuotaUSD = value.quotaUSD
+		group.QuotaPackageValidityDays = value.validityDays
+	}
+	return nil
+}
+
+func (r *groupRepository) hydrateQuotaPackageFieldsForGroups(ctx context.Context, groups []service.Group) error {
+	if len(groups) == 0 {
+		return nil
+	}
+	groupIDs := make([]int64, 0, len(groups))
+	for i := range groups {
+		if groups[i].ID > 0 {
+			groupIDs = append(groupIDs, groups[i].ID)
+		}
+	}
+	values, err := r.loadQuotaPackageFieldMap(ctx, groupIDs)
+	if err != nil {
+		return err
+	}
+	for i := range groups {
+		if value, ok := values[groups[i].ID]; ok {
+			groups[i].QuotaPackageEnabled = value.enabled
+			groups[i].QuotaPackageQuotaUSD = value.quotaUSD
+			groups[i].QuotaPackageValidityDays = value.validityDays
+		}
+	}
+	return nil
+}
+
+type quotaPackageGroupFields struct {
+	enabled      bool
+	quotaUSD     *float64
+	validityDays int
+}
+
+func (r *groupRepository) loadQuotaPackageFieldMap(ctx context.Context, groupIDs []int64) (map[int64]quotaPackageGroupFields, error) {
+	values := make(map[int64]quotaPackageGroupFields, len(groupIDs))
+	if len(groupIDs) == 0 {
+		return values, nil
+	}
+
+	rows, err := r.sql.QueryContext(
+		ctx,
+		`SELECT id,
+		        COALESCE(quota_package_enabled, FALSE),
+		        quota_package_quota_usd,
+		        COALESCE(NULLIF(quota_package_validity_days, 0), 30)
+		 FROM groups
+		 WHERE id = ANY($1)`,
+		pq.Array(groupIDs),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var groupID int64
+		var enabled bool
+		var quota sql.NullFloat64
+		var validityDays int
+		if err := rows.Scan(&groupID, &enabled, &quota, &validityDays); err != nil {
+			return nil, err
+		}
+		var quotaPtr *float64
+		if quota.Valid {
+			value := quota.Float64
+			quotaPtr = &value
+		}
+		if validityDays <= 0 {
+			validityDays = 30
+		}
+		values[groupID] = quotaPackageGroupFields{
+			enabled:      enabled,
+			quotaUSD:     quotaPtr,
+			validityDays: validityDays,
+		}
+	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}

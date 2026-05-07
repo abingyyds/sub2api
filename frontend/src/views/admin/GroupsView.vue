@@ -94,20 +94,30 @@
               <span
                 :class="[
                   'inline-block rounded-full px-2 py-0.5 text-xs font-medium',
-                  row.subscription_type === 'subscription'
+                  row.quota_package_enabled
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                    : row.subscription_type === 'subscription'
                     ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'
                     : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
                 ]"
               >
                 {{
-                  row.subscription_type === 'subscription'
+                  row.quota_package_enabled
+                    ? t('admin.groups.quotaPackage.title')
+                    : row.subscription_type === 'subscription'
                     ? t('admin.groups.subscription.subscription')
                     : t('admin.groups.subscription.standard')
                 }}
               </span>
+              <div
+                v-if="row.quota_package_enabled"
+                class="text-xs text-gray-500 dark:text-gray-400"
+              >
+                ${{ row.quota_package_quota_usd || 0 }} · {{ t('admin.groups.quotaPackage.validityDaysValue', { days: row.quota_package_validity_days || 30 }) }}
+              </div>
               <!-- Subscription Limits - compact single line -->
               <div
-                v-if="row.subscription_type === 'subscription'"
+                v-else-if="row.subscription_type === 'subscription'"
                 class="text-xs text-gray-500 dark:text-gray-400"
               >
                 <template
@@ -388,6 +398,52 @@
 
         <!-- 套餐上架设置 -->
         <div class="border-t pt-4">
+          <!-- 额度包开关 -->
+          <div class="mb-4 flex items-center justify-between">
+            <div>
+              <label class="input-label mb-0">{{ t('admin.groups.quotaPackage.title') }}</label>
+              <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('admin.groups.quotaPackage.hint') }}</p>
+            </div>
+            <button
+              type="button"
+              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+              :class="createForm.quota_package_enabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-500'"
+              @click="createForm.quota_package_enabled = !createForm.quota_package_enabled"
+            >
+              <span
+                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                :class="createForm.quota_package_enabled ? 'translate-x-5' : 'translate-x-0'"
+              />
+            </button>
+          </div>
+
+          <div v-if="createForm.quota_package_enabled" class="mb-4 grid grid-cols-1 gap-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-800 dark:bg-emerald-900/10 sm:grid-cols-2">
+            <div>
+              <label class="input-label">{{ t('admin.groups.quotaPackage.quotaUsd') }}</label>
+              <input
+                v-model.number="createForm.quota_package_quota_usd"
+                type="number"
+                min="0"
+                step="0.01"
+                class="input"
+                :placeholder="t('admin.groups.quotaPackage.quotaUsdPlaceholder')"
+              />
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t('admin.groups.quotaPackage.quotaUsdHint') }}</p>
+            </div>
+            <div>
+              <label class="input-label">{{ t('admin.groups.quotaPackage.validityDays') }}</label>
+              <input
+                v-model.number="createForm.quota_package_validity_days"
+                type="number"
+                min="1"
+                step="1"
+                class="input"
+                :placeholder="t('admin.groups.quotaPackage.validityDaysPlaceholder')"
+              />
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t('admin.groups.quotaPackage.validityDaysHint') }}</p>
+            </div>
+          </div>
+
           <!-- 上架开关 -->
           <div class="flex items-center justify-between">
             <div>
@@ -997,6 +1053,52 @@
 
         <!-- 套餐上架设置 -->
         <div class="border-t pt-4">
+          <!-- 额度包开关 -->
+          <div class="mb-4 flex items-center justify-between">
+            <div>
+              <label class="input-label mb-0">{{ t('admin.groups.quotaPackage.title') }}</label>
+              <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('admin.groups.quotaPackage.hint') }}</p>
+            </div>
+            <button
+              type="button"
+              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+              :class="editForm.quota_package_enabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-dark-500'"
+              @click="editForm.quota_package_enabled = !editForm.quota_package_enabled"
+            >
+              <span
+                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                :class="editForm.quota_package_enabled ? 'translate-x-5' : 'translate-x-0'"
+              />
+            </button>
+          </div>
+
+          <div v-if="editForm.quota_package_enabled" class="mb-4 grid grid-cols-1 gap-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-800 dark:bg-emerald-900/10 sm:grid-cols-2">
+            <div>
+              <label class="input-label">{{ t('admin.groups.quotaPackage.quotaUsd') }}</label>
+              <input
+                v-model.number="editForm.quota_package_quota_usd"
+                type="number"
+                min="0"
+                step="0.01"
+                class="input"
+                :placeholder="t('admin.groups.quotaPackage.quotaUsdPlaceholder')"
+              />
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t('admin.groups.quotaPackage.quotaUsdHint') }}</p>
+            </div>
+            <div>
+              <label class="input-label">{{ t('admin.groups.quotaPackage.validityDays') }}</label>
+              <input
+                v-model.number="editForm.quota_package_validity_days"
+                type="number"
+                min="1"
+                step="1"
+                class="input"
+                :placeholder="t('admin.groups.quotaPackage.validityDaysPlaceholder')"
+              />
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t('admin.groups.quotaPackage.validityDaysHint') }}</p>
+            </div>
+          </div>
+
           <!-- 上架开关 -->
           <div class="flex items-center justify-between">
             <div>
@@ -1595,7 +1697,10 @@ const createForm = reactive({
   tags: [] as string[],
   model_plaza_visible: true,
   display_price: '',
-  display_discount: ''
+  display_discount: '',
+  quota_package_enabled: false,
+  quota_package_quota_usd: null as number | null,
+  quota_package_validity_days: 30
 })
 
 // 简单账号类型（用于模型路由选择）
@@ -1784,7 +1889,10 @@ const editForm = reactive({
   tags: [] as string[],
   model_plaza_visible: true,
   display_price: '',
-  display_discount: ''
+  display_discount: '',
+  quota_package_enabled: false,
+  quota_package_quota_usd: null as number | null,
+  quota_package_validity_days: 30
 })
 
 // 根据分组类型返回不同的删除确认消息
@@ -1900,6 +2008,9 @@ const closeCreateModal = () => {
   createForm.model_plaza_visible = true
   createForm.display_price = ''
   createForm.display_discount = ''
+  createForm.quota_package_enabled = false
+  createForm.quota_package_quota_usd = null
+  createForm.quota_package_validity_days = 30
   createModelRoutingRules.value = []
   createPlanFeatures.value = []
   createTags.value = []
@@ -1915,6 +2026,8 @@ const handleCreateGroup = async () => {
     // 构建请求数据，包含模型路由配置
     const requestData = {
       ...createForm,
+      quota_package_quota_usd: createForm.quota_package_enabled ? createForm.quota_package_quota_usd : null,
+      quota_package_validity_days: createForm.quota_package_validity_days || 30,
       model_routing: convertRoutingRulesToApiFormat(createModelRoutingRules.value),
       plan_features: createPlanFeatures.value.filter(f => f.trim() !== ''),
       tags: createTags.value.filter(t => t.trim() !== '')
@@ -1962,6 +2075,9 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.model_plaza_visible = group.model_plaza_visible ?? true
   editForm.display_price = group.display_price || ''
   editForm.display_discount = group.display_discount || ''
+  editForm.quota_package_enabled = group.quota_package_enabled || false
+  editForm.quota_package_quota_usd = group.quota_package_quota_usd ?? null
+  editForm.quota_package_validity_days = group.quota_package_validity_days || 30
   editPlanFeatures.value = group.plan_features ? [...group.plan_features] : []
   editTags.value = group.tags ? [...group.tags] : []
   // 加载模型路由规则（异步加载账号名称）
@@ -1991,6 +2107,8 @@ const handleUpdateGroup = async () => {
     const payload = {
       ...editForm,
       fallback_group_id: editForm.fallback_group_id === null ? 0 : editForm.fallback_group_id,
+      quota_package_quota_usd: editForm.quota_package_enabled ? editForm.quota_package_quota_usd : null,
+      quota_package_validity_days: editForm.quota_package_validity_days || 30,
       model_routing: convertRoutingRulesToApiFormat(editModelRoutingRules.value),
       plan_features: editPlanFeatures.value.filter(f => f.trim() !== ''),
       tags: editTags.value.filter(t => t.trim() !== '')

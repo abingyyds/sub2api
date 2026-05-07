@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	dbent "github.com/Wei-Shaw/sub2api/ent"
@@ -16,10 +17,15 @@ import (
 
 type apiKeyRepository struct {
 	client *dbent.Client
+	sql    sqlExecutor
 }
 
 func NewAPIKeyRepository(client *dbent.Client) service.APIKeyRepository {
 	return &apiKeyRepository{client: client}
+}
+
+func NewAPIKeyRepositoryWithSQL(client *dbent.Client, sqlDB *sql.DB) service.APIKeyRepository {
+	return &apiKeyRepository{client: client, sql: sqlDB}
 }
 
 func (r *apiKeyRepository) activeQuery() *dbent.APIKeyQuery {
@@ -64,7 +70,11 @@ func (r *apiKeyRepository) GetByID(ctx context.Context, id int64) (*service.APIK
 		}
 		return nil, err
 	}
-	return apiKeyEntityToService(m), nil
+	out := apiKeyEntityToService(m)
+	if err := r.hydrateAPIKeyGroupQuotaFields(ctx, out); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 // GetKeyAndOwnerID 根据 API Key ID 获取其 key 与所有者（用户）ID。
@@ -98,7 +108,11 @@ func (r *apiKeyRepository) GetByKey(ctx context.Context, key string) (*service.A
 		}
 		return nil, err
 	}
-	return apiKeyEntityToService(m), nil
+	out := apiKeyEntityToService(m)
+	if err := r.hydrateAPIKeyGroupQuotaFields(ctx, out); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (r *apiKeyRepository) GetByKeyForAuth(ctx context.Context, key string) (*service.APIKey, error) {
@@ -148,7 +162,11 @@ func (r *apiKeyRepository) GetByKeyForAuth(ctx context.Context, key string) (*se
 		}
 		return nil, err
 	}
-	return apiKeyEntityToService(m), nil
+	out := apiKeyEntityToService(m)
+	if err := r.hydrateAPIKeyGroupQuotaFields(ctx, out); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (r *apiKeyRepository) Update(ctx context.Context, key *service.APIKey) error {
@@ -249,7 +267,9 @@ func (r *apiKeyRepository) ListByUserID(ctx context.Context, userID int64, param
 
 	outKeys := make([]service.APIKey, 0, len(keys))
 	for i := range keys {
-		outKeys = append(outKeys, *apiKeyEntityToService(keys[i]))
+		out := apiKeyEntityToService(keys[i])
+		_ = r.hydrateAPIKeyGroupQuotaFields(ctx, out)
+		outKeys = append(outKeys, *out)
 	}
 
 	return outKeys, paginationResultFromTotal(int64(total), params), nil
@@ -299,7 +319,9 @@ func (r *apiKeyRepository) ListByGroupID(ctx context.Context, groupID int64, par
 
 	outKeys := make([]service.APIKey, 0, len(keys))
 	for i := range keys {
-		outKeys = append(outKeys, *apiKeyEntityToService(keys[i]))
+		out := apiKeyEntityToService(keys[i])
+		_ = r.hydrateAPIKeyGroupQuotaFields(ctx, out)
+		outKeys = append(outKeys, *out)
 	}
 
 	return outKeys, paginationResultFromTotal(int64(total), params), nil
@@ -463,6 +485,36 @@ func groupEntityToService(g *dbent.Group) *service.Group {
 		CreatedAt:             g.CreatedAt,
 		UpdatedAt:             g.UpdatedAt,
 	}
+}
+
+func (r *apiKeyRepository) hydrateAPIKeyGroupQuotaFields(ctx context.Context, key *service.APIKey) error {
+	if r.sql == nil || key == nil || key.Group == nil || key.Group.ID <= 0 {
+		return nil
+	}
+	var enabled bool
+	var quota sql.NullFloat64
+	var validityDays int
+	if err := scanSingleRow(ctx, r.sql, `
+		SELECT COALESCE(quota_package_enabled, FALSE),
+		       quota_package_quota_usd,
+		       COALESCE(NULLIF(quota_package_validity_days, 0), 30)
+		FROM groups
+		WHERE id = $1
+	`, []any{key.Group.ID}, &enabled, &quota, &validityDays); err != nil {
+		return err
+	}
+	key.Group.QuotaPackageEnabled = enabled
+	if quota.Valid {
+		value := quota.Float64
+		key.Group.QuotaPackageQuotaUSD = &value
+	} else {
+		key.Group.QuotaPackageQuotaUSD = nil
+	}
+	if validityDays <= 0 {
+		validityDays = 30
+	}
+	key.Group.QuotaPackageValidityDays = validityDays
+	return nil
 }
 
 func derefString(s *string) string {

@@ -24,6 +24,7 @@ func SetupRouter(
 	orgAuth middleware2.OrgAuthMiddleware,
 	apiKeyService *service.APIKeyService,
 	subscriptionService *service.SubscriptionService,
+	quotaPackageRepo service.QuotaPackageRepository,
 	opsService *service.OpsService,
 	settingService *service.SettingService,
 	subSiteService *service.SubSiteService,
@@ -53,7 +54,7 @@ func SetupRouter(
 	}
 
 	// 注册路由
-	registerRoutes(r, handlers, jwtAuth, adminAuth, apiKeyAuth, orgAuth, apiKeyService, subscriptionService, opsService, subSiteService, cfg, redisClient)
+	registerRoutes(r, handlers, jwtAuth, adminAuth, apiKeyAuth, orgAuth, apiKeyService, subscriptionService, quotaPackageRepo, opsService, subSiteService, cfg, redisClient)
 
 	return r
 }
@@ -68,6 +69,7 @@ func registerRoutes(
 	orgAuth middleware2.OrgAuthMiddleware,
 	apiKeyService *service.APIKeyService,
 	subscriptionService *service.SubscriptionService,
+	quotaPackageRepo service.QuotaPackageRepository,
 	opsService *service.OpsService,
 	subSiteService *service.SubSiteService,
 	cfg *config.Config,
@@ -85,5 +87,5 @@ func registerRoutes(
 	routes.RegisterAdminRoutes(v1, h, adminAuth)
 	routes.RegisterOrgRoutes(v1, h, jwtAuth, orgAuth)
 	routes.RegisterSubSiteAdminRoutes(v1, h, jwtAuth, subSiteService)
-	routes.RegisterGatewayRoutes(r, h, apiKeyAuth, apiKeyService, subscriptionService, opsService, cfg)
+	routes.RegisterGatewayRoutes(r, h, apiKeyAuth, apiKeyService, subscriptionService, quotaPackageRepo, opsService, cfg)
 }

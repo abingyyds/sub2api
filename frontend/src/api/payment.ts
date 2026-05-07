@@ -21,7 +21,7 @@ export interface PaymentPlan {
   amount_fen: number
   group_id: number
   validity_days: number
-  type?: 'subscription' | 'balance'
+  type?: 'subscription' | 'balance' | 'quota_package'
   balance_amount?: number
 }
 
@@ -52,6 +52,7 @@ export interface CreateOrderResponse {
 export interface PaymentOrder {
   order_no: string
   plan_key: string
+  order_type?: 'subscription' | 'balance' | 'quota_package' | string
   amount_fen: number
   promo_code: string
   discount_amount: number

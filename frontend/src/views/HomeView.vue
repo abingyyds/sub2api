@@ -199,7 +199,7 @@
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              {{ t('pricing.payment.paymentSuccess') }}
+              {{ paymentOrderType === 'quota_package' ? t('pricing.payment.quotaPackageSuccess') : t('pricing.payment.paymentSuccess') }}
             </div>
             <div v-else-if="paymentStatus === 'closed'" class="text-sm text-red-500">
               {{ t('pricing.payment.orderExpired') }}
@@ -328,6 +328,7 @@ const showPaymentModal = ref(false)
 const qrLoading = ref(false)
 const qrCanvas = ref<HTMLCanvasElement | null>(null)
 const paymentStatus = ref<'pending' | 'paid' | 'closed'>('pending')
+const paymentOrderType = ref<'subscription' | 'quota_package'>('subscription')
 const currentOrderNo = ref('')
 const currentOrderAmount = ref('')
 const countdown = ref(0)
@@ -373,7 +374,10 @@ async function loadPlans() {
   try {
     const allPlans = await paymentAPI.getPlans()
     plans.value = allPlans
-      .filter(p => (p.type || 'subscription') === 'subscription')
+      .filter(p => {
+        const type = p.type || 'subscription'
+        return type === 'subscription' || type === 'quota_package'
+      })
       .map(hideRateFeatures)
   } catch {
     // silently fail
@@ -402,6 +406,7 @@ async function handleBuyPlan(plan: PaymentPlan) {
   creatingOrder.value = true
   try {
     const order = await paymentAPI.createOrder(plan.key)
+    paymentOrderType.value = plan.type === 'quota_package' ? 'quota_package' : 'subscription'
     currentOrderNo.value = order.order_no
     currentOrderAmount.value = (order.amount_fen / 100).toFixed(order.amount_fen % 100 === 0 ? 0 : 2)
     paymentStatus.value = 'pending'
@@ -463,7 +468,12 @@ function startPolling() {
 async function syncPaymentSuccessState() {
   try {
     await authStore.refreshUser()
-    appStore.showSuccess(t('pricing.payment.paymentSuccessToast'), 5000)
+    appStore.showSuccess(
+      paymentOrderType.value === 'quota_package'
+        ? t('pricing.payment.quotaPackageSuccessToast')
+        : t('pricing.payment.paymentSuccessToast'),
+      5000
+    )
   } catch (error) {
     console.error('Failed to refresh home payment success state:', error)
     appStore.showError('支付成功，但页面数据刷新失败，请手动刷新页面查看最新状态')

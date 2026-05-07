@@ -283,6 +283,7 @@ type GatewayService struct {
 	usageLogRepo        UsageLogRepository
 	userRepo            UserRepository
 	userSubRepo         UserSubscriptionRepository
+	quotaPackageRepo    QuotaPackageRepository
 	orgRepo             OrganizationRepository
 	orgMemberRepo       OrgMemberRepository
 	orgProjectRepo      OrgProjectRepository
@@ -313,6 +314,7 @@ func NewGatewayService(
 	usageLogRepo UsageLogRepository,
 	userRepo UserRepository,
 	userSubRepo UserSubscriptionRepository,
+	quotaPackageRepo QuotaPackageRepository,
 	orgRepo OrganizationRepository,
 	orgMemberRepo OrgMemberRepository,
 	orgProjectRepo OrgProjectRepository,
@@ -337,6 +339,7 @@ func NewGatewayService(
 		usageLogRepo:        usageLogRepo,
 		userRepo:            userRepo,
 		userSubRepo:         userSubRepo,
+		quotaPackageRepo:    quotaPackageRepo,
 		orgRepo:             orgRepo,
 		orgMemberRepo:       orgMemberRepo,
 		orgProjectRepo:      orgProjectRepo,
@@ -3641,11 +3644,15 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 		}
 	}
 
-	// 判断计费方式：订阅模式 vs 余额模式
+	// 判断计费方式：订阅模式 / 额度包 / 余额模式
 	isSubscriptionBilling := subscription != nil && apiKey.Group != nil && apiKey.Group.IsSubscriptionType()
+	isQuotaPackageBilling := subscription == nil && apiKey.GroupID != nil && apiKey.Group != nil && apiKey.Group.IsQuotaPackage()
 	billingType := BillingTypeBalance
-	if isSubscriptionBilling {
+	switch {
+	case isSubscriptionBilling:
 		billingType = BillingTypeSubscription
+	case isQuotaPackageBilling:
+		billingType = BillingTypeQuotaPackage
 	}
 
 	// 应用账号计费倍率到真实扣费；展示层会按角色决定是否暴露成本明细。
@@ -3785,7 +3792,16 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 	}
 
 	// 根据计费类型执行扣费
-	if isSubscriptionBilling {
+	if isQuotaPackageBilling {
+		// 额度包模式：按到期时间最早的额度包优先扣减。
+		if shouldBill && cost.ActualCost > 0 {
+			if s.quotaPackageRepo == nil {
+				log.Printf("Quota package repository is unavailable: user=%d group=%d", user.ID, *apiKey.GroupID)
+			} else if err := s.quotaPackageRepo.Deduct(ctx, user.ID, *apiKey.GroupID, cost.ActualCost); err != nil {
+				log.Printf("Deduct quota package failed: %v", err)
+			}
+		}
+	} else if isSubscriptionBilling {
 		// 订阅模式：更新订阅用量（使用 ActualCost 应用倍率后的费用）
 		if shouldBill && cost.ActualCost > 0 {
 			if err := s.userSubRepo.IncrementUsage(ctx, subscription.ID, cost.ActualCost); err != nil {

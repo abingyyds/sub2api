@@ -289,6 +289,7 @@ const (
 // Payment order type constants.
 const (
 	PaymentOrderTypeSubscription      = "subscription"
+	PaymentOrderTypeQuotaPackage      = "quota_package"
 	PaymentOrderTypeBalance           = "balance"
 	PaymentOrderTypeAgentActivation   = "agent_activation"
 	PaymentOrderTypeSubSiteActivation = "subsite_activation"

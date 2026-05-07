@@ -32,6 +32,7 @@ func ProvideRouter(
 	orgAuth middleware2.OrgAuthMiddleware,
 	apiKeyService *service.APIKeyService,
 	subscriptionService *service.SubscriptionService,
+	quotaPackageRepo service.QuotaPackageRepository,
 	opsService *service.OpsService,
 	settingService *service.SettingService,
 	subSiteService *service.SubSiteService,
@@ -53,7 +54,7 @@ func ProvideRouter(
 		}
 	}
 
-	return SetupRouter(r, handlers, jwtAuth, adminAuth, apiKeyAuth, orgAuth, apiKeyService, subscriptionService, opsService, settingService, subSiteService, cfg, redisClient)
+	return SetupRouter(r, handlers, jwtAuth, adminAuth, apiKeyAuth, orgAuth, apiKeyService, subscriptionService, quotaPackageRepo, opsService, settingService, subSiteService, cfg, redisClient)
 }
 
 // ProvideHTTPServer 提供 HTTP 服务器
