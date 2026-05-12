@@ -441,6 +441,37 @@ func AccountSummaryFromService(a *service.Account) *AccountSummary {
 	}
 }
 
+func usageLogBilledBreakdown(l *service.UsageLog) (input, output, cacheCreation, cacheRead float64) {
+	if l == nil {
+		return 0, 0, 0, 0
+	}
+
+	factor := 1.0
+	if l.TotalCost > 0 {
+		factor = l.ActualCost / l.TotalCost
+	} else if l.RateMultiplier > 0 {
+		factor = l.RateMultiplier
+	}
+
+	input = l.InputCost * factor
+	output = l.OutputCost * factor
+	cacheCreation = l.CacheCreationCost * factor
+	cacheRead = l.CacheReadCost * factor
+
+	delta := l.ActualCost - (input + output + cacheCreation + cacheRead)
+	switch {
+	case cacheRead != 0:
+		cacheRead += delta
+	case cacheCreation != 0:
+		cacheCreation += delta
+	case output != 0:
+		output += delta
+	case input != 0:
+		input += delta
+	}
+	return input, output, cacheCreation, cacheRead
+}
+
 func usageLogAccountCost(l *service.UsageLog) float64 {
 	if l == nil {
 		return 0
@@ -456,35 +487,40 @@ func usageLogAccountCost(l *service.UsageLog) float64 {
 }
 
 func usageLogFromService(l *service.UsageLog) UsageLog {
-	// 基础调用日志 DTO 不包含计费倍率、成本拆分、真实成本和管理员字段。
+	// 基础调用日志 DTO 不包含计费倍率、标准成本和管理员字段。
+	inputBilledCost, outputBilledCost, cacheCreationBilledCost, cacheReadBilledCost := usageLogBilledBreakdown(l)
 	return UsageLog{
-		ID:                    l.ID,
-		UserID:                l.UserID,
-		APIKeyID:              l.APIKeyID,
-		AccountID:             l.AccountID,
-		RequestID:             l.RequestID,
-		Model:                 l.Model,
-		GroupID:               l.GroupID,
-		SubscriptionID:        l.SubscriptionID,
-		InputTokens:           l.InputTokens,
-		OutputTokens:          l.OutputTokens,
-		CacheCreationTokens:   l.CacheCreationTokens,
-		CacheReadTokens:       l.CacheReadTokens,
-		CacheCreation5mTokens: l.CacheCreation5mTokens,
-		CacheCreation1hTokens: l.CacheCreation1hTokens,
-		ActualCost:            l.ActualCost,
-		BillingType:           l.BillingType,
-		Stream:                l.Stream,
-		DurationMs:            l.DurationMs,
-		FirstTokenMs:          l.FirstTokenMs,
-		ImageCount:            l.ImageCount,
-		ImageSize:             l.ImageSize,
-		UserAgent:             l.UserAgent,
-		CreatedAt:             l.CreatedAt,
-		User:                  UserFromServiceShallow(l.User),
-		APIKey:                UserAPIKeyFromService(l.APIKey),
-		Group:                 UserGroupFromService(l.Group),
-		Subscription:          UserSubscriptionFromService(l.Subscription),
+		ID:                      l.ID,
+		UserID:                  l.UserID,
+		APIKeyID:                l.APIKeyID,
+		AccountID:               l.AccountID,
+		RequestID:               l.RequestID,
+		Model:                   l.Model,
+		GroupID:                 l.GroupID,
+		SubscriptionID:          l.SubscriptionID,
+		InputTokens:             l.InputTokens,
+		OutputTokens:            l.OutputTokens,
+		CacheCreationTokens:     l.CacheCreationTokens,
+		CacheReadTokens:         l.CacheReadTokens,
+		CacheCreation5mTokens:   l.CacheCreation5mTokens,
+		CacheCreation1hTokens:   l.CacheCreation1hTokens,
+		InputBilledCost:         inputBilledCost,
+		OutputBilledCost:        outputBilledCost,
+		CacheCreationBilledCost: cacheCreationBilledCost,
+		CacheReadBilledCost:     cacheReadBilledCost,
+		ActualCost:              l.ActualCost,
+		BillingType:             l.BillingType,
+		Stream:                  l.Stream,
+		DurationMs:              l.DurationMs,
+		FirstTokenMs:            l.FirstTokenMs,
+		ImageCount:              l.ImageCount,
+		ImageSize:               l.ImageSize,
+		UserAgent:               l.UserAgent,
+		CreatedAt:               l.CreatedAt,
+		User:                    UserFromServiceShallow(l.User),
+		APIKey:                  UserAPIKeyFromService(l.APIKey),
+		Group:                   UserGroupFromService(l.Group),
+		Subscription:            UserSubscriptionFromService(l.Subscription),
 	}
 }
 

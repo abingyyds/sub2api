@@ -342,8 +342,12 @@ type UsageLog struct {
 	CacheCreation5mTokens int `json:"cache_creation_5m_tokens"`
 	CacheCreation1hTokens int `json:"cache_creation_1h_tokens"`
 
-	// 普通用户只能看到最终扣费，不能看到计费倍率、成本拆分或真实成本。
-	ActualCost float64 `json:"actual_cost"`
+	// 普通用户只能看到按最终扣费口径摊分后的明细，不能看到计费倍率或标准成本。
+	InputBilledCost         float64 `json:"input_billed_cost,omitempty"`
+	OutputBilledCost        float64 `json:"output_billed_cost,omitempty"`
+	CacheCreationBilledCost float64 `json:"cache_creation_billed_cost,omitempty"`
+	CacheReadBilledCost     float64 `json:"cache_read_billed_cost,omitempty"`
+	ActualCost              float64 `json:"actual_cost"`
 
 	BillingType  int8 `json:"billing_type"`
 	Stream       bool `json:"stream"`

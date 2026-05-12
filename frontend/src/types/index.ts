@@ -712,6 +712,10 @@ export interface UsageLog {
   cache_creation_5m_tokens: number
   cache_creation_1h_tokens: number
 
+  input_billed_cost?: number
+  output_billed_cost?: number
+  cache_creation_billed_cost?: number
+  cache_read_billed_cost?: number
   actual_cost: number
   billing_type: number
 
