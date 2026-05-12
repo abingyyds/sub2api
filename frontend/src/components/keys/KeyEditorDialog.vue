@@ -18,7 +18,6 @@
             :name="preSelectedGroup.name"
             :platform="preSelectedGroup.platform"
             :subscription-type="preSelectedGroup.subscription_type"
-            :rate-multiplier="preSelectedGroup.rate_multiplier"
           />
         </div>
         <p v-if="preSelectedGroup.description" class="mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -51,7 +50,6 @@
               :name="(option as unknown as GroupOption).label"
               :platform="(option as unknown as GroupOption).platform"
               :subscription-type="(option as unknown as GroupOption).subscriptionType"
-              :rate-multiplier="(option as unknown as GroupOption).rate"
             />
             <span v-else class="text-gray-400">{{ t('keys.selectGroup') }}</span>
           </template>
@@ -60,7 +58,6 @@
               :name="(option as unknown as GroupOption).label"
               :platform="(option as unknown as GroupOption).platform"
               :subscription-type="(option as unknown as GroupOption).subscriptionType"
-              :rate-multiplier="(option as unknown as GroupOption).rate"
               :description="(option as unknown as GroupOption).description"
               :selected="selected"
             />
@@ -241,7 +238,6 @@ interface GroupOption extends SelectOption {
   value: number | null
   label: string
   description: string | null
-  rate: number
   subscriptionType: SubscriptionType
   platform: GroupPlatform
 }
@@ -349,7 +345,6 @@ const groupOptions = computed<GroupOption[]>(() =>
     value: group.id,
     label: group.name,
     description: group.description,
-    rate: group.rate_multiplier,
     subscriptionType: group.subscription_type,
     platform: group.platform
   }))

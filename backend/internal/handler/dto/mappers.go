@@ -34,20 +34,6 @@ func UserFromService(u *service.User) *User {
 		return nil
 	}
 	out := UserFromServiceShallow(u)
-	if len(u.APIKeys) > 0 {
-		out.APIKeys = make([]APIKey, 0, len(u.APIKeys))
-		for i := range u.APIKeys {
-			k := u.APIKeys[i]
-			out.APIKeys = append(out.APIKeys, *APIKeyFromService(&k))
-		}
-	}
-	if len(u.Subscriptions) > 0 {
-		out.Subscriptions = make([]UserSubscription, 0, len(u.Subscriptions))
-		for i := range u.Subscriptions {
-			s := u.Subscriptions[i]
-			out.Subscriptions = append(out.Subscriptions, *UserSubscriptionFromService(&s))
-		}
-	}
 	return out
 }
 
@@ -102,6 +88,27 @@ func APIKeyFromService(k *service.APIKey) *APIKey {
 	}
 }
 
+func UserAPIKeyFromService(k *service.APIKey) *UserAPIKey {
+	if k == nil {
+		return nil
+	}
+	return &UserAPIKey{
+		ID:          k.ID,
+		UserID:      k.UserID,
+		Key:         k.Key,
+		Name:        k.Name,
+		GroupID:     k.GroupID,
+		Status:      k.Status,
+		IPWhitelist: k.IPWhitelist,
+		IPBlacklist: k.IPBlacklist,
+		UsageLimit:  k.UsageLimit,
+		CreatedAt:   k.CreatedAt,
+		UpdatedAt:   k.UpdatedAt,
+		User:        UserFromServiceShallow(k.User),
+		Group:       UserGroupFromService(k.Group),
+	}
+}
+
 func GroupFromServiceShallow(g *service.Group) *Group {
 	if g == nil {
 		return nil
@@ -115,6 +122,39 @@ func GroupFromService(g *service.Group) *Group {
 		return nil
 	}
 	return GroupFromServiceShallow(g)
+}
+
+func UserGroupFromService(g *service.Group) *UserGroup {
+	if g == nil {
+		return nil
+	}
+	return &UserGroup{
+		ID:                       g.ID,
+		Name:                     g.Name,
+		Description:              g.Description,
+		Platform:                 g.Platform,
+		IsExclusive:              g.IsExclusive,
+		Status:                   g.Status,
+		SubscriptionType:         g.SubscriptionType,
+		DailyLimitUSD:            g.DailyLimitUSD,
+		WeeklyLimitUSD:           g.WeeklyLimitUSD,
+		MonthlyLimitUSD:          g.MonthlyLimitUSD,
+		ClaudeCodeOnly:           g.ClaudeCodeOnly,
+		FallbackGroupID:          g.FallbackGroupID,
+		PriceFen:                 g.PriceFen,
+		Listed:                   g.Listed,
+		DefaultValidityDays:      g.DefaultValidityDays,
+		PlanFeatures:             g.PlanFeatures,
+		Tags:                     g.Tags,
+		ModelPlazaVisible:        g.ModelPlazaVisible,
+		DisplayPrice:             g.DisplayPrice,
+		DisplayDiscount:          g.DisplayDiscount,
+		QuotaPackageEnabled:      g.QuotaPackageEnabled,
+		QuotaPackageQuotaUSD:     g.QuotaPackageQuotaUSD,
+		QuotaPackageValidityDays: g.QuotaPackageValidityDays,
+		CreatedAt:                g.CreatedAt,
+		UpdatedAt:                g.UpdatedAt,
+	}
 }
 
 // GroupFromServiceAdmin converts a service Group to DTO for admin users.
@@ -340,6 +380,26 @@ func RedeemCodeFromService(rc *service.RedeemCode) *RedeemCode {
 	return &out
 }
 
+func UserRedeemCodeFromService(rc *service.RedeemCode) *UserRedeemCode {
+	if rc == nil {
+		return nil
+	}
+	return &UserRedeemCode{
+		ID:           rc.ID,
+		Code:         rc.Code,
+		Type:         rc.Type,
+		Value:        rc.Value,
+		Status:       rc.Status,
+		UsedBy:       rc.UsedBy,
+		UsedAt:       rc.UsedAt,
+		CreatedAt:    rc.CreatedAt,
+		GroupID:      rc.GroupID,
+		ValidityDays: rc.ValidityDays,
+		User:         UserFromServiceShallow(rc.User),
+		Group:        UserGroupFromService(rc.Group),
+	}
+}
+
 // RedeemCodeFromServiceAdmin converts a service RedeemCode to DTO for admin users.
 // It includes notes - user-facing endpoints must not use this.
 func RedeemCodeFromServiceAdmin(rc *service.RedeemCode) *AdminRedeemCode {
@@ -381,34 +441,6 @@ func AccountSummaryFromService(a *service.Account) *AccountSummary {
 	}
 }
 
-func usageLogBilledBreakdown(l *service.UsageLog) (input, output, cacheCreation, cacheRead float64) {
-	if l == nil {
-		return 0, 0, 0, 0
-	}
-	if l.TotalCost > 0 {
-		factor := l.ActualCost / l.TotalCost
-		return l.InputCost * factor, l.OutputCost * factor, l.CacheCreationCost * factor, l.CacheReadCost * factor
-	}
-	multiplier := l.RateMultiplier
-	if multiplier <= 0 {
-		multiplier = 1
-	}
-	return l.InputCost * multiplier, l.OutputCost * multiplier, l.CacheCreationCost * multiplier, l.CacheReadCost * multiplier
-}
-
-func usageLogEffectiveRateMultiplier(l *service.UsageLog) float64 {
-	if l == nil {
-		return 1
-	}
-	if l.TotalCost > 0 {
-		return l.ActualCost / l.TotalCost
-	}
-	if l.RateMultiplier > 0 {
-		return l.RateMultiplier
-	}
-	return 1
-}
-
 func usageLogAccountCost(l *service.UsageLog) float64 {
 	if l == nil {
 		return 0
@@ -423,51 +455,41 @@ func usageLogAccountCost(l *service.UsageLog) float64 {
 	return l.TotalCost * multiplier
 }
 
-func usageLogFromService(l *service.UsageLog, userVisibleRate bool) UsageLog {
-	// 基础调用日志 DTO 不包含真实成本和管理员字段；管理员字段由 AdminUsageLog 额外承载。
-	inputBilledCost, outputBilledCost, cacheCreationBilledCost, cacheReadBilledCost := usageLogBilledBreakdown(l)
-	rateMultiplier := l.RateMultiplier
-	if userVisibleRate {
-		rateMultiplier = usageLogEffectiveRateMultiplier(l)
-	}
+func usageLogFromService(l *service.UsageLog) UsageLog {
+	// 基础调用日志 DTO 不包含计费倍率、成本拆分、真实成本和管理员字段。
 	return UsageLog{
-		ID:                      l.ID,
-		UserID:                  l.UserID,
-		APIKeyID:                l.APIKeyID,
-		AccountID:               l.AccountID,
-		RequestID:               l.RequestID,
-		Model:                   l.Model,
-		GroupID:                 l.GroupID,
-		SubscriptionID:          l.SubscriptionID,
-		InputTokens:             l.InputTokens,
-		OutputTokens:            l.OutputTokens,
-		CacheCreationTokens:     l.CacheCreationTokens,
-		CacheReadTokens:         l.CacheReadTokens,
-		CacheCreation5mTokens:   l.CacheCreation5mTokens,
-		CacheCreation1hTokens:   l.CacheCreation1hTokens,
-		InputBilledCost:         inputBilledCost,
-		OutputBilledCost:        outputBilledCost,
-		CacheCreationBilledCost: cacheCreationBilledCost,
-		CacheReadBilledCost:     cacheReadBilledCost,
-		ActualCost:              l.ActualCost,
-		RateMultiplier:          rateMultiplier,
-		BillingType:             l.BillingType,
-		Stream:                  l.Stream,
-		DurationMs:              l.DurationMs,
-		FirstTokenMs:            l.FirstTokenMs,
-		ImageCount:              l.ImageCount,
-		ImageSize:               l.ImageSize,
-		UserAgent:               l.UserAgent,
-		CreatedAt:               l.CreatedAt,
-		User:                    UserFromServiceShallow(l.User),
-		APIKey:                  APIKeyFromService(l.APIKey),
-		Group:                   GroupFromServiceShallow(l.Group),
-		Subscription:            UserSubscriptionFromService(l.Subscription),
+		ID:                    l.ID,
+		UserID:                l.UserID,
+		APIKeyID:              l.APIKeyID,
+		AccountID:             l.AccountID,
+		RequestID:             l.RequestID,
+		Model:                 l.Model,
+		GroupID:               l.GroupID,
+		SubscriptionID:        l.SubscriptionID,
+		InputTokens:           l.InputTokens,
+		OutputTokens:          l.OutputTokens,
+		CacheCreationTokens:   l.CacheCreationTokens,
+		CacheReadTokens:       l.CacheReadTokens,
+		CacheCreation5mTokens: l.CacheCreation5mTokens,
+		CacheCreation1hTokens: l.CacheCreation1hTokens,
+		ActualCost:            l.ActualCost,
+		BillingType:           l.BillingType,
+		Stream:                l.Stream,
+		DurationMs:            l.DurationMs,
+		FirstTokenMs:          l.FirstTokenMs,
+		ImageCount:            l.ImageCount,
+		ImageSize:             l.ImageSize,
+		UserAgent:             l.UserAgent,
+		CreatedAt:             l.CreatedAt,
+		User:                  UserFromServiceShallow(l.User),
+		APIKey:                UserAPIKeyFromService(l.APIKey),
+		Group:                 UserGroupFromService(l.Group),
+		Subscription:          UserSubscriptionFromService(l.Subscription),
 	}
 }
 
 func usageLogFromServiceUser(l *service.UsageLog) UsageLog {
-	return usageLogFromService(l, true)
+	return usageLogFromService(l)
 }
 
 // UsageLogFromService converts a service UsageLog to DTO for regular users.
@@ -487,12 +509,16 @@ func UsageLogFromServiceAdmin(l *service.UsageLog) *AdminUsageLog {
 		return nil
 	}
 	return &AdminUsageLog{
-		UsageLog:              usageLogFromService(l, false),
+		UsageLog:              usageLogFromService(l),
+		APIKey:                APIKeyFromService(l.APIKey),
+		Group:                 GroupFromServiceShallow(l.Group),
+		Subscription:          UserSubscriptionFromServiceAdmin(l.Subscription),
 		InputCost:             l.InputCost,
 		OutputCost:            l.OutputCost,
 		CacheCreationCost:     l.CacheCreationCost,
 		CacheReadCost:         l.CacheReadCost,
 		TotalCost:             l.TotalCost,
+		RateMultiplier:        l.RateMultiplier,
 		AccountCost:           usageLogAccountCost(l),
 		AccountRateMultiplier: l.AccountRateMultiplier,
 		IPAddress:             l.IPAddress,
@@ -633,6 +659,7 @@ func UserSubscriptionFromServiceAdmin(sub *service.UserSubscription) *AdminUserS
 	}
 	return &AdminUserSubscription{
 		UserSubscription: userSubscriptionFromServiceBase(sub),
+		Group:            GroupFromServiceShallow(sub.Group),
 		AssignedBy:       sub.AssignedBy,
 		AssignedAt:       sub.AssignedAt,
 		Notes:            sub.Notes,
@@ -657,7 +684,7 @@ func userSubscriptionFromServiceBase(sub *service.UserSubscription) UserSubscrip
 		CreatedAt:          sub.CreatedAt,
 		UpdatedAt:          sub.UpdatedAt,
 		User:               UserFromServiceShallow(sub.User),
-		Group:              GroupFromServiceShallow(sub.Group),
+		Group:              UserGroupFromService(sub.Group),
 	}
 }
 

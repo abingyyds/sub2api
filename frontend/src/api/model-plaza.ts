@@ -21,8 +21,6 @@ export interface ModelPlazaPricingGroup {
   id: number
   name: string
   platform: Group['platform']
-  rate_multiplier: number
-  display_rate_multiplier: number | null
   display_price: string
   display_discount: string
   description: string | null

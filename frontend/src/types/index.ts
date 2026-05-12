@@ -286,7 +286,6 @@ export interface Group {
   name: string
   description: string | null
   platform: GroupPlatform
-  rate_multiplier: number
   is_exclusive: boolean
   status: 'active' | 'inactive'
   subscription_type: SubscriptionType
@@ -321,6 +320,7 @@ export interface Group {
 }
 
 export interface AdminGroup extends Group {
+  rate_multiplier: number
   display_rate_multiplier: number | null
   // 模型路由配置（仅管理员可见，内部信息）
   model_routing: Record<string, number[]> | null
@@ -537,7 +537,7 @@ export interface Account {
   updated_at: string
   proxy?: Proxy
   group_ids?: number[] // Groups this account belongs to
-  groups?: Group[] // Preloaded group objects
+  groups?: AdminGroup[] // Preloaded group objects
 
   // Rate limit & scheduling fields
   schedulable: boolean
@@ -712,12 +712,7 @@ export interface UsageLog {
   cache_creation_5m_tokens: number
   cache_creation_1h_tokens: number
 
-  input_billed_cost?: number
-  output_billed_cost?: number
-  cache_creation_billed_cost?: number
-  cache_read_billed_cost?: number
   actual_cost: number
-  rate_multiplier: number
   billing_type: number
 
   stream: boolean
@@ -751,6 +746,7 @@ export interface AdminUsageLog extends UsageLog {
   cache_creation_cost: number
   cache_read_cost: number
   total_cost: number
+  rate_multiplier: number
 
   // 账号维度计费（真实成本 * 账号倍率，仅管理员接口返回）
   account_cost: number
@@ -763,6 +759,10 @@ export interface AdminUsageLog extends UsageLog {
 
   // 最小账号信息（仅管理员接口返回）
   account?: UsageLogAccountSummary
+
+  api_key?: ApiKey
+  group?: AdminGroup
+  subscription?: AdminUserSubscription
 }
 
 export interface UsageCleanupFilters {
@@ -964,6 +964,14 @@ export interface UserSubscription {
   expires_at: string | null
   user?: User
   group?: Group
+}
+
+export interface AdminUserSubscription extends Omit<UserSubscription, 'group'> {
+  group?: AdminGroup
+  assigned_by?: number | null
+  assigned_at?: string
+  notes?: string
+  assigned_by_user?: User
 }
 
 export interface SubscriptionProgress {

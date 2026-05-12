@@ -81,6 +81,7 @@ func TestAPIContracts(t *testing.T) {
 					"name": "Key One",
 					"group_id": null,
 					"status": "active",
+					"usage_limit": null,
 					"ip_whitelist": null,
 					"ip_blacklist": null,
 					"created_at": "2025-01-02T03:04:05Z",
@@ -117,6 +118,7 @@ func TestAPIContracts(t *testing.T) {
 							"name": "Key One",
 							"group_id": null,
 							"status": "active",
+							"usage_limit": null,
 							"ip_whitelist": null,
 							"ip_blacklist": null,
 							"created_at": "2025-01-02T03:04:05Z",
@@ -134,7 +136,7 @@ func TestAPIContracts(t *testing.T) {
 			name: "GET /api/v1/groups/available",
 			setup: func(t *testing.T, deps *contractDeps) {
 				t.Helper()
-				// 普通用户可见的分组列表不应包含内部字段（如 model_routing/account_count）。
+				// 普通用户可见的分组列表不应包含内部字段（如 rate_multiplier/model_routing/account_count）。
 				deps.groupRepo.SetActive([]service.Group{
 					{
 						ID:                  10,
@@ -168,18 +170,22 @@ func TestAPIContracts(t *testing.T) {
 						"name": "Group One",
 						"description": "desc",
 						"platform": "anthropic",
-						"rate_multiplier": 1.5,
 						"is_exclusive": false,
 						"status": "active",
 						"subscription_type": "standard",
 						"daily_limit_usd": null,
 						"weekly_limit_usd": null,
 						"monthly_limit_usd": null,
-						"image_price_1k": null,
-						"image_price_2k": null,
-						"image_price_4k": null,
 						"claude_code_only": false,
 						"fallback_group_id": null,
+						"price_fen": 0,
+						"listed": false,
+						"default_validity_days": 0,
+						"plan_features": null,
+						"tags": null,
+						"model_plaza_visible": false,
+						"display_price": "",
+						"display_discount": "",
 						"created_at": "2025-01-02T03:04:05Z",
 						"updated_at": "2025-01-02T03:04:05Z"
 					}
@@ -384,12 +390,7 @@ func TestAPIContracts(t *testing.T) {
 							"cache_read_tokens": 2,
 							"cache_creation_5m_tokens": 0,
 							"cache_creation_1h_tokens": 0,
-							"input_billed_cost": 0.2,
-							"output_billed_cost": 0.4,
-							"cache_creation_billed_cost": 0.1,
-							"cache_read_billed_cost": 0.3,
 							"actual_cost": 1,
-							"rate_multiplier": 2,
 							"billing_type": 0,
 							"stream": true,
 							"duration_ms": 100,

@@ -627,7 +627,7 @@ import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { adminAPI } from '@/api/admin'
-import type { UserSubscription, Group, GroupPlatform, SubscriptionType } from '@/types'
+import type { AdminGroup, AdminUserSubscription, GroupPlatform, SubscriptionType } from '@/types'
 import type { SimpleUser } from '@/api/admin/usage'
 import type { Column } from '@/components/common/types'
 import { formatDateOnly } from '@/utils/format'
@@ -770,8 +770,8 @@ const statusOptions = computed(() => [
   { value: 'revoked', label: t('admin.subscriptions.status.revoked') }
 ])
 
-const subscriptions = ref<UserSubscription[]>([])
-const groups = ref<Group[]>([])
+const subscriptions = ref<AdminUserSubscription[]>([])
+const groups = ref<AdminGroup[]>([])
 const loading = ref(false)
 let abortController: AbortController | null = null
 
@@ -814,8 +814,8 @@ const showAssignModal = ref(false)
 const showExtendModal = ref(false)
 const showRevokeDialog = ref(false)
 const submitting = ref(false)
-const extendingSubscription = ref<UserSubscription | null>(null)
-const revokingSubscription = ref<UserSubscription | null>(null)
+const extendingSubscription = ref<AdminUserSubscription | null>(null)
+const revokingSubscription = ref<AdminUserSubscription | null>(null)
 
 const assignForm = reactive({
   user_id: null as number | null,
@@ -1062,7 +1062,7 @@ const handleAssignSubscription = async () => {
   }
 }
 
-const handleExtend = (subscription: UserSubscription) => {
+const handleExtend = (subscription: AdminUserSubscription) => {
   extendingSubscription.value = subscription
   extendForm.days = 30
   showExtendModal.value = true
@@ -1102,7 +1102,7 @@ const handleExtendSubscription = async () => {
   }
 }
 
-const handleRevoke = (subscription: UserSubscription) => {
+const handleRevoke = (subscription: AdminUserSubscription) => {
   revokingSubscription.value = subscription
   showRevokeDialog.value = true
 }

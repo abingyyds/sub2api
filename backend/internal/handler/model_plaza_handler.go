@@ -27,8 +27,8 @@ func NewModelPlazaHandler(apiKeyService *service.APIKeyService, gatewayService *
 
 // GroupModels represents a group with its available models
 type GroupModels struct {
-	Group  dto.Group `json:"group"`
-	Models []string  `json:"models"`
+	Group  dto.UserGroup `json:"group"`
+	Models []string      `json:"models"`
 }
 
 // List returns all available groups with their models for the current user
@@ -57,7 +57,7 @@ func (h *ModelPlazaHandler) List(c *gin.Context) {
 	result := make([]GroupModels, len(groups))
 	for i, group := range groups {
 		result[i] = GroupModels{
-			Group:  *dto.GroupFromService(&group),
+			Group:  *dto.UserGroupFromService(&group),
 			Models: modelsByGroup[group.ID],
 		}
 	}

@@ -56,6 +56,23 @@ type APIKey struct {
 	Group *Group `json:"group,omitempty"`
 }
 
+type UserAPIKey struct {
+	ID          int64     `json:"id"`
+	UserID      int64     `json:"user_id"`
+	Key         string    `json:"key"`
+	Name        string    `json:"name"`
+	GroupID     *int64    `json:"group_id"`
+	Status      string    `json:"status"`
+	IPWhitelist []string  `json:"ip_whitelist"`
+	IPBlacklist []string  `json:"ip_blacklist"`
+	UsageLimit  *float64  `json:"usage_limit"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+
+	User  *User      `json:"user,omitempty"`
+	Group *UserGroup `json:"group,omitempty"`
+}
+
 type Group struct {
 	ID             int64   `json:"id"`
 	Name           string  `json:"name"`
@@ -92,6 +109,42 @@ type Group struct {
 	PlanFeatures []string `json:"plan_features"`
 
 	// 分组卡片展示字段
+	Tags              []string `json:"tags"`
+	ModelPlazaVisible bool     `json:"model_plaza_visible"`
+	DisplayPrice      string   `json:"display_price"`
+	DisplayDiscount   string   `json:"display_discount"`
+
+	// 额度包配置
+	QuotaPackageEnabled      bool     `json:"quota_package_enabled"`
+	QuotaPackageQuotaUSD     *float64 `json:"quota_package_quota_usd"`
+	QuotaPackageValidityDays int      `json:"quota_package_validity_days"`
+
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// UserGroup 是普通用户接口使用的 group DTO，不包含计费倍率等内部计价参数。
+type UserGroup struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Platform    string `json:"platform"`
+	IsExclusive bool   `json:"is_exclusive"`
+	Status      string `json:"status"`
+
+	SubscriptionType string   `json:"subscription_type"`
+	DailyLimitUSD    *float64 `json:"daily_limit_usd"`
+	WeeklyLimitUSD   *float64 `json:"weekly_limit_usd"`
+	MonthlyLimitUSD  *float64 `json:"monthly_limit_usd"`
+
+	ClaudeCodeOnly  bool   `json:"claude_code_only"`
+	FallbackGroupID *int64 `json:"fallback_group_id"`
+
+	PriceFen            int      `json:"price_fen"`
+	Listed              bool     `json:"listed"`
+	DefaultValidityDays int      `json:"default_validity_days"`
+	PlanFeatures        []string `json:"plan_features"`
+
 	Tags              []string `json:"tags"`
 	ModelPlazaVisible bool     `json:"model_plaza_visible"`
 	DisplayPrice      string   `json:"display_price"`
@@ -244,6 +297,23 @@ type RedeemCode struct {
 	Group *Group `json:"group,omitempty"`
 }
 
+type UserRedeemCode struct {
+	ID        int64      `json:"id"`
+	Code      string     `json:"code"`
+	Type      string     `json:"type"`
+	Value     float64    `json:"value"`
+	Status    string     `json:"status"`
+	UsedBy    *int64     `json:"used_by"`
+	UsedAt    *time.Time `json:"used_at"`
+	CreatedAt time.Time  `json:"created_at"`
+
+	GroupID      *int64 `json:"group_id"`
+	ValidityDays int    `json:"validity_days"`
+
+	User  *User      `json:"user,omitempty"`
+	Group *UserGroup `json:"group,omitempty"`
+}
+
 // AdminRedeemCode 是管理员接口使用的 redeem code DTO（包含 notes 等字段）。
 // 注意：普通用户接口不得返回 notes 等内部信息。
 type AdminRedeemCode struct {
@@ -272,13 +342,8 @@ type UsageLog struct {
 	CacheCreation5mTokens int `json:"cache_creation_5m_tokens"`
 	CacheCreation1hTokens int `json:"cache_creation_1h_tokens"`
 
-	// 普通用户只能看到按计费规则折算后的扣费明细，不能看到真实成本。
-	InputBilledCost         float64 `json:"input_billed_cost,omitempty"`
-	OutputBilledCost        float64 `json:"output_billed_cost,omitempty"`
-	CacheCreationBilledCost float64 `json:"cache_creation_billed_cost,omitempty"`
-	CacheReadBilledCost     float64 `json:"cache_read_billed_cost,omitempty"`
-	ActualCost              float64 `json:"actual_cost"`
-	RateMultiplier          float64 `json:"rate_multiplier"`
+	// 普通用户只能看到最终扣费，不能看到计费倍率、成本拆分或真实成本。
+	ActualCost float64 `json:"actual_cost"`
 
 	BillingType  int8 `json:"billing_type"`
 	Stream       bool `json:"stream"`
@@ -295,8 +360,8 @@ type UsageLog struct {
 	CreatedAt time.Time `json:"created_at"`
 
 	User         *User             `json:"user,omitempty"`
-	APIKey       *APIKey           `json:"api_key,omitempty"`
-	Group        *Group            `json:"group,omitempty"`
+	APIKey       *UserAPIKey       `json:"api_key,omitempty"`
+	Group        *UserGroup        `json:"group,omitempty"`
 	Subscription *UserSubscription `json:"subscription,omitempty"`
 }
 
@@ -304,12 +369,17 @@ type UsageLog struct {
 type AdminUsageLog struct {
 	UsageLog
 
+	APIKey       *APIKey                `json:"api_key,omitempty"`
+	Group        *Group                 `json:"group,omitempty"`
+	Subscription *AdminUserSubscription `json:"subscription,omitempty"`
+
 	// 真实成本字段，仅管理员可见。
 	InputCost         float64 `json:"input_cost"`
 	OutputCost        float64 `json:"output_cost"`
 	CacheCreationCost float64 `json:"cache_creation_cost"`
 	CacheReadCost     float64 `json:"cache_read_cost"`
 	TotalCost         float64 `json:"total_cost"`
+	RateMultiplier    float64 `json:"rate_multiplier"`
 
 	// AccountCost 账号维度计费（真实成本 * 账号倍率），仅管理员可见。
 	AccountCost float64 `json:"account_cost"`
@@ -443,14 +513,16 @@ type UserSubscription struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
-	User  *User  `json:"user,omitempty"`
-	Group *Group `json:"group,omitempty"`
+	User  *User      `json:"user,omitempty"`
+	Group *UserGroup `json:"group,omitempty"`
 }
 
 // AdminUserSubscription 是管理员接口使用的订阅 DTO（包含分配信息/备注等字段）。
 // 注意：普通用户接口不得返回 assigned_by/assigned_at/notes/assigned_by_user 等管理员字段。
 type AdminUserSubscription struct {
 	UserSubscription
+
+	Group *Group `json:"group,omitempty"`
 
 	AssignedBy *int64    `json:"assigned_by"`
 	AssignedAt time.Time `json:"assigned_at"`

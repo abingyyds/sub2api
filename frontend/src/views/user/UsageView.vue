@@ -258,27 +258,9 @@
           </template>
 
           <template #cell-cost="{ row }">
-            <div class="flex items-center gap-1.5 text-sm">
-              <span class="font-medium text-green-600 dark:text-green-400">
-                ${{ row.actual_cost.toFixed(6) }}
-              </span>
-              <!-- Cost Detail Tooltip -->
-              <div
-                class="group relative"
-                @mouseenter="showTooltip($event, row)"
-                @mouseleave="hideTooltip"
-              >
-                <div
-                  class="flex h-4 w-4 cursor-help items-center justify-center rounded-full bg-gray-100 transition-colors group-hover:bg-blue-100 dark:bg-gray-700 dark:group-hover:bg-blue-900/50"
-                >
-                  <Icon
-                    name="infoCircle"
-                    size="xs"
-                    class="text-gray-400 group-hover:text-blue-500 dark:text-gray-500 dark:group-hover:text-blue-400"
-                  />
-                </div>
-              </div>
-            </div>
+            <span class="text-sm font-medium text-green-600 dark:text-green-400">
+              ${{ row.actual_cost.toFixed(6) }}
+            </span>
           </template>
 
           <template #cell-first_token="{ row }">
@@ -374,60 +356,6 @@
       </div>
     </div>
   </Teleport>
-
-  <!-- Tooltip Portal -->
-  <Teleport to="body">
-    <div
-      v-if="tooltipVisible"
-      class="fixed z-[9999] pointer-events-none -translate-y-1/2"
-      :style="{
-        left: tooltipPosition.x + 'px',
-        top: tooltipPosition.y + 'px'
-      }"
-    >
-      <div
-        class="whitespace-nowrap rounded-lg border border-gray-700 bg-gray-900 px-3 py-2.5 text-xs text-white shadow-xl dark:border-gray-600 dark:bg-gray-800"
-      >
-        <div class="space-y-1.5">
-          <!-- Billing Breakdown -->
-          <div class="mb-2 border-b border-gray-700 pb-1.5">
-            <div class="text-xs font-semibold text-gray-300 mb-1">{{ t('usage.billingDetails') }}</div>
-            <div v-if="tooltipData && (tooltipData.input_billed_cost || 0) > 0" class="flex items-center justify-between gap-4">
-              <span class="text-gray-400">{{ t('usage.inputBilled') }}</span>
-              <span class="font-medium text-white">${{ (tooltipData.input_billed_cost || 0).toFixed(6) }}</span>
-            </div>
-            <div v-if="tooltipData && (tooltipData.output_billed_cost || 0) > 0" class="flex items-center justify-between gap-4">
-              <span class="text-gray-400">{{ t('usage.outputBilled') }}</span>
-              <span class="font-medium text-white">${{ (tooltipData.output_billed_cost || 0).toFixed(6) }}</span>
-            </div>
-            <div v-if="tooltipData && (tooltipData.cache_creation_billed_cost || 0) > 0" class="flex items-center justify-between gap-4">
-              <span class="text-gray-400">{{ t('usage.cacheCreationBilled') }}</span>
-              <span class="font-medium text-white">${{ (tooltipData.cache_creation_billed_cost || 0).toFixed(6) }}</span>
-            </div>
-            <div v-if="tooltipData && (tooltipData.cache_read_billed_cost || 0) > 0" class="flex items-center justify-between gap-4">
-              <span class="text-gray-400">{{ t('usage.cacheReadBilled') }}</span>
-              <span class="font-medium text-white">${{ (tooltipData.cache_read_billed_cost || 0).toFixed(6) }}</span>
-            </div>
-          </div>
-          <!-- Billing Summary -->
-          <div class="flex items-center justify-between gap-6">
-            <span class="text-gray-400">{{ t('usage.billingStandard') }}</span>
-            <span class="font-semibold text-blue-400">{{ (tooltipData?.rate_multiplier ?? 1).toFixed(2) }}x</span>
-          </div>
-          <div class="flex items-center justify-between gap-6 border-t border-gray-700 pt-1.5">
-            <span class="text-gray-400">{{ t('usage.actualDeduction') }}</span>
-            <span class="font-semibold text-green-400"
-              >${{ tooltipData?.actual_cost.toFixed(6) }}</span
-            >
-          </div>
-        </div>
-        <!-- Tooltip Arrow (left side) -->
-        <div
-          class="absolute right-full top-1/2 h-0 w-0 -translate-y-1/2 border-b-[6px] border-r-[6px] border-t-[6px] border-b-transparent border-r-gray-900 border-t-transparent dark:border-r-gray-800"
-        ></div>
-      </div>
-    </div>
-  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -475,11 +403,6 @@ const usageStatsPromises = new Map<string, Promise<UsageStatsResponse>>()
 let abortController: AbortController | null = null
 let usageStatsRequestId = 0
 let apiKeysPrefetchTimer: number | null = null
-
-// Tooltip state
-const tooltipVisible = ref(false)
-const tooltipPosition = ref({ x: 0, y: 0 })
-const tooltipData = ref<UsageLog | null>(null)
 
 // Token tooltip state
 const tokenTooltipVisible = ref(false)
@@ -835,7 +758,6 @@ const exportToCSV = async () => {
       'Cache Read Tokens',
       'Cache Creation Tokens',
       'Actual Deduction',
-      'Billing Rate',
       'First Token (ms)',
       'Duration (ms)'
     ]
@@ -850,7 +772,6 @@ const exportToCSV = async () => {
         log.cache_read_tokens,
         log.cache_creation_tokens,
         log.actual_cost.toFixed(8),
-        log.rate_multiplier.toFixed(4),
         log.first_token_ms ?? '',
         log.duration_ms
       ].map(escapeCSVValue)
@@ -876,23 +797,6 @@ const exportToCSV = async () => {
   } finally {
     exporting.value = false
   }
-}
-
-// Tooltip functions
-const showTooltip = (event: MouseEvent, row: UsageLog) => {
-  const target = event.currentTarget as HTMLElement
-  const rect = target.getBoundingClientRect()
-
-  tooltipData.value = row
-  // Position to the right of the icon, vertically centered
-  tooltipPosition.value.x = rect.right + 8
-  tooltipPosition.value.y = rect.top + rect.height / 2
-  tooltipVisible.value = true
-}
-
-const hideTooltip = () => {
-  tooltipVisible.value = false
-  tooltipData.value = null
 }
 
 // Token tooltip functions

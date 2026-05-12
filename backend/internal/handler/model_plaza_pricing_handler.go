@@ -19,17 +19,15 @@ type modelPlazaPricingTableResponse struct {
 }
 
 type modelPlazaPricingGroup struct {
-	ID                    int64    `json:"id"`
-	Name                  string   `json:"name"`
-	Platform              string   `json:"platform"`
-	RateMultiplier        float64  `json:"rate_multiplier"`
-	DisplayRateMultiplier *float64 `json:"display_rate_multiplier"`
-	DisplayPrice          string   `json:"display_price"`
-	DisplayDiscount       string   `json:"display_discount"`
-	Description           string   `json:"description"`
-	SubscriptionType      string   `json:"subscription_type"`
-	HasExplicitModels     bool     `json:"has_explicit_models"`
-	ModelsCount           int      `json:"models_count"`
+	ID                int64  `json:"id"`
+	Name              string `json:"name"`
+	Platform          string `json:"platform"`
+	DisplayPrice      string `json:"display_price"`
+	DisplayDiscount   string `json:"display_discount"`
+	Description       string `json:"description"`
+	SubscriptionType  string `json:"subscription_type"`
+	HasExplicitModels bool   `json:"has_explicit_models"`
+	ModelsCount       int    `json:"models_count"`
 }
 
 type modelPlazaPricingItem struct {
@@ -119,17 +117,15 @@ func (h *ModelPlazaHandler) buildPricingTable(groups []service.Group, modelsByGr
 		hasExplicitModels := len(models) > 0
 
 		groupSummaries = append(groupSummaries, modelPlazaPricingGroup{
-			ID:                    group.ID,
-			Name:                  group.Name,
-			Platform:              group.Platform,
-			RateMultiplier:        group.RateMultiplier,
-			DisplayRateMultiplier: group.DisplayRateMultiplier,
-			DisplayPrice:          group.DisplayPrice,
-			DisplayDiscount:       group.DisplayDiscount,
-			Description:           group.Description,
-			SubscriptionType:      group.SubscriptionType,
-			HasExplicitModels:     hasExplicitModels,
-			ModelsCount:           len(models),
+			ID:                group.ID,
+			Name:              group.Name,
+			Platform:          group.Platform,
+			DisplayPrice:      group.DisplayPrice,
+			DisplayDiscount:   group.DisplayDiscount,
+			Description:       group.Description,
+			SubscriptionType:  group.SubscriptionType,
+			HasExplicitModels: hasExplicitModels,
+			ModelsCount:       len(models),
 		})
 
 		if hasExplicitModels {

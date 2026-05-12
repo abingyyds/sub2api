@@ -237,7 +237,6 @@
                   :name="row.group.name"
                   :platform="row.group.platform"
                   :subscription-type="row.group.subscription_type"
-                  :rate-multiplier="row.group.rate_multiplier"
                 />
                 <span v-else class="text-sm text-gray-400 dark:text-dark-500">{{
                   t('keys.noGroup')
@@ -495,7 +494,6 @@
               :name="option.label"
               :platform="option.platform"
               :subscription-type="option.subscriptionType"
-              :rate-multiplier="option.rate"
               :description="option.description"
               :selected="
                 selectedKeyForGroup?.group_id === option.value ||
@@ -545,7 +543,6 @@ interface GroupOption extends SelectOption {
   value: number | null
   label: string
   description: string | null
-  rate: number
   subscriptionType: SubscriptionType
   platform: GroupPlatform
 }
@@ -730,13 +727,12 @@ const setGroupButtonRef = (keyId: number, el: Element | ComponentPublicInstance 
   }
 }
 
-// Convert groups to Select options format with rate multiplier and subscription type
+// Convert groups to Select options format with subscription type
 const groupOptions = computed<GroupOption[]>(() =>
   groups.value.map((group) => ({
     value: group.id,
     label: group.name,
     description: group.description,
-    rate: group.rate_multiplier,
     subscriptionType: group.subscription_type,
     platform: group.platform
   }))

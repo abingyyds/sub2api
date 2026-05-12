@@ -5,7 +5,7 @@
 
 import { apiClient } from '../client'
 import type {
-  UserSubscription,
+  AdminUserSubscription,
   SubscriptionProgress,
   AssignSubscriptionRequest,
   BulkAssignSubscriptionRequest,
@@ -33,8 +33,8 @@ export async function list(
   options?: {
     signal?: AbortSignal
   }
-): Promise<PaginatedResponse<UserSubscription>> {
-  const { data } = await apiClient.get<PaginatedResponse<UserSubscription>>(
+): Promise<PaginatedResponse<AdminUserSubscription>> {
+  const { data } = await apiClient.get<PaginatedResponse<AdminUserSubscription>>(
     '/admin/subscriptions',
     {
       params: {
@@ -53,8 +53,8 @@ export async function list(
  * @param id - Subscription ID
  * @returns Subscription details
  */
-export async function getById(id: number): Promise<UserSubscription> {
-  const { data } = await apiClient.get<UserSubscription>(`/admin/subscriptions/${id}`)
+export async function getById(id: number): Promise<AdminUserSubscription> {
+  const { data } = await apiClient.get<AdminUserSubscription>(`/admin/subscriptions/${id}`)
   return data
 }
 
@@ -73,8 +73,8 @@ export async function getProgress(id: number): Promise<SubscriptionProgress> {
  * @param request - Assignment request
  * @returns Created subscription
  */
-export async function assign(request: AssignSubscriptionRequest): Promise<UserSubscription> {
-  const { data } = await apiClient.post<UserSubscription>('/admin/subscriptions/assign', request)
+export async function assign(request: AssignSubscriptionRequest): Promise<AdminUserSubscription> {
+  const { data } = await apiClient.post<AdminUserSubscription>('/admin/subscriptions/assign', request)
   return data
 }
 
@@ -85,8 +85,8 @@ export async function assign(request: AssignSubscriptionRequest): Promise<UserSu
  */
 export async function bulkAssign(
   request: BulkAssignSubscriptionRequest
-): Promise<UserSubscription[]> {
-  const { data } = await apiClient.post<UserSubscription[]>(
+): Promise<AdminUserSubscription[]> {
+  const { data } = await apiClient.post<AdminUserSubscription[]>(
     '/admin/subscriptions/bulk-assign',
     request
   )
@@ -102,8 +102,8 @@ export async function bulkAssign(
 export async function extend(
   id: number,
   request: ExtendSubscriptionRequest
-): Promise<UserSubscription> {
-  const { data } = await apiClient.post<UserSubscription>(
+): Promise<AdminUserSubscription> {
+  const { data } = await apiClient.post<AdminUserSubscription>(
     `/admin/subscriptions/${id}/extend`,
     request
   )
@@ -131,8 +131,8 @@ export async function listByGroup(
   groupId: number,
   page: number = 1,
   pageSize: number = 20
-): Promise<PaginatedResponse<UserSubscription>> {
-  const { data } = await apiClient.get<PaginatedResponse<UserSubscription>>(
+): Promise<PaginatedResponse<AdminUserSubscription>> {
+  const { data } = await apiClient.get<PaginatedResponse<AdminUserSubscription>>(
     `/admin/groups/${groupId}/subscriptions`,
     {
       params: { page, page_size: pageSize }
@@ -152,8 +152,8 @@ export async function listByUser(
   userId: number,
   page: number = 1,
   pageSize: number = 20
-): Promise<PaginatedResponse<UserSubscription>> {
-  const { data } = await apiClient.get<PaginatedResponse<UserSubscription>>(
+): Promise<PaginatedResponse<AdminUserSubscription>> {
+  const { data } = await apiClient.get<PaginatedResponse<AdminUserSubscription>>(
     `/admin/users/${userId}/subscriptions`,
     {
       params: { page, page_size: pageSize }
