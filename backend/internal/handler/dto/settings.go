@@ -87,6 +87,20 @@ type SystemSettings struct {
 	RechargeMinAmount             float64 `json:"recharge_min_amount"`
 	RechargePlans                 string  `json:"recharge_plans"`
 
+	// WeChat Official Account notifications
+	WechatOfficialEnabled                   bool    `json:"wechat_official_enabled"`
+	WechatOfficialAppID                     string  `json:"wechat_official_appid"`
+	WechatOfficialAppSecretConfigured       bool    `json:"wechat_official_appsecret_configured"`
+	WechatOfficialBindRedirectURL           string  `json:"wechat_official_bind_redirect_url"`
+	WechatOfficialNotifyURL                 string  `json:"wechat_official_notify_url"`
+	WechatOfficialTemplateLowBalance        string  `json:"wechat_official_template_low_balance"`
+	WechatOfficialTemplateLowQuota          string  `json:"wechat_official_template_low_quota"`
+	WechatOfficialTemplateSubscriptionLimit string  `json:"wechat_official_template_subscription_limit"`
+	WechatOfficialLowBalanceThreshold       float64 `json:"wechat_official_low_balance_threshold"`
+	WechatOfficialLowQuotaThreshold         float64 `json:"wechat_official_low_quota_threshold"`
+	WechatOfficialLowSubscriptionThreshold  float64 `json:"wechat_official_low_subscription_threshold"`
+	WechatOfficialCooldownHours             int     `json:"wechat_official_cooldown_hours"`
+
 	// Alipay
 	AlipayEnabled              bool   `json:"alipay_enabled"`
 	AlipayAppID                string `json:"alipay_app_id"`

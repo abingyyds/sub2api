@@ -324,6 +324,22 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	updates[SettingKeyRechargeMinAmount] = fmt.Sprintf("%g", settings.RechargeMinAmount)
 	updates[SettingKeyRechargePlans] = settings.RechargePlans
 
+	// WeChat Official Account notifications
+	updates[SettingKeyWechatOfficialEnabled] = strconv.FormatBool(settings.WechatOfficialEnabled)
+	updates[SettingKeyWechatOfficialAppID] = settings.WechatOfficialAppID
+	if settings.WechatOfficialAppSecret != "" {
+		updates[SettingKeyWechatOfficialAppSecret] = settings.WechatOfficialAppSecret
+	}
+	updates[SettingKeyWechatOfficialBindRedirectURL] = settings.WechatOfficialBindRedirectURL
+	updates[SettingKeyWechatOfficialNotifyURL] = settings.WechatOfficialNotifyURL
+	updates[SettingKeyWechatOfficialTemplateLowBalance] = settings.WechatOfficialTemplateLowBalance
+	updates[SettingKeyWechatOfficialTemplateLowQuota] = settings.WechatOfficialTemplateLowQuota
+	updates[SettingKeyWechatOfficialTemplateSubscriptionLimit] = settings.WechatOfficialTemplateSubscriptionLimit
+	updates[SettingKeyWechatOfficialLowBalanceThreshold] = strconv.FormatFloat(settings.WechatOfficialLowBalanceThreshold, 'f', 8, 64)
+	updates[SettingKeyWechatOfficialLowQuotaThreshold] = strconv.FormatFloat(settings.WechatOfficialLowQuotaThreshold, 'f', 8, 64)
+	updates[SettingKeyWechatOfficialLowSubscriptionThreshold] = strconv.FormatFloat(settings.WechatOfficialLowSubscriptionThreshold, 'f', 8, 64)
+	updates[SettingKeyWechatOfficialCooldownHours] = strconv.Itoa(settings.WechatOfficialCooldownHours)
+
 	// Alipay settings
 	updates[SettingKeyAlipayEnabled] = strconv.FormatBool(settings.AlipayEnabled)
 	updates[SettingKeyAlipayAppID] = settings.AlipayAppID
@@ -539,6 +555,13 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 
 		// Epay defaults
 		SettingKeyEpayEnabled: "false",
+
+		// WeChat Official Account notification defaults
+		SettingKeyWechatOfficialEnabled:                  "false",
+		SettingKeyWechatOfficialLowBalanceThreshold:      "1",
+		SettingKeyWechatOfficialLowQuotaThreshold:        "1",
+		SettingKeyWechatOfficialLowSubscriptionThreshold: "1",
+		SettingKeyWechatOfficialCooldownHours:            "24",
 	}
 
 	return s.settingRepo.SetMultiple(ctx, defaults)
@@ -732,6 +755,21 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		result.RechargeMinAmount = v
 	}
 	result.RechargePlans = settings[SettingKeyRechargePlans]
+
+	// WeChat Official Account notifications
+	result.WechatOfficialEnabled = settings[SettingKeyWechatOfficialEnabled] == "true"
+	result.WechatOfficialAppID = settings[SettingKeyWechatOfficialAppID]
+	result.WechatOfficialAppSecret = settings[SettingKeyWechatOfficialAppSecret]
+	result.WechatOfficialAppSecretConfigured = settings[SettingKeyWechatOfficialAppSecret] != ""
+	result.WechatOfficialBindRedirectURL = settings[SettingKeyWechatOfficialBindRedirectURL]
+	result.WechatOfficialNotifyURL = settings[SettingKeyWechatOfficialNotifyURL]
+	result.WechatOfficialTemplateLowBalance = settings[SettingKeyWechatOfficialTemplateLowBalance]
+	result.WechatOfficialTemplateLowQuota = settings[SettingKeyWechatOfficialTemplateLowQuota]
+	result.WechatOfficialTemplateSubscriptionLimit = settings[SettingKeyWechatOfficialTemplateSubscriptionLimit]
+	result.WechatOfficialLowBalanceThreshold = parseSettingFloatDefault(settings[SettingKeyWechatOfficialLowBalanceThreshold], 1)
+	result.WechatOfficialLowQuotaThreshold = parseSettingFloatDefault(settings[SettingKeyWechatOfficialLowQuotaThreshold], 1)
+	result.WechatOfficialLowSubscriptionThreshold = parseSettingFloatDefault(settings[SettingKeyWechatOfficialLowSubscriptionThreshold], 1)
+	result.WechatOfficialCooldownHours = parseSettingIntDefault(settings[SettingKeyWechatOfficialCooldownHours], defaultWechatNotifyCooldownHours)
 
 	// Alipay settings
 	result.AlipayEnabled = settings[SettingKeyAlipayEnabled] == "true"

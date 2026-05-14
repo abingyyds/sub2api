@@ -68,6 +68,7 @@ var ProviderSet = wire.NewSet(
 	NewAdminInviteCodeRepo,
 	NewPaymentOrderRepo,
 	NewQuotaPackageRepository,
+	NewWechatNotificationRepository,
 	NewAgentRepository,
 	NewSubSiteRepository,
 	NewSubSiteAdminRepository,

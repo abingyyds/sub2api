@@ -15,12 +15,12 @@ import (
 )
 
 // NewAPIKeyAuthMiddleware 创建 API Key 认证中间件
-func NewAPIKeyAuthMiddleware(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, quotaPackageRepo service.QuotaPackageRepository, orgService *service.OrganizationService, orgMemberService *service.OrgMemberService, orgProjectService *service.OrgProjectService, cfg *config.Config) APIKeyAuthMiddleware {
-	return APIKeyAuthMiddleware(apiKeyAuthWithSubscription(apiKeyService, subscriptionService, quotaPackageRepo, orgService, orgMemberService, orgProjectService, cfg))
+func NewAPIKeyAuthMiddleware(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, quotaPackageRepo service.QuotaPackageRepository, orgService *service.OrganizationService, orgMemberService *service.OrgMemberService, orgProjectService *service.OrgProjectService, cfg *config.Config, wechatNotifyService *service.WechatOfficialNotificationService) APIKeyAuthMiddleware {
+	return APIKeyAuthMiddleware(apiKeyAuthWithSubscription(apiKeyService, subscriptionService, quotaPackageRepo, orgService, orgMemberService, orgProjectService, cfg, wechatNotifyService))
 }
 
 // apiKeyAuthWithSubscription API Key认证中间件（支持订阅验证）
-func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, quotaPackageRepo service.QuotaPackageRepository, orgService *service.OrganizationService, orgMemberService *service.OrgMemberService, orgProjectService *service.OrgProjectService, cfg *config.Config) gin.HandlerFunc {
+func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, quotaPackageRepo service.QuotaPackageRepository, orgService *service.OrganizationService, orgMemberService *service.OrgMemberService, orgProjectService *service.OrgProjectService, cfg *config.Config, wechatNotifyService *service.WechatOfficialNotificationService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		queryKey := strings.TrimSpace(c.Query("key"))
 		queryApiKey := strings.TrimSpace(c.Query("api_key"))
@@ -177,6 +177,9 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 				c.Set(string(ContextKeySubscription), subscription)
 				subscriptionAuthorized = true
 			} else if !isQuotaPackageType {
+				if wechatNotifyService != nil {
+					go wechatNotifyService.NotifySubscriptionUnavailable(context.Background(), apiKey.User.ID, apiKey.Group)
+				}
 				abortSubscriptionAuthError(c, apiKey, err)
 				return
 			} else {
@@ -197,6 +200,9 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 			}
 			if available <= 0 {
 				log.Printf("[Auth] 403 QUOTA_PACKAGE_INSUFFICIENT: user=%d group=%d path=%s", apiKey.User.ID, apiKey.Group.ID, c.Request.URL.Path)
+				if wechatNotifyService != nil {
+					go wechatNotifyService.NotifyQuotaUnavailable(context.Background(), apiKey.User.ID, apiKey.Group)
+				}
 				AbortWithError(c, 403, "QUOTA_PACKAGE_INSUFFICIENT", "Quota package balance is insufficient")
 				return
 			}
@@ -204,6 +210,9 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 			// 余额模式：检查用户余额
 			if apiKey.User.Balance <= 0 {
 				log.Printf("[Auth] 403 INSUFFICIENT_BALANCE: user=%d balance=%.4f path=%s", apiKey.User.ID, apiKey.User.Balance, c.Request.URL.Path)
+				if wechatNotifyService != nil {
+					go wechatNotifyService.NotifyBalanceUnavailable(context.Background(), apiKey.User)
+				}
 				AbortWithError(c, 403, "INSUFFICIENT_BALANCE", "Insufficient account balance")
 				return
 			}

@@ -45,6 +45,15 @@ func RegisterUserRoutes(
 			user.PUT("", h.User.UpdateProfile)
 			user.PUT("/discovery-source", h.User.UpdateDiscoverySource)
 
+			if h.WechatNotify != nil {
+				wechat := user.Group("/wechat-official")
+				{
+					wechat.GET("/status", h.WechatNotify.Status)
+					wechat.GET("/bind-url", h.WechatNotify.BindURL)
+					wechat.POST("/unbind", h.WechatNotify.Unbind)
+				}
+			}
+
 			// TOTP 双因素认证
 			totp := user.Group("/totp")
 			{

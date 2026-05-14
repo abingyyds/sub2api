@@ -17,12 +17,12 @@ var (
 
 // UserListFilters contains all filter options for listing users
 type UserListFilters struct {
-	Status       string           // User status filter
-	Role         string           // User role filter
-	Search       string           // Search in email, username
-	Attributes   map[int64]string // Custom attribute filters: attributeID -> value
-	CreatedAfter string           // Filter users created on or after this date (YYYY-MM-DD)
-	CreatedBefore string          // Filter users created on or before this date (YYYY-MM-DD)
+	Status        string           // User status filter
+	Role          string           // User role filter
+	Search        string           // Search in email, username
+	Attributes    map[int64]string // Custom attribute filters: attributeID -> value
+	CreatedAfter  string           // Filter users created on or after this date (YYYY-MM-DD)
+	CreatedBefore string           // Filter users created on or before this date (YYYY-MM-DD)
 }
 
 type UserRepository interface {
@@ -38,6 +38,7 @@ type UserRepository interface {
 
 	UpdateBalance(ctx context.Context, id int64, amount float64) error
 	DeductBalance(ctx context.Context, id int64, amount float64) error
+	GetBalance(ctx context.Context, id int64) (float64, error)
 	UpdateConcurrency(ctx context.Context, id int64, amount int) error
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
 	RemoveGroupFromAllowedGroups(ctx context.Context, groupID int64) (int64, error)

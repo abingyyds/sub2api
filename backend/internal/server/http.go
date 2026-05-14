@@ -34,6 +34,7 @@ func ProvideRouter(
 	subscriptionService *service.SubscriptionService,
 	quotaPackageRepo service.QuotaPackageRepository,
 	opsService *service.OpsService,
+	wechatNotifyService *service.WechatOfficialNotificationService,
 	settingService *service.SettingService,
 	subSiteService *service.SubSiteService,
 	redisClient *redis.Client,
@@ -54,7 +55,7 @@ func ProvideRouter(
 		}
 	}
 
-	return SetupRouter(r, handlers, jwtAuth, adminAuth, apiKeyAuth, orgAuth, apiKeyService, subscriptionService, quotaPackageRepo, opsService, settingService, subSiteService, cfg, redisClient)
+	return SetupRouter(r, handlers, jwtAuth, adminAuth, apiKeyAuth, orgAuth, apiKeyService, subscriptionService, quotaPackageRepo, opsService, wechatNotifyService, settingService, subSiteService, cfg, redisClient)
 }
 
 // ProvideHTTPServer 提供 HTTP 服务器

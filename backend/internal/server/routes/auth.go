@@ -43,6 +43,9 @@ func RegisterAuthRoutes(
 		}), h.Auth.ResetPassword)
 		auth.GET("/oauth/linuxdo/start", h.Auth.LinuxDoOAuthStart)
 		auth.GET("/oauth/linuxdo/callback", h.Auth.LinuxDoOAuthCallback)
+		if h.WechatNotify != nil {
+			auth.GET("/oauth/wechat-official/callback", h.WechatNotify.Callback)
+		}
 	}
 
 	// 公开设置（无需认证）

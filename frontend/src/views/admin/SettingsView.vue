@@ -685,6 +685,89 @@
           </div>
         </div>
 
+        <!-- WeChat Official Account Notification Settings -->
+        <div class="card">
+          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+              微信公众号通知
+            </h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              用服务号模板消息提醒用户余额不足、额度包不足和套餐额度不足
+            </p>
+          </div>
+          <div class="space-y-5 p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="font-medium text-gray-900 dark:text-white">启用公众号通知</label>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  用户在个人资料页绑定公众号后才会收到提醒
+                </p>
+              </div>
+              <Toggle v-model="form.wechat_official_enabled" />
+            </div>
+
+            <div v-if="form.wechat_official_enabled" class="space-y-4 border-t border-gray-100 pt-4 dark:border-dark-700">
+              <div>
+                <label for="wechat_official_appid" class="input-label">公众号 AppID</label>
+                <input id="wechat_official_appid" v-model="form.wechat_official_appid" type="text" class="input mt-1" placeholder="wx..." />
+              </div>
+              <div>
+                <label for="wechat_official_appsecret" class="input-label">公众号 AppSecret</label>
+                <input id="wechat_official_appsecret" v-model="form.wechat_official_appsecret" type="password" class="input mt-1" :placeholder="form.wechat_official_appsecret_configured ? '已配置，留空保持不变' : ''" />
+              </div>
+              <div>
+                <div class="flex items-center justify-between gap-3">
+                  <label for="wechat_official_bind_redirect_url" class="input-label mb-0">OAuth 回调地址</label>
+                  <button type="button" class="btn btn-secondary btn-xs" @click="form.wechat_official_bind_redirect_url = wechatOfficialRedirectUrlSuggestion">
+                    填入建议值
+                  </button>
+                </div>
+                <input id="wechat_official_bind_redirect_url" v-model="form.wechat_official_bind_redirect_url" type="url" class="input mt-1" :placeholder="wechatOfficialRedirectUrlSuggestion" />
+                <p class="input-hint">需要在微信公众平台网页授权域名中配置同一域名。</p>
+              </div>
+              <div>
+                <label for="wechat_official_notify_url" class="input-label">模板消息点击跳转地址</label>
+                <input id="wechat_official_notify_url" v-model="form.wechat_official_notify_url" type="url" class="input mt-1" placeholder="https://example.com/pricing" />
+              </div>
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label for="wechat_official_template_low_balance" class="input-label">余额不足模板 ID</label>
+                  <input id="wechat_official_template_low_balance" v-model="form.wechat_official_template_low_balance" type="text" class="input mt-1" placeholder="template_id" />
+                </div>
+                <div>
+                  <label for="wechat_official_template_low_quota" class="input-label">额度包不足模板 ID</label>
+                  <input id="wechat_official_template_low_quota" v-model="form.wechat_official_template_low_quota" type="text" class="input mt-1" placeholder="template_id" />
+                </div>
+                <div>
+                  <label for="wechat_official_template_subscription_limit" class="input-label">套餐不足模板 ID</label>
+                  <input id="wechat_official_template_subscription_limit" v-model="form.wechat_official_template_subscription_limit" type="text" class="input mt-1" placeholder="template_id" />
+                </div>
+                <div>
+                  <label for="wechat_official_cooldown_hours" class="input-label">同类通知冷却时间（小时）</label>
+                  <input id="wechat_official_cooldown_hours" v-model.number="form.wechat_official_cooldown_hours" type="number" min="1" step="1" class="input mt-1" />
+                </div>
+              </div>
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div>
+                  <label for="wechat_official_low_balance_threshold" class="input-label">余额阈值（USD）</label>
+                  <input id="wechat_official_low_balance_threshold" v-model.number="form.wechat_official_low_balance_threshold" type="number" min="0" step="0.0001" class="input mt-1" />
+                </div>
+                <div>
+                  <label for="wechat_official_low_quota_threshold" class="input-label">额度包阈值（USD）</label>
+                  <input id="wechat_official_low_quota_threshold" v-model.number="form.wechat_official_low_quota_threshold" type="number" min="0" step="0.0001" class="input mt-1" />
+                </div>
+                <div>
+                  <label for="wechat_official_low_subscription_threshold" class="input-label">套餐阈值（USD）</label>
+                  <input id="wechat_official_low_subscription_threshold" v-model.number="form.wechat_official_low_subscription_threshold" type="number" min="0" step="0.0001" class="input mt-1" />
+                </div>
+              </div>
+              <p class="rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-700 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-200">
+                模板建议字段：first、keyword1、keyword2、keyword3、keyword4、remark。余额和额度包通知会填入当前余量、提醒阈值和时间；套餐通知会填入套餐、周期、剩余额度和时间。
+              </p>
+            </div>
+          </div>
+        </div>
+
         <!-- Alipay Settings -->
         <div class="card">
           <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
@@ -1515,6 +1598,7 @@ type SettingsForm = SystemSettings & {
   wechat_pay_apiv3_key: string
   wechat_pay_public_key: string
   wechat_pay_private_key: string
+  wechat_official_appsecret: string
   alipay_private_key: string
   alipay_public_key: string
   epay_pkey: string
@@ -1601,6 +1685,20 @@ const form = reactive<SettingsForm>({
   payment_plans: '',
   recharge_min_amount: 0,
   recharge_plans: '',
+  // WeChat Official Account notifications
+  wechat_official_enabled: false,
+  wechat_official_appid: '',
+  wechat_official_appsecret: '',
+  wechat_official_appsecret_configured: false,
+  wechat_official_bind_redirect_url: '',
+  wechat_official_notify_url: '',
+  wechat_official_template_low_balance: '',
+  wechat_official_template_low_quota: '',
+  wechat_official_template_subscription_limit: '',
+  wechat_official_low_balance_threshold: 1,
+  wechat_official_low_quota_threshold: 1,
+  wechat_official_low_subscription_threshold: 1,
+  wechat_official_cooldown_hours: 24,
   // Alipay
   alipay_enabled: false,
   alipay_app_id: '',
@@ -1625,6 +1723,13 @@ const linuxdoRedirectUrlSuggestion = computed(() => {
   const origin =
     window.location.origin || `${window.location.protocol}//${window.location.host}`
   return `${origin}/api/v1/auth/oauth/linuxdo/callback`
+})
+
+const wechatOfficialRedirectUrlSuggestion = computed(() => {
+  if (typeof window === 'undefined') return ''
+  const origin =
+    window.location.origin || `${window.location.protocol}//${window.location.host}`
+  return `${origin}/api/v1/auth/oauth/wechat-official/callback`
 })
 
 // Contact info structured fields
@@ -1811,6 +1916,7 @@ async function loadSettings() {
     form.wechat_pay_apiv3_key = ''
     form.wechat_pay_public_key = ''
     form.wechat_pay_private_key = ''
+    form.wechat_official_appsecret = ''
     // Parse recharge plans JSON into visual editor
     rechargePlansList.value = parseRechargePlans(form.recharge_plans)
   } catch (error: any) {
@@ -1889,6 +1995,18 @@ async function saveSettings() {
       payment_plans: form.payment_plans,
       recharge_min_amount: form.recharge_min_amount,
       recharge_plans: serializeRechargePlans(rechargePlansList.value),
+      wechat_official_enabled: form.wechat_official_enabled,
+      wechat_official_appid: form.wechat_official_appid,
+      wechat_official_appsecret: form.wechat_official_appsecret || undefined,
+      wechat_official_bind_redirect_url: form.wechat_official_bind_redirect_url,
+      wechat_official_notify_url: form.wechat_official_notify_url,
+      wechat_official_template_low_balance: form.wechat_official_template_low_balance,
+      wechat_official_template_low_quota: form.wechat_official_template_low_quota,
+      wechat_official_template_subscription_limit: form.wechat_official_template_subscription_limit,
+      wechat_official_low_balance_threshold: form.wechat_official_low_balance_threshold,
+      wechat_official_low_quota_threshold: form.wechat_official_low_quota_threshold,
+      wechat_official_low_subscription_threshold: form.wechat_official_low_subscription_threshold,
+      wechat_official_cooldown_hours: form.wechat_official_cooldown_hours,
       alipay_enabled: form.alipay_enabled,
       alipay_app_id: form.alipay_app_id,
       alipay_private_key: form.alipay_private_key || undefined,
@@ -1909,6 +2027,7 @@ async function saveSettings() {
     form.wechat_pay_apiv3_key = ''
     form.wechat_pay_public_key = ''
     form.wechat_pay_private_key = ''
+    form.wechat_official_appsecret = ''
     form.alipay_private_key = ''
     form.alipay_public_key = ''
     form.epay_pkey = ''

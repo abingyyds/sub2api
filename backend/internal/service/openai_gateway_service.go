@@ -251,6 +251,7 @@ type OpenAIGatewayService struct {
 	openAITokenProvider *OpenAITokenProvider
 	toolCorrector       *CodexToolCorrector
 	subSiteService      *SubSiteService // 分站池扣费
+	wechatNotifyService *WechatOfficialNotificationService
 }
 
 // NewOpenAIGatewayService creates a new OpenAIGatewayService
@@ -275,6 +276,7 @@ func NewOpenAIGatewayService(
 	deferredService *DeferredService,
 	openAITokenProvider *OpenAITokenProvider,
 	subSiteService *SubSiteService,
+	wechatNotifyService *WechatOfficialNotificationService,
 ) *OpenAIGatewayService {
 	return &OpenAIGatewayService{
 		accountRepo:         accountRepo,
@@ -298,6 +300,7 @@ func NewOpenAIGatewayService(
 		openAITokenProvider: openAITokenProvider,
 		toolCorrector:       NewCodexToolCorrector(),
 		subSiteService:      subSiteService,
+		wechatNotifyService: wechatNotifyService,
 	}
 }
 
@@ -2216,16 +2219,24 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 				log.Printf("Quota package repository is unavailable: user=%d group=%d", user.ID, *apiKey.GroupID)
 			} else if err := s.quotaPackageRepo.Deduct(ctx, user.ID, *apiKey.GroupID, cost.ActualCost); err != nil {
 				log.Printf("Deduct quota package failed: %v", err)
+			} else if s.wechatNotifyService != nil {
+				if remaining, err := s.quotaPackageRepo.GetAvailableTotal(ctx, user.ID, *apiKey.GroupID); err == nil {
+					go s.wechatNotifyService.NotifyQuotaAfterDeduct(context.Background(), user.ID, apiKey.Group, remaining)
+				}
 			}
 		}
 	} else if isSubscriptionBilling {
 		if shouldBill && cost.ActualCost > 0 {
-			_ = s.userSubRepo.IncrementUsage(ctx, subscription.ID, cost.ActualCost)
+			if err := s.userSubRepo.IncrementUsage(ctx, subscription.ID, cost.ActualCost); err == nil && s.wechatNotifyService != nil {
+				go s.wechatNotifyService.NotifySubscriptionAfterUsage(context.Background(), user.ID, subscription, apiKey.Group, cost.ActualCost)
+			}
 			s.billingCacheService.QueueUpdateSubscriptionUsage(user.ID, *apiKey.GroupID, cost.ActualCost)
 		}
 	} else {
 		if shouldBill && cost.ActualCost > 0 {
-			_ = s.userRepo.DeductBalance(ctx, user.ID, cost.ActualCost)
+			if err := s.userRepo.DeductBalance(ctx, user.ID, cost.ActualCost); err == nil && s.wechatNotifyService != nil {
+				go s.wechatNotifyService.NotifyBalanceAfterDeduct(context.Background(), user, cost.ActualCost)
+			}
 			s.billingCacheService.QueueDeductBalance(user.ID, cost.ActualCost)
 			if boundSubSite != nil && subSiteRate > 0 && s.subSiteService != nil && len(subSiteChain) > 0 {
 				s.subSiteService.DebitPoolForConsumption(ctx, boundSubSite.ID, user.ID, usageLog.ID, cost.ActualCost, subSiteRate)

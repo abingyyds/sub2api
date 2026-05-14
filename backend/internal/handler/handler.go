@@ -56,6 +56,7 @@ type Handlers struct {
 	SubSite       *SubSiteHandler
 	SubSiteAdmin  *SubSiteAdminHandler
 	Withdraw      *WithdrawHandler
+	WechatNotify  *WechatNotificationHandler
 }
 
 // BuildInfo contains build-time information

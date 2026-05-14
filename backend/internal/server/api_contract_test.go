@@ -752,6 +752,14 @@ func (r *stubUserRepo) DeductBalance(ctx context.Context, id int64, amount float
 	return errors.New("not implemented")
 }
 
+func (r *stubUserRepo) GetBalance(ctx context.Context, id int64) (float64, error) {
+	user, err := r.GetByID(ctx, id)
+	if err != nil {
+		return 0, err
+	}
+	return user.Balance, nil
+}
+
 func (r *stubUserRepo) UpdateConcurrency(ctx context.Context, id int64, amount int) error {
 	return errors.New("not implemented")
 }

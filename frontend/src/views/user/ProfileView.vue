@@ -59,6 +59,9 @@
         <SlideIn direction="up" :delay="700">
           <ProfileTotpCard />
         </SlideIn>
+        <SlideIn direction="up" :delay="800">
+          <ProfileWechatNotificationCard />
+        </SlideIn>
       </div>
     </FadeIn>
   </AppLayout>
@@ -75,6 +78,7 @@ import ProfileInfoCard from '@/components/user/profile/ProfileInfoCard.vue'
 import ProfileEditForm from '@/components/user/profile/ProfileEditForm.vue'
 import ProfilePasswordForm from '@/components/user/profile/ProfilePasswordForm.vue'
 import ProfileTotpCard from '@/components/user/profile/ProfileTotpCard.vue'
+import ProfileWechatNotificationCard from '@/components/user/profile/ProfileWechatNotificationCard.vue'
 import { Icon } from '@/components/icons'
 import { FadeIn, SlideIn, StaggerContainer, GlowCard } from '@/components/animations'
 

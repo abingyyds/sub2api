@@ -96,6 +96,20 @@ export interface SystemSettings {
   recharge_min_amount: number
   recharge_plans: string
 
+  // WeChat Official Account notifications
+  wechat_official_enabled: boolean
+  wechat_official_appid: string
+  wechat_official_appsecret_configured: boolean
+  wechat_official_bind_redirect_url: string
+  wechat_official_notify_url: string
+  wechat_official_template_low_balance: string
+  wechat_official_template_low_quota: string
+  wechat_official_template_subscription_limit: string
+  wechat_official_low_balance_threshold: number
+  wechat_official_low_quota_threshold: number
+  wechat_official_low_subscription_threshold: number
+  wechat_official_cooldown_hours: number
+
   // Alipay
   alipay_enabled: boolean
   alipay_app_id: string
@@ -182,6 +196,20 @@ export interface UpdateSettingsRequest {
   // Recharge settings
   recharge_min_amount?: number
   recharge_plans?: string
+
+  // WeChat Official Account notifications
+  wechat_official_enabled?: boolean
+  wechat_official_appid?: string
+  wechat_official_appsecret?: string
+  wechat_official_bind_redirect_url?: string
+  wechat_official_notify_url?: string
+  wechat_official_template_low_balance?: string
+  wechat_official_template_low_quota?: string
+  wechat_official_template_subscription_limit?: string
+  wechat_official_low_balance_threshold?: number
+  wechat_official_low_quota_threshold?: number
+  wechat_official_low_subscription_threshold?: number
+  wechat_official_cooldown_hours?: number
 
   // Alipay
   alipay_enabled?: boolean

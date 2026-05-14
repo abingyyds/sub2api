@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"errors"
 	"strings"
 
@@ -13,14 +14,14 @@ import (
 
 // APIKeyAuthGoogle is a Google-style error wrapper for API key auth.
 func APIKeyAuthGoogle(apiKeyService *service.APIKeyService, cfg *config.Config) gin.HandlerFunc {
-	return APIKeyAuthWithSubscriptionGoogle(apiKeyService, nil, nil, cfg)
+	return APIKeyAuthWithSubscriptionGoogle(apiKeyService, nil, nil, cfg, nil)
 }
 
 // APIKeyAuthWithSubscriptionGoogle behaves like ApiKeyAuthWithSubscription but returns Google-style errors:
 // {"error":{"code":401,"message":"...","status":"UNAUTHENTICATED"}}
 //
 // It is intended for Gemini native endpoints (/v1beta) to match Gemini SDK expectations.
-func APIKeyAuthWithSubscriptionGoogle(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, quotaPackageRepo service.QuotaPackageRepository, cfg *config.Config) gin.HandlerFunc {
+func APIKeyAuthWithSubscriptionGoogle(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, quotaPackageRepo service.QuotaPackageRepository, cfg *config.Config, wechatNotifyService *service.WechatOfficialNotificationService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if v := strings.TrimSpace(c.Query("api_key")); v != "" {
 			abortWithGoogleError(c, 400, "Query parameter api_key is deprecated. Use Authorization header or key instead.")
@@ -80,6 +81,9 @@ func APIKeyAuthWithSubscriptionGoogle(apiKeyService *service.APIKeyService, subs
 				c.Set(string(ContextKeySubscription), subscription)
 				subscriptionAuthorized = true
 			} else if !isQuotaPackageType {
+				if wechatNotifyService != nil {
+					go wechatNotifyService.NotifySubscriptionUnavailable(context.Background(), apiKey.User.ID, apiKey.Group)
+				}
 				abortSubscriptionGoogleError(c, err)
 				return
 			}
@@ -96,11 +100,17 @@ func APIKeyAuthWithSubscriptionGoogle(apiKeyService *service.APIKeyService, subs
 				return
 			}
 			if available <= 0 {
+				if wechatNotifyService != nil {
+					go wechatNotifyService.NotifyQuotaUnavailable(context.Background(), apiKey.User.ID, apiKey.Group)
+				}
 				abortWithGoogleError(c, 403, "Quota package balance is insufficient")
 				return
 			}
 		} else if !isSubscriptionType || subscriptionService == nil {
 			if apiKey.User.Balance <= 0 {
+				if wechatNotifyService != nil {
+					go wechatNotifyService.NotifyBalanceUnavailable(context.Background(), apiKey.User)
+				}
 				abortWithGoogleError(c, 403, "Insufficient account balance")
 				return
 			}

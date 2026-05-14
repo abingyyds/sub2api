@@ -301,6 +301,7 @@ type GatewayService struct {
 	claudeTokenProvider *ClaudeTokenProvider
 	sessionLimitCache   SessionLimitCache // 会话数量限制缓存（仅 Anthropic OAuth/SetupToken）
 	subSiteService      *SubSiteService   // 分站池扣费
+	wechatNotifyService *WechatOfficialNotificationService
 }
 
 type modelMappingBatchLister interface {
@@ -332,6 +333,7 @@ func NewGatewayService(
 	claudeTokenProvider *ClaudeTokenProvider,
 	sessionLimitCache SessionLimitCache,
 	subSiteService *SubSiteService,
+	wechatNotifyService *WechatOfficialNotificationService,
 ) *GatewayService {
 	return &GatewayService{
 		accountRepo:         accountRepo,
@@ -357,6 +359,7 @@ func NewGatewayService(
 		claudeTokenProvider: claudeTokenProvider,
 		sessionLimitCache:   sessionLimitCache,
 		subSiteService:      subSiteService,
+		wechatNotifyService: wechatNotifyService,
 	}
 }
 
@@ -3799,6 +3802,10 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 				log.Printf("Quota package repository is unavailable: user=%d group=%d", user.ID, *apiKey.GroupID)
 			} else if err := s.quotaPackageRepo.Deduct(ctx, user.ID, *apiKey.GroupID, cost.ActualCost); err != nil {
 				log.Printf("Deduct quota package failed: %v", err)
+			} else if s.wechatNotifyService != nil {
+				if remaining, err := s.quotaPackageRepo.GetAvailableTotal(ctx, user.ID, *apiKey.GroupID); err == nil {
+					go s.wechatNotifyService.NotifyQuotaAfterDeduct(context.Background(), user.ID, apiKey.Group, remaining)
+				}
 			}
 		}
 	} else if isSubscriptionBilling {
@@ -3806,6 +3813,8 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 		if shouldBill && cost.ActualCost > 0 {
 			if err := s.userSubRepo.IncrementUsage(ctx, subscription.ID, cost.ActualCost); err != nil {
 				log.Printf("Increment subscription usage failed: %v", err)
+			} else if s.wechatNotifyService != nil {
+				go s.wechatNotifyService.NotifySubscriptionAfterUsage(context.Background(), user.ID, subscription, apiKey.Group, cost.ActualCost)
 			}
 			// 异步更新订阅缓存
 			s.billingCacheService.QueueUpdateSubscriptionUsage(user.ID, *apiKey.GroupID, cost.ActualCost)
@@ -3815,6 +3824,8 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 		if shouldBill && cost.ActualCost > 0 {
 			if err := s.userRepo.DeductBalance(ctx, user.ID, cost.ActualCost); err != nil {
 				log.Printf("Deduct balance failed: %v", err)
+			} else if s.wechatNotifyService != nil {
+				go s.wechatNotifyService.NotifyBalanceAfterDeduct(context.Background(), user, cost.ActualCost)
 			}
 			// 异步更新余额缓存
 			s.billingCacheService.QueueDeductBalance(user.ID, cost.ActualCost)

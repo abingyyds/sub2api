@@ -26,6 +26,7 @@ func SetupRouter(
 	subscriptionService *service.SubscriptionService,
 	quotaPackageRepo service.QuotaPackageRepository,
 	opsService *service.OpsService,
+	wechatNotifyService *service.WechatOfficialNotificationService,
 	settingService *service.SettingService,
 	subSiteService *service.SubSiteService,
 	cfg *config.Config,
@@ -54,7 +55,7 @@ func SetupRouter(
 	}
 
 	// 注册路由
-	registerRoutes(r, handlers, jwtAuth, adminAuth, apiKeyAuth, orgAuth, apiKeyService, subscriptionService, quotaPackageRepo, opsService, subSiteService, cfg, redisClient)
+	registerRoutes(r, handlers, jwtAuth, adminAuth, apiKeyAuth, orgAuth, apiKeyService, subscriptionService, quotaPackageRepo, opsService, wechatNotifyService, subSiteService, cfg, redisClient)
 
 	return r
 }
@@ -71,6 +72,7 @@ func registerRoutes(
 	subscriptionService *service.SubscriptionService,
 	quotaPackageRepo service.QuotaPackageRepository,
 	opsService *service.OpsService,
+	wechatNotifyService *service.WechatOfficialNotificationService,
 	subSiteService *service.SubSiteService,
 	cfg *config.Config,
 	redisClient *redis.Client,
@@ -87,5 +89,5 @@ func registerRoutes(
 	routes.RegisterAdminRoutes(v1, h, adminAuth)
 	routes.RegisterOrgRoutes(v1, h, jwtAuth, orgAuth)
 	routes.RegisterSubSiteAdminRoutes(v1, h, jwtAuth, subSiteService)
-	routes.RegisterGatewayRoutes(r, h, apiKeyAuth, apiKeyService, subscriptionService, quotaPackageRepo, opsService, cfg)
+	routes.RegisterGatewayRoutes(r, h, apiKeyAuth, apiKeyService, subscriptionService, quotaPackageRepo, opsService, wechatNotifyService, cfg)
 }

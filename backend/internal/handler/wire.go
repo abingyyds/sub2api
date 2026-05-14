@@ -112,6 +112,7 @@ func ProvideHandlers(
 	subSiteHandler *SubSiteHandler,
 	subSiteAdminHandler *SubSiteAdminHandler,
 	withdrawHandler *WithdrawHandler,
+	wechatNotificationHandler *WechatNotificationHandler,
 ) *Handlers {
 	return &Handlers{
 		Auth:          authHandler,
@@ -134,6 +135,7 @@ func ProvideHandlers(
 		SubSite:       subSiteHandler,
 		SubSiteAdmin:  subSiteAdminHandler,
 		Withdraw:      withdrawHandler,
+		WechatNotify:  wechatNotificationHandler,
 	}
 }
 
@@ -157,6 +159,7 @@ var ProviderSet = wire.NewSet(
 	NewSubSiteHandler,
 	NewSubSiteAdminHandler,
 	NewWithdrawHandler,
+	NewWechatNotificationHandler,
 	ProvideSettingHandler,
 
 	// Admin handlers

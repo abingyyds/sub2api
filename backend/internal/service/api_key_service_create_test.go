@@ -127,6 +127,10 @@ func (s apiKeyCreateUserRepoStub) DeductBalance(ctx context.Context, id int64, a
 	panic("unexpected DeductBalance call")
 }
 
+func (s apiKeyCreateUserRepoStub) GetBalance(ctx context.Context, id int64) (float64, error) {
+	panic("unexpected GetBalance call")
+}
+
 func (s apiKeyCreateUserRepoStub) UpdateConcurrency(ctx context.Context, id int64, amount int) error {
 	panic("unexpected UpdateConcurrency call")
 }

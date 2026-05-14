@@ -45,84 +45,96 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 	opsEnabled := h.opsService != nil && h.opsService.IsMonitoringEnabled(c.Request.Context())
 
 	response.Success(c, dto.SystemSettings{
-		RegistrationEnabled:                  settings.RegistrationEnabled,
-		EmailVerifyEnabled:                   settings.EmailVerifyEnabled,
-		PromoCodeEnabled:                     settings.PromoCodeEnabled,
-		PasswordResetEnabled:                 settings.PasswordResetEnabled,
-		TotpEnabled:                          settings.TotpEnabled,
-		TotpEncryptionKeyConfigured:          h.settingService.IsTotpEncryptionKeyConfigured(),
-		SMTPHost:                             settings.SMTPHost,
-		SMTPPort:                             settings.SMTPPort,
-		SMTPUsername:                         settings.SMTPUsername,
-		SMTPPasswordConfigured:               settings.SMTPPasswordConfigured,
-		SMTPFrom:                             settings.SMTPFrom,
-		SMTPFromName:                         settings.SMTPFromName,
-		SMTPUseTLS:                           settings.SMTPUseTLS,
-		TurnstileEnabled:                     settings.TurnstileEnabled,
-		TurnstileSiteKey:                     settings.TurnstileSiteKey,
-		TurnstileSecretKeyConfigured:         settings.TurnstileSecretKeyConfigured,
-		LinuxDoConnectEnabled:                settings.LinuxDoConnectEnabled,
-		LinuxDoConnectClientID:               settings.LinuxDoConnectClientID,
-		LinuxDoConnectClientSecretConfigured: settings.LinuxDoConnectClientSecretConfigured,
-		LinuxDoConnectRedirectURL:            settings.LinuxDoConnectRedirectURL,
-		SiteName:                             settings.SiteName,
-		SiteLogo:                             settings.SiteLogo,
-		SiteSubtitle:                         settings.SiteSubtitle,
-		APIBaseURL:                           settings.APIBaseURL,
-		ContactInfo:                          settings.ContactInfo,
-		DocURL:                               settings.DocURL,
-		HomeContent:                          settings.HomeContent,
-		HideCcsImportButton:                  settings.HideCcsImportButton,
-		DefaultConcurrency:                   settings.DefaultConcurrency,
-		DefaultBalance:                       settings.DefaultBalance,
-		MaxRetryRounds:                       settings.MaxRetryRounds,
-		InitialBalanceExpiryDays:             settings.InitialBalanceExpiryDays,
-		EnableModelFallback:                  settings.EnableModelFallback,
-		FallbackModelAnthropic:               settings.FallbackModelAnthropic,
-		FallbackModelOpenAI:                  settings.FallbackModelOpenAI,
-		FallbackModelGemini:                  settings.FallbackModelGemini,
-		FallbackModelAntigravity:             settings.FallbackModelAntigravity,
-		EnableIdentityPatch:                  settings.EnableIdentityPatch,
-		IdentityPatchPrompt:                  settings.IdentityPatchPrompt,
-		OpsMonitoringEnabled:                 opsEnabled && settings.OpsMonitoringEnabled,
-		OpsRealtimeMonitoringEnabled:         settings.OpsRealtimeMonitoringEnabled,
-		OpsQueryModeDefault:                  settings.OpsQueryModeDefault,
-		OpsMetricsIntervalSeconds:            settings.OpsMetricsIntervalSeconds,
-		ReferralEnabled:                      settings.ReferralEnabled,
-		ReferralRewardAmount:                 settings.ReferralRewardAmount,
-		InviteeRewardAmount:                  settings.InviteeRewardAmount,
-		AgentEnabled:                         settings.AgentEnabled,
-		AgentDefaultCommissionRate:           settings.AgentDefaultCommissionRate,
-		AgentActivationFee:                   settings.AgentActivationFee,
-		AgentContractVersion:                 settings.AgentContractVersion,
-		AgentContractTemplate:                settings.AgentContractTemplate,
-		AgentWithdrawFreezeDays:              settings.AgentWithdrawFreezeDays,
-		AgentWithdrawWeekday:                 settings.AgentWithdrawWeekday,
-		AgentWithdrawStartHour:               settings.AgentWithdrawStartHour,
-		AgentWithdrawEndHour:                 settings.AgentWithdrawEndHour,
-		PaymentEnabled:                       settings.PaymentEnabled,
-		WechatPayAppID:                       settings.WechatPayAppID,
-		WechatPayMchID:                       settings.WechatPayMchID,
-		WechatPayAPIv3KeyConfigured:          settings.WechatPayAPIv3KeyConfigured,
-		WechatPayMchSerialNo:                 settings.WechatPayMchSerialNo,
-		WechatPayPublicKeyID:                 settings.WechatPayPublicKeyID,
-		WechatPayPublicKeyConfigured:         settings.WechatPayPublicKeyConfigured,
-		WechatPayPrivateKeyConfigured:        settings.WechatPayPrivateKeyConfigured,
-		WechatPayNotifyURL:                   settings.WechatPayNotifyURL,
-		PaymentPlans:                         settings.PaymentPlans,
-		RechargeMinAmount:                    settings.RechargeMinAmount,
-		RechargePlans:                        settings.RechargePlans,
-		AlipayEnabled:                        settings.AlipayEnabled,
-		AlipayAppID:                          settings.AlipayAppID,
-		AlipayPrivateKeyConfigured:           settings.AlipayPrivateKeyConfigured,
-		AlipayPublicKeyConfigured:            settings.AlipayPublicKeyConfigured,
-		AlipayNotifyURL:                      settings.AlipayNotifyURL,
-		AlipayIsProduction:                   settings.AlipayIsProduction,
-		EpayEnabled:                          settings.EpayEnabled,
-		EpayGateway:                          settings.EpayGateway,
-		EpayPID:                              settings.EpayPID,
-		EpayPKeyConfigured:                   settings.EpayPKeyConfigured,
-		EpayNotifyURL:                        settings.EpayNotifyURL,
+		RegistrationEnabled:                     settings.RegistrationEnabled,
+		EmailVerifyEnabled:                      settings.EmailVerifyEnabled,
+		PromoCodeEnabled:                        settings.PromoCodeEnabled,
+		PasswordResetEnabled:                    settings.PasswordResetEnabled,
+		TotpEnabled:                             settings.TotpEnabled,
+		TotpEncryptionKeyConfigured:             h.settingService.IsTotpEncryptionKeyConfigured(),
+		SMTPHost:                                settings.SMTPHost,
+		SMTPPort:                                settings.SMTPPort,
+		SMTPUsername:                            settings.SMTPUsername,
+		SMTPPasswordConfigured:                  settings.SMTPPasswordConfigured,
+		SMTPFrom:                                settings.SMTPFrom,
+		SMTPFromName:                            settings.SMTPFromName,
+		SMTPUseTLS:                              settings.SMTPUseTLS,
+		TurnstileEnabled:                        settings.TurnstileEnabled,
+		TurnstileSiteKey:                        settings.TurnstileSiteKey,
+		TurnstileSecretKeyConfigured:            settings.TurnstileSecretKeyConfigured,
+		LinuxDoConnectEnabled:                   settings.LinuxDoConnectEnabled,
+		LinuxDoConnectClientID:                  settings.LinuxDoConnectClientID,
+		LinuxDoConnectClientSecretConfigured:    settings.LinuxDoConnectClientSecretConfigured,
+		LinuxDoConnectRedirectURL:               settings.LinuxDoConnectRedirectURL,
+		SiteName:                                settings.SiteName,
+		SiteLogo:                                settings.SiteLogo,
+		SiteSubtitle:                            settings.SiteSubtitle,
+		APIBaseURL:                              settings.APIBaseURL,
+		ContactInfo:                             settings.ContactInfo,
+		DocURL:                                  settings.DocURL,
+		HomeContent:                             settings.HomeContent,
+		HideCcsImportButton:                     settings.HideCcsImportButton,
+		DefaultConcurrency:                      settings.DefaultConcurrency,
+		DefaultBalance:                          settings.DefaultBalance,
+		MaxRetryRounds:                          settings.MaxRetryRounds,
+		InitialBalanceExpiryDays:                settings.InitialBalanceExpiryDays,
+		EnableModelFallback:                     settings.EnableModelFallback,
+		FallbackModelAnthropic:                  settings.FallbackModelAnthropic,
+		FallbackModelOpenAI:                     settings.FallbackModelOpenAI,
+		FallbackModelGemini:                     settings.FallbackModelGemini,
+		FallbackModelAntigravity:                settings.FallbackModelAntigravity,
+		EnableIdentityPatch:                     settings.EnableIdentityPatch,
+		IdentityPatchPrompt:                     settings.IdentityPatchPrompt,
+		OpsMonitoringEnabled:                    opsEnabled && settings.OpsMonitoringEnabled,
+		OpsRealtimeMonitoringEnabled:            settings.OpsRealtimeMonitoringEnabled,
+		OpsQueryModeDefault:                     settings.OpsQueryModeDefault,
+		OpsMetricsIntervalSeconds:               settings.OpsMetricsIntervalSeconds,
+		ReferralEnabled:                         settings.ReferralEnabled,
+		ReferralRewardAmount:                    settings.ReferralRewardAmount,
+		InviteeRewardAmount:                     settings.InviteeRewardAmount,
+		AgentEnabled:                            settings.AgentEnabled,
+		AgentDefaultCommissionRate:              settings.AgentDefaultCommissionRate,
+		AgentActivationFee:                      settings.AgentActivationFee,
+		AgentContractVersion:                    settings.AgentContractVersion,
+		AgentContractTemplate:                   settings.AgentContractTemplate,
+		AgentWithdrawFreezeDays:                 settings.AgentWithdrawFreezeDays,
+		AgentWithdrawWeekday:                    settings.AgentWithdrawWeekday,
+		AgentWithdrawStartHour:                  settings.AgentWithdrawStartHour,
+		AgentWithdrawEndHour:                    settings.AgentWithdrawEndHour,
+		PaymentEnabled:                          settings.PaymentEnabled,
+		WechatPayAppID:                          settings.WechatPayAppID,
+		WechatPayMchID:                          settings.WechatPayMchID,
+		WechatPayAPIv3KeyConfigured:             settings.WechatPayAPIv3KeyConfigured,
+		WechatPayMchSerialNo:                    settings.WechatPayMchSerialNo,
+		WechatPayPublicKeyID:                    settings.WechatPayPublicKeyID,
+		WechatPayPublicKeyConfigured:            settings.WechatPayPublicKeyConfigured,
+		WechatPayPrivateKeyConfigured:           settings.WechatPayPrivateKeyConfigured,
+		WechatPayNotifyURL:                      settings.WechatPayNotifyURL,
+		PaymentPlans:                            settings.PaymentPlans,
+		RechargeMinAmount:                       settings.RechargeMinAmount,
+		RechargePlans:                           settings.RechargePlans,
+		WechatOfficialEnabled:                   settings.WechatOfficialEnabled,
+		WechatOfficialAppID:                     settings.WechatOfficialAppID,
+		WechatOfficialAppSecretConfigured:       settings.WechatOfficialAppSecretConfigured,
+		WechatOfficialBindRedirectURL:           settings.WechatOfficialBindRedirectURL,
+		WechatOfficialNotifyURL:                 settings.WechatOfficialNotifyURL,
+		WechatOfficialTemplateLowBalance:        settings.WechatOfficialTemplateLowBalance,
+		WechatOfficialTemplateLowQuota:          settings.WechatOfficialTemplateLowQuota,
+		WechatOfficialTemplateSubscriptionLimit: settings.WechatOfficialTemplateSubscriptionLimit,
+		WechatOfficialLowBalanceThreshold:       settings.WechatOfficialLowBalanceThreshold,
+		WechatOfficialLowQuotaThreshold:         settings.WechatOfficialLowQuotaThreshold,
+		WechatOfficialLowSubscriptionThreshold:  settings.WechatOfficialLowSubscriptionThreshold,
+		WechatOfficialCooldownHours:             settings.WechatOfficialCooldownHours,
+		AlipayEnabled:                           settings.AlipayEnabled,
+		AlipayAppID:                             settings.AlipayAppID,
+		AlipayPrivateKeyConfigured:              settings.AlipayPrivateKeyConfigured,
+		AlipayPublicKeyConfigured:               settings.AlipayPublicKeyConfigured,
+		AlipayNotifyURL:                         settings.AlipayNotifyURL,
+		AlipayIsProduction:                      settings.AlipayIsProduction,
+		EpayEnabled:                             settings.EpayEnabled,
+		EpayGateway:                             settings.EpayGateway,
+		EpayPID:                                 settings.EpayPID,
+		EpayPKeyConfigured:                      settings.EpayPKeyConfigured,
+		EpayNotifyURL:                           settings.EpayNotifyURL,
 	})
 }
 
@@ -218,6 +230,20 @@ type UpdateSettingsRequest struct {
 	RechargeMinAmount    float64 `json:"recharge_min_amount"`
 	RechargePlans        string  `json:"recharge_plans"`
 
+	// WeChat Official Account notifications
+	WechatOfficialEnabled                   bool    `json:"wechat_official_enabled"`
+	WechatOfficialAppID                     string  `json:"wechat_official_appid"`
+	WechatOfficialAppSecret                 string  `json:"wechat_official_appsecret"`
+	WechatOfficialBindRedirectURL           string  `json:"wechat_official_bind_redirect_url"`
+	WechatOfficialNotifyURL                 string  `json:"wechat_official_notify_url"`
+	WechatOfficialTemplateLowBalance        string  `json:"wechat_official_template_low_balance"`
+	WechatOfficialTemplateLowQuota          string  `json:"wechat_official_template_low_quota"`
+	WechatOfficialTemplateSubscriptionLimit string  `json:"wechat_official_template_subscription_limit"`
+	WechatOfficialLowBalanceThreshold       float64 `json:"wechat_official_low_balance_threshold"`
+	WechatOfficialLowQuotaThreshold         float64 `json:"wechat_official_low_quota_threshold"`
+	WechatOfficialLowSubscriptionThreshold  float64 `json:"wechat_official_low_subscription_threshold"`
+	WechatOfficialCooldownHours             int     `json:"wechat_official_cooldown_hours"`
+
 	// Alipay
 	AlipayEnabled      bool   `json:"alipay_enabled"`
 	AlipayAppID        string `json:"alipay_app_id"`
@@ -267,6 +293,18 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	}
 	if req.InitialBalanceExpiryDays < 0 {
 		req.InitialBalanceExpiryDays = 0
+	}
+	if req.WechatOfficialLowBalanceThreshold < 0 {
+		req.WechatOfficialLowBalanceThreshold = 0
+	}
+	if req.WechatOfficialLowQuotaThreshold < 0 {
+		req.WechatOfficialLowQuotaThreshold = 0
+	}
+	if req.WechatOfficialLowSubscriptionThreshold < 0 {
+		req.WechatOfficialLowSubscriptionThreshold = 0
+	}
+	if req.WechatOfficialCooldownHours <= 0 {
+		req.WechatOfficialCooldownHours = 24
 	}
 	if req.AgentWithdrawFreezeDays < 0 {
 		req.AgentWithdrawFreezeDays = 0
@@ -347,6 +385,48 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		}
 	}
 
+	if req.WechatOfficialEnabled {
+		req.WechatOfficialAppID = strings.TrimSpace(req.WechatOfficialAppID)
+		req.WechatOfficialAppSecret = strings.TrimSpace(req.WechatOfficialAppSecret)
+		req.WechatOfficialBindRedirectURL = strings.TrimSpace(req.WechatOfficialBindRedirectURL)
+		req.WechatOfficialNotifyURL = strings.TrimSpace(req.WechatOfficialNotifyURL)
+		req.WechatOfficialTemplateLowBalance = strings.TrimSpace(req.WechatOfficialTemplateLowBalance)
+		req.WechatOfficialTemplateLowQuota = strings.TrimSpace(req.WechatOfficialTemplateLowQuota)
+		req.WechatOfficialTemplateSubscriptionLimit = strings.TrimSpace(req.WechatOfficialTemplateSubscriptionLimit)
+
+		if req.WechatOfficialAppID == "" {
+			response.BadRequest(c, "WeChat Official Account AppID is required when enabled")
+			return
+		}
+		if req.WechatOfficialBindRedirectURL == "" {
+			response.BadRequest(c, "WeChat Official Account bind redirect URL is required when enabled")
+			return
+		}
+		if err := config.ValidateAbsoluteHTTPURL(req.WechatOfficialBindRedirectURL); err != nil {
+			response.BadRequest(c, "WeChat Official Account bind redirect URL must be an absolute http(s) URL")
+			return
+		}
+		if req.WechatOfficialNotifyURL != "" {
+			if err := config.ValidateAbsoluteHTTPURL(req.WechatOfficialNotifyURL); err != nil {
+				response.BadRequest(c, "WeChat Official Account notification URL must be an absolute http(s) URL")
+				return
+			}
+		}
+		if req.WechatOfficialTemplateLowBalance == "" &&
+			req.WechatOfficialTemplateLowQuota == "" &&
+			req.WechatOfficialTemplateSubscriptionLimit == "" {
+			response.BadRequest(c, "At least one WeChat Official Account template ID is required when enabled")
+			return
+		}
+		if req.WechatOfficialAppSecret == "" {
+			if previousSettings.WechatOfficialAppSecret == "" {
+				response.BadRequest(c, "WeChat Official Account AppSecret is required when enabled")
+				return
+			}
+			req.WechatOfficialAppSecret = previousSettings.WechatOfficialAppSecret
+		}
+	}
+
 	// Ops metrics collector interval validation (seconds).
 	if req.OpsMetricsIntervalSeconds != nil {
 		v := *req.OpsMetricsIntervalSeconds
@@ -422,41 +502,53 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 			}
 			return previousSettings.OpsMetricsIntervalSeconds
 		}(),
-		ReferralEnabled:            req.ReferralEnabled,
-		ReferralRewardAmount:       req.ReferralRewardAmount,
-		InviteeRewardAmount:        req.InviteeRewardAmount,
-		AgentEnabled:               req.AgentEnabled,
-		AgentDefaultCommissionRate: req.AgentDefaultCommissionRate,
-		AgentActivationFee:         req.AgentActivationFee,
-		AgentContractVersion:       req.AgentContractVersion,
-		AgentContractTemplate:      req.AgentContractTemplate,
-		AgentWithdrawFreezeDays:    req.AgentWithdrawFreezeDays,
-		AgentWithdrawWeekday:       req.AgentWithdrawWeekday,
-		AgentWithdrawStartHour:     req.AgentWithdrawStartHour,
-		AgentWithdrawEndHour:       req.AgentWithdrawEndHour,
-		PaymentEnabled:             req.PaymentEnabled,
-		WechatPayAppID:             req.WechatPayAppID,
-		WechatPayMchID:             req.WechatPayMchID,
-		WechatPayAPIv3Key:          req.WechatPayAPIv3Key,
-		WechatPayMchSerialNo:       req.WechatPayMchSerialNo,
-		WechatPayPublicKeyID:       req.WechatPayPublicKeyID,
-		WechatPayPublicKey:         req.WechatPayPublicKey,
-		WechatPayPrivateKey:        req.WechatPayPrivateKey,
-		WechatPayNotifyURL:         req.WechatPayNotifyURL,
-		PaymentPlans:               req.PaymentPlans,
-		RechargeMinAmount:          req.RechargeMinAmount,
-		RechargePlans:              req.RechargePlans,
-		AlipayEnabled:              req.AlipayEnabled,
-		AlipayAppID:                req.AlipayAppID,
-		AlipayPrivateKey:           req.AlipayPrivateKey,
-		AlipayPublicKey:            req.AlipayPublicKey,
-		AlipayNotifyURL:            req.AlipayNotifyURL,
-		AlipayIsProduction:         req.AlipayIsProduction,
-		EpayEnabled:                req.EpayEnabled,
-		EpayGateway:                req.EpayGateway,
-		EpayPID:                    req.EpayPID,
-		EpayPKey:                   req.EpayPKey,
-		EpayNotifyURL:              req.EpayNotifyURL,
+		ReferralEnabled:                         req.ReferralEnabled,
+		ReferralRewardAmount:                    req.ReferralRewardAmount,
+		InviteeRewardAmount:                     req.InviteeRewardAmount,
+		AgentEnabled:                            req.AgentEnabled,
+		AgentDefaultCommissionRate:              req.AgentDefaultCommissionRate,
+		AgentActivationFee:                      req.AgentActivationFee,
+		AgentContractVersion:                    req.AgentContractVersion,
+		AgentContractTemplate:                   req.AgentContractTemplate,
+		AgentWithdrawFreezeDays:                 req.AgentWithdrawFreezeDays,
+		AgentWithdrawWeekday:                    req.AgentWithdrawWeekday,
+		AgentWithdrawStartHour:                  req.AgentWithdrawStartHour,
+		AgentWithdrawEndHour:                    req.AgentWithdrawEndHour,
+		PaymentEnabled:                          req.PaymentEnabled,
+		WechatPayAppID:                          req.WechatPayAppID,
+		WechatPayMchID:                          req.WechatPayMchID,
+		WechatPayAPIv3Key:                       req.WechatPayAPIv3Key,
+		WechatPayMchSerialNo:                    req.WechatPayMchSerialNo,
+		WechatPayPublicKeyID:                    req.WechatPayPublicKeyID,
+		WechatPayPublicKey:                      req.WechatPayPublicKey,
+		WechatPayPrivateKey:                     req.WechatPayPrivateKey,
+		WechatPayNotifyURL:                      req.WechatPayNotifyURL,
+		PaymentPlans:                            req.PaymentPlans,
+		RechargeMinAmount:                       req.RechargeMinAmount,
+		RechargePlans:                           req.RechargePlans,
+		WechatOfficialEnabled:                   req.WechatOfficialEnabled,
+		WechatOfficialAppID:                     req.WechatOfficialAppID,
+		WechatOfficialAppSecret:                 req.WechatOfficialAppSecret,
+		WechatOfficialBindRedirectURL:           req.WechatOfficialBindRedirectURL,
+		WechatOfficialNotifyURL:                 req.WechatOfficialNotifyURL,
+		WechatOfficialTemplateLowBalance:        req.WechatOfficialTemplateLowBalance,
+		WechatOfficialTemplateLowQuota:          req.WechatOfficialTemplateLowQuota,
+		WechatOfficialTemplateSubscriptionLimit: req.WechatOfficialTemplateSubscriptionLimit,
+		WechatOfficialLowBalanceThreshold:       req.WechatOfficialLowBalanceThreshold,
+		WechatOfficialLowQuotaThreshold:         req.WechatOfficialLowQuotaThreshold,
+		WechatOfficialLowSubscriptionThreshold:  req.WechatOfficialLowSubscriptionThreshold,
+		WechatOfficialCooldownHours:             req.WechatOfficialCooldownHours,
+		AlipayEnabled:                           req.AlipayEnabled,
+		AlipayAppID:                             req.AlipayAppID,
+		AlipayPrivateKey:                        req.AlipayPrivateKey,
+		AlipayPublicKey:                         req.AlipayPublicKey,
+		AlipayNotifyURL:                         req.AlipayNotifyURL,
+		AlipayIsProduction:                      req.AlipayIsProduction,
+		EpayEnabled:                             req.EpayEnabled,
+		EpayGateway:                             req.EpayGateway,
+		EpayPID:                                 req.EpayPID,
+		EpayPKey:                                req.EpayPKey,
+		EpayNotifyURL:                           req.EpayNotifyURL,
 	}
 
 	if err := h.settingService.UpdateSettings(c.Request.Context(), settings); err != nil {
@@ -474,83 +566,95 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	}
 
 	response.Success(c, dto.SystemSettings{
-		RegistrationEnabled:                  updatedSettings.RegistrationEnabled,
-		EmailVerifyEnabled:                   updatedSettings.EmailVerifyEnabled,
-		PromoCodeEnabled:                     updatedSettings.PromoCodeEnabled,
-		PasswordResetEnabled:                 updatedSettings.PasswordResetEnabled,
-		TotpEnabled:                          updatedSettings.TotpEnabled,
-		TotpEncryptionKeyConfigured:          h.settingService.IsTotpEncryptionKeyConfigured(),
-		SMTPHost:                             updatedSettings.SMTPHost,
-		SMTPPort:                             updatedSettings.SMTPPort,
-		SMTPUsername:                         updatedSettings.SMTPUsername,
-		SMTPPasswordConfigured:               updatedSettings.SMTPPasswordConfigured,
-		SMTPFrom:                             updatedSettings.SMTPFrom,
-		SMTPFromName:                         updatedSettings.SMTPFromName,
-		SMTPUseTLS:                           updatedSettings.SMTPUseTLS,
-		TurnstileEnabled:                     updatedSettings.TurnstileEnabled,
-		TurnstileSiteKey:                     updatedSettings.TurnstileSiteKey,
-		TurnstileSecretKeyConfigured:         updatedSettings.TurnstileSecretKeyConfigured,
-		LinuxDoConnectEnabled:                updatedSettings.LinuxDoConnectEnabled,
-		LinuxDoConnectClientID:               updatedSettings.LinuxDoConnectClientID,
-		LinuxDoConnectClientSecretConfigured: updatedSettings.LinuxDoConnectClientSecretConfigured,
-		LinuxDoConnectRedirectURL:            updatedSettings.LinuxDoConnectRedirectURL,
-		SiteName:                             updatedSettings.SiteName,
-		SiteLogo:                             updatedSettings.SiteLogo,
-		SiteSubtitle:                         updatedSettings.SiteSubtitle,
-		APIBaseURL:                           updatedSettings.APIBaseURL,
-		ContactInfo:                          updatedSettings.ContactInfo,
-		DocURL:                               updatedSettings.DocURL,
-		HomeContent:                          updatedSettings.HomeContent,
-		HideCcsImportButton:                  updatedSettings.HideCcsImportButton,
-		DefaultConcurrency:                   updatedSettings.DefaultConcurrency,
-		DefaultBalance:                       updatedSettings.DefaultBalance,
-		MaxRetryRounds:                       updatedSettings.MaxRetryRounds,
-		InitialBalanceExpiryDays:             updatedSettings.InitialBalanceExpiryDays,
-		EnableModelFallback:                  updatedSettings.EnableModelFallback,
-		FallbackModelAnthropic:               updatedSettings.FallbackModelAnthropic,
-		FallbackModelOpenAI:                  updatedSettings.FallbackModelOpenAI,
-		FallbackModelGemini:                  updatedSettings.FallbackModelGemini,
-		FallbackModelAntigravity:             updatedSettings.FallbackModelAntigravity,
-		EnableIdentityPatch:                  updatedSettings.EnableIdentityPatch,
-		IdentityPatchPrompt:                  updatedSettings.IdentityPatchPrompt,
-		OpsMonitoringEnabled:                 updatedSettings.OpsMonitoringEnabled,
-		OpsRealtimeMonitoringEnabled:         updatedSettings.OpsRealtimeMonitoringEnabled,
-		OpsQueryModeDefault:                  updatedSettings.OpsQueryModeDefault,
-		OpsMetricsIntervalSeconds:            updatedSettings.OpsMetricsIntervalSeconds,
-		ReferralEnabled:                      updatedSettings.ReferralEnabled,
-		ReferralRewardAmount:                 updatedSettings.ReferralRewardAmount,
-		InviteeRewardAmount:                  updatedSettings.InviteeRewardAmount,
-		AgentEnabled:                         updatedSettings.AgentEnabled,
-		AgentDefaultCommissionRate:           updatedSettings.AgentDefaultCommissionRate,
-		AgentActivationFee:                   updatedSettings.AgentActivationFee,
-		AgentContractVersion:                 updatedSettings.AgentContractVersion,
-		AgentContractTemplate:                updatedSettings.AgentContractTemplate,
-		AgentWithdrawFreezeDays:              updatedSettings.AgentWithdrawFreezeDays,
-		AgentWithdrawWeekday:                 updatedSettings.AgentWithdrawWeekday,
-		AgentWithdrawStartHour:               updatedSettings.AgentWithdrawStartHour,
-		AgentWithdrawEndHour:                 updatedSettings.AgentWithdrawEndHour,
-		PaymentEnabled:                       updatedSettings.PaymentEnabled,
-		WechatPayAppID:                       updatedSettings.WechatPayAppID,
-		WechatPayMchID:                       updatedSettings.WechatPayMchID,
-		WechatPayAPIv3KeyConfigured:          updatedSettings.WechatPayAPIv3KeyConfigured,
-		WechatPayPublicKeyID:                 updatedSettings.WechatPayPublicKeyID,
-		WechatPayPublicKeyConfigured:         updatedSettings.WechatPayPublicKeyConfigured,
-		WechatPayPrivateKeyConfigured:        updatedSettings.WechatPayPrivateKeyConfigured,
-		WechatPayNotifyURL:                   updatedSettings.WechatPayNotifyURL,
-		PaymentPlans:                         updatedSettings.PaymentPlans,
-		RechargeMinAmount:                    updatedSettings.RechargeMinAmount,
-		RechargePlans:                        updatedSettings.RechargePlans,
-		AlipayEnabled:                        updatedSettings.AlipayEnabled,
-		AlipayAppID:                          updatedSettings.AlipayAppID,
-		AlipayPrivateKeyConfigured:           updatedSettings.AlipayPrivateKeyConfigured,
-		AlipayPublicKeyConfigured:            updatedSettings.AlipayPublicKeyConfigured,
-		AlipayNotifyURL:                      updatedSettings.AlipayNotifyURL,
-		AlipayIsProduction:                   updatedSettings.AlipayIsProduction,
-		EpayEnabled:                          updatedSettings.EpayEnabled,
-		EpayGateway:                          updatedSettings.EpayGateway,
-		EpayPID:                              updatedSettings.EpayPID,
-		EpayPKeyConfigured:                   updatedSettings.EpayPKeyConfigured,
-		EpayNotifyURL:                        updatedSettings.EpayNotifyURL,
+		RegistrationEnabled:                     updatedSettings.RegistrationEnabled,
+		EmailVerifyEnabled:                      updatedSettings.EmailVerifyEnabled,
+		PromoCodeEnabled:                        updatedSettings.PromoCodeEnabled,
+		PasswordResetEnabled:                    updatedSettings.PasswordResetEnabled,
+		TotpEnabled:                             updatedSettings.TotpEnabled,
+		TotpEncryptionKeyConfigured:             h.settingService.IsTotpEncryptionKeyConfigured(),
+		SMTPHost:                                updatedSettings.SMTPHost,
+		SMTPPort:                                updatedSettings.SMTPPort,
+		SMTPUsername:                            updatedSettings.SMTPUsername,
+		SMTPPasswordConfigured:                  updatedSettings.SMTPPasswordConfigured,
+		SMTPFrom:                                updatedSettings.SMTPFrom,
+		SMTPFromName:                            updatedSettings.SMTPFromName,
+		SMTPUseTLS:                              updatedSettings.SMTPUseTLS,
+		TurnstileEnabled:                        updatedSettings.TurnstileEnabled,
+		TurnstileSiteKey:                        updatedSettings.TurnstileSiteKey,
+		TurnstileSecretKeyConfigured:            updatedSettings.TurnstileSecretKeyConfigured,
+		LinuxDoConnectEnabled:                   updatedSettings.LinuxDoConnectEnabled,
+		LinuxDoConnectClientID:                  updatedSettings.LinuxDoConnectClientID,
+		LinuxDoConnectClientSecretConfigured:    updatedSettings.LinuxDoConnectClientSecretConfigured,
+		LinuxDoConnectRedirectURL:               updatedSettings.LinuxDoConnectRedirectURL,
+		SiteName:                                updatedSettings.SiteName,
+		SiteLogo:                                updatedSettings.SiteLogo,
+		SiteSubtitle:                            updatedSettings.SiteSubtitle,
+		APIBaseURL:                              updatedSettings.APIBaseURL,
+		ContactInfo:                             updatedSettings.ContactInfo,
+		DocURL:                                  updatedSettings.DocURL,
+		HomeContent:                             updatedSettings.HomeContent,
+		HideCcsImportButton:                     updatedSettings.HideCcsImportButton,
+		DefaultConcurrency:                      updatedSettings.DefaultConcurrency,
+		DefaultBalance:                          updatedSettings.DefaultBalance,
+		MaxRetryRounds:                          updatedSettings.MaxRetryRounds,
+		InitialBalanceExpiryDays:                updatedSettings.InitialBalanceExpiryDays,
+		EnableModelFallback:                     updatedSettings.EnableModelFallback,
+		FallbackModelAnthropic:                  updatedSettings.FallbackModelAnthropic,
+		FallbackModelOpenAI:                     updatedSettings.FallbackModelOpenAI,
+		FallbackModelGemini:                     updatedSettings.FallbackModelGemini,
+		FallbackModelAntigravity:                updatedSettings.FallbackModelAntigravity,
+		EnableIdentityPatch:                     updatedSettings.EnableIdentityPatch,
+		IdentityPatchPrompt:                     updatedSettings.IdentityPatchPrompt,
+		OpsMonitoringEnabled:                    updatedSettings.OpsMonitoringEnabled,
+		OpsRealtimeMonitoringEnabled:            updatedSettings.OpsRealtimeMonitoringEnabled,
+		OpsQueryModeDefault:                     updatedSettings.OpsQueryModeDefault,
+		OpsMetricsIntervalSeconds:               updatedSettings.OpsMetricsIntervalSeconds,
+		ReferralEnabled:                         updatedSettings.ReferralEnabled,
+		ReferralRewardAmount:                    updatedSettings.ReferralRewardAmount,
+		InviteeRewardAmount:                     updatedSettings.InviteeRewardAmount,
+		AgentEnabled:                            updatedSettings.AgentEnabled,
+		AgentDefaultCommissionRate:              updatedSettings.AgentDefaultCommissionRate,
+		AgentActivationFee:                      updatedSettings.AgentActivationFee,
+		AgentContractVersion:                    updatedSettings.AgentContractVersion,
+		AgentContractTemplate:                   updatedSettings.AgentContractTemplate,
+		AgentWithdrawFreezeDays:                 updatedSettings.AgentWithdrawFreezeDays,
+		AgentWithdrawWeekday:                    updatedSettings.AgentWithdrawWeekday,
+		AgentWithdrawStartHour:                  updatedSettings.AgentWithdrawStartHour,
+		AgentWithdrawEndHour:                    updatedSettings.AgentWithdrawEndHour,
+		PaymentEnabled:                          updatedSettings.PaymentEnabled,
+		WechatPayAppID:                          updatedSettings.WechatPayAppID,
+		WechatPayMchID:                          updatedSettings.WechatPayMchID,
+		WechatPayAPIv3KeyConfigured:             updatedSettings.WechatPayAPIv3KeyConfigured,
+		WechatPayPublicKeyID:                    updatedSettings.WechatPayPublicKeyID,
+		WechatPayPublicKeyConfigured:            updatedSettings.WechatPayPublicKeyConfigured,
+		WechatPayPrivateKeyConfigured:           updatedSettings.WechatPayPrivateKeyConfigured,
+		WechatPayNotifyURL:                      updatedSettings.WechatPayNotifyURL,
+		PaymentPlans:                            updatedSettings.PaymentPlans,
+		RechargeMinAmount:                       updatedSettings.RechargeMinAmount,
+		RechargePlans:                           updatedSettings.RechargePlans,
+		WechatOfficialEnabled:                   updatedSettings.WechatOfficialEnabled,
+		WechatOfficialAppID:                     updatedSettings.WechatOfficialAppID,
+		WechatOfficialAppSecretConfigured:       updatedSettings.WechatOfficialAppSecretConfigured,
+		WechatOfficialBindRedirectURL:           updatedSettings.WechatOfficialBindRedirectURL,
+		WechatOfficialNotifyURL:                 updatedSettings.WechatOfficialNotifyURL,
+		WechatOfficialTemplateLowBalance:        updatedSettings.WechatOfficialTemplateLowBalance,
+		WechatOfficialTemplateLowQuota:          updatedSettings.WechatOfficialTemplateLowQuota,
+		WechatOfficialTemplateSubscriptionLimit: updatedSettings.WechatOfficialTemplateSubscriptionLimit,
+		WechatOfficialLowBalanceThreshold:       updatedSettings.WechatOfficialLowBalanceThreshold,
+		WechatOfficialLowQuotaThreshold:         updatedSettings.WechatOfficialLowQuotaThreshold,
+		WechatOfficialLowSubscriptionThreshold:  updatedSettings.WechatOfficialLowSubscriptionThreshold,
+		WechatOfficialCooldownHours:             updatedSettings.WechatOfficialCooldownHours,
+		AlipayEnabled:                           updatedSettings.AlipayEnabled,
+		AlipayAppID:                             updatedSettings.AlipayAppID,
+		AlipayPrivateKeyConfigured:              updatedSettings.AlipayPrivateKeyConfigured,
+		AlipayPublicKeyConfigured:               updatedSettings.AlipayPublicKeyConfigured,
+		AlipayNotifyURL:                         updatedSettings.AlipayNotifyURL,
+		AlipayIsProduction:                      updatedSettings.AlipayIsProduction,
+		EpayEnabled:                             updatedSettings.EpayEnabled,
+		EpayGateway:                             updatedSettings.EpayGateway,
+		EpayPID:                                 updatedSettings.EpayPID,
+		EpayPKeyConfigured:                      updatedSettings.EpayPKeyConfigured,
+		EpayNotifyURL:                           updatedSettings.EpayNotifyURL,
 	})
 }
 
@@ -701,6 +805,42 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	}
 	if before.InitialBalanceExpiryDays != after.InitialBalanceExpiryDays {
 		changed = append(changed, "initial_balance_expiry_days")
+	}
+	if before.WechatOfficialEnabled != after.WechatOfficialEnabled {
+		changed = append(changed, "wechat_official_enabled")
+	}
+	if before.WechatOfficialAppID != after.WechatOfficialAppID {
+		changed = append(changed, "wechat_official_appid")
+	}
+	if req.WechatOfficialAppSecret != "" {
+		changed = append(changed, "wechat_official_appsecret")
+	}
+	if before.WechatOfficialBindRedirectURL != after.WechatOfficialBindRedirectURL {
+		changed = append(changed, "wechat_official_bind_redirect_url")
+	}
+	if before.WechatOfficialNotifyURL != after.WechatOfficialNotifyURL {
+		changed = append(changed, "wechat_official_notify_url")
+	}
+	if before.WechatOfficialTemplateLowBalance != after.WechatOfficialTemplateLowBalance {
+		changed = append(changed, "wechat_official_template_low_balance")
+	}
+	if before.WechatOfficialTemplateLowQuota != after.WechatOfficialTemplateLowQuota {
+		changed = append(changed, "wechat_official_template_low_quota")
+	}
+	if before.WechatOfficialTemplateSubscriptionLimit != after.WechatOfficialTemplateSubscriptionLimit {
+		changed = append(changed, "wechat_official_template_subscription_limit")
+	}
+	if before.WechatOfficialLowBalanceThreshold != after.WechatOfficialLowBalanceThreshold {
+		changed = append(changed, "wechat_official_low_balance_threshold")
+	}
+	if before.WechatOfficialLowQuotaThreshold != after.WechatOfficialLowQuotaThreshold {
+		changed = append(changed, "wechat_official_low_quota_threshold")
+	}
+	if before.WechatOfficialLowSubscriptionThreshold != after.WechatOfficialLowSubscriptionThreshold {
+		changed = append(changed, "wechat_official_low_subscription_threshold")
+	}
+	if before.WechatOfficialCooldownHours != after.WechatOfficialCooldownHours {
+		changed = append(changed, "wechat_official_cooldown_hours")
 	}
 	return changed
 }

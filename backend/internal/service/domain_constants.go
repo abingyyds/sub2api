@@ -219,6 +219,23 @@ const (
 	SettingKeyWechatPayPrivateKey  = "wechat_pay_private_key"   // 商户API私钥(PEM)
 	SettingKeyWechatPayNotifyURL   = "wechat_pay_notify_url"    // 支付回调通知URL
 
+	// =========================
+	// WeChat Official Account notifications
+	// =========================
+
+	SettingKeyWechatOfficialEnabled                   = "wechat_official_enabled"                     // 是否启用公众号通知
+	SettingKeyWechatOfficialAppID                     = "wechat_official_appid"                       // 公众号 AppID
+	SettingKeyWechatOfficialAppSecret                 = "wechat_official_appsecret"                   // 公众号 AppSecret
+	SettingKeyWechatOfficialBindRedirectURL           = "wechat_official_bind_redirect_url"           // 公众号 OAuth 后端回调地址
+	SettingKeyWechatOfficialNotifyURL                 = "wechat_official_notify_url"                  // 模板消息点击跳转地址
+	SettingKeyWechatOfficialTemplateLowBalance        = "wechat_official_template_low_balance"        // 余额不足模板 ID
+	SettingKeyWechatOfficialTemplateLowQuota          = "wechat_official_template_low_quota"          // 额度包不足模板 ID
+	SettingKeyWechatOfficialTemplateSubscriptionLimit = "wechat_official_template_subscription_limit" // 订阅套餐不足模板 ID
+	SettingKeyWechatOfficialLowBalanceThreshold       = "wechat_official_low_balance_threshold"       // 余额不足阈值（美元余额）
+	SettingKeyWechatOfficialLowQuotaThreshold         = "wechat_official_low_quota_threshold"         // 额度包不足阈值（美元额度）
+	SettingKeyWechatOfficialLowSubscriptionThreshold  = "wechat_official_low_subscription_threshold"  // 订阅套餐不足阈值（美元额度）
+	SettingKeyWechatOfficialCooldownHours             = "wechat_official_cooldown_hours"              // 同一事件通知冷却时间（小时）
+
 	// 初始余额有效期
 	SettingKeyInitialBalanceExpiryDays = "initial_balance_expiry_days" // 新用户初始余额有效天数（0=永不过期）
 

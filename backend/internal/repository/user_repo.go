@@ -396,6 +396,18 @@ func (r *userRepository) DeductBalance(ctx context.Context, id int64, amount flo
 	return nil
 }
 
+func (r *userRepository) GetBalance(ctx context.Context, id int64) (float64, error) {
+	client := clientFromContext(ctx, r.client)
+	user, err := client.User.Query().
+		Where(dbuser.IDEQ(id)).
+		Select(dbuser.FieldBalance).
+		Only(ctx)
+	if err != nil {
+		return 0, translatePersistenceError(err, service.ErrUserNotFound, nil)
+	}
+	return user.Balance, nil
+}
+
 func (r *userRepository) UpdateConcurrency(ctx context.Context, id int64, amount int) error {
 	client := clientFromContext(ctx, r.client)
 	n, err := client.User.Update().Where(dbuser.IDEQ(id)).AddConcurrency(amount).Save(ctx)

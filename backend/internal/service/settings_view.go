@@ -94,6 +94,21 @@ type SystemSettings struct {
 	RechargeMinAmount             float64
 	RechargePlans                 string // JSON
 
+	// WeChat Official Account notifications
+	WechatOfficialEnabled                   bool
+	WechatOfficialAppID                     string
+	WechatOfficialAppSecret                 string
+	WechatOfficialAppSecretConfigured       bool
+	WechatOfficialBindRedirectURL           string
+	WechatOfficialNotifyURL                 string
+	WechatOfficialTemplateLowBalance        string
+	WechatOfficialTemplateLowQuota          string
+	WechatOfficialTemplateSubscriptionLimit string
+	WechatOfficialLowBalanceThreshold       float64
+	WechatOfficialLowQuotaThreshold         float64
+	WechatOfficialLowSubscriptionThreshold  float64
+	WechatOfficialCooldownHours             int
+
 	// Alipay
 	AlipayEnabled              bool
 	AlipayAppID                string
