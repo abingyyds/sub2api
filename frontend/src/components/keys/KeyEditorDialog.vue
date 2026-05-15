@@ -185,7 +185,7 @@
         <button
           form="key-form"
           type="submit"
-          :disabled="submitting || (!isEditMode && !formData.legal_accepted)"
+          :disabled="submitting"
           class="btn btn-primary"
           data-tour="key-form-submit"
         >
@@ -385,6 +385,21 @@ const handleClose = () => {
   }
 }
 
+const getSaveErrorMessage = (error: any): string => {
+  const reason = error?.reason || error?.response?.data?.reason
+  const code = error?.code || error?.response?.data?.code
+  if (reason === 'LEGAL_AGREEMENT_REQUIRED' || code === 'LEGAL_AGREEMENT_REQUIRED') {
+    return t('keys.legal.required')
+  }
+
+  return (
+    error?.message ||
+    error?.response?.data?.message ||
+    error?.response?.data?.detail ||
+    t('keys.failedToSave')
+  )
+}
+
 const handleSubmit = async () => {
   if (formData.value.group_id === null) {
     appStore.showError(t('keys.groupRequired'))
@@ -451,8 +466,7 @@ const handleSubmit = async () => {
 
     emit('close')
   } catch (error: any) {
-    const errorMsg = error.response?.data?.detail || t('keys.failedToSave')
-    appStore.showError(errorMsg)
+    appStore.showError(getSaveErrorMessage(error))
   } finally {
     submitting.value = false
   }
