@@ -97,6 +97,10 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 			AbortWithError(c, 401, "USER_INACTIVE", "User account is not active")
 			return
 		}
+		if !apiKey.User.LegalAgreementAccepted {
+			AbortWithError(c, 403, "LEGAL_AGREEMENT_REQUIRED", "Please read and accept the User Agreement and Privacy Policy in the console before using the API.")
+			return
+		}
 
 		// === 企业计费前置检查 ===
 		// 如果 API Key 绑定了组织，检查组织状态和成员限额

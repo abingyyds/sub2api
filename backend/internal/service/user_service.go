@@ -79,6 +79,7 @@ type ChangePasswordRequest struct {
 // UserService 用户服务
 type UserService struct {
 	userRepo             UserRepository
+	legalRepo            UserLegalAgreementRepository
 	authCacheInvalidator APIKeyAuthCacheInvalidator
 	userCache            UserCache
 }
@@ -98,6 +99,47 @@ func NewUserService(userRepo UserRepository, authCacheInvalidator APIKeyAuthCach
 	}
 }
 
+func (s *UserService) SetLegalAgreementRepository(repo UserLegalAgreementRepository) {
+	s.legalRepo = repo
+}
+
+func (s *UserService) hydrateLegalAgreement(ctx context.Context, user *User) error {
+	if s.legalRepo == nil || user == nil {
+		return nil
+	}
+	agreement, err := s.legalRepo.GetByUserID(ctx, user.ID)
+	if err != nil {
+		if IsLegalAgreementMissing(err) {
+			user.LegalAgreementAccepted = false
+			user.LegalAgreement = nil
+			return nil
+		}
+		return fmt.Errorf("get legal agreement: %w", err)
+	}
+	user.LegalAgreement = agreement
+	user.LegalAgreementAccepted = agreement.IsCurrent()
+	return nil
+}
+
+func (s *UserService) AcceptLegalAgreement(ctx context.Context, userID int64) error {
+	if s.legalRepo == nil {
+		return ErrServiceUnavailable
+	}
+	if _, err := s.userRepo.GetByID(ctx, userID); err != nil {
+		return fmt.Errorf("get user: %w", err)
+	}
+	if err := s.legalRepo.Upsert(ctx, NewCurrentLegalAgreement(userID)); err != nil {
+		return err
+	}
+	if s.authCacheInvalidator != nil {
+		s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, userID)
+	}
+	if s.userCache != nil {
+		_ = s.userCache.Delete(ctx, userID)
+	}
+	return nil
+}
+
 // GetFirstAdmin 获取首个管理员用户（用于 Admin API Key 认证）
 func (s *UserService) GetFirstAdmin(ctx context.Context) (*User, error) {
 	admin, err := s.userRepo.GetFirstAdmin(ctx)
@@ -112,6 +154,9 @@ func (s *UserService) GetProfile(ctx context.Context, userID int64) (*User, erro
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get user: %w", err)
+	}
+	if err := s.hydrateLegalAgreement(ctx, user); err != nil {
+		return nil, err
 	}
 	return user, nil
 }
@@ -206,6 +251,9 @@ func (s *UserService) GetByID(ctx context.Context, id int64) (*User, error) {
 	// Try cache first
 	if s.userCache != nil {
 		if user, err := s.userCache.Get(ctx, id); err == nil {
+			if err := s.hydrateLegalAgreement(ctx, user); err != nil {
+				return nil, err
+			}
 			return user, nil
 		}
 	}
@@ -214,6 +262,9 @@ func (s *UserService) GetByID(ctx context.Context, id int64) (*User, error) {
 	user, err := s.userRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("get user: %w", err)
+	}
+	if err := s.hydrateLegalAgreement(ctx, user); err != nil {
+		return nil, err
 	}
 
 	// Update cache

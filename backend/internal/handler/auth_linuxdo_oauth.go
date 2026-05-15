@@ -25,13 +25,14 @@ import (
 )
 
 const (
-	linuxDoOAuthCookiePath        = "/api/v1/auth/oauth/linuxdo"
-	linuxDoOAuthStateCookieName   = "linuxdo_oauth_state"
-	linuxDoOAuthVerifierCookie    = "linuxdo_oauth_verifier"
-	linuxDoOAuthRedirectCookie    = "linuxdo_oauth_redirect"
-	linuxDoOAuthCookieMaxAgeSec   = 10 * 60 // 10 minutes
-	linuxDoOAuthDefaultRedirectTo = "/dashboard"
-	linuxDoOAuthDefaultFrontendCB = "/auth/linuxdo/callback"
+	linuxDoOAuthCookiePath            = "/api/v1/auth/oauth/linuxdo"
+	linuxDoOAuthStateCookieName       = "linuxdo_oauth_state"
+	linuxDoOAuthVerifierCookie        = "linuxdo_oauth_verifier"
+	linuxDoOAuthRedirectCookie        = "linuxdo_oauth_redirect"
+	linuxDoOAuthLegalAcceptanceCookie = "linuxdo_oauth_legal_acceptance"
+	linuxDoOAuthCookieMaxAgeSec       = 10 * 60 // 10 minutes
+	linuxDoOAuthDefaultRedirectTo     = "/dashboard"
+	linuxDoOAuthDefaultFrontendCB     = "/auth/linuxdo/callback"
 
 	linuxDoOAuthMaxRedirectLen      = 2048
 	linuxDoOAuthMaxFragmentValueLen = 512
@@ -90,6 +91,9 @@ func (h *AuthHandler) LinuxDoOAuthStart(c *gin.Context) {
 	secureCookie := isRequestHTTPS(c)
 	setCookie(c, linuxDoOAuthStateCookieName, encodeCookieValue(state), linuxDoOAuthCookieMaxAgeSec, secureCookie)
 	setCookie(c, linuxDoOAuthRedirectCookie, encodeCookieValue(redirectTo), linuxDoOAuthCookieMaxAgeSec, secureCookie)
+	if c.Query("terms_accepted") == "true" && c.Query("privacy_accepted") == "true" && c.Query("legal_commitment_accepted") == "true" {
+		setCookie(c, linuxDoOAuthLegalAcceptanceCookie, encodeCookieValue("true"), linuxDoOAuthCookieMaxAgeSec, secureCookie)
+	}
 
 	codeChallenge := ""
 	if cfg.UsePKCE {
@@ -148,6 +152,7 @@ func (h *AuthHandler) LinuxDoOAuthCallback(c *gin.Context) {
 		clearCookie(c, linuxDoOAuthStateCookieName, secureCookie)
 		clearCookie(c, linuxDoOAuthVerifierCookie, secureCookie)
 		clearCookie(c, linuxDoOAuthRedirectCookie, secureCookie)
+		clearCookie(c, linuxDoOAuthLegalAcceptanceCookie, secureCookie)
 	}()
 
 	expectedState, err := readCookieDecoded(c, linuxDoOAuthStateCookieName)
@@ -211,6 +216,14 @@ func (h *AuthHandler) LinuxDoOAuthCallback(c *gin.Context) {
 		email = linuxDoSyntheticEmail(subject)
 	}
 
+	if !h.oauthUserExists(c.Request.Context(), email) {
+		legalAccepted, _ := readCookieDecoded(c, linuxDoOAuthLegalAcceptanceCookie)
+		if legalAccepted != "true" {
+			redirectOAuthError(c, frontendCallback, "legal_acceptance_required", "please accept the User Agreement and Privacy Policy before registering", "")
+			return
+		}
+	}
+
 	jwtToken, _, err := h.authService.LoginOrRegisterOAuth(c.Request.Context(), email, username)
 	if err != nil {
 		// 避免把内部细节泄露给客户端；给前端保留结构化原因与提示信息即可。
@@ -236,6 +249,18 @@ func (h *AuthHandler) getLinuxDoOAuthConfig(ctx context.Context) (config.LinuxDo
 		return config.LinuxDoConnectConfig{}, infraerrors.NotFound("OAUTH_DISABLED", "oauth login is disabled")
 	}
 	return h.cfg.LinuxDo, nil
+}
+
+func (h *AuthHandler) oauthUserExists(ctx context.Context, email string) bool {
+	if h == nil || h.authService == nil {
+		return false
+	}
+	exists, err := h.authService.UserExistsByEmail(ctx, email)
+	if err != nil {
+		log.Printf("[LinuxDo OAuth] user existence check failed for %q: %v", email, err)
+		return false
+	}
+	return exists
 }
 
 func linuxDoExchangeCode(

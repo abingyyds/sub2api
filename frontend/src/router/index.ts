@@ -67,7 +67,16 @@ const routes: RouteRecordRaw[] = wrapRouteLazyComponents([
     component: () => import('@/views/legal/TermsView.vue'),
     meta: {
       requiresAuth: false,
-      title: '用户协议'
+      title: 'User Agreement'
+    }
+  },
+  {
+    path: '/legal/privacy',
+    name: 'Privacy',
+    component: () => import('@/views/legal/PrivacyView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Privacy Policy'
     }
   },
   {

@@ -37,6 +37,7 @@ export interface User {
   subscriptions?: UserSubscription[] // User's active subscriptions
   is_agent?: boolean // Whether user is an agent
   agent_status?: string // Agent status: 'pending', 'approved', 'rejected'
+  legal_agreement_accepted?: boolean // Whether the latest legal agreement has been accepted
   created_at: string
   updated_at: string
 }
@@ -67,6 +68,9 @@ export interface RegisterRequest {
   verify_code?: string
   turnstile_token?: string
   invite_code?: string
+  terms_accepted: boolean
+  privacy_accepted: boolean
+  legal_commitment_accepted?: boolean
 }
 
 export interface SendVerifyCodeRequest {
@@ -352,6 +356,7 @@ export interface CreateApiKeyRequest {
   ip_whitelist?: string[]
   ip_blacklist?: string[]
   usage_limit?: number | null
+  legal_accepted?: boolean
 }
 
 export interface UpdateApiKeyRequest {

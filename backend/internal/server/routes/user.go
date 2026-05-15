@@ -44,6 +44,7 @@ func RegisterUserRoutes(
 			user.PUT("/password", h.User.ChangePassword)
 			user.PUT("", h.User.UpdateProfile)
 			user.PUT("/discovery-source", h.User.UpdateDiscoverySource)
+			user.POST("/legal-agreement", h.User.AcceptLegalAgreement)
 
 			if h.WechatNotify != nil {
 				wechat := user.Group("/wechat-official")

@@ -45,10 +45,20 @@ export async function changePassword(
   return data
 }
 
+export async function acceptLegalAgreement(): Promise<User> {
+  const { data } = await apiClient.post<User>('/user/legal-agreement', {
+    terms_accepted: true,
+    privacy_accepted: true,
+    api_terms_accepted: true
+  })
+  return data
+}
+
 export const userAPI = {
   getProfile,
   updateProfile,
-  changePassword
+  changePassword,
+  acceptLegalAgreement
 }
 
 export default userAPI

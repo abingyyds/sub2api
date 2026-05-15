@@ -163,6 +163,18 @@
           </div>
         </div>
       </div>
+
+      <label
+        v-if="!isEditMode"
+        class="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 dark:border-dark-700 dark:bg-dark-900/60 dark:text-dark-200"
+      >
+        <input
+          v-model="formData.legal_accepted"
+          type="checkbox"
+          class="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-dark-600"
+        />
+        <span>{{ t('keys.legal.commitmentLabel') }}</span>
+      </label>
     </form>
 
     <template #footer>
@@ -173,7 +185,7 @@
         <button
           form="key-form"
           type="submit"
-          :disabled="submitting"
+          :disabled="submitting || (!isEditMode && !formData.legal_accepted)"
           class="btn btn-primary"
           data-tour="key-form-submit"
         >
@@ -252,6 +264,7 @@ interface KeyFormData {
   ip_whitelist: string
   ip_blacklist: string
   usage_limit: number | null
+  legal_accepted: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -276,7 +289,8 @@ const createEmptyFormData = (groupId: number | null = null): KeyFormData => ({
   enable_ip_restriction: false,
   ip_whitelist: '',
   ip_blacklist: '',
-  usage_limit: null
+  usage_limit: null,
+  legal_accepted: false
 })
 
 const createFormDataFromKey = (key: ApiKey): KeyFormData => {
@@ -291,7 +305,8 @@ const createFormDataFromKey = (key: ApiKey): KeyFormData => {
     enable_ip_restriction: hasIPRestriction,
     ip_whitelist: key.ip_whitelist.join('\n'),
     ip_blacklist: key.ip_blacklist.join('\n'),
-    usage_limit: key.usage_limit
+    usage_limit: key.usage_limit,
+    legal_accepted: true
   }
 }
 
@@ -388,6 +403,11 @@ const handleSubmit = async () => {
     }
   }
 
+  if (!isEditMode.value && !formData.value.legal_accepted) {
+    appStore.showError(t('keys.legal.required'))
+    return
+  }
+
   const ipWhitelist = formData.value.enable_ip_restriction
     ? parseIPList(formData.value.ip_whitelist)
     : []
@@ -417,7 +437,8 @@ const handleSubmit = async () => {
         customKey,
         ipWhitelist,
         ipBlacklist,
-        formData.value.usage_limit
+        formData.value.usage_limit,
+        formData.value.legal_accepted
       )
       appStore.showSuccess(t('keys.keyCreatedSuccess'))
 

@@ -32,6 +32,13 @@ type UpdateProfileRequest struct {
 	Username *string `json:"username"`
 }
 
+// AcceptLegalAgreementRequest represents the legal agreement acceptance payload.
+type AcceptLegalAgreementRequest struct {
+	TermsAccepted    bool `json:"terms_accepted"`
+	PrivacyAccepted  bool `json:"privacy_accepted"`
+	APITermsAccepted bool `json:"api_terms_accepted"`
+}
+
 // GetProfile handles getting user profile
 // GET /api/v1/users/me
 func (h *UserHandler) GetProfile(c *gin.Context) {
@@ -103,6 +110,39 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 	}
 
 	response.Success(c, dto.UserFromService(updatedUser))
+}
+
+// AcceptLegalAgreement records that the current user accepted the latest legal documents.
+// POST /api/v1/user/legal-agreement
+func (h *UserHandler) AcceptLegalAgreement(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "User not authenticated")
+		return
+	}
+
+	var req AcceptLegalAgreementRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+	if !req.TermsAccepted || !req.PrivacyAccepted || !req.APITermsAccepted {
+		response.BadRequest(c, "You must read and accept the User Agreement, Privacy Policy, and API usage terms before using the API.")
+		return
+	}
+
+	if err := h.userService.AcceptLegalAgreement(c.Request.Context(), subject.UserID); err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	userData, err := h.userService.GetProfile(c.Request.Context(), subject.UserID)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, dto.UserFromService(userData))
 }
 
 // UpdateDiscoverySourceRequest 更新用户来源请求

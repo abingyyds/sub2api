@@ -1,5 +1,56 @@
 <template>
   <div class="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
+        <section
+          v-if="requiresLegalAgreement"
+          class="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/50 dark:bg-amber-900/20"
+        >
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h2 class="text-base font-semibold text-amber-900 dark:text-amber-100">
+                {{ t('keys.legal.title') }}
+              </h2>
+              <p class="mt-1 max-w-3xl text-sm text-amber-800 dark:text-amber-200">
+                {{ t('keys.legal.description') }}
+              </p>
+              <div class="mt-4 flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  @click="openLegal('terms')"
+                >
+                  {{ termsAccepted ? t('keys.legal.accepted') : t('keys.legal.reviewTerms') }}
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  @click="openLegal('privacy')"
+                >
+                  {{ privacyAccepted ? t('keys.legal.accepted') : t('keys.legal.reviewPrivacy') }}
+                </button>
+              </div>
+            </div>
+
+            <div class="w-full space-y-3 lg:max-w-md">
+              <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-amber-200 bg-white/70 px-3 py-2 text-sm text-amber-900 dark:border-amber-700/60 dark:bg-dark-900/50 dark:text-amber-100">
+                <input
+                  v-model="apiLegalCommitmentAccepted"
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 rounded border-amber-300 text-primary-600 focus:ring-primary-500"
+                  :disabled="!termsAccepted || !privacyAccepted"
+                />
+                <span>{{ t('keys.legal.commitmentLabel') }}</span>
+              </label>
+              <button
+                type="button"
+                class="btn btn-primary w-full"
+                :disabled="acceptingLegal || !canAcceptLegalAgreement"
+                @click="acceptLegalAgreement"
+              >
+                {{ acceptingLegal ? t('common.processing') : t('keys.legal.acceptButton') }}
+              </button>
+            </div>
+          </div>
+        </section>
 
         <!-- Section 1: 新建 API Key - Group Cards -->
         <section>
@@ -505,20 +556,34 @@
       </div>
     </Teleport>
   </div>
+
+  <LegalAgreementModal
+    v-if="activeLegalDocument"
+    :show="showLegalModal"
+    :document="activeLegalDocument"
+    :accept-label="t('keys.legal.acceptLabel')"
+    :reject-label="t('common.cancel')"
+    :read-prompt="t('auth.legal.scrollToAccept')"
+    :accepted-label="t('auth.legal.finishedReading')"
+    @accept="handleLegalAccept"
+    @reject="showLegalModal = false"
+  />
 </template>
 
 <script setup lang="ts">
 	import { ref, computed, onMounted, onUnmounted, nextTick, type ComponentPublicInstance } from 'vue'
 	import { useI18n } from 'vue-i18n'
 	import { useAppStore } from '@/stores/app'
+	import { useAuthStore } from '@/stores/auth'
 	import { useClipboard } from '@/composables/useClipboard'
 const { t } = useI18n()
-import { keysAPI, usageAPI, userGroupsAPI } from '@/api'
+import { keysAPI, usageAPI, userGroupsAPI, userAPI } from '@/api'
 import { defineChunkResilientAsyncComponent } from '@/router/asyncComponent'
 	import Icon from '@/components/icons/Icon.vue'
 	import GroupBadge from '@/components/common/GroupBadge.vue'
 	import GroupOptionItem from '@/components/common/GroupOptionItem.vue'
 	import PlatformIcon from '@/components/common/PlatformIcon.vue'
+	import LegalAgreementModal from '@/components/legal/LegalAgreementModal.vue'
 
 	// 弹窗组件异步加载，用户交互时才加载
 	const DataTable = defineChunkResilientAsyncComponent(() => import('@/components/common/DataTable.vue'))
@@ -538,6 +603,7 @@ import {
   resolveCcSwitchImportTarget,
   type SupportedCcSwitchApp,
 } from '@/utils/clientImport'
+import { getLegalDocument, type LegalDocument, type LegalDocumentKind } from '@/legal/documents'
 
 interface GroupOption extends SelectOption {
   value: number | null
@@ -634,6 +700,7 @@ async function getCachedAvailableGroups(force = false): Promise<Group[]> {
 }
 
 const appStore = useAppStore()
+const authStore = useAuthStore()
 const { copyToClipboard: clipboardCopy } = useClipboard()
 
 const columns = computed<Column[]>(() => [
@@ -671,7 +738,20 @@ const pendingCcsRow = ref<ApiKey | null>(null)
 const selectedKey = ref<ApiKey | null>(null)
 const copiedKeyId = ref<number | null>(null)
 const groupSelectorKeyId = ref<number | null>(null)
+const termsAccepted = ref(false)
+const privacyAccepted = ref(false)
+const apiLegalCommitmentAccepted = ref(false)
+const acceptingLegal = ref(false)
+const showLegalModal = ref(false)
+const activeLegalKind = ref<LegalDocumentKind>('terms')
 const publicSettings = computed(() => appStore.cachedPublicSettings)
+const requiresLegalAgreement = computed(
+  () => Boolean(authStore.user) && authStore.user?.legal_agreement_accepted !== true
+)
+const activeLegalDocument = computed<LegalDocument>(() => getLegalDocument(activeLegalKind.value))
+const canAcceptLegalAgreement = computed(
+  () => termsAccepted.value && privacyAccepted.value && apiLegalCommitmentAccepted.value
+)
 const dropdownRef = ref<HTMLElement | null>(null)
 const dropdownPosition = ref<{ top: number; left: number } | null>(null)
 const groupButtonRefs = ref<Map<number, HTMLElement>>(new Map())
@@ -817,6 +897,11 @@ const isGroupUnavailable = (group: Group) => {
 }
 
 const openCreateModal = (groupId: number | null = null) => {
+  if (requiresLegalAgreement.value) {
+    appStore.showError(t('keys.legal.required'))
+    return
+  }
+
   createModalGroupId.value = groupId
   selectedKey.value = null
   showEditModal.value = false
@@ -825,6 +910,38 @@ const openCreateModal = (groupId: number | null = null) => {
 
 const quickCreateKey = (group: Group) => {
   openCreateModal(group.id)
+}
+
+function openLegal(kind: LegalDocumentKind): void {
+  activeLegalKind.value = kind
+  showLegalModal.value = true
+}
+
+function handleLegalAccept(): void {
+  if (activeLegalKind.value === 'terms') {
+    termsAccepted.value = true
+  } else {
+    privacyAccepted.value = true
+  }
+  showLegalModal.value = false
+}
+
+async function acceptLegalAgreement(): Promise<void> {
+  if (!canAcceptLegalAgreement.value) {
+    appStore.showError(t('keys.legal.required'))
+    return
+  }
+
+  acceptingLegal.value = true
+  try {
+    await userAPI.acceptLegalAgreement()
+    await authStore.refreshUser()
+    appStore.showSuccess(t('keys.legal.success'))
+  } catch (error: any) {
+    appStore.showError(error?.message || t('keys.legal.required'))
+  } finally {
+    acceptingLegal.value = false
+  }
 }
 
 // FAQ items

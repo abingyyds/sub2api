@@ -31,11 +31,12 @@ func TestSimpleModeBypassesQuotaCheck(t *testing.T) {
 		DailyLimitUSD:    &limit,
 	}
 	user := &service.User{
-		ID:          7,
-		Role:        service.RoleUser,
-		Status:      service.StatusActive,
-		Balance:     10,
-		Concurrency: 3,
+		ID:                     7,
+		Role:                   service.RoleUser,
+		Status:                 service.StatusActive,
+		Balance:                10,
+		Concurrency:            3,
+		LegalAgreementAccepted: true,
 	}
 	apiKey := &service.APIKey{
 		ID:     100,
@@ -123,11 +124,12 @@ func TestAPIKeyAuthSetsGroupContext(t *testing.T) {
 		Hydrated: true,
 	}
 	user := &service.User{
-		ID:          7,
-		Role:        service.RoleUser,
-		Status:      service.StatusActive,
-		Balance:     10,
-		Concurrency: 3,
+		ID:                     7,
+		Role:                   service.RoleUser,
+		Status:                 service.StatusActive,
+		Balance:                10,
+		Concurrency:            3,
+		LegalAgreementAccepted: true,
 	}
 	apiKey := &service.APIKey{
 		ID:     100,
@@ -181,11 +183,12 @@ func TestAPIKeyAuthOverwritesInvalidContextGroup(t *testing.T) {
 		Hydrated: true,
 	}
 	user := &service.User{
-		ID:          7,
-		Role:        service.RoleUser,
-		Status:      service.StatusActive,
-		Balance:     10,
-		Concurrency: 3,
+		ID:                     7,
+		Role:                   service.RoleUser,
+		Status:                 service.StatusActive,
+		Balance:                10,
+		Concurrency:            3,
+		LegalAgreementAccepted: true,
 	}
 	apiKey := &service.APIKey{
 		ID:     100,

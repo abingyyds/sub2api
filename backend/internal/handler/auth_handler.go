@@ -47,11 +47,14 @@ func NewAuthHandler(
 
 // RegisterRequest represents the registration request payload
 type RegisterRequest struct {
-	Email          string `json:"email" binding:"required,email"`
-	Password       string `json:"password" binding:"required,min=6"`
-	VerifyCode     string `json:"verify_code"`
-	TurnstileToken string `json:"turnstile_token"`
-	InviteCode     string `json:"invite_code"` // 邀请码
+	Email           string `json:"email" binding:"required,email"`
+	Password        string `json:"password" binding:"required,min=6"`
+	VerifyCode      string `json:"verify_code"`
+	TurnstileToken  string `json:"turnstile_token"`
+	InviteCode      string `json:"invite_code"` // 邀请码
+	TermsAccepted   bool   `json:"terms_accepted"`
+	PrivacyAccepted bool   `json:"privacy_accepted"`
+	LegalCommitment bool   `json:"legal_commitment_accepted"`
 }
 
 // SendVerifyCodeRequest 发送验证码请求
@@ -86,6 +89,10 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+	if !req.TermsAccepted || !req.PrivacyAccepted || !req.LegalCommitment {
+		response.BadRequest(c, "You must review and accept the User Agreement, Privacy Policy, and prohibited-use commitment before registering.")
 		return
 	}
 

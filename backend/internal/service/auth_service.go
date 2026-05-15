@@ -46,12 +46,13 @@ type JWTClaims struct {
 
 // AuthService 认证服务
 type AuthService struct {
-	userRepo          UserRepository
-	cfg               *config.Config
-	settingService    *SettingService
-	emailService      *EmailService
-	turnstileService  *TurnstileService
-	emailQueueService *EmailQueueService
+	userRepo               UserRepository
+	legalRepo              UserLegalAgreementRepository
+	cfg                    *config.Config
+	settingService         *SettingService
+	emailService           *EmailService
+	turnstileService       *TurnstileService
+	emailQueueService      *EmailQueueService
 	referralService        *ReferralService
 	adminInviteCodeService *AdminInviteCodeService
 }
@@ -68,20 +69,49 @@ func NewAuthService(
 	adminInviteCodeService *AdminInviteCodeService,
 ) *AuthService {
 	return &AuthService{
-		userRepo:          userRepo,
-		cfg:               cfg,
-		settingService:    settingService,
-		emailService:      emailService,
-		turnstileService:  turnstileService,
-		emailQueueService: emailQueueService,
-		referralService:   referralService,
+		userRepo:               userRepo,
+		cfg:                    cfg,
+		settingService:         settingService,
+		emailService:           emailService,
+		turnstileService:       turnstileService,
+		emailQueueService:      emailQueueService,
+		referralService:        referralService,
 		adminInviteCodeService: adminInviteCodeService,
 	}
+}
+
+func (s *AuthService) SetLegalAgreementRepository(repo UserLegalAgreementRepository) {
+	s.legalRepo = repo
+}
+
+func (s *AuthService) recordCurrentLegalAgreement(ctx context.Context, user *User) error {
+	if user == nil {
+		return ErrServiceUnavailable
+	}
+	if s.legalRepo == nil {
+		return ErrServiceUnavailable
+	}
+	agreement := NewCurrentLegalAgreement(user.ID)
+	if err := s.legalRepo.Upsert(ctx, agreement); err != nil {
+		return err
+	}
+	user.LegalAgreement = agreement
+	user.LegalAgreementAccepted = true
+	return nil
 }
 
 // Register 用户注册，返回token和用户
 func (s *AuthService) Register(ctx context.Context, email, password string) (string, *User, error) {
 	return s.RegisterWithVerification(ctx, email, password, "", "", "")
+}
+
+// UserExistsByEmail reports whether an account already exists for the given email.
+func (s *AuthService) UserExistsByEmail(ctx context.Context, email string) (bool, error) {
+	email = strings.TrimSpace(email)
+	if email == "" || len(email) > 255 {
+		return false, infraerrors.BadRequest("INVALID_EMAIL", "invalid email")
+	}
+	return s.userRepo.ExistsByEmail(ctx, email)
 }
 
 // RegisterWithVerification 用户注册（支持邮件验证和邀请码），返回token和用户
@@ -163,6 +193,10 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 			return "", nil, ErrEmailExists
 		}
 		log.Printf("[Auth] Database error creating user: %v", err)
+		return "", nil, ErrServiceUnavailable
+	}
+	if err := s.recordCurrentLegalAgreement(ctx, user); err != nil {
+		log.Printf("[Auth] Failed to record legal agreement for user %d: %v", user.ID, err)
 		return "", nil, ErrServiceUnavailable
 	}
 
@@ -480,6 +514,7 @@ func (s *AuthService) LoginOrRegisterOAuth(ctx context.Context, email, username 
 				}
 			}
 
+			createdOAuthUser := false
 			if err := s.userRepo.Create(ctx, newUser); err != nil {
 				if errors.Is(err, ErrEmailExists) {
 					// 并发场景：GetByEmail 与 Create 之间用户被创建。
@@ -494,6 +529,13 @@ func (s *AuthService) LoginOrRegisterOAuth(ctx context.Context, email, username 
 				}
 			} else {
 				user = newUser
+				createdOAuthUser = true
+			}
+			if createdOAuthUser {
+				if err := s.recordCurrentLegalAgreement(ctx, user); err != nil {
+					log.Printf("[Auth] Failed to record legal agreement for oauth user %d: %v", user.ID, err)
+					return "", nil, ErrServiceUnavailable
+				}
 			}
 		} else {
 			log.Printf("[Auth] Database error during oauth login: %v", err)

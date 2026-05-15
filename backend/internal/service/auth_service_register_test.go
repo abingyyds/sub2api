@@ -91,6 +91,34 @@ func (s *emailCacheStub) SetPasswordResetEmailCooldown(ctx context.Context, emai
 	return nil
 }
 
+type legalAgreementRepoStub struct {
+	agreement *UserLegalAgreement
+	upserts   []*UserLegalAgreement
+	err       error
+	getErr    error
+}
+
+func (s *legalAgreementRepoStub) Upsert(ctx context.Context, agreement *UserLegalAgreement) error {
+	if s.err != nil {
+		return s.err
+	}
+	clone := *agreement
+	s.agreement = &clone
+	s.upserts = append(s.upserts, &clone)
+	return nil
+}
+
+func (s *legalAgreementRepoStub) GetByUserID(ctx context.Context, userID int64) (*UserLegalAgreement, error) {
+	if s.getErr != nil {
+		return nil, s.getErr
+	}
+	if s.agreement == nil || s.agreement.UserID != userID {
+		return nil, ErrLegalAgreementNotFound
+	}
+	clone := *s.agreement
+	return &clone, nil
+}
+
 func newAuthService(repo *userRepoStub, settings map[string]string, emailCache EmailCache) *AuthService {
 	cfg := &config.Config{
 		JWT: config.JWTConfig{
@@ -113,7 +141,7 @@ func newAuthService(repo *userRepoStub, settings map[string]string, emailCache E
 		emailService = NewEmailService(&settingRepoStub{values: settings}, emailCache)
 	}
 
-	return NewAuthService(
+	svc := NewAuthService(
 		repo,
 		cfg,
 		settingService,
@@ -121,7 +149,10 @@ func newAuthService(repo *userRepoStub, settings map[string]string, emailCache E
 		nil,
 		nil,
 		nil, // promoService
+		nil,
 	)
+	svc.SetLegalAgreementRepository(&legalAgreementRepoStub{})
+	return svc
 }
 
 func TestAuthService_Register_Disabled(t *testing.T) {
@@ -152,7 +183,7 @@ func TestAuthService_Register_EmailVerifyEnabledButServiceNotConfigured(t *testi
 	}, nil)
 
 	// 应返回服务不可用错误，而不是允许绕过验证
-	_, _, err := service.RegisterWithVerification(context.Background(), "user@test.com", "password", "any-code", "")
+	_, _, err := service.RegisterWithVerification(context.Background(), "user@test.com", "password", "any-code", "", "")
 	require.ErrorIs(t, err, ErrServiceUnavailable)
 }
 
@@ -164,7 +195,7 @@ func TestAuthService_Register_EmailVerifyRequired(t *testing.T) {
 		SettingKeyEmailVerifyEnabled:  "true",
 	}, cache)
 
-	_, _, err := service.RegisterWithVerification(context.Background(), "user@test.com", "password", "", "")
+	_, _, err := service.RegisterWithVerification(context.Background(), "user@test.com", "password", "", "", "")
 	require.ErrorIs(t, err, ErrEmailVerifyRequired)
 }
 
@@ -178,7 +209,7 @@ func TestAuthService_Register_EmailVerifyInvalid(t *testing.T) {
 		SettingKeyEmailVerifyEnabled:  "true",
 	}, cache)
 
-	_, _, err := service.RegisterWithVerification(context.Background(), "user@test.com", "password", "wrong", "")
+	_, _, err := service.RegisterWithVerification(context.Background(), "user@test.com", "password", "wrong", "", "")
 	require.ErrorIs(t, err, ErrInvalidVerifyCode)
 	require.ErrorContains(t, err, "verify code")
 }
@@ -252,6 +283,7 @@ func TestAuthService_Register_Success(t *testing.T) {
 	require.Equal(t, 2, user.Concurrency)
 	require.Len(t, repo.created, 1)
 	require.True(t, user.CheckPassword("password"))
+	require.True(t, user.LegalAgreementAccepted)
 }
 
 func TestAuthService_ValidateToken_ExpiredReturnsClaimsWithError(t *testing.T) {

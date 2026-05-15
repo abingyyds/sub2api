@@ -155,11 +155,12 @@ func TestApiKeyAuthWithSubscriptionGoogleSetsGroupContext(t *testing.T) {
 		Hydrated: true,
 	}
 	user := &service.User{
-		ID:          7,
-		Role:        service.RoleUser,
-		Status:      service.StatusActive,
-		Balance:     10,
-		Concurrency: 3,
+		ID:                     7,
+		Role:                   service.RoleUser,
+		Status:                 service.StatusActive,
+		Balance:                10,
+		Concurrency:            3,
+		LegalAgreementAccepted: true,
 	}
 	apiKey := &service.APIKey{
 		ID:     100,
@@ -220,8 +221,9 @@ func TestApiKeyAuthWithSubscriptionGoogle_QueryKeyAllowedOnV1Beta(t *testing.T) 
 				Key:    key,
 				Status: service.StatusActive,
 				User: &service.User{
-					ID:     123,
-					Status: service.StatusActive,
+					ID:                     123,
+					Status:                 service.StatusActive,
+					LegalAgreementAccepted: true,
 				},
 			}, nil
 		},
@@ -298,8 +300,9 @@ func TestApiKeyAuthWithSubscriptionGoogle_DisabledKey(t *testing.T) {
 				Key:    key,
 				Status: service.StatusDisabled,
 				User: &service.User{
-					ID:     123,
-					Status: service.StatusActive,
+					ID:                     123,
+					Status:                 service.StatusActive,
+					LegalAgreementAccepted: true,
 				},
 			}, nil
 		},
@@ -331,9 +334,10 @@ func TestApiKeyAuthWithSubscriptionGoogle_InsufficientBalance(t *testing.T) {
 				Key:    key,
 				Status: service.StatusActive,
 				User: &service.User{
-					ID:      123,
-					Status:  service.StatusActive,
-					Balance: 0,
+					ID:                     123,
+					Status:                 service.StatusActive,
+					Balance:                0,
+					LegalAgreementAccepted: true,
 				},
 			}, nil
 		},

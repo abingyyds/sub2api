@@ -176,6 +176,9 @@ let countdownTimer: ReturnType<typeof setInterval> | null = null
 const email = ref<string>('')
 const password = ref<string>('')
 const inviteCode = ref<string>('')
+const termsAccepted = ref<boolean>(false)
+const privacyAccepted = ref<boolean>(false)
+const legalCommitmentAccepted = ref<boolean>(false)
 const hasRegisterData = ref<boolean>(false)
 
 const siteName = ref<string>('cCoder.me')
@@ -192,7 +195,16 @@ onMounted(async () => {
       email.value = registerData.email || ''
       password.value = registerData.password || ''
       inviteCode.value = registerData.invite_code || ''
-      hasRegisterData.value = !!(email.value && password.value)
+      termsAccepted.value = registerData.terms_accepted === true
+      privacyAccepted.value = registerData.privacy_accepted === true
+      legalCommitmentAccepted.value = registerData.legal_commitment_accepted === true
+      hasRegisterData.value = !!(
+        email.value &&
+        password.value &&
+        termsAccepted.value &&
+        privacyAccepted.value &&
+        legalCommitmentAccepted.value
+      )
     } catch {
       hasRegisterData.value = false
     }
@@ -300,7 +312,10 @@ async function handleVerify(): Promise<void> {
       email: email.value,
       password: password.value,
       verify_code: verifyCode.value.trim(),
-      invite_code: inviteCode.value || undefined
+      invite_code: inviteCode.value || undefined,
+      terms_accepted: termsAccepted.value,
+      privacy_accepted: privacyAccepted.value,
+      legal_commitment_accepted: legalCommitmentAccepted.value
     })
 
     sessionStorage.removeItem('register_data')

@@ -216,12 +216,54 @@ func ProvideAPIKeyAuthCacheInvalidator(apiKeyService *APIKeyService) APIKeyAuthC
 	return apiKeyService
 }
 
+func ProvideAuthService(
+	userRepo UserRepository,
+	cfg *config.Config,
+	settingService *SettingService,
+	emailService *EmailService,
+	turnstileService *TurnstileService,
+	emailQueueService *EmailQueueService,
+	referralService *ReferralService,
+	adminInviteCodeService *AdminInviteCodeService,
+	legalRepo UserLegalAgreementRepository,
+) *AuthService {
+	svc := NewAuthService(userRepo, cfg, settingService, emailService, turnstileService, emailQueueService, referralService, adminInviteCodeService)
+	svc.SetLegalAgreementRepository(legalRepo)
+	return svc
+}
+
+func ProvideUserService(
+	userRepo UserRepository,
+	authCacheInvalidator APIKeyAuthCacheInvalidator,
+	userCache UserCache,
+	legalRepo UserLegalAgreementRepository,
+) *UserService {
+	svc := NewUserService(userRepo, authCacheInvalidator, userCache)
+	svc.SetLegalAgreementRepository(legalRepo)
+	return svc
+}
+
+func ProvideAPIKeyService(
+	apiKeyRepo APIKeyRepository,
+	userRepo UserRepository,
+	groupRepo GroupRepository,
+	userSubRepo UserSubscriptionRepository,
+	quotaPackageRepo QuotaPackageRepository,
+	cache APIKeyCache,
+	cfg *config.Config,
+	legalRepo UserLegalAgreementRepository,
+) *APIKeyService {
+	svc := NewAPIKeyService(apiKeyRepo, userRepo, groupRepo, userSubRepo, quotaPackageRepo, cache, cfg)
+	svc.SetLegalAgreementRepository(legalRepo)
+	return svc
+}
+
 // ProviderSet is the Wire provider set for all services
 var ProviderSet = wire.NewSet(
 	// Core services
-	NewAuthService,
-	NewUserService,
-	NewAPIKeyService,
+	ProvideAuthService,
+	ProvideUserService,
+	ProvideAPIKeyService,
 	ProvideAPIKeyAuthCacheInvalidator,
 	NewGroupService,
 	NewAccountService,

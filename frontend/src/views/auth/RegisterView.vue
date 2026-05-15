@@ -11,8 +11,13 @@
         </p>
       </div>
 
-      <!-- LinuxDo Connect OAuth 登录 -->
-      <LinuxDoOAuthSection v-if="linuxdoOAuthEnabled" :disabled="isLoading" />
+      <!-- LinuxDo Connect OAuth login -->
+      <LinuxDoOAuthSection
+        v-if="linuxdoOAuthEnabled"
+        :disabled="isLoading"
+        :legal-accepted="legalAccepted"
+        include-legal-acceptance
+      />
 
       <!-- Registration Disabled Message -->
       <div
@@ -95,23 +100,65 @@
           </p>
         </div>
 
-        <!-- Agreement Checkbox -->
-        <div class="flex items-start gap-2">
-          <input
-            id="agree_terms"
-            v-model="agreedToTerms"
-            type="checkbox"
-            :disabled="isLoading"
-            class="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-dark-600 dark:bg-dark-700"
-          />
-          <label for="agree_terms" class="text-sm text-gray-500 dark:text-dark-400">
-            {{ t('auth.agreeToTermsPrefix') }}
-            <router-link
-              to="/legal/terms"
-              target="_blank"
-              class="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
-            >{{ t('auth.termsOfService') }}</router-link>
+        <!-- Agreement review -->
+        <div class="space-y-3">
+          <p class="text-sm font-medium text-gray-700 dark:text-dark-200">
+            {{ t('auth.legal.reviewRequired') }}
+          </p>
+
+          <button
+            type="button"
+            class="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 text-left transition-colors hover:border-primary-300 hover:bg-primary-50/40 dark:border-dark-700 dark:bg-dark-800 dark:hover:border-primary-700 dark:hover:bg-primary-900/20"
+            @click="openLegal('terms')"
+          >
+            <span class="flex items-center gap-3">
+              <Icon name="document" size="md" class="text-primary-500" />
+              <span>
+                <span class="block text-sm font-medium text-gray-900 dark:text-white">
+                  {{ t('auth.legal.userAgreement') }}
+                </span>
+                <span class="block text-xs text-gray-500 dark:text-dark-400">
+                  {{ termsAccepted ? t('auth.legal.accepted') : t('auth.legal.readBeforeAccept') }}
+                </span>
+              </span>
+            </span>
+            <Icon :name="termsAccepted ? 'checkCircle' : 'chevronRight'" size="md" :class="termsAccepted ? 'text-emerald-500' : 'text-gray-400'" />
+          </button>
+
+          <button
+            type="button"
+            class="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 text-left transition-colors hover:border-primary-300 hover:bg-primary-50/40 dark:border-dark-700 dark:bg-dark-800 dark:hover:border-primary-700 dark:hover:bg-primary-900/20"
+            @click="openLegal('privacy')"
+          >
+            <span class="flex items-center gap-3">
+              <Icon name="shield" size="md" class="text-primary-500" />
+              <span>
+                <span class="block text-sm font-medium text-gray-900 dark:text-white">
+                  {{ t('auth.legal.privacyPolicy') }}
+                </span>
+                <span class="block text-xs text-gray-500 dark:text-dark-400">
+                  {{ privacyAccepted ? t('auth.legal.accepted') : t('auth.legal.readBeforeAccept') }}
+                </span>
+              </span>
+            </span>
+            <Icon :name="privacyAccepted ? 'checkCircle' : 'chevronRight'" size="md" :class="privacyAccepted ? 'text-emerald-500' : 'text-gray-400'" />
+          </button>
+
+          <label
+            class="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 dark:border-dark-700 dark:bg-dark-900/60 dark:text-dark-200"
+          >
+            <input
+              v-model="legalCommitmentAccepted"
+              type="checkbox"
+              class="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-dark-600"
+              :disabled="!termsAccepted || !privacyAccepted"
+            />
+            <span>{{ t('auth.legal.commitmentLabel') }}</span>
           </label>
+
+          <p v-if="errors.legal" class="input-error-text">
+            {{ errors.legal }}
+          </p>
         </div>
 
         <!-- Error Message -->
@@ -134,7 +181,7 @@
         <!-- Submit Button -->
         <button
           type="submit"
-          :disabled="isLoading || !agreedToTerms"
+          :disabled="isLoading || !legalAccepted"
           class="btn btn-primary w-full transition-all duration-300"
         >
           <svg
@@ -182,16 +229,30 @@
       </p>
     </template>
   </AuthLayout>
+
+  <LegalAgreementModal
+    v-if="activeLegalDocument"
+    :show="showLegalModal"
+    :document="activeLegalDocument"
+    :accept-label="t('auth.legal.acceptDocument')"
+    :reject-label="t('common.cancel')"
+    :read-prompt="t('auth.legal.scrollToAccept')"
+    :accepted-label="t('auth.legal.finishedReading')"
+    @accept="handleLegalAccept"
+    @reject="showLegalModal = false"
+  />
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent, onMounted, reactive, ref } from 'vue'
+import { computed, defineAsyncComponent, onMounted, reactive, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { AuthLayout } from '@/components/layout'
 import Icon from '@/components/icons/Icon.vue'
+import LegalAgreementModal from '@/components/legal/LegalAgreementModal.vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import { redirectAfterAuth } from '@/utils/postAuthRedirect'
+import { getLegalDocument, type LegalDocument, type LegalDocumentKind } from '@/legal/documents'
 
 const { t } = useI18n()
 
@@ -220,7 +281,11 @@ const siteName = ref<string>('cCoder.me')
 const linuxdoOAuthEnabled = ref<boolean>(false)
 
 const inviteCode = ref<string>('')
-const agreedToTerms = ref<boolean>(false)
+const termsAccepted = ref<boolean>(false)
+const privacyAccepted = ref<boolean>(false)
+const legalCommitmentAccepted = ref<boolean>(false)
+const showLegalModal = ref<boolean>(false)
+const activeLegalKind = ref<LegalDocumentKind>('terms')
 
 const formData = reactive({
   email: '',
@@ -229,8 +294,14 @@ const formData = reactive({
 
 const errors = reactive({
   email: '',
-  password: ''
+  password: '',
+  legal: ''
 })
+
+const legalAccepted = computed(
+  () => termsAccepted.value && privacyAccepted.value && legalCommitmentAccepted.value
+)
+const activeLegalDocument = computed<LegalDocument>(() => getLegalDocument(activeLegalKind.value))
 
 // ==================== Lifecycle ====================
 
@@ -266,6 +337,7 @@ function validateForm(): boolean {
   // Reset errors
   errors.email = ''
   errors.password = ''
+  errors.legal = ''
 
   let isValid = true
 
@@ -287,10 +359,30 @@ function validateForm(): boolean {
     isValid = false
   }
 
+  if (!legalAccepted.value) {
+    errors.legal = t('auth.legal.required')
+    isValid = false
+  }
+
   return isValid
 }
 
 // ==================== Form Handlers ====================
+
+function openLegal(kind: LegalDocumentKind): void {
+  activeLegalKind.value = kind
+  showLegalModal.value = true
+}
+
+function handleLegalAccept(): void {
+  if (activeLegalKind.value === 'terms') {
+    termsAccepted.value = true
+  } else {
+    privacyAccepted.value = true
+  }
+  errors.legal = ''
+  showLegalModal.value = false
+}
 
 async function handleRegister(): Promise<void> {
   // Clear previous error
@@ -312,7 +404,10 @@ async function handleRegister(): Promise<void> {
         JSON.stringify({
           email: formData.email,
           password: formData.password,
-          invite_code: inviteCode.value || undefined
+          invite_code: inviteCode.value || undefined,
+          terms_accepted: true,
+          privacy_accepted: true,
+          legal_commitment_accepted: true
         })
       )
 
@@ -325,7 +420,10 @@ async function handleRegister(): Promise<void> {
     await authStore.register({
       email: formData.email,
       password: formData.password,
-      invite_code: inviteCode.value || undefined
+      invite_code: inviteCode.value || undefined,
+      terms_accepted: true,
+      privacy_accepted: true,
+      legal_commitment_accepted: true
     })
 
     // Show success toast

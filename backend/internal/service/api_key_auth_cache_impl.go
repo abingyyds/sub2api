@@ -109,7 +109,7 @@ func (s *APIKeyService) StartAuthCacheInvalidationSubscriber(ctx context.Context
 }
 
 func (s *APIKeyService) authCacheKey(key string) string {
-	sum := sha256.Sum256([]byte(key))
+	sum := sha256.Sum256([]byte(key + "|" + LegalTermsVersion + "|" + LegalPrivacyVersion + "|" + LegalApiTermsVersion))
 	return hex.EncodeToString(sum[:])
 }
 
@@ -214,11 +214,12 @@ func (s *APIKeyService) snapshotFromAPIKey(apiKey *APIKey) *APIKeyAuthSnapshot {
 		IPWhitelist: apiKey.IPWhitelist,
 		IPBlacklist: apiKey.IPBlacklist,
 		User: APIKeyAuthUserSnapshot{
-			ID:          apiKey.User.ID,
-			Status:      apiKey.User.Status,
-			Role:        apiKey.User.Role,
-			Balance:     apiKey.User.Balance,
-			Concurrency: apiKey.User.Concurrency,
+			ID:                     apiKey.User.ID,
+			Status:                 apiKey.User.Status,
+			Role:                   apiKey.User.Role,
+			Balance:                apiKey.User.Balance,
+			Concurrency:            apiKey.User.Concurrency,
+			LegalAgreementAccepted: apiKey.User.LegalAgreementAccepted,
 		},
 	}
 	if apiKey.Group != nil {
@@ -260,11 +261,12 @@ func (s *APIKeyService) snapshotToAPIKey(key string, snapshot *APIKeyAuthSnapsho
 		IPWhitelist: snapshot.IPWhitelist,
 		IPBlacklist: snapshot.IPBlacklist,
 		User: &User{
-			ID:          snapshot.User.ID,
-			Status:      snapshot.User.Status,
-			Role:        snapshot.User.Role,
-			Balance:     snapshot.User.Balance,
-			Concurrency: snapshot.User.Concurrency,
+			ID:                     snapshot.User.ID,
+			Status:                 snapshot.User.Status,
+			Role:                   snapshot.User.Role,
+			Balance:                snapshot.User.Balance,
+			Concurrency:            snapshot.User.Concurrency,
+			LegalAgreementAccepted: snapshot.User.LegalAgreementAccepted,
 		},
 	}
 	if snapshot.Group != nil {

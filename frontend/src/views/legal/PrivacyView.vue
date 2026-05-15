@@ -1,5 +1,5 @@
 <template>
-  <LegalPageView kind="terms" />
+  <LegalPageView kind="privacy" />
 </template>
 
 <script setup lang="ts">

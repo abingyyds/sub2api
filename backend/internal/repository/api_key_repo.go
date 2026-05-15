@@ -3,6 +3,9 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"time"
 
 	dbent "github.com/Wei-Shaw/sub2api/ent"
@@ -116,6 +119,9 @@ func (r *apiKeyRepository) GetByKey(ctx context.Context, key string) (*service.A
 }
 
 func (r *apiKeyRepository) GetByKeyForAuth(ctx context.Context, key string) (*service.APIKey, error) {
+	if r.sql != nil {
+		return r.getByKeyForAuthSQL(ctx, key)
+	}
 	m, err := r.activeQuery().
 		Where(apikey.KeyEQ(key)).
 		Select(
@@ -167,6 +173,227 @@ func (r *apiKeyRepository) GetByKeyForAuth(ctx context.Context, key string) (*se
 		return nil, err
 	}
 	return out, nil
+}
+
+func (r *apiKeyRepository) getByKeyForAuthSQL(ctx context.Context, key string) (*service.APIKey, error) {
+	query := `
+		SELECT
+			ak.id,
+			ak.user_id,
+			ak.group_id,
+			ak.status,
+			ak.ip_whitelist,
+			ak.ip_blacklist,
+			ak.org_id,
+			ak.org_project_id,
+			u.id,
+			u.status,
+			u.role,
+			u.balance,
+			u.concurrency,
+			CASE
+				WHEN ula.user_id IS NOT NULL
+				 AND ula.terms_version = $2
+				 AND ula.privacy_version = $3
+				 AND ula.api_terms_version = $4
+				 AND ula.terms_accepted_at IS NOT NULL
+				 AND ula.privacy_accepted_at IS NOT NULL
+				 AND ula.api_terms_accepted_at IS NOT NULL
+				THEN TRUE ELSE FALSE
+			END,
+			g.id,
+			g.name,
+			g.platform,
+			g.status,
+			g.subscription_type,
+			g.rate_multiplier,
+			g.daily_limit_usd,
+			g.weekly_limit_usd,
+			g.monthly_limit_usd,
+			g.image_price_1k,
+			g.image_price_2k,
+			g.image_price_4k,
+			g.claude_code_only,
+			g.fallback_group_id,
+			g.model_routing_enabled,
+			g.model_routing,
+			COALESCE(g.quota_package_enabled, FALSE),
+			g.quota_package_quota_usd,
+			COALESCE(NULLIF(g.quota_package_validity_days, 0), 30)
+		FROM api_keys ak
+		JOIN users u ON u.id = ak.user_id
+		LEFT JOIN user_legal_agreements ula ON ula.user_id = u.id
+		LEFT JOIN groups g ON g.id = ak.group_id
+		WHERE ak.key = $1
+		  AND ak.deleted_at IS NULL
+		LIMIT 1
+	`
+
+	var keyOut service.APIKey
+	var groupID sql.NullInt64
+	var orgID sql.NullInt64
+	var orgProjectID sql.NullInt64
+	var ipWhitelistJSON sql.NullString
+	var ipBlacklistJSON sql.NullString
+	var userOut service.User
+	var legalAccepted bool
+	var groupIDValue sql.NullInt64
+	var groupName sql.NullString
+	var groupPlatform sql.NullString
+	var groupStatus sql.NullString
+	var groupSubscriptionType sql.NullString
+	var groupRateMultiplier sql.NullFloat64
+	var dailyLimit sql.NullFloat64
+	var weeklyLimit sql.NullFloat64
+	var monthlyLimit sql.NullFloat64
+	var imagePrice1K sql.NullFloat64
+	var imagePrice2K sql.NullFloat64
+	var imagePrice4K sql.NullFloat64
+	var claudeCodeOnly sql.NullBool
+	var fallbackGroupID sql.NullInt64
+	var modelRoutingEnabled sql.NullBool
+	var modelRoutingJSON sql.NullString
+	var quotaPackageEnabled sql.NullBool
+	var quotaPackageQuota sql.NullFloat64
+	var quotaPackageValidityDays sql.NullInt64
+
+	err := scanSingleRow(
+		ctx,
+		r.sql,
+		query,
+		[]any{key, service.LegalTermsVersion, service.LegalPrivacyVersion, service.LegalApiTermsVersion},
+		&keyOut.ID,
+		&keyOut.UserID,
+		&groupID,
+		&keyOut.Status,
+		&ipWhitelistJSON,
+		&ipBlacklistJSON,
+		&orgID,
+		&orgProjectID,
+		&userOut.ID,
+		&userOut.Status,
+		&userOut.Role,
+		&userOut.Balance,
+		&userOut.Concurrency,
+		&legalAccepted,
+		&groupIDValue,
+		&groupName,
+		&groupPlatform,
+		&groupStatus,
+		&groupSubscriptionType,
+		&groupRateMultiplier,
+		&dailyLimit,
+		&weeklyLimit,
+		&monthlyLimit,
+		&imagePrice1K,
+		&imagePrice2K,
+		&imagePrice4K,
+		&claudeCodeOnly,
+		&fallbackGroupID,
+		&modelRoutingEnabled,
+		&modelRoutingJSON,
+		&quotaPackageEnabled,
+		&quotaPackageQuota,
+		&quotaPackageValidityDays,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, service.ErrAPIKeyNotFound
+		}
+		return nil, err
+	}
+
+	keyOut.Key = key
+	var ipWhitelist []string
+	var ipBlacklist []string
+	if ipWhitelistJSON.Valid && ipWhitelistJSON.String != "" {
+		if err := json.Unmarshal([]byte(ipWhitelistJSON.String), &ipWhitelist); err != nil {
+			return nil, fmt.Errorf("decode api key ip whitelist: %w", err)
+		}
+	}
+	if ipBlacklistJSON.Valid && ipBlacklistJSON.String != "" {
+		if err := json.Unmarshal([]byte(ipBlacklistJSON.String), &ipBlacklist); err != nil {
+			return nil, fmt.Errorf("decode api key ip blacklist: %w", err)
+		}
+	}
+	keyOut.IPWhitelist = ipWhitelist
+	keyOut.IPBlacklist = ipBlacklist
+	if groupID.Valid {
+		keyOut.GroupID = &groupID.Int64
+	}
+	if orgID.Valid {
+		keyOut.OrgID = &orgID.Int64
+	}
+	if orgProjectID.Valid {
+		keyOut.OrgProjectID = &orgProjectID.Int64
+	}
+	userOut.LegalAgreementAccepted = legalAccepted
+	keyOut.User = &userOut
+
+	if groupIDValue.Valid {
+		var modelRouting map[string][]int64
+		if modelRoutingJSON.Valid && modelRoutingJSON.String != "" {
+			if err := json.Unmarshal([]byte(modelRoutingJSON.String), &modelRouting); err != nil {
+				return nil, fmt.Errorf("decode group model routing: %w", err)
+			}
+		}
+		groupOut := &service.Group{
+			ID:                  groupIDValue.Int64,
+			Name:                groupName.String,
+			Platform:            groupPlatform.String,
+			Status:              groupStatus.String,
+			Hydrated:            true,
+			SubscriptionType:    groupSubscriptionType.String,
+			ModelRouting:        modelRouting,
+			ModelRoutingEnabled: modelRoutingEnabled.Bool,
+			ClaudeCodeOnly:      claudeCodeOnly.Bool,
+		}
+		if groupRateMultiplier.Valid {
+			groupOut.RateMultiplier = groupRateMultiplier.Float64
+		}
+		if dailyLimit.Valid {
+			v := dailyLimit.Float64
+			groupOut.DailyLimitUSD = &v
+		}
+		if weeklyLimit.Valid {
+			v := weeklyLimit.Float64
+			groupOut.WeeklyLimitUSD = &v
+		}
+		if monthlyLimit.Valid {
+			v := monthlyLimit.Float64
+			groupOut.MonthlyLimitUSD = &v
+		}
+		if imagePrice1K.Valid {
+			v := imagePrice1K.Float64
+			groupOut.ImagePrice1K = &v
+		}
+		if imagePrice2K.Valid {
+			v := imagePrice2K.Float64
+			groupOut.ImagePrice2K = &v
+		}
+		if imagePrice4K.Valid {
+			v := imagePrice4K.Float64
+			groupOut.ImagePrice4K = &v
+		}
+		if fallbackGroupID.Valid {
+			v := fallbackGroupID.Int64
+			groupOut.FallbackGroupID = &v
+		}
+		groupOut.QuotaPackageEnabled = quotaPackageEnabled.Bool
+		if quotaPackageQuota.Valid {
+			v := quotaPackageQuota.Float64
+			groupOut.QuotaPackageQuotaUSD = &v
+		}
+		if quotaPackageValidityDays.Valid {
+			groupOut.QuotaPackageValidityDays = int(quotaPackageValidityDays.Int64)
+		}
+		if groupOut.QuotaPackageValidityDays <= 0 {
+			groupOut.QuotaPackageValidityDays = 30
+		}
+		keyOut.Group = groupOut
+	}
+
+	return &keyOut, nil
 }
 
 func (r *apiKeyRepository) Update(ctx context.Context, key *service.APIKey) error {

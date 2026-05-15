@@ -83,12 +83,13 @@ type APIKeyAuthCacheInvalidator interface {
 
 // CreateAPIKeyRequest 创建API Key请求
 type CreateAPIKeyRequest struct {
-	Name        string   `json:"name"`
-	GroupID     *int64   `json:"group_id"`
-	CustomKey   *string  `json:"custom_key"`   // 可选的自定义key
-	IPWhitelist []string `json:"ip_whitelist"` // IP 白名单
-	IPBlacklist []string `json:"ip_blacklist"` // IP 黑名单
-	UsageLimit  *float64 `json:"usage_limit"`  // 用量上限（USD），null表示无限制
+	Name          string   `json:"name"`
+	GroupID       *int64   `json:"group_id"`
+	CustomKey     *string  `json:"custom_key"`   // 可选的自定义key
+	IPWhitelist   []string `json:"ip_whitelist"` // IP 白名单
+	IPBlacklist   []string `json:"ip_blacklist"` // IP 黑名单
+	UsageLimit    *float64 `json:"usage_limit"`  // 用量上限（USD），null表示无限制
+	LegalAccepted bool     `json:"legal_accepted"`
 }
 
 // UpdateAPIKeyRequest 更新API Key请求
@@ -108,6 +109,7 @@ type APIKeyService struct {
 	groupRepo        GroupRepository
 	userSubRepo      UserSubscriptionRepository
 	quotaPackageRepo QuotaPackageRepository
+	legalRepo        UserLegalAgreementRepository
 	cache            APIKeyCache
 	cfg              *config.Config
 	authCacheL1      *ristretto.Cache
@@ -136,6 +138,41 @@ func NewAPIKeyService(
 	}
 	svc.initAuthCache(cfg)
 	return svc
+}
+
+func (s *APIKeyService) SetLegalAgreementRepository(repo UserLegalAgreementRepository) {
+	s.legalRepo = repo
+}
+
+func (s *APIKeyService) EnsureLegalAgreementAccepted(ctx context.Context, userID int64) error {
+	if s.legalRepo == nil {
+		return ErrLegalAgreementRequired
+	}
+	agreement, err := s.legalRepo.GetByUserID(ctx, userID)
+	if err != nil {
+		if IsLegalAgreementMissing(err) {
+			return ErrLegalAgreementRequired
+		}
+		return fmt.Errorf("get legal agreement: %w", err)
+	}
+	if !agreement.IsCurrent() {
+		return ErrLegalAgreementRequired
+	}
+	return nil
+}
+
+func (s *APIKeyService) acceptLegalAgreementForAPI(ctx context.Context, user *User) error {
+	if user == nil || s.legalRepo == nil {
+		return ErrLegalAgreementRequired
+	}
+	agreement := NewCurrentLegalAgreement(user.ID)
+	if err := s.legalRepo.Upsert(ctx, agreement); err != nil {
+		return err
+	}
+	user.LegalAgreement = agreement
+	user.LegalAgreementAccepted = true
+	s.InvalidateAuthCacheByUserID(ctx, user.ID)
+	return nil
 }
 
 // GenerateKey 生成随机API Key
@@ -246,6 +283,12 @@ func (s *APIKeyService) Create(ctx context.Context, userID int64, req CreateAPIK
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get user: %w", err)
+	}
+	if !req.LegalAccepted {
+		return nil, ErrLegalAgreementRequired
+	}
+	if err := s.acceptLegalAgreementForAPI(ctx, user); err != nil {
+		return nil, err
 	}
 
 	name := strings.TrimSpace(req.Name)

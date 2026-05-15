@@ -24,12 +24,6 @@ function getDefaultLocale(): string {
     return saved as LocaleCode
   }
 
-  // Check browser language
-  const browserLang = navigator.language.toLowerCase()
-  if (browserLang.startsWith('zh')) {
-    return 'zh'
-  }
-
   return DEFAULT_LOCALE
 }
 

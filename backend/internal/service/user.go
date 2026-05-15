@@ -45,6 +45,9 @@ type User struct {
 
 	BoundSubSite *SubSite
 
+	LegalAgreementAccepted bool
+	LegalAgreement         *UserLegalAgreement
+
 	APIKeys       []APIKey
 	Subscriptions []UserSubscription
 }

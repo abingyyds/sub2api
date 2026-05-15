@@ -78,7 +78,7 @@ func (s *apiKeyCreateRepoStub) CountByGroupID(ctx context.Context, groupID int64
 }
 
 func (s *apiKeyCreateRepoStub) ListKeysByUserID(ctx context.Context, userID int64) ([]string, error) {
-	panic("unexpected ListKeysByUserID call")
+	return nil, nil
 }
 
 func (s *apiKeyCreateRepoStub) ListKeysByGroupID(ctx context.Context, groupID int64) ([]string, error) {
@@ -343,6 +343,16 @@ func (s *apiKeyCreateQuotaPackageRepoStub) Deduct(ctx context.Context, userID, g
 	panic("unexpected Deduct call")
 }
 
+type apiKeyCreateLegalAgreementRepoStub struct{}
+
+func (s *apiKeyCreateLegalAgreementRepoStub) Upsert(ctx context.Context, agreement *UserLegalAgreement) error {
+	return nil
+}
+
+func (s *apiKeyCreateLegalAgreementRepoStub) GetByUserID(ctx context.Context, userID int64) (*UserLegalAgreement, error) {
+	return NewCurrentLegalAgreement(userID), nil
+}
+
 func TestAPIKeyService_Create_DefaultsBlankNameToRandomShortName(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -356,8 +366,9 @@ func TestAPIKeyService_Create_DefaultsBlankNameToRandomShortName(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := &apiKeyCreateRepoStub{}
 			svc := NewAPIKeyService(repo, apiKeyCreateUserRepoStub{}, nil, nil, nil, nil, &config.Config{})
+			svc.SetLegalAgreementRepository(&apiKeyCreateLegalAgreementRepoStub{})
 
-			key, err := svc.Create(context.Background(), 7, CreateAPIKeyRequest{Name: tt.inputName})
+			key, err := svc.Create(context.Background(), 7, CreateAPIKeyRequest{Name: tt.inputName, LegalAccepted: true})
 			require.NoError(t, err)
 			require.NotNil(t, repo.created)
 			require.Len(t, repo.created.Name, apiKeyDefaultNameLen)
@@ -369,8 +380,9 @@ func TestAPIKeyService_Create_DefaultsBlankNameToRandomShortName(t *testing.T) {
 func TestAPIKeyService_Create_TrimsProvidedName(t *testing.T) {
 	repo := &apiKeyCreateRepoStub{}
 	svc := NewAPIKeyService(repo, apiKeyCreateUserRepoStub{}, nil, nil, nil, nil, &config.Config{})
+	svc.SetLegalAgreementRepository(&apiKeyCreateLegalAgreementRepoStub{})
 
-	key, err := svc.Create(context.Background(), 7, CreateAPIKeyRequest{Name: "  production  "})
+	key, err := svc.Create(context.Background(), 7, CreateAPIKeyRequest{Name: "  production  ", LegalAccepted: true})
 	require.NoError(t, err)
 	require.Equal(t, "production", key.Name)
 }
@@ -389,8 +401,9 @@ func TestAPIKeyService_Create_AllowsQuotaPackageGroupWithoutActiveSubscription(t
 	subRepo := &apiKeyCreateSubscriptionRepoStub{}
 	quotaRepo := &apiKeyCreateQuotaPackageRepoStub{available: map[int64]float64{groupID: 10}}
 	svc := NewAPIKeyService(repo, apiKeyCreateUserRepoStub{}, groupRepo, subRepo, quotaRepo, nil, &config.Config{})
+	svc.SetLegalAgreementRepository(&apiKeyCreateLegalAgreementRepoStub{})
 
-	key, err := svc.Create(context.Background(), 7, CreateAPIKeyRequest{Name: "quota", GroupID: &groupID})
+	key, err := svc.Create(context.Background(), 7, CreateAPIKeyRequest{Name: "quota", GroupID: &groupID, LegalAccepted: true})
 
 	require.NoError(t, err)
 	require.NotNil(t, key.GroupID)
@@ -426,3 +439,4 @@ var _ UserRepository = (*apiKeyCreateUserRepoStub)(nil)
 var _ GroupRepository = (*apiKeyCreateGroupRepoStub)(nil)
 var _ UserSubscriptionRepository = (*apiKeyCreateSubscriptionRepoStub)(nil)
 var _ QuotaPackageRepository = (*apiKeyCreateQuotaPackageRepoStub)(nil)
+var _ UserLegalAgreementRepository = (*apiKeyCreateLegalAgreementRepoStub)(nil)

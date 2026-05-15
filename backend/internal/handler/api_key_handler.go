@@ -27,12 +27,13 @@ func NewAPIKeyHandler(apiKeyService *service.APIKeyService) *APIKeyHandler {
 
 // CreateAPIKeyRequest represents the create API key request payload
 type CreateAPIKeyRequest struct {
-	Name        string   `json:"name"`
-	GroupID     *int64   `json:"group_id"`     // nullable
-	CustomKey   *string  `json:"custom_key"`   // 可选的自定义key
-	IPWhitelist []string `json:"ip_whitelist"` // IP 白名单
-	IPBlacklist []string `json:"ip_blacklist"` // IP 黑名单
-	UsageLimit  *float64 `json:"usage_limit"`  // 用量上限（USD），null表示无限制
+	Name          string   `json:"name"`
+	GroupID       *int64   `json:"group_id"`     // nullable
+	CustomKey     *string  `json:"custom_key"`   // 可选的自定义key
+	IPWhitelist   []string `json:"ip_whitelist"` // IP 白名单
+	IPBlacklist   []string `json:"ip_blacklist"` // IP 黑名单
+	UsageLimit    *float64 `json:"usage_limit"`  // 用量上限（USD），null表示无限制
+	LegalAccepted bool     `json:"legal_accepted"`
 }
 
 // UpdateAPIKeyRequest represents the update API key request payload
@@ -116,12 +117,13 @@ func (h *APIKeyHandler) Create(c *gin.Context) {
 	}
 
 	svcReq := service.CreateAPIKeyRequest{
-		Name:        req.Name,
-		GroupID:     req.GroupID,
-		CustomKey:   req.CustomKey,
-		IPWhitelist: req.IPWhitelist,
-		IPBlacklist: req.IPBlacklist,
-		UsageLimit:  req.UsageLimit,
+		Name:          req.Name,
+		GroupID:       req.GroupID,
+		CustomKey:     req.CustomKey,
+		IPWhitelist:   req.IPWhitelist,
+		IPBlacklist:   req.IPBlacklist,
+		UsageLimit:    req.UsageLimit,
+		LegalAccepted: req.LegalAccepted,
 	}
 	key, err := h.apiKeyService.Create(c.Request.Context(), subject.UserID, svcReq)
 	if err != nil {

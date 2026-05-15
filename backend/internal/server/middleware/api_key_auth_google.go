@@ -55,6 +55,10 @@ func APIKeyAuthWithSubscriptionGoogle(apiKeyService *service.APIKeyService, subs
 			abortWithGoogleError(c, 401, "User account is not active")
 			return
 		}
+		if !apiKey.User.LegalAgreementAccepted {
+			abortWithGoogleError(c, 403, "Please read and accept the User Agreement and Privacy Policy in the console before using the API.")
+			return
+		}
 
 		// 简易模式：跳过余额和订阅检查
 		if cfg.RunMode == config.RunModeSimple {

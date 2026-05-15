@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4">
-    <button type="button" :disabled="disabled" class="btn btn-secondary w-full" @click="startLogin">
+    <button type="button" :disabled="disabled || !legalAccepted" class="btn btn-secondary w-full" @click="startLogin">
       <svg
         class="icon mr-2"
         viewBox="0 0 16 16"
@@ -26,7 +26,7 @@
           ></path>
         </g>
       </svg>
-      {{ t('auth.linuxdo.signIn') }}
+      {{ legalAccepted ? t('auth.linuxdo.signIn') : t('auth.legal.acceptBeforeOAuth') }}
     </button>
 
     <div class="flex items-center gap-3">
@@ -43,9 +43,14 @@
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
-defineProps<{
+const props = withDefaults(defineProps<{
   disabled?: boolean
-}>()
+  legalAccepted?: boolean
+  includeLegalAcceptance?: boolean
+}>(), {
+  legalAccepted: true,
+  includeLegalAcceptance: false
+})
 
 const route = useRoute()
 const { t } = useI18n()
@@ -54,8 +59,13 @@ function startLogin(): void {
   const redirectTo = (route.query.redirect as string) || '/dashboard'
   const apiBase = (import.meta.env.VITE_API_BASE_URL as string | undefined) || '/api/v1'
   const normalized = apiBase.replace(/\/$/, '')
-  const startURL = `${normalized}/auth/oauth/linuxdo/start?redirect=${encodeURIComponent(redirectTo)}`
+  const params = new URLSearchParams({ redirect: redirectTo })
+  if (props.includeLegalAcceptance && props.legalAccepted) {
+    params.set('terms_accepted', 'true')
+    params.set('privacy_accepted', 'true')
+    params.set('legal_commitment_accepted', 'true')
+  }
+  const startURL = `${normalized}/auth/oauth/linuxdo/start?${params.toString()}`
   window.location.href = startURL
 }
 </script>
-
