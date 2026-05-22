@@ -47,6 +47,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 	response.Success(c, dto.SystemSettings{
 		RegistrationEnabled:                     settings.RegistrationEnabled,
 		EmailVerifyEnabled:                      settings.EmailVerifyEnabled,
+		BlockChinaIPRegistration:                settings.BlockChinaIPRegistration,
 		PromoCodeEnabled:                        settings.PromoCodeEnabled,
 		PasswordResetEnabled:                    settings.PasswordResetEnabled,
 		TotpEnabled:                             settings.TotpEnabled,
@@ -141,11 +142,12 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 // UpdateSettingsRequest 更新设置请求
 type UpdateSettingsRequest struct {
 	// 注册设置
-	RegistrationEnabled  bool `json:"registration_enabled"`
-	EmailVerifyEnabled   bool `json:"email_verify_enabled"`
-	PromoCodeEnabled     bool `json:"promo_code_enabled"`
-	PasswordResetEnabled bool `json:"password_reset_enabled"`
-	TotpEnabled          bool `json:"totp_enabled"` // TOTP 双因素认证
+	RegistrationEnabled      bool `json:"registration_enabled"`
+	EmailVerifyEnabled       bool `json:"email_verify_enabled"`
+	BlockChinaIPRegistration bool `json:"block_china_ip_registration"`
+	PromoCodeEnabled         bool `json:"promo_code_enabled"`
+	PasswordResetEnabled     bool `json:"password_reset_enabled"`
+	TotpEnabled              bool `json:"totp_enabled"` // TOTP 双因素认证
 
 	// 邮件服务设置
 	SMTPHost     string `json:"smtp_host"`
@@ -442,6 +444,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	settings := &service.SystemSettings{
 		RegistrationEnabled:        req.RegistrationEnabled,
 		EmailVerifyEnabled:         req.EmailVerifyEnabled,
+		BlockChinaIPRegistration:   req.BlockChinaIPRegistration,
 		PromoCodeEnabled:           req.PromoCodeEnabled,
 		PasswordResetEnabled:       req.PasswordResetEnabled,
 		TotpEnabled:                req.TotpEnabled,
@@ -568,6 +571,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	response.Success(c, dto.SystemSettings{
 		RegistrationEnabled:                     updatedSettings.RegistrationEnabled,
 		EmailVerifyEnabled:                      updatedSettings.EmailVerifyEnabled,
+		BlockChinaIPRegistration:                updatedSettings.BlockChinaIPRegistration,
 		PromoCodeEnabled:                        updatedSettings.PromoCodeEnabled,
 		PasswordResetEnabled:                    updatedSettings.PasswordResetEnabled,
 		TotpEnabled:                             updatedSettings.TotpEnabled,
@@ -685,6 +689,9 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	}
 	if before.EmailVerifyEnabled != after.EmailVerifyEnabled {
 		changed = append(changed, "email_verify_enabled")
+	}
+	if before.BlockChinaIPRegistration != after.BlockChinaIPRegistration {
+		changed = append(changed, "block_china_ip_registration")
 	}
 	if before.PasswordResetEnabled != after.PasswordResetEnabled {
 		changed = append(changed, "password_reset_enabled")

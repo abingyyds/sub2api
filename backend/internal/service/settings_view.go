@@ -1,11 +1,12 @@
 package service
 
 type SystemSettings struct {
-	RegistrationEnabled  bool
-	EmailVerifyEnabled   bool
-	PromoCodeEnabled     bool
-	PasswordResetEnabled bool
-	TotpEnabled          bool // TOTP 双因素认证
+	RegistrationEnabled      bool
+	EmailVerifyEnabled       bool
+	BlockChinaIPRegistration bool
+	PromoCodeEnabled         bool
+	PasswordResetEnabled     bool
+	TotpEnabled              bool // TOTP 双因素认证
 
 	SMTPHost               string
 	SMTPPort               int

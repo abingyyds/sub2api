@@ -4,6 +4,7 @@ package ip
 import (
 	"net"
 	"strings"
+	"unicode"
 
 	"github.com/gin-gonic/gin"
 )
@@ -44,6 +45,43 @@ func GetClientIP(c *gin.Context) string {
 	return normalizeIP(c.ClientIP())
 }
 
+// GetClientCountryCode 从常见 CDN / 反向代理 Header 中读取客户端国家或地区代码。
+// 当前用于注册区域限制；没有可信国家码时返回空字符串，由调用方决定是否放行。
+func GetClientCountryCode(c *gin.Context) string {
+	for _, header := range []string{
+		"CF-IPCountry",
+		"X-Vercel-IP-Country",
+		"CloudFront-Viewer-Country",
+		"X-AppEngine-Country",
+		"X-Country-Code",
+		"X-Country",
+		"X-Geo-Country",
+		"X-GeoIP-Country",
+		"X-GeoIP-Country-Code",
+		"X-IP-Country",
+		"X-Client-Country",
+		"X-Forwarded-Country",
+		"Fastly-Geo-Country-Code",
+		"Fly-Client-IPCountry",
+	} {
+		if value := normalizeCountryCode(c.GetHeader(header)); value != "" {
+			return value
+		}
+	}
+	return ""
+}
+
+// IsMainlandChinaCountryCode reports whether a country code/header value identifies mainland China.
+func IsMainlandChinaCountryCode(countryCode string) bool {
+	code := normalizeCountryCode(countryCode)
+	switch code {
+	case "CN", "CHN", "CHINA", "MAINLANDCHINA", "中国", "中国大陆":
+		return true
+	default:
+		return false
+	}
+}
+
 // normalizeIP 规范化 IP 地址，去除端口号和空格。
 func normalizeIP(ip string) string {
 	ip = strings.TrimSpace(ip)
@@ -52,6 +90,23 @@ func normalizeIP(ip string) string {
 		return host
 	}
 	return ip
+}
+
+func normalizeCountryCode(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return ""
+	}
+	if strings.Contains(value, ",") {
+		value = strings.TrimSpace(strings.Split(value, ",")[0])
+	}
+	value = strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) || r == '-' || r == '_' {
+			return -1
+		}
+		return unicode.ToUpper(r)
+	}, value)
+	return value
 }
 
 // isPrivateIP 检查 IP 是否为私有地址。

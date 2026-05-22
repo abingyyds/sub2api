@@ -52,6 +52,15 @@
               <Icon name="sparkles" size="md" /> {{ newcomerCtaText }}
             </button>
           </MagneticButton>
+          <div class="mt-6 max-w-2xl rounded-2xl border border-amber-200 bg-amber-50/90 px-5 py-4 text-left text-sm text-amber-800 shadow-sm dark:border-amber-800/40 dark:bg-amber-900/20 dark:text-amber-300">
+            <div class="flex items-start gap-3">
+              <Icon name="exclamationTriangle" size="md" class="mt-0.5 flex-shrink-0 text-amber-500" />
+              <div>
+                <p class="font-bold">服务区域提示</p>
+                <p class="mt-1 leading-relaxed">本服务暂不向中国大陆地区提供新增注册、充值及相关生成式 AI 服务。</p>
+              </div>
+            </div>
+          </div>
         </div>
       </SlideIn>
     </header>

@@ -44,6 +44,7 @@
       :hero-description="heroDescription"
       :cta-text="ctaText"
       :feature-tags="featureTags"
+      :service-area-notice="serviceAreaNotice"
       :registration-notice="registrationNotice"
       :allow-sub-site-open="allowSubSiteOpen"
       :sub-site-open-price="subSiteOpenPrice"
@@ -223,7 +224,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick, shallowRef, defineAsyncComponent } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore, useAppStore } from '@/stores'
@@ -255,6 +256,7 @@ const featureTags = computed(() => [
   t('home.tags.stickySession'),
   t('home.tags.realtimeBilling'),
 ])
+const serviceAreaNotice = computed(() => t('home.serviceAreaNotice'))
 const registrationNotice = computed(() => {
   const mode = appStore.cachedPublicSettings?.registration_mode
   if (mode === 'invite') return '当前分站仅支持邀请码注册。'
@@ -268,20 +270,28 @@ const allowSubSiteOpen = computed(() => Boolean(
 ))
 const subSiteOpenPrice = computed(() => fenToYuan(appStore.cachedPublicSettings?.subsite_price_fen || 0))
 
-const ThemeComponent = shallowRef<any>(StarterHome)
+const ThemeComponent = computed(() => {
+  switch (themeTemplate.value) {
+    case 'aurora':
+      return AuroraHome
+    case 'summit':
+      return SummitHome
+    case 'terminal':
+      return TerminalHome
+    default:
+      return StarterHome
+  }
+})
+
 const themeRoot = computed(() => {
   switch (themeTemplate.value) {
     case 'aurora':
-      ThemeComponent.value = AuroraHome
       return 'bg-gradient-to-br from-sky-50 via-indigo-50/70 to-cyan-100 dark:from-slate-950 dark:via-indigo-950 dark:to-slate-950'
     case 'summit':
-      ThemeComponent.value = SummitHome
       return 'bg-gradient-to-br from-stone-50 via-amber-50/40 to-orange-100 dark:from-neutral-950 dark:via-stone-900 dark:to-neutral-950'
     case 'terminal':
-      ThemeComponent.value = TerminalHome
       return 'bg-zinc-950 text-emerald-100'
     default:
-      ThemeComponent.value = StarterHome
       return 'bg-gradient-to-br from-gray-50 via-primary-50/30 to-gray-100 dark:from-dark-950 dark:via-dark-900 dark:to-dark-950'
   }
 })

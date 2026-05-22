@@ -10,6 +10,7 @@ export default {
     login: 'Login',
     getStarted: 'Get Started',
     goToDashboard: 'Go to Dashboard',
+    serviceAreaNotice: 'This service does not currently provide new registrations, top-ups, or related generative AI services to users in mainland China.',
     tags: {
       subscriptionToApi: 'Subscription to API',
       stickySession: 'Sticky Session',
@@ -280,6 +281,10 @@ export default {
     accountCreatedSuccess: 'Account created successfully! Welcome to {siteName}.',
     agreeToTermsPrefix: 'I have read and agree to the',
     termsOfService: 'Terms of Service',
+    serviceAreaNotice: {
+      title: 'Service Availability Notice',
+      body: 'This service does not currently provide new registrations, top-ups, or related generative AI services to users in mainland China.'
+    },
     legal: {
       reviewRequired: 'Review and accept the legal documents to continue.',
       userAgreement: 'User Agreement',
@@ -3202,6 +3207,9 @@ export default {
         description: 'Control user registration and verification',
         enableRegistration: 'Enable Registration',
         enableRegistrationHint: 'Allow new users to register',
+        blockChinaIpRegistration: 'Block China IP Registration',
+        blockChinaIpRegistrationHint:
+          'When enabled, new registrations, verification codes, and first-time third-party signups from mainland China IPs are blocked. Requires a CDN or reverse proxy country-code header.',
         emailVerification: 'Email Verification',
         emailVerificationHint: 'Require email verification for new registrations',
         promoCode: 'Promo Code',

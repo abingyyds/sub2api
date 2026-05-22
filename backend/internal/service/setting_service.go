@@ -15,8 +15,9 @@ import (
 )
 
 var (
-	ErrRegistrationDisabled = infraerrors.Forbidden("REGISTRATION_DISABLED", "registration is currently disabled")
-	ErrSettingNotFound      = infraerrors.NotFound("SETTING_NOT_FOUND", "setting not found")
+	ErrRegistrationDisabled       = infraerrors.Forbidden("REGISTRATION_DISABLED", "registration is currently disabled")
+	ErrChinaIPRegistrationBlocked = infraerrors.Forbidden("CHINA_IP_REGISTRATION_BLOCKED", "本服务暂不向中国大陆地区提供新增注册、充值及相关生成式 AI 服务。")
+	ErrSettingNotFound            = infraerrors.NotFound("SETTING_NOT_FOUND", "setting not found")
 )
 
 type SettingRepository interface {
@@ -219,6 +220,7 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	// 注册设置
 	updates[SettingKeyRegistrationEnabled] = strconv.FormatBool(settings.RegistrationEnabled)
 	updates[SettingKeyEmailVerifyEnabled] = strconv.FormatBool(settings.EmailVerifyEnabled)
+	updates[SettingKeyBlockChinaIPRegistration] = strconv.FormatBool(settings.BlockChinaIPRegistration)
 	updates[SettingKeyPromoCodeEnabled] = strconv.FormatBool(settings.PromoCodeEnabled)
 	updates[SettingKeyPasswordResetEnabled] = strconv.FormatBool(settings.PasswordResetEnabled)
 	updates[SettingKeyTotpEnabled] = strconv.FormatBool(settings.TotpEnabled)
@@ -387,6 +389,15 @@ func (s *SettingService) IsEmailVerifyEnabled(ctx context.Context) bool {
 	return value == "true"
 }
 
+// IsChinaIPRegistrationBlocked 检查是否禁止中国大陆 IP 注册。
+func (s *SettingService) IsChinaIPRegistrationBlocked(ctx context.Context) bool {
+	value, err := s.settingRepo.GetValue(ctx, SettingKeyBlockChinaIPRegistration)
+	if err != nil {
+		return false
+	}
+	return value == "true"
+}
+
 // IsPromoCodeEnabled 检查是否启用优惠码功能
 func (s *SettingService) IsPromoCodeEnabled(ctx context.Context) bool {
 	value, err := s.settingRepo.GetValue(ctx, SettingKeyPromoCodeEnabled)
@@ -505,15 +516,16 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 
 	// 初始化默认设置
 	defaults := map[string]string{
-		SettingKeyRegistrationEnabled: "true",
-		SettingKeyEmailVerifyEnabled:  "false",
-		SettingKeyPromoCodeEnabled:    "true", // 默认启用优惠码功能
-		SettingKeySiteName:            "Sub2API",
-		SettingKeySiteLogo:            "",
-		SettingKeyDefaultConcurrency:  strconv.Itoa(s.cfg.Default.UserConcurrency),
-		SettingKeyDefaultBalance:      strconv.FormatFloat(s.cfg.Default.UserBalance, 'f', 8, 64),
-		SettingKeySMTPPort:            "587",
-		SettingKeySMTPUseTLS:          "false",
+		SettingKeyRegistrationEnabled:      "true",
+		SettingKeyEmailVerifyEnabled:       "false",
+		SettingKeyBlockChinaIPRegistration: "false",
+		SettingKeyPromoCodeEnabled:         "true", // 默认启用优惠码功能
+		SettingKeySiteName:                 "Sub2API",
+		SettingKeySiteLogo:                 "",
+		SettingKeyDefaultConcurrency:       strconv.Itoa(s.cfg.Default.UserConcurrency),
+		SettingKeyDefaultBalance:           strconv.FormatFloat(s.cfg.Default.UserBalance, 'f', 8, 64),
+		SettingKeySMTPPort:                 "587",
+		SettingKeySMTPUseTLS:               "false",
 		// Model fallback defaults
 		SettingKeyEnableModelFallback:      "false",
 		SettingKeyFallbackModelAnthropic:   "claude-3-5-sonnet-20241022",
@@ -573,6 +585,7 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 	result := &SystemSettings{
 		RegistrationEnabled:          settings[SettingKeyRegistrationEnabled] == "true",
 		EmailVerifyEnabled:           emailVerifyEnabled,
+		BlockChinaIPRegistration:     settings[SettingKeyBlockChinaIPRegistration] == "true",
 		PromoCodeEnabled:             settings[SettingKeyPromoCodeEnabled] != "false", // 默认启用
 		PasswordResetEnabled:         emailVerifyEnabled && settings[SettingKeyPasswordResetEnabled] == "true",
 		TotpEnabled:                  settings[SettingKeyTotpEnabled] == "true",

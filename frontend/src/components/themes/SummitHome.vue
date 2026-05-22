@@ -60,7 +60,10 @@
         </div>
       </div>
 
-      <div v-if="props.registrationNotice || props.allowSubSiteOpen" class="mb-16 space-y-4">
+      <div v-if="props.serviceAreaNotice || props.registrationNotice || props.allowSubSiteOpen" class="mb-16 space-y-4">
+        <div v-if="props.serviceAreaNotice" class="border-l-4 border-amber-500 bg-amber-50 px-6 py-4 font-serif text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+          {{ props.serviceAreaNotice }}
+        </div>
         <div v-if="props.registrationNotice" class="border-l-4 border-amber-500 bg-amber-50 px-6 py-4 font-serif text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
           {{ props.registrationNotice }}
         </div>

@@ -9,6 +9,7 @@ export interface ThemeHomeProps {
   heroDescription: string
   ctaText: string
   featureTags: string[]
+  serviceAreaNotice: string
   registrationNotice: string
   allowSubSiteOpen: boolean
   subSiteOpenPrice: string

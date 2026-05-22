@@ -67,7 +67,10 @@
         </div>
       </div>
 
-      <div v-if="props.registrationNotice || props.allowSubSiteOpen" class="mb-12 space-y-3 text-sm">
+      <div v-if="props.serviceAreaNotice || props.registrationNotice || props.allowSubSiteOpen" class="mb-12 space-y-3 text-sm">
+        <div v-if="props.serviceAreaNotice" class="rounded border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-300">
+          <span class="mr-2 text-amber-500">[WARN]</span>{{ props.serviceAreaNotice }}
+        </div>
         <div v-if="props.registrationNotice" class="rounded border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-300">
           <span class="mr-2 text-amber-500">[WARN]</span>{{ props.registrationNotice }}
         </div>

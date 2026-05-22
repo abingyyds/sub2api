@@ -91,6 +91,9 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		response.BadRequest(c, "Invalid request: "+err.Error())
 		return
 	}
+	if h.rejectMainlandChinaRegistration(c) {
+		return
+	}
 	if !req.TermsAccepted || !req.PrivacyAccepted || !req.LegalCommitment {
 		response.BadRequest(c, "You must review and accept the User Agreement, Privacy Policy, and prohibited-use commitment before registering.")
 		return
@@ -138,6 +141,9 @@ func (h *AuthHandler) SendVerifyCode(c *gin.Context) {
 		response.BadRequest(c, "Invalid request: "+err.Error())
 		return
 	}
+	if h.rejectMainlandChinaRegistration(c) {
+		return
+	}
 
 	// Turnstile 验证
 	if err := h.authService.VerifyTurnstile(c.Request.Context(), req.TurnstileToken, ip.GetClientIP(c)); err != nil {
@@ -155,6 +161,30 @@ func (h *AuthHandler) SendVerifyCode(c *gin.Context) {
 		Message:   "Verification code sent successfully",
 		Countdown: result.Countdown,
 	})
+}
+
+func (h *AuthHandler) shouldBlockMainlandChinaRegistration(c *gin.Context) bool {
+	if h == nil || h.settingSvc == nil || c == nil {
+		return false
+	}
+	if !h.settingSvc.IsChinaIPRegistrationBlocked(c.Request.Context()) {
+		return false
+	}
+	return ip.IsMainlandChinaCountryCode(ip.GetClientCountryCode(c))
+}
+
+func (h *AuthHandler) rejectMainlandChinaRegistration(c *gin.Context) bool {
+	if !h.shouldBlockMainlandChinaRegistration(c) {
+		return false
+	}
+	slog.Warn(
+		"mainland_china_registration_blocked",
+		"ip", ip.GetClientIP(c),
+		"country_code", ip.GetClientCountryCode(c),
+		"path", c.FullPath(),
+	)
+	response.ErrorFrom(c, service.ErrChinaIPRegistrationBlocked)
+	return true
 }
 
 // Login handles user login

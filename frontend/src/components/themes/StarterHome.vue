@@ -114,7 +114,13 @@
         </div>
       </div>
 
-      <div v-if="props.registrationNotice || props.allowSubSiteOpen" class="mb-12 grid gap-4 lg:grid-cols-2">
+      <div v-if="props.serviceAreaNotice || props.registrationNotice || props.allowSubSiteOpen" class="mb-12 grid gap-4 lg:grid-cols-2">
+        <div v-if="props.serviceAreaNotice" class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-700 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300">
+          <div class="flex items-start gap-2.5">
+            <Icon name="exclamationTriangle" size="sm" class="mt-0.5 flex-shrink-0 text-amber-500" />
+            <span>{{ props.serviceAreaNotice }}</span>
+          </div>
+        </div>
         <div v-if="props.registrationNotice" class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-700 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300">
           {{ props.registrationNotice }}
         </div>

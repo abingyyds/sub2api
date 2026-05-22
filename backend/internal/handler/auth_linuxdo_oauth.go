@@ -217,6 +217,10 @@ func (h *AuthHandler) LinuxDoOAuthCallback(c *gin.Context) {
 	}
 
 	if !h.oauthUserExists(c.Request.Context(), email) {
+		if h.shouldBlockMainlandChinaRegistration(c) {
+			redirectOAuthError(c, frontendCallback, infraerrors.Reason(service.ErrChinaIPRegistrationBlocked), infraerrors.Message(service.ErrChinaIPRegistrationBlocked), "")
+			return
+		}
 		legalAccepted, _ := readCookieDecoded(c, linuxDoOAuthLegalAcceptanceCookie)
 		if legalAccepted != "true" {
 			redirectOAuthError(c, frontendCallback, "legal_acceptance_required", "please accept the User Agreement and Privacy Policy before registering", "")

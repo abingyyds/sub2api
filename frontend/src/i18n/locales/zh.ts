@@ -10,6 +10,7 @@ export default {
     login: '登录',
     getStarted: '开始使用',
     goToDashboard: '进入控制台',
+    serviceAreaNotice: '本服务暂不向中国大陆地区提供新增注册、充值及相关生成式 AI 服务。',
     tags: {
       subscriptionToApi: '订阅转 API',
       stickySession: '粘性会话',
@@ -277,6 +278,10 @@ export default {
     accountCreatedSuccess: '账户创建成功！欢迎使用 {siteName}。',
     agreeToTermsPrefix: '我已阅读并同意',
     termsOfService: '《用户协议》',
+    serviceAreaNotice: {
+      title: '服务区域提示',
+      body: '本服务暂不向中国大陆地区提供新增注册、充值及相关生成式 AI 服务。'
+    },
     legal: {
       reviewRequired: '请先阅读并同意法律文件后继续。',
       userAgreement: '用户协议',
@@ -3354,6 +3359,9 @@ export default {
         description: '控制用户注册和验证',
         enableRegistration: '开放注册',
         enableRegistrationHint: '允许新用户注册',
+        blockChinaIpRegistration: '关闭中国 IP 注册',
+        blockChinaIpRegistrationHint:
+          '开启后，来自中国大陆地区 IP 的新增注册、注册验证码和第三方首次注册将被拦截。需要 CDN 或反向代理传递国家码 Header。',
         emailVerification: '邮箱验证',
         emailVerificationHint: '新用户注册时需要验证邮箱',
         promoCode: '优惠码',

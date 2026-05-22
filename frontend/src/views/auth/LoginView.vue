@@ -12,6 +12,23 @@
           </p>
         </div>
 
+        <!-- Service Area Notice -->
+        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/50 dark:bg-amber-900/20">
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0">
+              <Icon name="exclamationTriangle" size="md" class="text-amber-500" />
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                {{ t('auth.serviceAreaNotice.title') }}
+              </p>
+              <p class="mt-1 text-sm text-amber-700 dark:text-amber-400">
+                {{ t('auth.serviceAreaNotice.body') }}
+              </p>
+            </div>
+          </div>
+        </div>
+
         <!-- LinuxDo Connect OAuth 登录 -->
         <LinuxDoOAuthSection v-if="linuxdoOAuthEnabled" :disabled="isLoading" />
 

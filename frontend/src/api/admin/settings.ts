@@ -12,6 +12,7 @@ export interface SystemSettings {
   // Registration settings
   registration_enabled: boolean
   email_verify_enabled: boolean
+  block_china_ip_registration: boolean
   promo_code_enabled: boolean
   password_reset_enabled: boolean
   totp_enabled: boolean // TOTP 双因素认证
@@ -129,6 +130,7 @@ export interface SystemSettings {
 export interface UpdateSettingsRequest {
   registration_enabled?: boolean
   email_verify_enabled?: boolean
+  block_china_ip_registration?: boolean
   promo_code_enabled?: boolean
   password_reset_enabled?: boolean
   totp_enabled?: boolean // TOTP 双因素认证

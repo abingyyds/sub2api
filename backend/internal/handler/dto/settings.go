@@ -4,6 +4,7 @@ package dto
 type SystemSettings struct {
 	RegistrationEnabled         bool `json:"registration_enabled"`
 	EmailVerifyEnabled          bool `json:"email_verify_enabled"`
+	BlockChinaIPRegistration    bool `json:"block_china_ip_registration"`
 	PromoCodeEnabled            bool `json:"promo_code_enabled"`
 	PasswordResetEnabled        bool `json:"password_reset_enabled"`
 	TotpEnabled                 bool `json:"totp_enabled"`                   // TOTP 双因素认证

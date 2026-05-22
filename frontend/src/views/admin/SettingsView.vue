@@ -309,6 +309,21 @@
               <Toggle v-model="form.registration_enabled" />
             </div>
 
+            <!-- Block Mainland China IP Registration -->
+            <div
+              class="flex items-center justify-between border-t border-gray-100 pt-4 dark:border-dark-700"
+            >
+              <div>
+                <label class="font-medium text-gray-900 dark:text-white">{{
+                  t('admin.settings.registration.blockChinaIpRegistration')
+                }}</label>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  {{ t('admin.settings.registration.blockChinaIpRegistrationHint') }}
+                </p>
+              </div>
+              <Toggle v-model="form.block_china_ip_registration" />
+            </div>
+
             <!-- Email Verification -->
             <div
               class="flex items-center justify-between border-t border-gray-100 pt-4 dark:border-dark-700"
@@ -1607,6 +1622,7 @@ type SettingsForm = SystemSettings & {
 const form = reactive<SettingsForm>({
   registration_enabled: true,
   email_verify_enabled: false,
+  block_china_ip_registration: false,
   promo_code_enabled: true,
   password_reset_enabled: false,
   totp_enabled: false,
@@ -1934,6 +1950,7 @@ async function saveSettings() {
     const payload: UpdateSettingsRequest = {
       registration_enabled: form.registration_enabled,
       email_verify_enabled: form.email_verify_enabled,
+      block_china_ip_registration: form.block_china_ip_registration,
       promo_code_enabled: form.promo_code_enabled,
       password_reset_enabled: form.password_reset_enabled,
       totp_enabled: form.totp_enabled,
