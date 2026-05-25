@@ -31,7 +31,7 @@ export interface AdminPaymentOrder {
 export async function list(
   page: number = 1,
   pageSize: number = 20,
-  filters?: { status?: string; order_type?: string },
+  filters?: { status?: string; order_type?: string; invoice_status?: string },
   options?: { signal?: AbortSignal }
 ): Promise<PaginatedResponse<AdminPaymentOrder>> {
   const { data } = await apiClient.get<PaginatedResponse<AdminPaymentOrder>>('/admin/orders', {
@@ -39,7 +39,8 @@ export async function list(
       page,
       page_size: pageSize,
       status: filters?.status || undefined,
-      order_type: filters?.order_type || undefined
+      order_type: filters?.order_type || undefined,
+      invoice_status: filters?.invoice_status || undefined
     },
     signal: options?.signal
   })

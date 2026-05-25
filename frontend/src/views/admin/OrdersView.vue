@@ -5,6 +5,7 @@
         <div class="flex flex-wrap gap-3">
           <Select v-model="filters.status" :options="statusOptions" :placeholder="t('admin.orders.allStatus')" class="w-36" @update:modelValue="onFilterChange" />
           <Select v-model="filters.order_type" :options="typeOptions" :placeholder="t('admin.orders.allTypes')" class="w-36" @update:modelValue="onFilterChange" />
+          <Select v-model="filters.invoice_status" :options="invoiceStatusOptions" :placeholder="t('admin.orders.allInvoiceStatus')" class="w-40" @update:modelValue="onFilterChange" />
           <button @click="loadData" :disabled="loading" class="btn btn-secondary" :title="t('common.refresh')">
             <Icon name="refresh" size="md" :class="loading ? 'animate-spin' : ''" />
           </button>
@@ -87,7 +88,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { ordersAPI } from '@/api/admin'
@@ -104,12 +106,22 @@ import type { Column } from '@/components/common/types'
 
 const { t } = useI18n()
 const appStore = useAppStore()
+const route = useRoute()
 
 const items = ref<AdminPaymentOrder[]>([])
 const loading = ref(false)
 const processingActionKey = ref<string | null>(null)
 const pagination = ref({ page: 1, page_size: 20, total: 0 })
-const filters = ref({ status: '', order_type: '' })
+const allowedInvoiceStatuses = new Set(['pending', 'processed', 'none'])
+const routeInvoiceStatus = () => {
+  if (typeof route.query.invoice_status === 'string' && allowedInvoiceStatuses.has(route.query.invoice_status)) return route.query.invoice_status
+  return route.name === 'AdminInvoiceRequests' ? 'pending' : ''
+}
+const filters = ref({
+  status: '',
+  order_type: '',
+  invoice_status: routeInvoiceStatus()
+})
 
 const columns = computed<Column[]>(() => [
   { key: 'order_no', label: t('admin.orders.orderNo'), sortable: false },
@@ -138,6 +150,13 @@ const typeOptions = computed(() => [
   { value: 'subscription', label: t('admin.orders.typeSubscription') },
   { value: 'quota_package', label: t('admin.orders.typeQuotaPackage') },
   { value: 'balance', label: t('admin.orders.typeBalance') }
+])
+
+const invoiceStatusOptions = computed(() => [
+  { value: 'pending', label: t('admin.orders.invoicePending') },
+  { value: '', label: t('admin.orders.allInvoiceStatus') },
+  { value: 'processed', label: t('admin.orders.invoiceProcessed') },
+  { value: 'none', label: t('admin.orders.invoiceNone') }
 ])
 
 function orderTypeLabel(value: string) {
@@ -201,7 +220,8 @@ const loadData = async () => {
   try {
     const res = await ordersAPI.list(pagination.value.page, pagination.value.page_size, {
       status: filters.value.status,
-      order_type: filters.value.order_type
+      order_type: filters.value.order_type,
+      invoice_status: filters.value.invoice_status
     })
     items.value = res.items
     pagination.value.total = res.total
@@ -239,6 +259,15 @@ const repairOrder = async (row: AdminPaymentOrder) => {
     processingActionKey.value = null
   }
 }
+
+watch(
+  () => [route.name, route.query.invoice_status],
+  () => {
+    filters.value.invoice_status = routeInvoiceStatus()
+    pagination.value.page = 1
+    loadData()
+  }
+)
 
 onMounted(loadData)
 </script>

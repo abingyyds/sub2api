@@ -26,9 +26,10 @@ func (h *PaymentOrderHandler) List(c *gin.Context) {
 	page, pageSize := response.ParsePagination(c)
 	status := c.Query("status")
 	orderType := c.Query("order_type")
+	invoiceStatus := c.Query("invoice_status")
 
 	params := pagination.PaginationParams{Page: page, PageSize: pageSize}
-	orders, pag, err := h.paymentService.ListAllOrders(c.Request.Context(), params, status, orderType)
+	orders, pag, err := h.paymentService.ListAllOrders(c.Request.Context(), params, status, orderType, invoiceStatus)
 	if err != nil {
 		slog.Error("[AdminOrders] ListAllOrders failed", "error", err)
 		response.ErrorFrom(c, err)

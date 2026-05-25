@@ -623,6 +623,18 @@ const routes: RouteRecordRaw[] = wrapRouteLazyComponents([
     }
   },
   {
+    path: '/admin/invoices',
+    name: 'AdminInvoiceRequests',
+    component: () => import('@/views/admin/OrdersView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Invoice Requests',
+      titleKey: 'admin.orders.invoiceRequestsTitle',
+      descriptionKey: 'admin.orders.invoiceRequestsDescription'
+    }
+  },
+  {
     path: '/admin/agents',
     name: 'AdminAgents',
     component: () => import('@/views/admin/AgentsView.vue'),

@@ -751,6 +751,7 @@ const adminNavItems = computed(() => {
       : []),
     { path: '/admin/usage', label: t('nav.usage'), icon: ChartIcon },
     { path: '/admin/orders', label: t('nav.orders'), icon: ShoppingBagIcon },
+    { path: '/admin/invoices', label: t('nav.invoiceRequests'), icon: ReceiptIcon },
     { path: '/admin/agents', label: t('nav.agents'), icon: UsersIcon },
     { path: '/admin/subsites', label: '分站', icon: GlobeIcon },
     { path: '/admin/withdraws', label: '提现审核', icon: ReceiptIcon },

@@ -179,7 +179,7 @@ func (r *paymentOrderRepo) ListByUserID(ctx context.Context, userID int64, param
 	}, nil
 }
 
-func (r *paymentOrderRepo) ListAll(ctx context.Context, params pagination.PaginationParams, status string, orderType string) ([]service.PaymentOrder, *pagination.PaginationResult, error) {
+func (r *paymentOrderRepo) ListAll(ctx context.Context, params pagination.PaginationParams, status string, orderType string, invoiceStatus string) ([]service.PaymentOrder, *pagination.PaginationResult, error) {
 	query := r.client.PaymentOrder.Query()
 
 	if status != "" {
@@ -188,14 +188,33 @@ func (r *paymentOrderRepo) ListAll(ctx context.Context, params pagination.Pagina
 	if orderType != "" {
 		query = query.Where(paymentorder.OrderTypeEQ(orderType))
 	}
+	switch invoiceStatus {
+	case "pending":
+		query = query.Where(
+			paymentorder.InvoiceRequestedAtNotNil(),
+			paymentorder.InvoiceProcessedAtIsNil(),
+		)
+	case "processed":
+		query = query.Where(paymentorder.InvoiceProcessedAtNotNil())
+	case "none":
+		query = query.Where(paymentorder.InvoiceRequestedAtIsNil())
+	}
 
 	total, err := query.Count(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("count payment orders: %w", err)
 	}
 
+	orderTerms := []paymentorder.OrderOption{dbent.Desc(paymentorder.FieldCreatedAt)}
+	if invoiceStatus == "pending" || invoiceStatus == "processed" {
+		orderTerms = []paymentorder.OrderOption{
+			dbent.Desc(paymentorder.FieldInvoiceRequestedAt),
+			dbent.Desc(paymentorder.FieldCreatedAt),
+		}
+	}
+
 	orders, err := query.
-		Order(dbent.Desc(paymentorder.FieldCreatedAt)).
+		Order(orderTerms...).
 		Limit(params.PageSize).
 		Offset((params.Page - 1) * params.PageSize).
 		All(ctx)

@@ -73,7 +73,7 @@ func (s *paymentOrderRepoStub) ListByUserID(ctx context.Context, userID int64, p
 	panic("unexpected ListByUserID call")
 }
 
-func (s *paymentOrderRepoStub) ListAll(ctx context.Context, params pagination.PaginationParams, status string, orderType string) ([]PaymentOrder, *pagination.PaginationResult, error) {
+func (s *paymentOrderRepoStub) ListAll(ctx context.Context, params pagination.PaginationParams, status string, orderType string, invoiceStatus string) ([]PaymentOrder, *pagination.PaginationResult, error) {
 	panic("unexpected ListAll call")
 }
 

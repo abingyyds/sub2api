@@ -118,7 +118,7 @@ type PaymentOrderRepository interface {
 	// Returns true if the update was applied, false if the current status didn't match.
 	CompareAndUpdateStatus(ctx context.Context, orderNo string, expectedStatus string, newStatus string, transactionID *string, paidAt *time.Time) (bool, error)
 	ListByUserID(ctx context.Context, userID int64, params pagination.PaginationParams) ([]PaymentOrder, *pagination.PaginationResult, error)
-	ListAll(ctx context.Context, params pagination.PaginationParams, status string, orderType string) ([]PaymentOrder, *pagination.PaginationResult, error)
+	ListAll(ctx context.Context, params pagination.PaginationParams, status string, orderType string, invoiceStatus string) ([]PaymentOrder, *pagination.PaginationResult, error)
 	SubmitInvoiceRequest(ctx context.Context, userID int64, orderNos []string, invoice InvoiceRequest) error
 	MarkInvoiceProcessed(ctx context.Context, orderID int64) error
 	CloseExpiredOrders(ctx context.Context) (int64, error)
@@ -1277,8 +1277,8 @@ func legacySubscriptionOrderStatus(subscriptionStatus string) string {
 }
 
 // ListAllOrders 列出所有订单（管理员）
-func (s *PaymentService) ListAllOrders(ctx context.Context, params pagination.PaginationParams, status string, orderType string) ([]PaymentOrder, *pagination.PaginationResult, error) {
-	return s.orderRepo.ListAll(ctx, params, status, orderType)
+func (s *PaymentService) ListAllOrders(ctx context.Context, params pagination.PaginationParams, status string, orderType string, invoiceStatus string) ([]PaymentOrder, *pagination.PaginationResult, error) {
+	return s.orderRepo.ListAll(ctx, params, status, orderType, invoiceStatus)
 }
 
 func (s *PaymentService) SubmitInvoiceRequest(ctx context.Context, userID int64, orderNos []string, invoice InvoiceRequest) error {
