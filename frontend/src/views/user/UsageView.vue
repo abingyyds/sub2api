@@ -3,93 +3,173 @@
     <TablePageLayout>
       <template #actions>
         <StaggerContainer :stagger-delay="100">
-          <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <!-- Total Requests -->
-            <GlowCard glow-color="rgb(59, 130, 246)">
-              <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
-                <div class="flex items-center gap-3">
-                  <div class="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/30">
-                    <Icon name="document" size="md" class="text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div>
-                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                      {{ t('usage.totalRequests') }}
-                    </p>
-                    <p class="text-xl font-bold text-gray-900 dark:text-white">
-                      {{ usageStats?.total_requests?.toLocaleString() || '0' }}
-                    </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                      {{ t('usage.inSelectedRange') }}
-                    </p>
+          <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <!-- Total Requests -->
+              <GlowCard glow-color="rgb(59, 130, 246)">
+                <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
+                  <div class="flex items-center gap-3">
+                    <div class="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/30">
+                      <Icon name="document" size="md" class="text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        {{ t('usage.totalRequests') }}
+                      </p>
+                      <p class="text-xl font-bold text-gray-900 dark:text-white">
+                        {{ usageStats?.total_requests?.toLocaleString() || '0' }}
+                      </p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400">
+                        {{ t('usage.inSelectedRange') }}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </GlowCard>
+              </GlowCard>
 
-            <!-- Total Tokens -->
-            <GlowCard glow-color="rgb(245, 158, 11)">
-              <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
-                <div class="flex items-center gap-3">
-                  <div class="rounded-lg bg-amber-100 p-2 dark:bg-amber-900/30">
-                    <Icon name="cube" size="md" class="text-amber-600 dark:text-amber-400" />
-                  </div>
-                  <div>
-                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                      {{ t('usage.totalTokens') }}
-                    </p>
-                    <p class="text-xl font-bold text-gray-900 dark:text-white">
-                      {{ formatTokens(usageStats?.total_tokens || 0) }}
-                    </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                      {{ t('usage.in') }}: {{ formatTokens(usageStats?.total_input_tokens || 0) }} /
-                      {{ t('usage.out') }}: {{ formatTokens(usageStats?.total_output_tokens || 0) }}
-                    </p>
+              <!-- Total Tokens -->
+              <GlowCard glow-color="rgb(245, 158, 11)">
+                <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
+                  <div class="flex items-center gap-3">
+                    <div class="rounded-lg bg-amber-100 p-2 dark:bg-amber-900/30">
+                      <Icon name="cube" size="md" class="text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div>
+                      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        {{ t('usage.totalTokens') }}
+                      </p>
+                      <p class="text-xl font-bold text-gray-900 dark:text-white">
+                        {{ formatTokens(usageStats?.total_tokens || 0) }}
+                      </p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400">
+                        {{ t('usage.in') }}: {{ formatTokens(usageStats?.total_input_tokens || 0) }} /
+                        {{ t('usage.out') }}: {{ formatTokens(usageStats?.total_output_tokens || 0) }}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </GlowCard>
+              </GlowCard>
 
-            <!-- Total Cost -->
-            <GlowCard glow-color="rgb(34, 197, 94)">
-              <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
-                <div class="flex items-center gap-3">
-                  <div class="rounded-lg bg-green-100 p-2 dark:bg-green-900/30">
-                    <Icon name="dollar" size="md" class="text-green-600 dark:text-green-400" />
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                      {{ t('usage.totalCost') }}
-                    </p>
-                    <p class="text-xl font-bold text-green-600 dark:text-green-400">
-                      ${{ (usageStats?.total_actual_cost || 0).toFixed(4) }}
-                    </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                      {{ t('usage.actualDeduction') }}
-                    </p>
+              <!-- Total Cost -->
+              <GlowCard glow-color="rgb(34, 197, 94)">
+                <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
+                  <div class="flex items-center gap-3">
+                    <div class="rounded-lg bg-green-100 p-2 dark:bg-green-900/30">
+                      <Icon name="dollar" size="md" class="text-green-600 dark:text-green-400" />
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        {{ t('usage.totalCost') }}
+                      </p>
+                      <p class="text-xl font-bold text-green-600 dark:text-green-400">
+                        ${{ (usageStats?.total_actual_cost || 0).toFixed(4) }}
+                      </p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400">
+                        {{ t('usage.actualDeduction') }}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </GlowCard>
+              </GlowCard>
 
-            <!-- Average Duration -->
-            <GlowCard glow-color="rgb(168, 85, 247)">
-              <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
-                <div class="flex items-center gap-3">
-                  <div class="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/30">
-                    <Icon name="clock" size="md" class="text-purple-600 dark:text-purple-400" />
-                  </div>
-                  <div>
-                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                      {{ t('usage.avgDuration') }}
-                    </p>
-                    <p class="text-xl font-bold text-gray-900 dark:text-white">
-                      {{ formatDuration(usageStats?.average_duration_ms || 0) }}
-                    </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('usage.perRequest') }}</p>
+              <!-- Average Duration -->
+              <GlowCard glow-color="rgb(168, 85, 247)">
+                <div class="rounded-2xl border-2 border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-900 shadow-soft p-4">
+                  <div class="flex items-center gap-3">
+                    <div class="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/30">
+                      <Icon name="clock" size="md" class="text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div>
+                      <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        {{ t('usage.avgDuration') }}
+                      </p>
+                      <p class="text-xl font-bold text-gray-900 dark:text-white">
+                        {{ formatDuration(usageStats?.average_duration_ms || 0) }}
+                      </p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('usage.perRequest') }}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </GlowCard>
+              </GlowCard>
+            </div>
+
+            <div v-if="subscriptionLoading || activeSubscriptions.length > 0" class="grid gap-4 lg:grid-cols-2">
+              <GlowCard
+                v-for="subscription in activeSubscriptions"
+                :key="subscription.id"
+                glow-color="rgb(217, 119, 87)"
+              >
+                <div class="rounded-2xl border-2 border-primary-200 bg-white p-5 shadow-soft dark:border-primary-800/40 dark:bg-dark-900">
+                  <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div class="min-w-0">
+                      <p class="text-xs font-semibold uppercase tracking-wide text-primary-600 dark:text-primary-400">
+                        {{ t('usage.currentSubscription') }}
+                      </p>
+                      <h3 class="mt-1 truncate text-lg font-bold text-gray-900 dark:text-white">
+                        {{ subscription.group?.name || t('usage.subscriptionFallbackName', { id: subscription.group_id }) }}
+                      </h3>
+                      <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-dark-400">
+                        {{ t('usage.subscriptionBillingNote') }}
+                      </p>
+                    </div>
+                    <span class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                      {{ t('usage.subscriptionStatusActive') }}
+                    </span>
+                  </div>
+
+                  <div class="mt-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+                    <div class="rounded-xl bg-gray-50 px-4 py-3 dark:bg-dark-800">
+                      <p class="text-xs font-medium text-gray-500 dark:text-dark-400">
+                        {{ t('usage.subscriptionExpiresAt') }}
+                      </p>
+                      <p class="mt-1 text-sm font-bold text-gray-900 dark:text-white">
+                        {{ formatSubscriptionExpiration(subscription.expires_at) }}
+                      </p>
+                    </div>
+
+                    <div class="space-y-3">
+                      <div
+                        v-for="windowInfo in getSubscriptionUsageWindows(subscription)"
+                        :key="windowInfo.key"
+                        class="rounded-xl bg-gray-50 px-4 py-3 dark:bg-dark-800"
+                      >
+                        <div class="flex items-center justify-between gap-3">
+                          <span class="text-sm font-bold text-gray-700 dark:text-gray-300">
+                            {{ windowInfo.label }}
+                          </span>
+                          <span class="text-sm font-semibold text-gray-900 dark:text-white">
+                            {{ formatUSD(windowInfo.used) }} / {{ formatUSD(windowInfo.limit) }}
+                          </span>
+                        </div>
+                        <div class="mt-2 h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-dark-600">
+                          <div
+                            class="h-full rounded-full transition-all duration-500"
+                            :class="getSubscriptionProgressClass(windowInfo.used, windowInfo.limit)"
+                            :style="{ width: getSubscriptionProgressWidth(windowInfo.used, windowInfo.limit) }"
+                          ></div>
+                        </div>
+                        <p class="mt-2 text-xs text-gray-500 dark:text-dark-400">
+                          {{ formatSubscriptionReset(windowInfo.windowStart, windowInfo.windowHours) }}
+                        </p>
+                      </div>
+                      <div
+                        v-if="getSubscriptionUsageWindows(subscription).length === 0"
+                        class="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300"
+                      >
+                        {{ t('usage.subscriptionUnlimited') }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </GlowCard>
+
+              <GlowCard v-if="subscriptionLoading && activeSubscriptions.length === 0" glow-color="rgb(217, 119, 87)">
+                <div class="rounded-2xl border-2 border-gray-200 bg-white p-5 shadow-soft dark:border-dark-700 dark:bg-dark-900">
+                  <div class="h-5 w-40 animate-pulse rounded bg-gray-200 dark:bg-dark-700"></div>
+                  <div class="mt-4 h-20 animate-pulse rounded-xl bg-gray-100 dark:bg-dark-800"></div>
+                </div>
+              </GlowCard>
+            </div>
           </div>
         </StaggerContainer>
       </template>
@@ -430,6 +510,7 @@ import { ref, computed, reactive, onMounted, onUnmounted, defineAsyncComponent }
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { useAuthStore } from '@/stores/auth'
+import { useSubscriptionStore } from '@/stores/subscriptions'
 import { usageAPI, keysAPI } from '@/api'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import TablePageLayout from '@/components/layout/TablePageLayout.vue'
@@ -439,9 +520,9 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import Select from '@/components/common/Select.vue'
 import DateRangePicker from '@/components/common/DateRangePicker.vue'
 import Icon from '@/components/icons/Icon.vue'
-import type { UsageLog, ApiKey, UsageQueryParams, UsageStatsResponse } from '@/types'
+import type { UsageLog, ApiKey, UsageQueryParams, UsageStatsResponse, UserSubscription } from '@/types'
 import type { Column } from '@/components/common/types'
-import { formatDateTime } from '@/utils/format'
+import { formatDateOnly, formatDateTime } from '@/utils/format'
 // Lazy load animations to reduce initial bundle size
 const StaggerContainer = defineAsyncComponent(() => import('@/components/animations/StaggerContainer.vue'))
 const GlowCard = defineAsyncComponent(() => import('@/components/animations/GlowCard.vue'))
@@ -449,6 +530,7 @@ const GlowCard = defineAsyncComponent(() => import('@/components/animations/Glow
 const { t } = useI18n()
 const appStore = useAppStore()
 const authStore = useAuthStore()
+const subscriptionStore = useSubscriptionStore()
 
 const API_KEYS_CACHE_TTL_MS = 5 * 60 * 1000
 const USAGE_STATS_CACHE_TTL_MS = 60 * 1000
@@ -483,6 +565,8 @@ const tokenTooltipData = ref<UsageLog | null>(null)
 
 // Usage stats from API
 const usageStats = ref<UsageStatsResponse | null>(null)
+const activeSubscriptions = computed<UserSubscription[]>(() => subscriptionStore.activeSubscriptions)
+const subscriptionLoading = computed(() => subscriptionStore.loading && activeSubscriptions.value.length === 0)
 
 const columns = computed<Column[]>(() => [
   { key: 'api_key', label: t('usage.apiKeyFilter'), sortable: false },
@@ -580,6 +664,110 @@ const formatTokens = (value: number): string => {
     return `${(value / 1_000).toFixed(2)}K`
   }
   return value.toLocaleString()
+}
+
+type SubscriptionUsageWindow = {
+  key: 'daily' | 'weekly' | 'monthly'
+  label: string
+  used: number
+  limit: number
+  windowStart: string | null
+  windowHours: number
+}
+
+const formatUSD = (value: number): string => `$${value.toFixed(2)}`
+
+const getSubscriptionProgressWidth = (used: number, limit: number): string => {
+  if (limit <= 0) return '0%'
+  return `${Math.min((used / limit) * 100, 100)}%`
+}
+
+const getSubscriptionProgressClass = (used: number, limit: number): string => {
+  if (limit <= 0) return 'bg-gray-400'
+  const percentage = (used / limit) * 100
+  if (percentage >= 90) return 'bg-red-500'
+  if (percentage >= 70) return 'bg-orange-500'
+  return 'bg-green-500'
+}
+
+const getSubscriptionUsageWindows = (subscription: UserSubscription): SubscriptionUsageWindow[] => {
+  const group = subscription.group
+  if (!group) return []
+
+  const windows: SubscriptionUsageWindow[] = []
+  if (group.monthly_limit_usd && group.monthly_limit_usd > 0) {
+    windows.push({
+      key: 'monthly',
+      label: t('usage.subscriptionMonthly'),
+      used: subscription.monthly_usage_usd || 0,
+      limit: group.monthly_limit_usd,
+      windowStart: subscription.monthly_window_start,
+      windowHours: 30 * 24
+    })
+  }
+  if (group.weekly_limit_usd && group.weekly_limit_usd > 0) {
+    windows.push({
+      key: 'weekly',
+      label: t('usage.subscriptionWeekly'),
+      used: subscription.weekly_usage_usd || 0,
+      limit: group.weekly_limit_usd,
+      windowStart: subscription.weekly_window_start,
+      windowHours: 7 * 24
+    })
+  }
+  if (group.daily_limit_usd && group.daily_limit_usd > 0) {
+    windows.push({
+      key: 'daily',
+      label: t('usage.subscriptionDaily'),
+      used: subscription.daily_usage_usd || 0,
+      limit: group.daily_limit_usd,
+      windowStart: subscription.daily_window_start,
+      windowHours: 24
+    })
+  }
+
+  return windows
+}
+
+const formatSubscriptionExpiration = (expiresAt: string | null): string => {
+  if (!expiresAt) return t('usage.subscriptionNoExpiration')
+
+  const expires = new Date(expiresAt)
+  const diff = expires.getTime() - Date.now()
+  if (Number.isNaN(expires.getTime()) || diff <= 0) {
+    return t('usage.subscriptionExpired')
+  }
+
+  const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
+  return t('usage.subscriptionDaysRemaining', {
+    days,
+    date: formatDateOnly(expires)
+  })
+}
+
+const formatSubscriptionReset = (windowStart: string | null, windowHours: number): string => {
+  if (!windowStart) return t('usage.subscriptionWindowNotActive')
+
+  const start = new Date(windowStart)
+  const resetAt = new Date(start.getTime() + windowHours * 60 * 60 * 1000)
+  const diff = resetAt.getTime() - Date.now()
+
+  if (Number.isNaN(resetAt.getTime()) || diff <= 0) {
+    return t('usage.subscriptionWindowNotActive')
+  }
+
+  const totalMinutes = Math.floor(diff / (1000 * 60))
+  const days = Math.floor(totalMinutes / (24 * 60))
+  const hours = Math.floor((totalMinutes % (24 * 60)) / 60)
+  const minutes = totalMinutes % 60
+
+  if (days > 0) {
+    return t('usage.subscriptionResetsIn', { time: `${days}d${hours}h` })
+  }
+  if (hours > 0) {
+    return t('usage.subscriptionResetsIn', { time: `${hours}h${minutes}m` })
+  }
+  return t('usage.subscriptionResetsIn', { time: `${minutes}m` })
 }
 
 // Compact format for cache tokens in table cells
@@ -740,6 +928,14 @@ const loadUsageStats = async () => {
     if (requestId === usageStatsRequestId) {
       console.error('Failed to load usage stats:', error)
     }
+  }
+}
+
+const loadActiveSubscriptions = async () => {
+  try {
+    await subscriptionStore.fetchActiveSubscriptions(true)
+  } catch (error) {
+    console.error('Failed to load subscriptions:', error)
   }
 }
 
@@ -945,6 +1141,7 @@ const scheduleApiKeysLoad = () => {
 
 onMounted(() => {
   scheduleApiKeysLoad()
+  void loadActiveSubscriptions()
   void loadUsageLogs()
   void loadUsageStats()
 })

@@ -938,8 +938,9 @@ const planDecoZh: Record<string, Omit<DecoratedPlan, 'plan'>> = {
     highlight: '每月额度 $650',
     features: [
       '<strong class="text-gray-900 dark:text-white text-base">总额 $650：</strong>充足算力储备，应对高频调用',
-      '<strong class="text-gray-900 dark:text-white text-base">每周 $162.5 高速配额：</strong>生产级优先级，拒绝排队等待',
-      '<strong class="text-gray-900 dark:text-white text-base">透明计费机制：</strong>按量清晰结算，每一分实打实可用',
+      '<strong class="text-gray-900 dark:text-white text-base">不区分模型：</strong>支持本站全部大模型，套餐额度统一可见',
+      '<strong class="text-gray-900 dark:text-white text-base">Claude 特价计费：</strong>Claude 模型默认按 CC 特价型分组计费',
+      '<strong class="text-gray-900 dark:text-white text-base">Opus 4.7 满血：</strong>Opus 4.7 按满血分组计费，适合生产关键任务',
       '<strong class="text-gray-900 dark:text-white text-base">熔断智能防护：</strong>异常流量自动隔离，生产环境稳定如磐石',
     ],
     cta: '立即购买，释放生产力',

@@ -216,15 +216,15 @@
                 </li>
                 <li class="flex items-start gap-3">
                   <Icon name="bolt" size="sm" class="text-yellow-500 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white text-base">每周 $162.5 高速配额：</strong>生产级优先级，拒绝排队等待</div>
+                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white text-base">不区分模型：</strong>支持本站全部大模型，套餐额度统一可见</div>
                 </li>
                 <li class="flex items-start gap-3">
                   <Icon name="dollar" size="sm" class="text-green-500 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white text-base">透明计费机制：</strong>按量清晰结算，每一分实打实可用</div>
+                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white text-base">Claude 特价计费：</strong>Claude 模型默认按 CC 特价型分组计费</div>
                 </li>
                 <li class="flex items-start gap-3">
                   <Icon name="shield" size="sm" class="text-blue-500 mt-0.5 flex-shrink-0" />
-                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white text-base">熔断智能防护：</strong>异常流量自动隔离，生产环境稳定如磐石</div>
+                  <div class="leading-relaxed"><strong class="text-gray-900 dark:text-white text-base">Opus 4.7 满血：</strong>Opus 4.7 按满血分组计费，适合生产关键任务</div>
                 </li>
               </ul>
               <MagneticButton>
