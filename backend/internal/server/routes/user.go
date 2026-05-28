@@ -134,6 +134,7 @@ func RegisterUserRoutes(
 			authPayment.POST("/subsite-topup", h.Payment.CreateSubSiteTopupOrder)
 			authPayment.GET("/orders", h.Payment.ListOrders)
 			authPayment.GET("/orders/:orderNo", h.Payment.QueryOrder)
+			authPayment.GET("/invoice-summary", h.Payment.GetInvoiceSummary)
 			authPayment.POST("/invoice-requests", h.Payment.SubmitInvoice)
 			authPayment.GET("/newcomer-status", h.Payment.GetNewcomerStatus)
 		}

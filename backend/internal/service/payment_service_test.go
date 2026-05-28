@@ -77,7 +77,11 @@ func (s *paymentOrderRepoStub) ListAll(ctx context.Context, params pagination.Pa
 	panic("unexpected ListAll call")
 }
 
-func (s *paymentOrderRepoStub) SubmitInvoiceRequest(ctx context.Context, userID int64, orderNos []string, invoice InvoiceRequest) error {
+func (s *paymentOrderRepoStub) GetInvoiceSummary(ctx context.Context, userID int64) (*InvoiceSummary, error) {
+	panic("unexpected GetInvoiceSummary call")
+}
+
+func (s *paymentOrderRepoStub) SubmitInvoiceRequest(ctx context.Context, userID int64, invoice InvoiceRequest) error {
 	panic("unexpected SubmitInvoiceRequest call")
 }
 

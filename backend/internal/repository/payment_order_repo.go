@@ -235,7 +235,37 @@ func (r *paymentOrderRepo) ListAll(ctx context.Context, params pagination.Pagina
 	}, nil
 }
 
-func (r *paymentOrderRepo) SubmitInvoiceRequest(ctx context.Context, userID int64, orderNos []string, invoice service.InvoiceRequest) error {
+func (r *paymentOrderRepo) GetInvoiceSummary(ctx context.Context, userID int64) (*service.InvoiceSummary, error) {
+	orders, err := r.client.PaymentOrder.Query().
+		Where(
+			paymentorder.UserIDEQ(userID),
+			paymentorder.StatusEQ(service.PaymentOrderStatusPaid),
+			paymentorder.InvoiceRequestedAtIsNil(),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("query invoice summary orders: %w", err)
+	}
+
+	amountFen := 0
+	for _, order := range orders {
+		amountFen += order.AmountFen
+	}
+
+	remainingFen := service.InvoiceMinimumAmountFen - amountFen
+	if remainingFen < 0 {
+		remainingFen = 0
+	}
+
+	return &service.InvoiceSummary{
+		AvailableAmountFen:  amountFen,
+		MinAmountFen:        service.InvoiceMinimumAmountFen,
+		RemainingAmountFen:  remainingFen,
+		AvailableOrderCount: len(orders),
+	}, nil
+}
+
+func (r *paymentOrderRepo) SubmitInvoiceRequest(ctx context.Context, userID int64, invoice service.InvoiceRequest) error {
 	tx, err := r.client.Tx(ctx)
 	if err != nil {
 		return fmt.Errorf("start invoice request transaction: %w", err)
@@ -249,30 +279,32 @@ func (r *paymentOrderRepo) SubmitInvoiceRequest(ctx context.Context, userID int6
 	orders, err := tx.PaymentOrder.Query().
 		Where(
 			paymentorder.UserIDEQ(userID),
-			paymentorder.OrderNoIn(orderNos...),
+			paymentorder.StatusEQ(service.PaymentOrderStatusPaid),
+			paymentorder.InvoiceRequestedAtIsNil(),
 		).
 		All(ctx)
 	if err != nil {
 		return fmt.Errorf("query invoice orders: %w", err)
 	}
-	if len(orders) != len(orderNos) {
-		return service.ErrPaymentOrderNotFound
+	if len(orders) == 0 {
+		return service.ErrInvoiceOrdersRequired
 	}
 
+	totalAmountFen := 0
+	orderIDs := make([]int64, 0, len(orders))
 	for _, order := range orders {
-		if order.Status != service.PaymentOrderStatusPaid {
-			return service.ErrInvoiceOrderNotPaid
-		}
-		if order.InvoiceRequestedAt != nil {
-			return service.ErrInvoiceAlreadyFiled
-		}
+		totalAmountFen += order.AmountFen
+		orderIDs = append(orderIDs, order.ID)
+	}
+	if totalAmountFen < service.InvoiceMinimumAmountFen {
+		return service.ErrInvoiceAmountTooLow
 	}
 
 	now := time.Now()
 	updated, err := tx.PaymentOrder.Update().
 		Where(
 			paymentorder.UserIDEQ(userID),
-			paymentorder.OrderNoIn(orderNos...),
+			paymentorder.IDIn(orderIDs...),
 			paymentorder.InvoiceRequestedAtIsNil(),
 		).
 		SetInvoiceCompanyName(invoice.CompanyName).
@@ -284,7 +316,7 @@ func (r *paymentOrderRepo) SubmitInvoiceRequest(ctx context.Context, userID int6
 	if err != nil {
 		return fmt.Errorf("update invoice request: %w", err)
 	}
-	if updated != len(orderNos) {
+	if updated != len(orderIDs) {
 		return service.ErrInvoiceAlreadyFiled
 	}
 
@@ -311,7 +343,8 @@ func (r *paymentOrderRepo) MarkInvoiceProcessed(ctx context.Context, orderID int
 
 	updated, err := r.client.PaymentOrder.Update().
 		Where(
-			paymentorder.IDEQ(orderID),
+			paymentorder.UserIDEQ(order.UserID),
+			paymentorder.InvoiceRequestedAtEQ(*order.InvoiceRequestedAt),
 			paymentorder.InvoiceRequestedAtNotNil(),
 			paymentorder.InvoiceProcessedAtIsNil(),
 		).

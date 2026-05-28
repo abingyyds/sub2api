@@ -47,13 +47,16 @@ var (
 		"SUBSCRIPTION_REPURCHASE_BLOCKED",
 		"each account can only purchase the same plan once during its active period; repurchase after expiry",
 	)
-	ErrInvoiceOrdersRequired = infraerrors.BadRequest("INVOICE_ORDERS_REQUIRED", "at least one order is required")
+	ErrInvoiceOrdersRequired = infraerrors.BadRequest("INVOICE_ORDERS_REQUIRED", "no invoiceable paid consumption is available")
 	ErrInvoiceEmailInvalid   = infraerrors.BadRequest("INVOICE_EMAIL_INVALID", "invoice email is invalid")
 	ErrInvoiceOrderNotPaid   = infraerrors.BadRequest("INVOICE_ORDER_NOT_PAID", "only paid orders can request invoices")
+	ErrInvoiceAmountTooLow   = infraerrors.BadRequest("INVOICE_AMOUNT_TOO_LOW", "uninvoiced paid consumption must total at least 1000 yuan to request an invoice")
 	ErrInvoiceNotRequested   = infraerrors.BadRequest("INVOICE_NOT_REQUESTED", "invoice has not been requested for this order")
-	ErrInvoiceAlreadyFiled   = infraerrors.Conflict("INVOICE_ALREADY_FILED", "invoice has already been requested for one or more selected orders")
+	ErrInvoiceAlreadyFiled   = infraerrors.Conflict("INVOICE_ALREADY_FILED", "invoice has already been requested for one or more paid consumption records")
 	ErrInvoiceAlreadyHandled = infraerrors.Conflict("INVOICE_ALREADY_HANDLED", "invoice has already been processed")
 )
+
+const InvoiceMinimumAmountFen = 100000
 
 var wechatPayAPIBaseURL = "https://api.mch.weixin.qq.com"
 
@@ -109,6 +112,13 @@ type InvoiceRequest struct {
 	Remark      string `json:"remark"`
 }
 
+type InvoiceSummary struct {
+	AvailableAmountFen  int `json:"available_amount_fen"`
+	MinAmountFen        int `json:"min_amount_fen"`
+	RemainingAmountFen  int `json:"remaining_amount_fen"`
+	AvailableOrderCount int `json:"available_order_count"`
+}
+
 type PaymentOrderRepository interface {
 	Create(ctx context.Context, order *PaymentOrder) error
 	GetByID(ctx context.Context, id int64) (*PaymentOrder, error)
@@ -119,7 +129,8 @@ type PaymentOrderRepository interface {
 	CompareAndUpdateStatus(ctx context.Context, orderNo string, expectedStatus string, newStatus string, transactionID *string, paidAt *time.Time) (bool, error)
 	ListByUserID(ctx context.Context, userID int64, params pagination.PaginationParams) ([]PaymentOrder, *pagination.PaginationResult, error)
 	ListAll(ctx context.Context, params pagination.PaginationParams, status string, orderType string, invoiceStatus string) ([]PaymentOrder, *pagination.PaginationResult, error)
-	SubmitInvoiceRequest(ctx context.Context, userID int64, orderNos []string, invoice InvoiceRequest) error
+	GetInvoiceSummary(ctx context.Context, userID int64) (*InvoiceSummary, error)
+	SubmitInvoiceRequest(ctx context.Context, userID int64, invoice InvoiceRequest) error
 	MarkInvoiceProcessed(ctx context.Context, orderID int64) error
 	CloseExpiredOrders(ctx context.Context) (int64, error)
 	CountPaidByUserAndPlanKey(ctx context.Context, userID int64, planKey string) (int, error)
@@ -1281,24 +1292,11 @@ func (s *PaymentService) ListAllOrders(ctx context.Context, params pagination.Pa
 	return s.orderRepo.ListAll(ctx, params, status, orderType, invoiceStatus)
 }
 
-func (s *PaymentService) SubmitInvoiceRequest(ctx context.Context, userID int64, orderNos []string, invoice InvoiceRequest) error {
-	uniqueOrderNos := make([]string, 0, len(orderNos))
-	seen := make(map[string]struct{}, len(orderNos))
-	for _, orderNo := range orderNos {
-		trimmed := strings.TrimSpace(orderNo)
-		if trimmed == "" {
-			continue
-		}
-		if _, exists := seen[trimmed]; exists {
-			continue
-		}
-		seen[trimmed] = struct{}{}
-		uniqueOrderNos = append(uniqueOrderNos, trimmed)
-	}
-	if len(uniqueOrderNos) == 0 {
-		return ErrInvoiceOrdersRequired
-	}
+func (s *PaymentService) GetInvoiceSummary(ctx context.Context, userID int64) (*InvoiceSummary, error) {
+	return s.orderRepo.GetInvoiceSummary(ctx, userID)
+}
 
+func (s *PaymentService) SubmitInvoiceRequest(ctx context.Context, userID int64, invoice InvoiceRequest) error {
 	invoice.CompanyName = strings.TrimSpace(invoice.CompanyName)
 	invoice.TaxID = strings.TrimSpace(invoice.TaxID)
 	invoice.Email = strings.TrimSpace(invoice.Email)
@@ -1311,7 +1309,7 @@ func (s *PaymentService) SubmitInvoiceRequest(ctx context.Context, userID int64,
 		return ErrInvoiceEmailInvalid
 	}
 
-	return s.orderRepo.SubmitInvoiceRequest(ctx, userID, uniqueOrderNos, invoice)
+	return s.orderRepo.SubmitInvoiceRequest(ctx, userID, invoice)
 }
 
 func (s *PaymentService) MarkInvoiceProcessed(ctx context.Context, orderID int64) error {

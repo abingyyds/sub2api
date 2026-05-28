@@ -11,27 +11,32 @@
             </div>
             <div class="flex items-center gap-3">
               <button
-                v-if="!invoiceMode"
                 class="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-dark-600 dark:bg-dark-800 dark:text-dark-200 dark:hover:bg-dark-700"
-                @click="invoiceMode = true"
+                :disabled="invoiceSummaryLoading"
+                @click="openInvoiceModal"
               >
                 {{ t('orderHistory.invoice') }}
               </button>
-              <button
-                v-if="invoiceMode"
-                class="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-dark-600 dark:bg-dark-800 dark:text-dark-200 dark:hover:bg-dark-700"
-                @click="invoiceMode = false; selectedOrders.clear()"
-              >
-                {{ t('common.cancel') }}
-              </button>
-              <button
-                v-if="invoiceMode"
-                class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-700 disabled:opacity-50"
-                :disabled="selectedOrders.size === 0"
-                @click="showInvoiceModal = true"
-              >
-                {{ t('orderHistory.submitInvoice') }} ({{ selectedOrders.size }})
-              </button>
+            </div>
+          </div>
+        </SlideIn>
+
+        <SlideIn v-if="!loading && !error" direction="up" :delay="150">
+          <div class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800 dark:border-amber-800/50 dark:bg-amber-900/20 dark:text-amber-200">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p class="font-medium">{{ t('orderHistory.invoiceConsumptionTitle') }}</p>
+                <p class="mt-1 text-xs">{{ t('orderHistory.invoiceThresholdHint', { amount: formatMoney(minInvoiceAmount) }) }}</p>
+              </div>
+              <div class="text-left sm:text-right">
+                <p class="text-lg font-bold">¥{{ invoiceableAmount.toFixed(2) }}</p>
+                <p v-if="!canSubmitInvoice" class="text-xs font-medium">
+                  {{ t('orderHistory.invoiceThresholdRemaining', { amount: formatMoney(invoiceAmountShortfall) }) }}
+                </p>
+                <p v-else class="text-xs font-medium">
+                  {{ t('orderHistory.invoiceReady') }}
+                </p>
+              </div>
             </div>
           </div>
         </SlideIn>
@@ -52,7 +57,7 @@
               <span>{{ t('orderHistory.paymentSuccessArrived') }}</span>
               <button
                 class="rounded-lg border border-green-300 px-3 py-1.5 text-xs font-medium text-green-700 transition hover:bg-green-100 dark:border-green-700 dark:text-green-300 dark:hover:bg-green-900/30"
-                @click="fetchOrders(currentPage)"
+                @click="refreshOrders()"
               >
                 {{ t('orderHistory.refreshOrders') }}
               </button>
@@ -80,7 +85,6 @@
               <table class="w-full text-left text-sm">
                 <thead>
                   <tr class="border-b border-gray-100 bg-gray-50 dark:border-dark-700 dark:bg-dark-800">
-                    <th v-if="invoiceMode" class="px-4 py-3"></th>
                     <th class="px-4 py-3 font-medium text-gray-500 dark:text-dark-400">{{ t('orderHistory.orderNo') }}</th>
                     <th class="px-4 py-3 font-medium text-gray-500 dark:text-dark-400">{{ t('orderHistory.type') }}</th>
                     <th class="px-4 py-3 font-medium text-gray-500 dark:text-dark-400">{{ t('orderHistory.amount') }}</th>
@@ -97,16 +101,6 @@
                     class="transition hover:bg-gray-50 dark:hover:bg-dark-800/50"
                     :class="isHighlightedOrder(order.order_no) ? 'bg-green-50/80 dark:bg-green-900/10' : ''"
                   >
-                    <!-- Checkbox for invoice mode -->
-                    <td v-if="invoiceMode" class="px-4 py-3">
-                      <input
-                        type="checkbox"
-                        class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-dark-500 dark:bg-dark-700"
-                        :checked="selectedOrders.has(order.order_no)"
-                        :disabled="!canRequestInvoice(order)"
-                        @change="toggleOrder(order)"
-                      />
-                    </td>
                     <!-- Order No -->
                     <td class="px-4 py-3">
                       <div class="flex items-center gap-1.5">
@@ -205,25 +199,6 @@
             </div>
           </div>
         </SlideIn>
-
-        <!-- Invoice mode summary bar -->
-        <div
-          v-if="invoiceMode && selectedOrders.size > 0"
-          class="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 rounded-2xl border border-gray-200 bg-white px-6 py-3 shadow-lg dark:border-dark-600 dark:bg-dark-800 z-50"
-        >
-          <span class="text-sm text-gray-600 dark:text-dark-300">
-            {{ t('orderHistory.selectedCount', { count: selectedOrders.size }) }}
-          </span>
-          <span class="text-sm font-bold text-gray-900 dark:text-white">
-            ¥{{ selectedTotalAmount.toFixed(2) }}
-          </span>
-          <button
-            class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-700"
-            @click="showInvoiceModal = true"
-          >
-            {{ t('orderHistory.submitInvoice') }}
-          </button>
-        </div>
       </div>
     </FadeIn>
 
@@ -276,14 +251,17 @@
                 ></textarea>
               </div>
 
-              <!-- Selected summary -->
+              <!-- Invoice summary -->
               <div class="rounded-lg bg-gray-50 p-3 dark:bg-dark-800">
                 <div class="flex items-center justify-between text-sm">
-                  <span class="text-gray-500 dark:text-dark-400">{{ t('orderHistory.selectedAmount') }}</span>
-                  <span class="font-bold text-gray-900 dark:text-white">¥{{ selectedTotalAmount.toFixed(2) }}</span>
+                  <span class="text-gray-500 dark:text-dark-400">{{ t('orderHistory.invoiceableAmount') }}</span>
+                  <span class="font-bold text-gray-900 dark:text-white">¥{{ invoiceableAmount.toFixed(2) }}</span>
                 </div>
                 <p class="mt-1 text-xs text-gray-400 dark:text-dark-500">
-                  {{ t('orderHistory.selectedCount', { count: selectedOrders.size }) }}
+                  {{ t('orderHistory.invoiceAutoInclude') }}
+                </p>
+                <p v-if="!canSubmitInvoice" class="mt-2 text-xs font-medium text-amber-600 dark:text-amber-300">
+                  {{ t('orderHistory.invoiceThresholdRemaining', { amount: formatMoney(invoiceAmountShortfall) }) }}
                 </p>
               </div>
             </div>
@@ -297,7 +275,7 @@
               </button>
               <button
                 class="flex-1 rounded-lg bg-primary-600 py-2.5 text-sm font-medium text-white transition hover:bg-primary-700 disabled:opacity-50"
-                :disabled="!invoiceForm.companyName || !invoiceForm.taxId || !invoiceForm.email || submittingInvoice"
+                :disabled="!canSubmitInvoiceForm"
                 @click="submitInvoice"
               >
                 {{ submittingInvoice ? t('common.loading') : t('orderHistory.submitInvoice') }}
@@ -318,7 +296,7 @@ import AppLayout from '@/components/layout/AppLayout.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { FadeIn, SlideIn } from '@/components/animations'
 import { useAppStore } from '@/stores/app'
-import { paymentAPI, type PaymentOrder } from '@/api/payment'
+import { paymentAPI, type InvoiceSummary, type PaymentOrder } from '@/api/payment'
 
 const { t } = useI18n()
 const appStore = useAppStore()
@@ -333,10 +311,9 @@ const totalPages = ref(1)
 const pageSize = 20
 const highlightedOrderNo = ref('')
 const showSuccessBanner = ref(false)
+const invoiceSummary = ref<InvoiceSummary | null>(null)
+const invoiceSummaryLoading = ref(false)
 
-// Invoice mode
-const invoiceMode = ref(false)
-const selectedOrders = reactive(new Set<string>())
 const showInvoiceModal = ref(false)
 const submittingInvoice = ref(false)
 const invoiceForm = reactive({
@@ -346,32 +323,34 @@ const invoiceForm = reactive({
   remark: '',
 })
 
-const selectedTotalAmount = computed(() => {
-  let total = 0
-  for (const orderNo of selectedOrders) {
-    const order = orders.value.find(o => o.order_no === orderNo)
-    if (order) {
-      total += order.amount_fen / 100
-    }
-  }
-  return total
-})
+const invoiceableAmountFen = computed(() => invoiceSummary.value?.available_amount_fen || 0)
+const minInvoiceAmountFen = computed(() => invoiceSummary.value?.min_amount_fen || 100000)
+const invoiceAmountShortfallFen = computed(() => invoiceSummary.value?.remaining_amount_fen ?? Math.max(0, minInvoiceAmountFen.value - invoiceableAmountFen.value))
+const invoiceableAmount = computed(() => invoiceableAmountFen.value / 100)
+const minInvoiceAmount = computed(() => minInvoiceAmountFen.value / 100)
+const invoiceAmountShortfall = computed(() => invoiceAmountShortfallFen.value / 100)
+const canSubmitInvoice = computed(() => invoiceableAmountFen.value >= minInvoiceAmountFen.value)
+const canSubmitInvoiceForm = computed(() => (
+  Boolean(invoiceForm.companyName && invoiceForm.taxId && invoiceForm.email) &&
+  canSubmitInvoice.value &&
+  !submittingInvoice.value
+))
 
-function toggleOrder(order: PaymentOrder) {
-  if (!canRequestInvoice(order)) return
-  if (selectedOrders.has(order.order_no)) {
-    selectedOrders.delete(order.order_no)
-  } else {
-    selectedOrders.add(order.order_no)
+function formatMoney(amount: number): string {
+  return amount.toFixed(Number.isInteger(amount) ? 0 : 2)
+}
+
+async function openInvoiceModal() {
+  if (!await fetchInvoiceSummary()) return
+  if (!canSubmitInvoice.value) {
+    appStore.showError(t('orderHistory.invoiceThresholdError', { amount: formatMoney(minInvoiceAmount.value) }))
+    return
   }
+  showInvoiceModal.value = true
 }
 
 function isLegacySubscriptionFallback(order: PaymentOrder): boolean {
   return order.order_no.startsWith('legacy-sub-') || order.pay_method.startsWith('legacy_subscription:')
-}
-
-function canRequestInvoice(order: PaymentOrder) {
-  return !isLegacySubscriptionFallback(order) && order.status === 'paid' && !order.invoice_requested_at
 }
 
 function getOrderType(order: PaymentOrder): 'recharge' | 'subscription' | 'quota_package' {
@@ -487,12 +466,6 @@ async function fetchOrders(page = 1) {
   try {
     const result = await paymentAPI.listOrders({ page, page_size: pageSize })
     orders.value = result.items || []
-    const selectable = new Set(orders.value.filter(canRequestInvoice).map(order => order.order_no))
-    for (const orderNo of Array.from(selectedOrders)) {
-      if (!selectable.has(orderNo)) {
-        selectedOrders.delete(orderNo)
-      }
-    }
     currentPage.value = result.page
     totalPages.value = result.pages
   } catch {
@@ -507,28 +480,52 @@ function goPage(page: number) {
   fetchOrders(page)
 }
 
+async function fetchInvoiceSummary(): Promise<boolean> {
+  invoiceSummaryLoading.value = true
+  try {
+    invoiceSummary.value = await paymentAPI.getInvoiceSummary()
+    return true
+  } catch (err: any) {
+    appStore.showError(err?.message || t('orderHistory.loadError'))
+    return false
+  } finally {
+    invoiceSummaryLoading.value = false
+  }
+}
+
+async function refreshOrders(page = currentPage.value) {
+  await Promise.all([fetchOrders(page), fetchInvoiceSummary()])
+}
+
 async function submitInvoice() {
-  if (selectedOrders.size === 0) return
+  if (!canSubmitInvoice.value) {
+    appStore.showError(t('orderHistory.invoiceThresholdError', { amount: formatMoney(minInvoiceAmount.value) }))
+    return
+  }
   submittingInvoice.value = true
   try {
     await paymentAPI.submitInvoiceRequest({
-      order_nos: Array.from(selectedOrders),
       company_name: invoiceForm.companyName.trim(),
       tax_id: invoiceForm.taxId.trim(),
       email: invoiceForm.email.trim(),
       remark: invoiceForm.remark.trim(),
     })
     showInvoiceModal.value = false
-    invoiceMode.value = false
-    selectedOrders.clear()
     resetInvoiceForm()
-    await fetchOrders(currentPage.value)
+    await refreshOrders(currentPage.value)
     appStore.showSuccess(t('orderHistory.invoiceSubmitted'))
   } catch (err: any) {
-    appStore.showError(err?.message || t('orderHistory.invoiceError'))
+    appStore.showError(getInvoiceErrorMessage(err))
   } finally {
     submittingInvoice.value = false
   }
+}
+
+function getInvoiceErrorMessage(err: any): string {
+  if (err?.reason === 'INVOICE_AMOUNT_TOO_LOW') {
+    return t('orderHistory.invoiceThresholdError', { amount: formatMoney(minInvoiceAmount.value) })
+  }
+  return err?.message || t('orderHistory.invoiceError')
 }
 
 onMounted(() => {
@@ -536,7 +533,7 @@ onMounted(() => {
   highlightedOrderNo.value = highlight
   showSuccessBanner.value = route.query.success === '1'
 
-  fetchOrders().finally(() => {
+  refreshOrders(1).finally(() => {
     if (showSuccessBanner.value) {
       router.replace({
         query: {

@@ -106,11 +106,10 @@ type CreateSubSiteTopupOrderRequest struct {
 }
 
 type SubmitInvoiceRequest struct {
-	OrderNos    []string `json:"order_nos" binding:"required,min=1"`
-	CompanyName string   `json:"company_name" binding:"required"`
-	TaxID       string   `json:"tax_id" binding:"required"`
-	Email       string   `json:"email" binding:"required,email"`
-	Remark      string   `json:"remark"`
+	CompanyName string `json:"company_name" binding:"required"`
+	TaxID       string `json:"tax_id" binding:"required"`
+	Email       string `json:"email" binding:"required,email"`
+	Remark      string `json:"remark"`
 }
 
 // CreateOrder creates a new payment order
@@ -375,7 +374,25 @@ func (h *PaymentHandler) ListOrders(c *gin.Context) {
 	response.Paginated(c, items, paginationResult.Total, paginationResult.Page, paginationResult.PageSize)
 }
 
-// SubmitInvoice submits invoice requests for one or more paid orders.
+// GetInvoiceSummary returns the user's current invoiceable paid consumption.
+// GET /api/v1/payment/invoice-summary
+func (h *PaymentHandler) GetInvoiceSummary(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "User not found in context")
+		return
+	}
+
+	summary, err := h.paymentService.GetInvoiceSummary(c.Request.Context(), subject.UserID)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, summary)
+}
+
+// SubmitInvoice submits an invoice request for all currently invoiceable paid consumption.
 // POST /api/v1/payment/invoice-requests
 func (h *PaymentHandler) SubmitInvoice(c *gin.Context) {
 	subject, ok := middleware2.GetAuthSubjectFromContext(c)
@@ -390,7 +407,7 @@ func (h *PaymentHandler) SubmitInvoice(c *gin.Context) {
 		return
 	}
 
-	err := h.paymentService.SubmitInvoiceRequest(c.Request.Context(), subject.UserID, req.OrderNos, service.InvoiceRequest{
+	err := h.paymentService.SubmitInvoiceRequest(c.Request.Context(), subject.UserID, service.InvoiceRequest{
 		CompanyName: req.CompanyName,
 		TaxID:       req.TaxID,
 		Email:       req.Email,

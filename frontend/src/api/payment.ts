@@ -70,6 +70,13 @@ export interface PaymentOrder {
   invoice_processed_at: string | null
 }
 
+export interface InvoiceSummary {
+  available_amount_fen: number
+  min_amount_fen: number
+  remaining_amount_fen: number
+  available_order_count: number
+}
+
 export type PayMethod = 'wechat' | 'alipay' | 'epay_alipay' | 'epay_wxpay'
 
 export interface CreateSubSiteActivationInput {
@@ -247,8 +254,12 @@ export async function listOrders(params?: {
   return data
 }
 
+export async function getInvoiceSummary(): Promise<InvoiceSummary> {
+  const { data } = await apiClient.get<InvoiceSummary>('/payment/invoice-summary')
+  return data
+}
+
 export async function submitInvoiceRequest(payload: {
-  order_nos: string[]
   company_name: string
   tax_id: string
   email: string
@@ -278,6 +289,7 @@ export const paymentAPI = {
   createSubSiteActivationOrder,
   queryOrder,
   listOrders,
+  getInvoiceSummary,
   submitInvoiceRequest,
   getNewcomerStatus,
 }
