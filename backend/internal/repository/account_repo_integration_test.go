@@ -132,6 +132,28 @@ func (s *AccountRepoSuite) TestUpdate_SyncSchedulerSnapshotOnDisabled() {
 	s.Require().Equal(service.StatusDisabled, cacheRecorder.setAccounts[0].Status)
 }
 
+func (s *AccountRepoSuite) TestUpdate_SyncSchedulerSnapshotOnCredentialsChanged() {
+	account := mustCreateAccount(s.T(), s.client, &service.Account{
+		Name:        "sync-model-mapping",
+		Status:      service.StatusActive,
+		Schedulable: true,
+		Credentials: map[string]any{},
+	})
+	cacheRecorder := &schedulerCacheRecorder{}
+	s.repo.schedulerCache = cacheRecorder
+
+	account.Credentials = map[string]any{
+		"model_mapping": map[string]any{
+			"claude-opus-4-8": "claude-opus-4-8",
+		},
+	}
+	s.Require().NoError(s.repo.Update(s.ctx, account))
+
+	s.Require().Len(cacheRecorder.setAccounts, 1)
+	s.Require().Equal("claude-opus-4-8", cacheRecorder.setAccounts[0].GetMappedModel("claude-opus-4-8"))
+	s.Require().True(cacheRecorder.setAccounts[0].IsModelSupported("claude-opus-4-8"))
+}
+
 func (s *AccountRepoSuite) TestDelete() {
 	account := mustCreateAccount(s.T(), s.client, &service.Account{Name: "to-delete"})
 
@@ -496,6 +518,30 @@ func (s *AccountRepoSuite) TestBulkUpdate_SyncSchedulerSnapshotOnDisabled() {
 	}
 	s.Require().Contains(ids, account1.ID)
 	s.Require().Contains(ids, account2.ID)
+}
+
+func (s *AccountRepoSuite) TestBulkUpdate_SyncSchedulerSnapshotOnCredentialsChanged() {
+	account := mustCreateAccount(s.T(), s.client, &service.Account{
+		Name:        "bulk-model-mapping",
+		Status:      service.StatusActive,
+		Schedulable: true,
+		Credentials: map[string]any{},
+	})
+	cacheRecorder := &schedulerCacheRecorder{}
+	s.repo.schedulerCache = cacheRecorder
+
+	rows, err := s.repo.BulkUpdate(s.ctx, []int64{account.ID}, service.AccountBulkUpdate{
+		Credentials: map[string]any{
+			"model_mapping": map[string]any{
+				"claude-opus-4-8": "claude-opus-4-8",
+			},
+		},
+	})
+	s.Require().NoError(err)
+	s.Require().Equal(int64(1), rows)
+
+	s.Require().Len(cacheRecorder.setAccounts, 1)
+	s.Require().True(cacheRecorder.setAccounts[0].IsModelSupported("claude-opus-4-8"))
 }
 
 // --- SetOverloaded / SetRateLimited / ClearRateLimit ---

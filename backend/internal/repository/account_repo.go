@@ -362,9 +362,10 @@ func (r *accountRepository) Update(ctx context.Context, account *service.Account
 	if err := enqueueSchedulerOutbox(ctx, r.sql, service.SchedulerOutboxEventAccountChanged, &account.ID, nil, buildSchedulerGroupPayload(account.GroupIDs)); err != nil {
 		log.Printf("[SchedulerOutbox] enqueue account update failed: account=%d err=%v", account.ID, err)
 	}
-	if account.Status == service.StatusError || account.Status == service.StatusDisabled || !account.Schedulable {
-		r.syncSchedulerAccountSnapshot(ctx, account.ID)
-	}
+	// Account selection reads credentials (including model_mapping) from the
+	// scheduler account cache. Refresh it synchronously so a newly added model
+	// is routable immediately after the admin update returns.
+	r.syncSchedulerAccountSnapshot(ctx, account.ID)
 	return nil
 }
 
@@ -553,14 +554,12 @@ func (r *accountRepository) SetError(ctx context.Context, id int64, errorMsg str
 	return nil
 }
 
-// syncSchedulerAccountSnapshot 在账号状态变更时主动同步快照到调度器缓存。
-// 当账号被设置为错误、禁用、不可调度或临时不可调度时调用，
-// 确保调度器和粘性会话逻辑能及时感知账号的最新状态，避免继续使用不可用账号。
+// syncSchedulerAccountSnapshot 主动同步最新账号数据到调度器缓存。
+// 账号状态和凭据中的调度字段（例如 model_mapping）都必须及时可见，
+// 否则粘性会话和分组调度可能继续使用旧配置。
 //
-// syncSchedulerAccountSnapshot proactively syncs account snapshot to scheduler cache
-// when account status changes. Called when account is set to error, disabled,
-// unschedulable, or temporarily unschedulable, ensuring scheduler and sticky session
-// logic can promptly detect the latest account state and avoid using unavailable accounts.
+// syncSchedulerAccountSnapshot proactively syncs the latest account data to the
+// scheduler cache so status and credential-based routing changes are immediately visible.
 func (r *accountRepository) syncSchedulerAccountSnapshot(ctx context.Context, accountID int64) {
 	if r == nil || r.schedulerCache == nil || accountID <= 0 {
 		return
@@ -1252,7 +1251,7 @@ func (r *accountRepository) BulkUpdate(ctx context.Context, ids []int64, updates
 		if err := enqueueSchedulerOutbox(ctx, r.sql, service.SchedulerOutboxEventAccountBulkChanged, nil, nil, payload); err != nil {
 			log.Printf("[SchedulerOutbox] enqueue bulk update failed: err=%v", err)
 		}
-		shouldSync := false
+		shouldSync := len(updates.Credentials) > 0
 		if updates.Status != nil && (*updates.Status == service.StatusError || *updates.Status == service.StatusDisabled) {
 			shouldSync = true
 		}
